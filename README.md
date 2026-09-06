@@ -56,3 +56,58 @@ Tenants cannot change `danger`, `focus`, `info` or the `class-*` label colors.
 - Radio uses a round control, not the stepped pixel circle from the design system's Radio card; Chakra's radiomark draws its dot with a pseudo element that a clip-path would also cut.
 - Tenant overrides apply to the whole document. A scoped preview of another tenant inside the page (for example a settings form) needs its own iframe.
 - In the dark theme the ink `outline` around orange fills blends into the ground by design; the orange fill carries the shape there.
+
+---
+
+## DRILLS
+
+A responsive, interactive mock ML workspace built with React, TanStack Start, and Tailwind CSS. The UI follows the supplied DRILLS HTML design.
+
+### Run locally
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Open the URL printed by Vite (normally `http://localhost:3000`). No backend, credentials, or environment variables are required.
+
+### Demo workflow
+
+1. Create a project. Choose sample data or start with an empty project.
+2. Add a dataset using local files, a simulated S3 bucket path, or sample data. Processing takes about four seconds.
+3. Create a training run through Dataset → Model → Configure → Compute → Review. New runs finish in about 30 seconds and register a model automatically.
+4. Open a model, try a deterministic prediction, and deploy it. New deployments become live in about five seconds.
+5. Pause/resume an endpoint, redeploy, edit scaling, compare or clone runs, and save project settings.
+
+The organization selector changes the workspace. Resource URLs include project and resource IDs; direct links restore the correct project and organization.
+
+### Mock data and persistence
+
+State is validated and saved to `localStorage` under `drills-demo-v1`. Each browser has its own workspace. Job timestamps persist across refreshes; completed jobs register each model only once. Invalid stored data is replaced with fresh samples. If browser storage is blocked or full, the app remains usable for the current session and displays a notice.
+
+**Reset demo data** in the sidebar restores the original workspace after confirmation.
+
+Uploaded file contents are not retained. Only names and metadata are saved; previews, statistics, explanations, costs, resource usage, logs, and predictions are illustrative. Downloads provide sample manifests, configurations, and reports, not trained model binaries. Integration snippets use reserved `.example` endpoints and never run automatically.
+
+Authentication, organization management, billing, personal settings, and dark mode are outside this version's scope.
+
+### Validation
+
+```bash
+pnpm typecheck
+pnpm lint
+pnpm build
+pnpm exec prettier --check src/features/drills src/routes src/styles.css tests playwright.config.ts vite.config.ts package.json README.md
+pnpm exec playwright install chromium  # once, if needed
+pnpm test
+```
+
+Playwright starts an isolated development server on port 3100. To test an existing server, set `DRILLS_BASE_URL` to its URL. Tests cover the full workflow, persistence, invalid/unavailable storage, organization isolation, filtering, metadata uploads, comparisons, cloning, settings, missing records, and keyboard/mobile navigation. Failure traces and screenshots are written to `test-results/`.
+
+### Structure
+
+- `src/features/drills/data.ts`: validated entity schemas, related sample data, and deterministic job transitions.
+- `src/features/drills/store.tsx`: client hydration, persistence, notifications, and simulation scheduling.
+- `src/features/drills/`: shared UI, app shell, and workflow screens.
+- `src/routes/`: native TanStack file routes. Regenerate `src/routeTree.gen.ts` with `pnpm generate-routes`; do not edit it manually.

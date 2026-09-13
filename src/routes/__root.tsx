@@ -5,10 +5,7 @@ import {
   createRootRoute,
 } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
-import { DemoProvider } from '../features/drills/store'
-import { Shell } from '../features/drills/Shell'
-import { Empty, Missing } from '../features/drills/components/display'
-import { Button } from '../features/drills/components/forms'
+import { Toaster } from '@/components/ui/sonner'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
@@ -19,8 +16,7 @@ export const Route = createRootRoute({
       { title: 'DRILLS — No-Code ML Platform' },
       {
         name: 'description',
-        content:
-          'Your workspace for building, training, and deploying machine learning models.',
+        content: 'Monitor projects, training runs, and deployments in DRILLS.',
       },
     ],
     links: [
@@ -28,21 +24,17 @@ export const Route = createRootRoute({
       { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
     ],
   }),
-  component: () => (
-    <DemoProvider>
-      <Shell />
-    </DemoProvider>
-  ),
-  notFoundComponent: Missing,
-  errorComponent: ({ error, reset }) => (
-    <main className="flex min-h-screen items-center justify-center p-6">
-      <Empty title="Something went wrong" description={error.message}>
-        <Button onClick={reset}>Try again</Button>
-      </Empty>
-    </main>
-  ),
-  shellComponent: RootDocument,
+  component: RootComponent,
 })
+
+function RootComponent() {
+  return (
+    <RootDocument>
+      <Outlet />
+    </RootDocument>
+  )
+}
+
 function RootDocument({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="light">
@@ -50,7 +42,8 @@ function RootDocument({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children || <Outlet />}
+        {children}
+        <Toaster position="bottom-right" richColors />
         <Scripts />
       </body>
     </html>

@@ -65,19 +65,21 @@ function CommandInput({
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
-    <div data-slot="command-input-wrapper" className="p-1 pb-0">
-      <InputGroup className="h-8! rounded-lg! border-input/30 bg-input/30 shadow-none! *:data-[slot=input-group-addon]:pl-2!">
+    <div data-slot="command-input-wrapper" className="p-2 pb-1">
+      <InputGroup size="lg" className="bg-input/30">
+        <InputGroupAddon>
+          <SearchIcon className="size-4 shrink-0 opacity-50" />
+        </InputGroupAddon>
         <CommandPrimitive.Input
-          data-slot="command-input"
+          data-slot="input-group-control"
           className={cn(
-            'w-full text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
+            // cmdk renders its own <input>, so it is not InputGroupInput and
+            // needs the group-size class explicitly. The wrapper owns the ring.
+            'h-9 w-full border-0 bg-transparent text-sm shadow-none outline-hidden ring-0 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50',
             className,
           )}
           {...props}
         />
-        <InputGroupAddon>
-          <SearchIcon className="size-4 shrink-0 opacity-50" />
-        </InputGroupAddon>
       </InputGroup>
     </div>
   )
@@ -91,7 +93,7 @@ function CommandList({
     <CommandPrimitive.List
       data-slot="command-list"
       className={cn(
-        'no-scrollbar max-h-72 scroll-py-1 overflow-x-hidden overflow-y-auto outline-none',
+        'no-scrollbar max-h-72 scroll-py-1 overflow-x-hidden overflow-y-auto outline-hidden',
         className,
       )}
       {...props}

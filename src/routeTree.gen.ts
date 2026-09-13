@@ -9,230 +9,298 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
-import { Route as ProjectsNewRouteImport } from './routes/projects.new'
-import { Route as ProjectsProjectIdSectionRouteImport } from './routes/projects.$projectId.$section'
-import { Route as ProjectsProjectIdDatasetsDatasetIdRouteImport } from './routes/projects.$projectId.datasets.$datasetId'
-import { Route as ProjectsProjectIdDeploymentsDeploymentIdRouteImport } from './routes/projects.$projectId.deployments.$deploymentId'
-import { Route as ProjectsProjectIdModelsModelIdRouteImport } from './routes/projects.$projectId.models.$modelId'
-import { Route as ProjectsProjectIdTrainingRunIdRouteImport } from './routes/projects.$projectId.training.$runId'
-import { Route as ProjectsProjectIdTrainingNewRouteImport } from './routes/projects.$projectId.training.new'
+import { Route as AppRouteRouteImport } from './routes/_app/route'
+import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppProjectsRouteImport } from './routes/_app/projects'
+import { Route as AppProjectsProjectIdRouteRouteImport } from './routes/_app/projects_/$projectId/route'
+import { Route as AppProjectsNewRouteImport } from './routes/_app/projects_/new'
+import { Route as AppProjectsProjectIdNavRouteRouteImport } from './routes/_app/projects_/$projectId/_nav/route'
+import { Route as AppProjectsProjectIdNavDatasetsRouteImport } from './routes/_app/projects_/$projectId/_nav/datasets'
+import { Route as AppProjectsProjectIdNavOverviewRouteImport } from './routes/_app/projects_/$projectId/_nav/overview'
+import { Route as AppProjectsProjectIdDatasetsDatasetIdRouteImport } from './routes/_app/projects_/$projectId/datasets_/$datasetId'
+import { Route as AppProjectsProjectIdTrainingRunIdRouteImport } from './routes/_app/projects_/$projectId/training_/$runId'
+import { Route as AppProjectsProjectIdTrainingNewRouteImport } from './routes/_app/projects_/$projectId/training_/new'
 
-const IndexRoute = IndexRouteImport.update({
+const AppRouteRoute = AppRouteRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRouteRoute,
 } as any)
-const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
-  id: '/projects/',
-  path: '/projects/',
-  getParentRoute: () => rootRouteImport,
+const AppProjectsRoute = AppProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => AppRouteRoute,
 } as any)
-const ProjectsNewRoute = ProjectsNewRouteImport.update({
-  id: '/projects/new',
+const AppProjectsProjectIdRouteRoute =
+  AppProjectsProjectIdRouteRouteImport.update({
+    id: '/projects_/$projectId',
+    path: '/projects/$projectId',
+    getParentRoute: () => AppRouteRoute,
+  } as any)
+const AppProjectsNewRoute = AppProjectsNewRouteImport.update({
+  id: '/projects_/new',
   path: '/projects/new',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRouteRoute,
 } as any)
-const ProjectsProjectIdSectionRoute =
-  ProjectsProjectIdSectionRouteImport.update({
-    id: '/projects/$projectId/$section',
-    path: '/projects/$projectId/$section',
-    getParentRoute: () => rootRouteImport,
+const AppProjectsProjectIdNavRouteRoute =
+  AppProjectsProjectIdNavRouteRouteImport.update({
+    id: '/_nav',
+    getParentRoute: () => AppProjectsProjectIdRouteRoute,
   } as any)
-const ProjectsProjectIdDatasetsDatasetIdRoute =
-  ProjectsProjectIdDatasetsDatasetIdRouteImport.update({
-    id: '/projects/$projectId/datasets/$datasetId',
-    path: '/projects/$projectId/datasets/$datasetId',
-    getParentRoute: () => rootRouteImport,
+const AppProjectsProjectIdNavDatasetsRoute =
+  AppProjectsProjectIdNavDatasetsRouteImport.update({
+    id: '/datasets',
+    path: '/datasets',
+    getParentRoute: () => AppProjectsProjectIdNavRouteRoute,
   } as any)
-const ProjectsProjectIdDeploymentsDeploymentIdRoute =
-  ProjectsProjectIdDeploymentsDeploymentIdRouteImport.update({
-    id: '/projects/$projectId/deployments/$deploymentId',
-    path: '/projects/$projectId/deployments/$deploymentId',
-    getParentRoute: () => rootRouteImport,
+const AppProjectsProjectIdNavOverviewRoute =
+  AppProjectsProjectIdNavOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
+    getParentRoute: () => AppProjectsProjectIdNavRouteRoute,
   } as any)
-const ProjectsProjectIdModelsModelIdRoute =
-  ProjectsProjectIdModelsModelIdRouteImport.update({
-    id: '/projects/$projectId/models/$modelId',
-    path: '/projects/$projectId/models/$modelId',
-    getParentRoute: () => rootRouteImport,
+const AppProjectsProjectIdDatasetsDatasetIdRoute =
+  AppProjectsProjectIdDatasetsDatasetIdRouteImport.update({
+    id: '/datasets_/$datasetId',
+    path: '/datasets/$datasetId',
+    getParentRoute: () => AppProjectsProjectIdRouteRoute,
   } as any)
-const ProjectsProjectIdTrainingRunIdRoute =
-  ProjectsProjectIdTrainingRunIdRouteImport.update({
-    id: '/projects/$projectId/training/$runId',
-    path: '/projects/$projectId/training/$runId',
-    getParentRoute: () => rootRouteImport,
+const AppProjectsProjectIdTrainingRunIdRoute =
+  AppProjectsProjectIdTrainingRunIdRouteImport.update({
+    id: '/training_/$runId',
+    path: '/training/$runId',
+    getParentRoute: () => AppProjectsProjectIdRouteRoute,
   } as any)
-const ProjectsProjectIdTrainingNewRoute =
-  ProjectsProjectIdTrainingNewRouteImport.update({
-    id: '/projects/$projectId/training/new',
-    path: '/projects/$projectId/training/new',
-    getParentRoute: () => rootRouteImport,
+const AppProjectsProjectIdTrainingNewRoute =
+  AppProjectsProjectIdTrainingNewRouteImport.update({
+    id: '/training_/new',
+    path: '/training/new',
+    getParentRoute: () => AppProjectsProjectIdRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/projects/new': typeof ProjectsNewRoute
-  '/projects/': typeof ProjectsIndexRoute
-  '/projects/$projectId/$section': typeof ProjectsProjectIdSectionRoute
-  '/projects/$projectId/datasets/$datasetId': typeof ProjectsProjectIdDatasetsDatasetIdRoute
-  '/projects/$projectId/deployments/$deploymentId': typeof ProjectsProjectIdDeploymentsDeploymentIdRoute
-  '/projects/$projectId/models/$modelId': typeof ProjectsProjectIdModelsModelIdRoute
-  '/projects/$projectId/training/$runId': typeof ProjectsProjectIdTrainingRunIdRoute
-  '/projects/$projectId/training/new': typeof ProjectsProjectIdTrainingNewRoute
+  '/': typeof AppIndexRoute
+  '/projects': typeof AppProjectsRoute
+  '/projects/$projectId': typeof AppProjectsProjectIdRouteRouteWithChildren
+  '/projects/new': typeof AppProjectsNewRoute
+  '/projects/$projectId/datasets': typeof AppProjectsProjectIdNavDatasetsRoute
+  '/projects/$projectId/overview': typeof AppProjectsProjectIdNavOverviewRoute
+  '/projects/$projectId/datasets/$datasetId': typeof AppProjectsProjectIdDatasetsDatasetIdRoute
+  '/projects/$projectId/training/$runId': typeof AppProjectsProjectIdTrainingRunIdRoute
+  '/projects/$projectId/training/new': typeof AppProjectsProjectIdTrainingNewRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/projects/new': typeof ProjectsNewRoute
-  '/projects': typeof ProjectsIndexRoute
-  '/projects/$projectId/$section': typeof ProjectsProjectIdSectionRoute
-  '/projects/$projectId/datasets/$datasetId': typeof ProjectsProjectIdDatasetsDatasetIdRoute
-  '/projects/$projectId/deployments/$deploymentId': typeof ProjectsProjectIdDeploymentsDeploymentIdRoute
-  '/projects/$projectId/models/$modelId': typeof ProjectsProjectIdModelsModelIdRoute
-  '/projects/$projectId/training/$runId': typeof ProjectsProjectIdTrainingRunIdRoute
-  '/projects/$projectId/training/new': typeof ProjectsProjectIdTrainingNewRoute
+  '/projects': typeof AppProjectsRoute
+  '/': typeof AppIndexRoute
+  '/projects/$projectId': typeof AppProjectsProjectIdRouteRouteWithChildren
+  '/projects/new': typeof AppProjectsNewRoute
+  '/projects/$projectId/datasets': typeof AppProjectsProjectIdNavDatasetsRoute
+  '/projects/$projectId/overview': typeof AppProjectsProjectIdNavOverviewRoute
+  '/projects/$projectId/datasets/$datasetId': typeof AppProjectsProjectIdDatasetsDatasetIdRoute
+  '/projects/$projectId/training/$runId': typeof AppProjectsProjectIdTrainingRunIdRoute
+  '/projects/$projectId/training/new': typeof AppProjectsProjectIdTrainingNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/projects/new': typeof ProjectsNewRoute
-  '/projects/': typeof ProjectsIndexRoute
-  '/projects/$projectId/$section': typeof ProjectsProjectIdSectionRoute
-  '/projects/$projectId/datasets/$datasetId': typeof ProjectsProjectIdDatasetsDatasetIdRoute
-  '/projects/$projectId/deployments/$deploymentId': typeof ProjectsProjectIdDeploymentsDeploymentIdRoute
-  '/projects/$projectId/models/$modelId': typeof ProjectsProjectIdModelsModelIdRoute
-  '/projects/$projectId/training/$runId': typeof ProjectsProjectIdTrainingRunIdRoute
-  '/projects/$projectId/training/new': typeof ProjectsProjectIdTrainingNewRoute
+  '/_app': typeof AppRouteRouteWithChildren
+  '/_app/projects': typeof AppProjectsRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/projects_/$projectId': typeof AppProjectsProjectIdRouteRouteWithChildren
+  '/_app/projects_/new': typeof AppProjectsNewRoute
+  '/_app/projects_/$projectId/_nav': typeof AppProjectsProjectIdNavRouteRouteWithChildren
+  '/_app/projects_/$projectId/_nav/datasets': typeof AppProjectsProjectIdNavDatasetsRoute
+  '/_app/projects_/$projectId/_nav/overview': typeof AppProjectsProjectIdNavOverviewRoute
+  '/_app/projects_/$projectId/datasets_/$datasetId': typeof AppProjectsProjectIdDatasetsDatasetIdRoute
+  '/_app/projects_/$projectId/training_/$runId': typeof AppProjectsProjectIdTrainingRunIdRoute
+  '/_app/projects_/$projectId/training_/new': typeof AppProjectsProjectIdTrainingNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/projects'
+    | '/projects/$projectId'
     | '/projects/new'
-    | '/projects/'
-    | '/projects/$projectId/$section'
+    | '/projects/$projectId/datasets'
+    | '/projects/$projectId/overview'
     | '/projects/$projectId/datasets/$datasetId'
-    | '/projects/$projectId/deployments/$deploymentId'
-    | '/projects/$projectId/models/$modelId'
     | '/projects/$projectId/training/$runId'
     | '/projects/$projectId/training/new'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
-    | '/projects/new'
     | '/projects'
-    | '/projects/$projectId/$section'
+    | '/'
+    | '/projects/$projectId'
+    | '/projects/new'
+    | '/projects/$projectId/datasets'
+    | '/projects/$projectId/overview'
     | '/projects/$projectId/datasets/$datasetId'
-    | '/projects/$projectId/deployments/$deploymentId'
-    | '/projects/$projectId/models/$modelId'
     | '/projects/$projectId/training/$runId'
     | '/projects/$projectId/training/new'
   id:
     | '__root__'
-    | '/'
-    | '/projects/new'
-    | '/projects/'
-    | '/projects/$projectId/$section'
-    | '/projects/$projectId/datasets/$datasetId'
-    | '/projects/$projectId/deployments/$deploymentId'
-    | '/projects/$projectId/models/$modelId'
-    | '/projects/$projectId/training/$runId'
-    | '/projects/$projectId/training/new'
+    | '/_app'
+    | '/_app/projects'
+    | '/_app/'
+    | '/_app/projects_/$projectId'
+    | '/_app/projects_/new'
+    | '/_app/projects_/$projectId/_nav'
+    | '/_app/projects_/$projectId/_nav/datasets'
+    | '/_app/projects_/$projectId/_nav/overview'
+    | '/_app/projects_/$projectId/datasets_/$datasetId'
+    | '/_app/projects_/$projectId/training_/$runId'
+    | '/_app/projects_/$projectId/training_/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  ProjectsNewRoute: typeof ProjectsNewRoute
-  ProjectsIndexRoute: typeof ProjectsIndexRoute
-  ProjectsProjectIdSectionRoute: typeof ProjectsProjectIdSectionRoute
-  ProjectsProjectIdDatasetsDatasetIdRoute: typeof ProjectsProjectIdDatasetsDatasetIdRoute
-  ProjectsProjectIdDeploymentsDeploymentIdRoute: typeof ProjectsProjectIdDeploymentsDeploymentIdRoute
-  ProjectsProjectIdModelsModelIdRoute: typeof ProjectsProjectIdModelsModelIdRoute
-  ProjectsProjectIdTrainingRunIdRoute: typeof ProjectsProjectIdTrainingRunIdRoute
-  ProjectsProjectIdTrainingNewRoute: typeof ProjectsProjectIdTrainingNewRoute
+  AppRouteRoute: typeof AppRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/': {
+      id: '/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRouteRoute
     }
-    '/projects/': {
-      id: '/projects/'
+    '/_app/projects': {
+      id: '/_app/projects'
       path: '/projects'
-      fullPath: '/projects/'
-      preLoaderRoute: typeof ProjectsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      fullPath: '/projects'
+      preLoaderRoute: typeof AppProjectsRouteImport
+      parentRoute: typeof AppRouteRoute
     }
-    '/projects/new': {
-      id: '/projects/new'
+    '/_app/projects_/$projectId': {
+      id: '/_app/projects_/$projectId'
+      path: '/projects/$projectId'
+      fullPath: '/projects/$projectId'
+      preLoaderRoute: typeof AppProjectsProjectIdRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/projects_/new': {
+      id: '/_app/projects_/new'
       path: '/projects/new'
       fullPath: '/projects/new'
-      preLoaderRoute: typeof ProjectsNewRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppProjectsNewRouteImport
+      parentRoute: typeof AppRouteRoute
     }
-    '/projects/$projectId/$section': {
-      id: '/projects/$projectId/$section'
-      path: '/projects/$projectId/$section'
-      fullPath: '/projects/$projectId/$section'
-      preLoaderRoute: typeof ProjectsProjectIdSectionRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_app/projects_/$projectId/_nav': {
+      id: '/_app/projects_/$projectId/_nav'
+      path: ''
+      fullPath: '/projects/$projectId'
+      preLoaderRoute: typeof AppProjectsProjectIdNavRouteRouteImport
+      parentRoute: typeof AppProjectsProjectIdRouteRoute
     }
-    '/projects/$projectId/datasets/$datasetId': {
-      id: '/projects/$projectId/datasets/$datasetId'
-      path: '/projects/$projectId/datasets/$datasetId'
+    '/_app/projects_/$projectId/_nav/datasets': {
+      id: '/_app/projects_/$projectId/_nav/datasets'
+      path: '/datasets'
+      fullPath: '/projects/$projectId/datasets'
+      preLoaderRoute: typeof AppProjectsProjectIdNavDatasetsRouteImport
+      parentRoute: typeof AppProjectsProjectIdNavRouteRoute
+    }
+    '/_app/projects_/$projectId/_nav/overview': {
+      id: '/_app/projects_/$projectId/_nav/overview'
+      path: '/overview'
+      fullPath: '/projects/$projectId/overview'
+      preLoaderRoute: typeof AppProjectsProjectIdNavOverviewRouteImport
+      parentRoute: typeof AppProjectsProjectIdNavRouteRoute
+    }
+    '/_app/projects_/$projectId/datasets_/$datasetId': {
+      id: '/_app/projects_/$projectId/datasets_/$datasetId'
+      path: '/datasets/$datasetId'
       fullPath: '/projects/$projectId/datasets/$datasetId'
-      preLoaderRoute: typeof ProjectsProjectIdDatasetsDatasetIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppProjectsProjectIdDatasetsDatasetIdRouteImport
+      parentRoute: typeof AppProjectsProjectIdRouteRoute
     }
-    '/projects/$projectId/deployments/$deploymentId': {
-      id: '/projects/$projectId/deployments/$deploymentId'
-      path: '/projects/$projectId/deployments/$deploymentId'
-      fullPath: '/projects/$projectId/deployments/$deploymentId'
-      preLoaderRoute: typeof ProjectsProjectIdDeploymentsDeploymentIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/projects/$projectId/models/$modelId': {
-      id: '/projects/$projectId/models/$modelId'
-      path: '/projects/$projectId/models/$modelId'
-      fullPath: '/projects/$projectId/models/$modelId'
-      preLoaderRoute: typeof ProjectsProjectIdModelsModelIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/projects/$projectId/training/$runId': {
-      id: '/projects/$projectId/training/$runId'
-      path: '/projects/$projectId/training/$runId'
+    '/_app/projects_/$projectId/training_/$runId': {
+      id: '/_app/projects_/$projectId/training_/$runId'
+      path: '/training/$runId'
       fullPath: '/projects/$projectId/training/$runId'
-      preLoaderRoute: typeof ProjectsProjectIdTrainingRunIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppProjectsProjectIdTrainingRunIdRouteImport
+      parentRoute: typeof AppProjectsProjectIdRouteRoute
     }
-    '/projects/$projectId/training/new': {
-      id: '/projects/$projectId/training/new'
-      path: '/projects/$projectId/training/new'
+    '/_app/projects_/$projectId/training_/new': {
+      id: '/_app/projects_/$projectId/training_/new'
+      path: '/training/new'
       fullPath: '/projects/$projectId/training/new'
-      preLoaderRoute: typeof ProjectsProjectIdTrainingNewRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppProjectsProjectIdTrainingNewRouteImport
+      parentRoute: typeof AppProjectsProjectIdRouteRoute
     }
   }
 }
 
+interface AppProjectsProjectIdNavRouteRouteChildren {
+  AppProjectsProjectIdNavDatasetsRoute: typeof AppProjectsProjectIdNavDatasetsRoute
+  AppProjectsProjectIdNavOverviewRoute: typeof AppProjectsProjectIdNavOverviewRoute
+}
+
+const AppProjectsProjectIdNavRouteRouteChildren: AppProjectsProjectIdNavRouteRouteChildren =
+  {
+    AppProjectsProjectIdNavDatasetsRoute: AppProjectsProjectIdNavDatasetsRoute,
+    AppProjectsProjectIdNavOverviewRoute: AppProjectsProjectIdNavOverviewRoute,
+  }
+
+const AppProjectsProjectIdNavRouteRouteWithChildren =
+  AppProjectsProjectIdNavRouteRoute._addFileChildren(
+    AppProjectsProjectIdNavRouteRouteChildren,
+  )
+
+interface AppProjectsProjectIdRouteRouteChildren {
+  AppProjectsProjectIdNavRouteRoute: typeof AppProjectsProjectIdNavRouteRouteWithChildren
+  AppProjectsProjectIdDatasetsDatasetIdRoute: typeof AppProjectsProjectIdDatasetsDatasetIdRoute
+  AppProjectsProjectIdTrainingRunIdRoute: typeof AppProjectsProjectIdTrainingRunIdRoute
+  AppProjectsProjectIdTrainingNewRoute: typeof AppProjectsProjectIdTrainingNewRoute
+}
+
+const AppProjectsProjectIdRouteRouteChildren: AppProjectsProjectIdRouteRouteChildren =
+  {
+    AppProjectsProjectIdNavRouteRoute:
+      AppProjectsProjectIdNavRouteRouteWithChildren,
+    AppProjectsProjectIdDatasetsDatasetIdRoute:
+      AppProjectsProjectIdDatasetsDatasetIdRoute,
+    AppProjectsProjectIdTrainingRunIdRoute:
+      AppProjectsProjectIdTrainingRunIdRoute,
+    AppProjectsProjectIdTrainingNewRoute: AppProjectsProjectIdTrainingNewRoute,
+  }
+
+const AppProjectsProjectIdRouteRouteWithChildren =
+  AppProjectsProjectIdRouteRoute._addFileChildren(
+    AppProjectsProjectIdRouteRouteChildren,
+  )
+
+interface AppRouteRouteChildren {
+  AppProjectsRoute: typeof AppProjectsRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppProjectsProjectIdRouteRoute: typeof AppProjectsProjectIdRouteRouteWithChildren
+  AppProjectsNewRoute: typeof AppProjectsNewRoute
+}
+
+const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppProjectsRoute: AppProjectsRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppProjectsProjectIdRouteRoute: AppProjectsProjectIdRouteRouteWithChildren,
+  AppProjectsNewRoute: AppProjectsNewRoute,
+}
+
+const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
+  AppRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  ProjectsNewRoute: ProjectsNewRoute,
-  ProjectsIndexRoute: ProjectsIndexRoute,
-  ProjectsProjectIdSectionRoute: ProjectsProjectIdSectionRoute,
-  ProjectsProjectIdDatasetsDatasetIdRoute:
-    ProjectsProjectIdDatasetsDatasetIdRoute,
-  ProjectsProjectIdDeploymentsDeploymentIdRoute:
-    ProjectsProjectIdDeploymentsDeploymentIdRoute,
-  ProjectsProjectIdModelsModelIdRoute: ProjectsProjectIdModelsModelIdRoute,
-  ProjectsProjectIdTrainingRunIdRoute: ProjectsProjectIdTrainingRunIdRoute,
-  ProjectsProjectIdTrainingNewRoute: ProjectsProjectIdTrainingNewRoute,
+  AppRouteRoute: AppRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

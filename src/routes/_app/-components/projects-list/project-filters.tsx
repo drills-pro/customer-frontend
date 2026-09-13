@@ -1,6 +1,5 @@
 import { Grid2X2, List, Search } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
 import {
   InputGroup,
   InputGroupAddon,
@@ -13,9 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { organizations } from '@/features/dashboard/data'
 
-import type { ProjectFiltersState } from './types'
+import type { ProjectFiltersState, View } from './types'
 
 export function ProjectFilters({
   filters,
@@ -126,33 +126,24 @@ export function ProjectFilters({
           </SelectContent>
         </Select>
 
-        <div
-          className="flex h-9 overflow-hidden rounded-lg border border-input bg-white"
+        <ToggleGroup
+          type="single"
+          value={filters.view}
+          onValueChange={(value) =>
+            value && onFiltersChange({ view: value as View })
+          }
+          variant="outline"
+          size="lg"
+          spacing={0}
           aria-label="Project view"
         >
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className={`h-full rounded-none ${filters.view === 'grid' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-500'}`}
-            aria-label="Grid view"
-            aria-pressed={filters.view === 'grid'}
-            onClick={() => onFiltersChange({ view: 'grid' })}
-          >
+          <ToggleGroupItem value="grid" aria-label="Grid view">
             <Grid2X2 />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className={`h-full rounded-none border-l ${filters.view === 'list' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-500'}`}
-            aria-label="List view"
-            aria-pressed={filters.view === 'list'}
-            onClick={() => onFiltersChange({ view: 'list' })}
-          >
+          </ToggleGroupItem>
+          <ToggleGroupItem value="list" aria-label="List view">
             <List />
-          </Button>
-        </div>
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
     </section>
   )

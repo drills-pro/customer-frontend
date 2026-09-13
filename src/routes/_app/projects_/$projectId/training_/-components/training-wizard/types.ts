@@ -5,5 +5,3 @@ export const steps = [
   'Compute',
   'Review',
 ] as const
-
-export type ConfigureMode = 'simple' | 'advanced' | 'yaml'

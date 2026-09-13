@@ -5,6 +5,7 @@ import {
   datasets as seededDatasets,
   resolveProject,
 } from '@/features/dashboard/data'
+import { resolveTrainingRun } from '@/features/dashboard/selectors/training-runs'
 import { TrainingNotFound } from './-components/training-not-found'
 import { TrainingWizard } from './-components/training-wizard'
 
@@ -19,6 +20,12 @@ export const Route = createFileRoute(
   }),
   component: NewTrainingRoute,
   notFoundComponent: TrainingNotFound,
+  staticData: {
+    breadcrumb: ({ parent: { project } }) =>
+      project
+        ? { items: [{ id: 'new-training', label: 'New training run' }] }
+        : null,
+  },
 })
 
 function NewTrainingRoute() {
@@ -32,7 +39,7 @@ function NewTrainingRoute() {
 
   const resolved = resolveProject(projectId, preferences)
   if (!resolved) return <TrainingNotFound />
-  const { project, organization } = resolved
+  const { project } = resolved
 
   const datasets = [...preferences.datasets, ...seededDatasets].filter(
     (dataset, index, all) =>
@@ -40,15 +47,14 @@ function NewTrainingRoute() {
       dataset.status === 'Ready' &&
       all.findIndex((candidate) => candidate.id === dataset.id) === index,
   )
-  const clone = preferences.trainingRuns.find(
-    (run) => run.id === search.clone && run.projectId === project.id,
-  )
+  const clone = search.clone
+    ? resolveTrainingRun(preferences, project.id, search.clone)
+    : undefined
 
   return (
     <TrainingWizard
       key={`${project.id}-${search.dataset ?? ''}-${clone?.id ?? ''}`}
       project={project}
-      organizationName={organization.name}
       datasets={datasets}
       initialDatasetId={search.dataset}
       clone={clone}

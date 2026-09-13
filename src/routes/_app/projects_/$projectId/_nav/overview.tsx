@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ArrowRight, Check } from 'lucide-react'
-import { Bar, BarChart, Cell, XAxis } from 'recharts'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge, BadgeDot } from '@/components/ui/badge'
@@ -14,36 +13,21 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from '@/components/ui/chart'
-import {
   Item,
   ItemContent,
   ItemDescription,
   ItemMedia,
   ItemTitle,
 } from '@/components/ui/item'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import type { UsagePeriod } from '@/features/dashboard/data'
 import { useProjectDetail } from '@/features/dashboard/context'
 import { useInView } from '@/hooks/use-in-view'
 import {
   FactList,
-  formatUsageValue,
-  getUsageSummary,
   serializeReadme,
   unavailable,
-  usagePeriodLabels,
 } from '../-components/project-overview'
 import { ReadmeCard } from '../-components/readme-editor'
+import { ResourceUsageCard } from '../-components/resource-usage-card'
 
 export const Route = createFileRoute(
   '/_app/projects_/$projectId/_nav/overview',
@@ -53,7 +37,6 @@ export const Route = createFileRoute(
 
 function ProjectOverviewRoute() {
   const { project, details, organization } = useProjectDetail()
-  const [usagePeriod, setUsagePeriod] = React.useState<UsagePeriod>('day')
   const { ref: usageCardRef, inView: usageChartsInView } =
     useInView<HTMLDivElement>()
   const bestModel = details.bestModel
@@ -289,129 +272,11 @@ function ProjectOverviewRoute() {
             </CardContent>
           </Card>
 
-          <Card ref={usageCardRef} size="lg" className="gap-0">
-            <CardHeader className="pb-4">
-              <CardTitle>Resource usage</CardTitle>
-              <CardAction>
-                <Select
-                  value={usagePeriod}
-                  onValueChange={(value) =>
-                    setUsagePeriod(value as UsagePeriod)
-                  }
-                >
-                  <SelectTrigger
-                    className="h-8 w-24 bg-white"
-                    aria-label="Usage interval"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="hour">Hour</SelectItem>
-                    <SelectItem value="day">Day</SelectItem>
-                    <SelectItem value="week">Week</SelectItem>
-                    <SelectItem value="month">Month</SelectItem>
-                  </SelectContent>
-                </Select>
-              </CardAction>
-            </CardHeader>
-            <CardContent className="grid">
-              {details.resourceUsage.map((resource, resourceIndex) => {
-                const periodLabel = usagePeriodLabels[usagePeriod]
-                const summary = getUsageSummary(resource, usagePeriod)
-                return (
-                  <section
-                    key={resource.id}
-                    className={resourceIndex === 0 ? '' : 'border-t pt-5'}
-                  >
-                    <div className="flex items-start justify-between gap-4 text-xs">
-                      <div>
-                        <h3 className="font-medium text-foreground">
-                          {resource.label}
-                        </h3>
-                        <p className="mt-1 text-muted-foreground">
-                          {resource.description}, last 7 {periodLabel}
-                        </p>
-                      </div>
-                      <strong className="whitespace-nowrap font-medium text-muted-foreground">
-                        {formatUsageValue(summary)} / {resource.limit}{' '}
-                        {resource.unit}
-                      </strong>
-                    </div>
-                    <ChartContainer
-                      config={{
-                        value: {
-                          label: resource.label,
-                          color: resource.color,
-                        },
-                      }}
-                      className="mt-3 h-28 w-full"
-                      role="img"
-                      aria-label={`${resource.label} usage for the last 7 ${periodLabel}`}
-                      data-testid={`usage-chart-${resource.id}`}
-                    >
-                      <BarChart
-                        key={usageChartsInView ? 'visible' : 'pending'}
-                        data={resource.series[usagePeriod]}
-                        accessibilityLayer
-                        margin={{ top: 8, right: 0, bottom: 0, left: 0 }}
-                      >
-                        <XAxis
-                          dataKey="label"
-                          tickLine={false}
-                          axisLine={false}
-                          tickMargin={8}
-                          tickFormatter={(label: string) =>
-                            resource.series[usagePeriod].find(
-                              (point) => point.label === label,
-                            )?.shortLabel ?? label
-                          }
-                        />
-                        <ChartTooltip
-                          cursor={false}
-                          content={
-                            <ChartTooltipContent
-                              labelFormatter={(_, payload) =>
-                                payload[0]?.payload.label
-                              }
-                              formatter={(value) => (
-                                <div className="flex min-w-32 items-center justify-between gap-4">
-                                  <span className="text-muted-foreground">
-                                    {resource.label}
-                                  </span>
-                                  <span className="font-mono font-medium text-foreground tabular-nums">
-                                    {formatUsageValue(Number(value))}{' '}
-                                    {resource.unit}
-                                  </span>
-                                </div>
-                              )}
-                            />
-                          }
-                        />
-                        <Bar
-                          dataKey="value"
-                          radius={[4, 4, 1, 1]}
-                          isAnimationActive={usageChartsInView}
-                        >
-                          {resource.series[usagePeriod].map((point, index) => (
-                            <Cell
-                              key={point.label}
-                              fill={resource.color}
-                              fillOpacity={
-                                index ===
-                                resource.series[usagePeriod].length - 1
-                                  ? 1
-                                  : 0.18
-                              }
-                            />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ChartContainer>
-                  </section>
-                )
-              })}
-            </CardContent>
-          </Card>
+          <ResourceUsageCard
+            ref={usageCardRef}
+            resources={details.resourceUsage}
+            inView={usageChartsInView}
+          />
 
           <Card size="lg">
             <CardHeader>

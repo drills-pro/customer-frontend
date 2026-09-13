@@ -1,5 +1,9 @@
 import { Button } from '@/components/ui/button'
-import { StepHeading } from './step-heading'
+import type {
+  TrainingScheduler,
+  TrainingSplit,
+} from '@/features/dashboard/data'
+import { formatLearningRate } from '@/features/dashboard/training'
 
 export function ReviewBlock({
   label,
@@ -11,36 +15,45 @@ export function ReviewBlock({
   onEdit: () => void
 }) {
   return (
-    <div className="rounded-lg p-4 ring-1 ring-slate-200">
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+    <div className="flex items-center justify-between gap-4 rounded-xl border p-4">
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
           {label}
         </p>
-        <Button variant="link" className="text-xs" onClick={onEdit}>
-          Edit
-        </Button>
+        <p className="mt-1 truncate text-sm font-semibold">{value}</p>
       </div>
-      <p className="mt-1.5 text-sm font-medium">{value}</p>
+      <Button
+        variant="link"
+        className="shrink-0 text-xs"
+        onClick={onEdit}
+        aria-label={`Edit ${label.toLowerCase()}`}
+      >
+        Edit
+      </Button>
     </div>
   )
 }
 
 export function ReviewStep({
   datasetName,
+  split,
   architectureName,
   epochs,
   batchSize,
   learningRate,
+  scheduler,
   earlyStopping,
   computeName,
   spot,
   onEditStep,
 }: {
   datasetName: string
+  split: TrainingSplit
   architectureName: string
   epochs: number
   batchSize: number
-  learningRate: string
+  learningRate: number
+  scheduler: TrainingScheduler
   earlyStopping: boolean
   computeName: string
   spot: boolean
@@ -48,14 +61,23 @@ export function ReviewStep({
 }) {
   return (
     <section>
-      <StepHeading
-        title="Review and start"
-        description="Double-check your configuration before starting the run."
-      />
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+      <div>
+        <h2 className="text-lg font-semibold tracking-tight">
+          Review and start
+        </h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Double-check your configuration before starting the run.
+        </p>
+      </div>
+      <div className="mt-6 grid gap-2.5">
         <ReviewBlock
           label="Dataset"
           value={datasetName}
+          onEdit={() => onEditStep(0)}
+        />
+        <ReviewBlock
+          label="Split"
+          value={`${split.train}% / ${split.validation}% / ${split.test}%`}
           onEdit={() => onEditStep(0)}
         />
         <ReviewBlock
@@ -65,16 +87,16 @@ export function ReviewStep({
         />
         <ReviewBlock
           label="Configuration"
-          value={`${epochs} epochs · batch ${batchSize} · ${learningRate} lr${earlyStopping ? ' · early stopping' : ''}`}
+          value={`${epochs} epochs · batch ${batchSize} · lr ${formatLearningRate(learningRate)} (${scheduler})${earlyStopping ? ' · early stopping' : ''}`}
           onEdit={() => onEditStep(2)}
         />
         <ReviewBlock
           label="Compute"
-          value={`${computeName}${spot ? ' · spot pricing' : ''}`}
+          value={`${computeName}${spot ? ' · spot' : ''}`}
           onEdit={() => onEditStep(3)}
         />
       </div>
-      <div className="mt-5 rounded-md bg-amber-50 p-3 text-xs text-amber-800">
+      <div className="mt-5 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
         Starting this run will immediately begin billing against your workspace
         credits.
       </div>

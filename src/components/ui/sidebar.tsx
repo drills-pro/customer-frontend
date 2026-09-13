@@ -25,8 +25,6 @@ import {
 } from '@/components/ui/tooltip'
 import { PanelLeftIcon } from 'lucide-react'
 
-const SIDEBAR_COOKIE_NAME = 'sidebar_state'
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = '16rem'
 const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
@@ -73,6 +71,10 @@ function SidebarProvider({
   // We use openProp and setOpenProp for control from outside the component.
   const [_open, _setOpen] = React.useState(defaultOpen)
   const open = openProp ?? _open
+  // Session-only by design. This used to write a `sidebar_state` cookie that
+  // nothing ever read back, so a refresh reopened the sidebar anyway. To make
+  // the state survive a refresh, read the value on the server and pass it in
+  // as `defaultOpen` rather than writing here.
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === 'function' ? value(open) : value
@@ -81,9 +83,6 @@ function SidebarProvider({
       } else {
         _setOpen(openState)
       }
-
-      // This sets the cookie to keep the sidebar state.
-      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
     },
     [setOpenProp, open],
   )
@@ -165,22 +164,6 @@ function Sidebar({
   collapsible?: 'offcanvas' | 'icon' | 'none'
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
-
-  React.useEffect(() => {
-    if (!isMobile || !openMobile) return
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
-      event.preventDefault()
-      setOpenMobile(false)
-      queueMicrotask(() => {
-        document
-          .querySelector<HTMLElement>('[data-slot="sidebar-trigger"]')
-          ?.focus()
-      })
-    }
-    document.addEventListener('keydown', closeOnEscape, true)
-    return () => document.removeEventListener('keydown', closeOnEscape, true)
-  }, [isMobile, openMobile, setOpenMobile])
 
   if (collapsible === 'none') {
     return (
@@ -321,9 +304,11 @@ function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
   )
 }
 
-function SidebarInset({ className, ...props }: React.ComponentProps<'main'>) {
+// A plain element, not <main>: each route renders its own <main id="dashboard-main">,
+// and a main landmark nested inside another is invalid landmark structure.
+function SidebarInset({ className, ...props }: React.ComponentProps<'div'>) {
   return (
-    <main
+    <div
       data-slot="sidebar-inset"
       className={cn(
         'relative flex w-full flex-1 flex-col bg-background md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2',
@@ -607,10 +592,9 @@ function SidebarMenuSkeleton({
 }: React.ComponentProps<'div'> & {
   showIcon?: boolean
 }) {
-  // Random width between 50 to 90%.
-  const [width] = React.useState(() => {
-    return `${Math.floor(Math.random() * 40) + 50}%`
-  })
+  // A fixed width, not Math.random(): a random one would differ between the
+  // server and client renders and break hydration.
+  const width = '70%'
 
   return (
     <div

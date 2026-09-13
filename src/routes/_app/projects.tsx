@@ -18,7 +18,6 @@ import {
 } from '@/features/dashboard/data'
 import type { Project } from '@/features/dashboard/data'
 import {
-  NewProjectCard,
   ProjectCard,
   ProjectFilters,
   ProjectsTable,
@@ -66,7 +65,9 @@ function ProjectsPage() {
         (filters.status === 'all' || project.status === filters.status),
     )
     .sort((left, right) =>
-      filters.sort === 'name' ? left.name.localeCompare(right.name) : 0,
+      filters.sort === 'name'
+        ? left.name.localeCompare(right.name)
+        : right.updatedAt - left.updatedAt,
     )
 
   return (
@@ -107,7 +108,13 @@ function ProjectsPage() {
             {visibleProjects.map((project) => (
               <ProjectCard key={project.id} project={project} />
             ))}
-            <NewProjectCard />
+            <Link
+              to="/projects/new"
+              className="flex min-h-[200px] w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-slate-300 text-sm font-medium text-slate-500 transition-colors hover:border-indigo-400 hover:bg-indigo-50/30 hover:text-indigo-600"
+            >
+              <Plus className="size-6" />
+              New project
+            </Link>
           </section>
         ) : (
           <ProjectsTable projects={visibleProjects} />

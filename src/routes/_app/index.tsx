@@ -11,11 +11,15 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { allProjects, deployments, trainings } from '@/features/dashboard/data'
+import { allProjects, deployments } from '@/features/dashboard/data'
 import { useDashboardLayout } from '@/features/dashboard/context'
 import {
+  orgTrainingRuns,
+  runProgressAt,
+} from '@/features/dashboard/selectors/training-runs'
+import { useNow } from '@/hooks/use-now'
+import {
   RecentActivityCard,
-  Sparkline,
   UploadDialog,
   YourProjectsCard,
   LiveTrainingsCard,
@@ -31,7 +35,10 @@ function DashboardPage() {
   const orgProjects = allProjects(preferences).filter(
     (item) => item.orgId === org.id,
   )
-  const orgTrainings = trainings.filter((item) => item.orgId === org.id)
+  const now = useNow()
+  const runningTrainings = orgTrainingRuns(preferences, org.id).filter(
+    (run) => runProgressAt(run, now).status === 'Running',
+  )
   const orgDeployments = deployments.filter((item) => item.orgId === org.id)
 
   return (
@@ -81,7 +88,7 @@ function DashboardPage() {
             ],
             [
               'Trainings Running',
-              String(orgTrainings.length),
+              String(runningTrainings.length),
               '+2',
               '2,27 17,20 30,23 45,13 59,16 73,7 87,10 99,2',
             ],
@@ -114,7 +121,20 @@ function DashboardPage() {
                     <span className="text-slate-400">vs last 30d</span>
                   </p>
                 </div>
-                <Sparkline points={points} />
+                <svg
+                  viewBox="0 0 100 34"
+                  className="h-8 w-24 text-indigo-600"
+                  aria-hidden="true"
+                >
+                  <polyline
+                    points={points}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </CardContent>
             </Card>
           ))}

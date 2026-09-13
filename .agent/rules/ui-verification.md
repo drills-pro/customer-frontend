@@ -36,11 +36,18 @@ const b = await chromium.launch()
 const p = await b.newPage()
 await p.goto('http://localhost:3000/<route>')
 const el = p.getByRole('textbox', { name: '<accessible name>' })
-console.log(await el.evaluate((n) => {
-  const s = getComputedStyle(n)
-  return { height: s.height, padding: s.padding, borderWidth: s.borderWidth,
-           boxShadow: s.boxShadow, outline: s.outlineStyle }
-}))
+console.log(
+  await el.evaluate((n) => {
+    const s = getComputedStyle(n)
+    return {
+      height: s.height,
+      padding: s.padding,
+      borderWidth: s.borderWidth,
+      boxShadow: s.boxShadow,
+      outline: s.outlineStyle,
+    }
+  }),
+)
 await b.close()
 ```
 
@@ -50,7 +57,7 @@ What to look for:
   wrapping a 32px `<input>` is the signature of a height set on the wrapper only.
 - **`boxShadow` with a `0px 0px 0px 0px` entry** — that slot is set but inert
   (width zero). That is how an inner control correctly stands down from a
-  composite's focus ring; it is *not* a missing ring.
+  composite's focus ring; it is _not_ a missing ring.
 - **Exactly one non-zero ring entry** on the element that owns the box, and an
   `outline` of `none`. Two visible rings, or a ring plus an outline, is the
   "double ring" regression.
@@ -65,9 +72,15 @@ at a reviewable size, and capture both states:
 
 ```js
 const box = await shell.boundingBox()
-const clip = { x: box.x - 16, y: box.y - 16, width: box.width + 32, height: box.height + 32 }
+const clip = {
+  x: box.x - 16,
+  y: box.y - 16,
+  width: box.width + 32,
+  height: box.height + 32,
+}
 await p.screenshot({ path: 'rest.png', clip })
-await el.focus(); await p.waitForTimeout(250)
+await el.focus()
+await p.waitForTimeout(250)
 await p.screenshot({ path: 'focus.png', clip })
 ```
 

@@ -1,44 +1,43 @@
 import * as React from 'react'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
+import { RouteBreadcrumbs } from '@/components/breadcrumbs'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useDashboardLayout } from '@/features/dashboard/context'
-import type { Dataset, Project, TrainingRun } from '@/features/dashboard/data'
+import type {
+  Dataset,
+  Project,
+  TrainingRun,
+  TrainingScheduler,
+  TrainingSplit,
+} from '@/features/dashboard/data'
 import {
   architecturesFor,
   computeOptions,
   estimateTraining,
   formatDuration,
-  trainingYaml,
+  formatLearningRate,
 } from '@/features/dashboard/training'
+import { allTrainingRuns } from '@/features/dashboard/selectors/training-runs'
 import { ComputeStep } from './compute-step'
 import { ConfigureStep } from './configure-step'
 import { DatasetStep } from './dataset-step'
 import { ModelStep } from './model-step'
 import { ReviewStep } from './review-step'
-import { SummaryRow } from './summary-row'
 import { steps } from './types'
-import type { ConfigureMode } from './types'
+
+const defaultSplit: TrainingSplit = { train: 80, validation: 10, test: 10 }
 
 export function TrainingWizard({
   project,
-  organizationName,
   datasets,
   initialDatasetId,
   clone,
 }: {
   project: Project
-  organizationName: string
   datasets: Dataset[]
   initialDatasetId?: string
   clone?: TrainingRun
@@ -47,17 +46,15 @@ export function TrainingWizard({
   const { preferences, updatePreferences } = useDashboardLayout()
   const architectures = architecturesFor(project)
   const [step, setStep] = React.useState(0)
-  const [maxStepReached, setMaxStepReached] = React.useState(0)
-  const goToStep = (index: number) => {
-    setStep(index)
-    setMaxStepReached((current) => Math.max(current, index))
-  }
   const [datasetId, setDatasetId] = React.useState(
     clone
       ? clone.datasetId
       : (datasets.find((item) => item.id === initialDatasetId)?.id ??
           datasets.at(0)?.id ??
           ''),
+  )
+  const [split, setSplit] = React.useState<TrainingSplit>(
+    clone?.split ?? defaultSplit,
   )
   const initialArchitecture =
     architectures.find((item) => item.name === clone?.architecture) ??
@@ -67,25 +64,17 @@ export function TrainingWizard({
   )
   const [epochs, setEpochs] = React.useState(clone?.epochs ?? 30)
   const [batchSize, setBatchSize] = React.useState(clone?.batchSize ?? 32)
-  const [learningRate, setLearningRate] = React.useState<
-    'auto' | 'low' | 'high'
-  >(clone?.learningRate ?? 'auto')
+  const [learningRate, setLearningRate] = React.useState(
+    clone?.learningRate ?? 1e-3,
+  )
+  const [scheduler, setScheduler] = React.useState<TrainingScheduler>(
+    clone?.scheduler ?? 'cosine',
+  )
   const [selectedAugmentations, setSelectedAugmentations] = React.useState<
     string[]
-  >(clone?.augmentations ?? ['Random flip', 'Random crop', 'Rotation ±15°'])
+  >(clone?.augmentations ?? ['Random flip'])
   const [earlyStopping, setEarlyStopping] = React.useState(
     clone?.earlyStopping ?? true,
-  )
-  const [mode, setMode] = React.useState<ConfigureMode>('simple')
-  const [optimizer, setOptimizer] = React.useState(clone?.optimizer ?? 'AdamW')
-  const [weightDecay, setWeightDecay] = React.useState(
-    clone?.weightDecay ?? '0.01',
-  )
-  const [warmupSteps, setWarmupSteps] = React.useState(
-    clone?.warmupSteps ?? 500,
-  )
-  const [mixedPrecision, setMixedPrecision] = React.useState(
-    clone?.mixedPrecision ?? 'bf16',
   )
   const [instanceId, setInstanceId] = React.useState(
     clone?.instanceId ?? 'a10g-1',
@@ -101,21 +90,15 @@ export function TrainingWizard({
   const estimate = dataset
     ? estimateTraining(dataset, architecture, epochs, batchSize, compute, spot)
     : { hours: 0, cost: 0 }
-  const yaml = trainingYaml({
-    datasetName: dataset?.name ?? '',
-    architecture: architecture.id,
-    epochs,
-    batchSize,
-    learningRate,
-    augmentations: selectedAugmentations,
-    earlyStopping,
-    optimizer,
-    weightDecay,
-    warmupSteps,
-    mixedPrecision,
-    instanceId,
-    spot,
-  })
+  const summaryRows = [
+    ['Dataset', dataset?.name ?? '—'],
+    ['Split', `${split.train} / ${split.validation} / ${split.test}`],
+    ['Model', architecture.name],
+    ['Epochs', String(epochs)],
+    ['Learning rate', `${formatLearningRate(learningRate)}, ${scheduler}`],
+    ['Batch size', String(batchSize)],
+    ['Instance', `${compute.name}${spot ? ' (spot)' : ''}`],
+  ] as const
 
   function toggleAugmentation(value: string) {
     setSelectedAugmentations((current) =>
@@ -129,7 +112,7 @@ export function TrainingWizard({
     if (!dataset || starting) return
     setStarting(true)
     const runId = `run-${crypto.randomUUID().slice(0, 8)}`
-    const projectRunCount = preferences.trainingRuns.filter(
+    const projectRunCount = allTrainingRuns(preferences).filter(
       (run) => run.projectId === project.id,
     ).length
     const runName = `${architecture.id}-${projectRunCount + 1}`
@@ -142,20 +125,20 @@ export function TrainingWizard({
       status: 'Running',
       epochs,
       batchSize,
+      split,
       learningRate,
+      scheduler,
       augmentations: selectedAugmentations,
       earlyStopping,
-      optimizer,
-      weightDecay,
-      warmupSteps,
-      mixedPrecision,
       instanceId: compute.id,
       instanceName: compute.name,
       spot,
       estimatedHours: estimate.hours,
       estimatedCost: estimate.cost,
-      progress: 40,
-      step: 4_820,
+      // Progress and step are derived from `startedAt`; these are the values
+      // a reader sees only if the derived state is unavailable.
+      progress: 0,
+      step: 0,
       totalSteps: 12_000,
       throughput: dataset.modality === 'image' ? '312 img/s' : '312 items/s',
       gpuUtilization: compute.id === 'cpu' ? '0%' : '94%',
@@ -188,21 +171,11 @@ export function TrainingWizard({
   return (
     <main
       id="dashboard-main"
-      className="mx-auto w-full max-w-[1448px] min-w-0 flex-1 p-4 sm:p-6"
+      className="mx-auto w-full max-w-[1180px] min-w-0 flex-1 p-4 sm:p-6 xl:py-10"
     >
-      <Breadcrumb className="mb-5">
-        <BreadcrumbList>
-          <BreadcrumbItem>{organizationName}</BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>{project.name}</BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>New training run</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <RouteBreadcrumbs className="mb-4" />
 
-      <div className="mb-6">
+      <div className="mb-7">
         <h1 className="text-2xl font-semibold tracking-tight">
           Create training
         </h1>
@@ -211,38 +184,44 @@ export function TrainingWizard({
         </p>
       </div>
 
-      <div className="grid min-w-0 items-start gap-6 lg:grid-cols-4">
-        <Card size="sm" className="gap-0">
-          <CardContent className="grid">
-            {steps.map((label, index) => (
-              <Button
-                key={label}
-                type="button"
-                variant="ghost"
-                disabled={index > maxStepReached}
-                onClick={() => setStep(index)}
-                aria-label={label}
-                aria-current={step === index ? 'step' : undefined}
-                className={`h-auto w-full justify-start gap-3 rounded-md px-3 py-2.5 text-left text-sm font-normal transition-colors disabled:pointer-events-none disabled:opacity-50 ${step === index ? 'bg-indigo-50 font-medium text-indigo-700 hover:bg-indigo-50' : 'text-slate-600 hover:bg-slate-50'}`}
+      <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[220px_minmax(0,1fr)_300px]">
+        <nav aria-label="Training steps" className="grid gap-0.5">
+          {steps.map((label, index) => (
+            <Button
+              key={label}
+              type="button"
+              variant="ghost"
+              disabled={index > step}
+              onClick={() => setStep(index)}
+              aria-label={label}
+              aria-current={step === index ? 'step' : undefined}
+              className="h-auto w-full justify-start gap-2.5 rounded-lg px-3 py-2.5 text-left font-normal text-muted-foreground disabled:opacity-100 aria-[current=step]:bg-indigo-50 aria-[current=step]:font-semibold aria-[current=step]:text-indigo-700"
+            >
+              <span
+                className={`flex size-5.5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
+                  index < step
+                    ? 'bg-emerald-600 text-white'
+                    : index === step
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
+                }`}
               >
-                <span
-                  className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${index < step ? 'bg-emerald-500 text-white' : index === step ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500'}`}
-                >
-                  {index < step ? <Check className="size-3.5" /> : index + 1}
-                </span>
-                {label}
-              </Button>
-            ))}
-          </CardContent>
-        </Card>
+                {index < step ? <Check className="size-3" /> : index + 1}
+              </span>
+              {label}
+            </Button>
+          ))}
+        </nav>
 
-        <Card size="flush" className="min-w-0 lg:col-span-2">
+        <Card size="flush" className="min-w-0">
           <CardContent className="p-6">
             {step === 0 && (
               <DatasetStep
                 datasets={datasets}
                 datasetId={datasetId}
                 setDatasetId={setDatasetId}
+                split={split}
+                setSplit={setSplit}
                 projectId={project.id}
               />
             )}
@@ -255,27 +234,18 @@ export function TrainingWizard({
             )}
             {step === 2 && (
               <ConfigureStep
-                mode={mode}
-                setMode={setMode}
                 epochs={epochs}
                 setEpochs={setEpochs}
                 batchSize={batchSize}
                 setBatchSize={setBatchSize}
                 learningRate={learningRate}
                 setLearningRate={setLearningRate}
+                scheduler={scheduler}
+                setScheduler={setScheduler}
                 selectedAugmentations={selectedAugmentations}
                 toggleAugmentation={toggleAugmentation}
                 earlyStopping={earlyStopping}
                 setEarlyStopping={setEarlyStopping}
-                optimizer={optimizer}
-                setOptimizer={setOptimizer}
-                weightDecay={weightDecay}
-                setWeightDecay={setWeightDecay}
-                warmupSteps={warmupSteps}
-                setWarmupSteps={setWarmupSteps}
-                mixedPrecision={mixedPrecision}
-                setMixedPrecision={setMixedPrecision}
-                yaml={yaml}
               />
             )}
             {step === 3 && (
@@ -289,35 +259,30 @@ export function TrainingWizard({
             {step === 4 && (
               <ReviewStep
                 datasetName={dataset?.name ?? 'Not selected'}
+                split={split}
                 architectureName={architecture.name}
                 epochs={epochs}
                 batchSize={batchSize}
                 learningRate={learningRate}
+                scheduler={scheduler}
                 earlyStopping={earlyStopping}
                 computeName={compute.name}
                 spot={spot}
-                onEditStep={goToStep}
+                onEditStep={setStep}
               />
             )}
 
             <div className="mt-8 flex justify-between border-t pt-5">
               {step === 0 ? (
-                <Button variant="outline" asChild>
-                  <Link
-                    to="/projects/$projectId/datasets"
-                    params={{ projectId: project.id }}
-                  >
-                    Cancel
-                  </Link>
-                </Button>
+                <span />
               ) : (
-                <Button variant="outline" onClick={() => goToStep(step - 1)}>
+                <Button variant="outline" onClick={() => setStep(step - 1)}>
                   <ChevronLeft />
                   Back
                 </Button>
               )}
               {step < steps.length - 1 ? (
-                <Button disabled={!dataset} onClick={() => goToStep(step + 1)}>
+                <Button disabled={!dataset} onClick={() => setStep(step + 1)}>
                   Continue
                   <ChevronRight />
                 </Button>
@@ -331,21 +296,21 @@ export function TrainingWizard({
           </CardContent>
         </Card>
 
-        <aside className="grid gap-4">
+        <aside className="grid min-w-0 gap-4">
           <Card size="lg">
             <CardHeader>
               <CardTitle>Run summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <SummaryRow label="Dataset" value={dataset?.name ?? '—'} />
-              <SummaryRow label="Split" value="80 / 10 / 10" />
-              <SummaryRow label="Model" value={architecture.name} />
-              <SummaryRow label="Epochs" value={String(epochs)} />
-              <SummaryRow label="Batch size" value={String(batchSize)} />
-              <SummaryRow
-                label="Instance"
-                value={`${compute.name}${spot ? ' (spot)' : ''}`}
-              />
+              {summaryRows.map(([label, value]) => (
+                <div
+                  key={label}
+                  className="flex justify-between gap-3 py-1.5 text-sm"
+                >
+                  <span className="text-muted-foreground">{label}</span>
+                  <span className="text-right font-medium">{value}</span>
+                </div>
+              ))}
             </CardContent>
           </Card>
           <Card size="lg">
@@ -361,11 +326,11 @@ export function TrainingWizard({
                   ≈ {formatDuration(estimate.hours)}
                 </span>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Billed per second. You are charged only for actual runtime.
                 {spot ? ' Spot pricing applied.' : ''}
               </p>
-              <div className="mt-4 rounded-md bg-emerald-50 p-3 text-xs text-emerald-800">
+              <div className="mt-3 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800">
                 Expected metric {architecture.accuracy} based on similar runs.
               </div>
             </CardContent>

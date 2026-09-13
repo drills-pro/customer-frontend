@@ -40,7 +40,7 @@ export function ProjectsTable({ projects }: { projects: Array<Project> }) {
           <TableRow key={project.id}>
             <TableCell>
               <Item className="flex-nowrap border-0 p-0">
-                <ItemMedia className="self-center translate-y-0!">
+                <ItemMedia className="group-has-data-[slot=item-description]/item:translate-y-0 group-has-data-[slot=item-description]/item:self-center">
                   <ProjectMark project={project} />
                 </ItemMedia>
                 <ItemContent className="min-w-0">

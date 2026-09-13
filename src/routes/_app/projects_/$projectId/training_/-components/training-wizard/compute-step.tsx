@@ -3,7 +3,6 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import type { ComputeOption } from '@/features/dashboard/training'
 import { computeOptions } from '@/features/dashboard/training'
-import { StepHeading } from './step-heading'
 
 export function ComputeStep({
   instanceId,
@@ -18,11 +17,13 @@ export function ComputeStep({
 }) {
   return (
     <section>
-      <StepHeading
-        title="Choose compute"
-        description="Larger instances finish faster but cost more per hour."
-      />
-      <div className="mt-5 grid gap-2.5">
+      <div>
+        <h2 className="text-lg font-semibold tracking-tight">Choose compute</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Larger instances finish faster but cost more per hour.
+        </p>
+      </div>
+      <div className="mt-6 grid gap-2.5">
         {computeOptions.map((item: ComputeOption) => (
           <Button
             key={item.id}
@@ -30,27 +31,28 @@ export function ComputeStep({
             variant="option"
             onClick={() => setInstanceId(item.id)}
             aria-pressed={instanceId === item.id}
-            className="w-full justify-between gap-4"
+            className="w-full justify-between gap-4 rounded-xl text-left"
           >
             <span>
-              <span className="block text-sm font-medium">{item.name}</span>
-              <span className="text-xs text-slate-500">
+              <span className="block text-sm font-semibold">{item.name}</span>
+              <span className="text-xs text-muted-foreground">
                 {item.specification}
               </span>
             </span>
             <span className="flex items-center gap-3 text-sm font-semibold">
-              ${item.hourlyRate.toFixed(2)}/hr{' '}
-              {instanceId === item.id && (
-                <span className="text-indigo-600">●</span>
-              )}
+              ${item.hourlyRate.toFixed(2)}/hr
+              <span
+                aria-hidden="true"
+                className="size-2 rounded-full bg-primary opacity-0 group-aria-pressed/button:opacity-100"
+              />
             </span>
           </Button>
         ))}
       </div>
-      <Label className="mt-4 flex items-center justify-between gap-4 rounded-lg p-3 leading-normal font-normal ring-1 ring-slate-200">
+      <Label className="mt-5 flex items-center justify-between gap-4 border-t pt-5 leading-normal font-normal">
         <span>
-          <span className="block text-sm font-medium">Use spot instance</span>
-          <span className="block text-xs text-slate-500">
+          <span className="block text-sm font-semibold">Use spot instance</span>
+          <span className="block text-xs text-muted-foreground">
             About 60% cheaper; may be interrupted and resumed.
           </span>
         </span>

@@ -15,13 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
+import { RouteBreadcrumbs } from '@/components/breadcrumbs'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -39,11 +33,16 @@ import {
 } from '@/features/dashboard/data'
 import { formatDuration, trainingLog } from '@/features/dashboard/training'
 import {
+  liveRun,
+  resolveTrainingRun,
+  runProgressAt,
+} from '@/features/dashboard/selectors/training-runs'
+import { useNow } from '@/hooks/use-now'
+import {
   ConfigCard,
   LogsCard,
   MetricCard,
   RunNotFound,
-  RunStat,
   StatusBadge,
 } from './-components/training-run-detail'
 
@@ -52,6 +51,20 @@ export const Route = createFileRoute(
 )({
   component: TrainingRunRoute,
   notFoundComponent: RunNotFoundRoute,
+  staticData: {
+    breadcrumb: ({ params, preferences, parent: { project } }) => {
+      if (!project) return null
+      const run = resolveTrainingRun(preferences, project.id, params.runId)
+      if (!run) return null
+      return {
+        items: [
+          { id: 'training', label: 'Training' },
+          { id: run.id, label: run.name },
+        ],
+        data: { run },
+      }
+    },
+  },
 })
 
 function TrainingRunRoute() {
@@ -62,12 +75,14 @@ function TrainingRunRoute() {
   const [autoscroll, setAutoscroll] = React.useState(true)
   const logRef = React.useRef<HTMLPreElement>(null)
 
+  const now = useNow()
   const resolved = resolveProject(projectId, preferences)
-  const run = resolved
-    ? preferences.trainingRuns.find(
-        (item) => item.id === runId && item.projectId === resolved.project.id,
-      )
+  const stored = resolved
+    ? resolveTrainingRun(preferences, resolved.project.id, runId)
     : undefined
+  // Progress, step, and status come from elapsed time, not the frozen values
+  // written when the run was created.
+  const run = stored ? liveRun(stored, now) : undefined
   const dataset = resolved
     ? [...preferences.datasets, ...seededDatasets].find(
         (item) =>
@@ -89,13 +104,33 @@ function TrainingRunRoute() {
     return <main id="dashboard-main" className="min-h-96 flex-1" />
   }
   if (!resolved || !run) return <RunNotFound projectId={projectId} />
-  const { project, organization } = resolved
+  const { project } = resolved
+
+  const live = runProgressAt(run, now)
+  const runStats: Array<[string, string]> = [
+    ['Epoch', `${live.epoch} / ${run.epochs}`],
+    [
+      'Step',
+      `${run.step.toLocaleString()} / ${run.totalSteps.toLocaleString()}`,
+    ],
+    ['Throughput', run.status === 'Running' ? run.throughput : '—'],
+    ['GPU util', run.status === 'Running' ? run.gpuUtilization : '0%'],
+    ['GPU memory', run.status === 'Running' ? run.gpuMemory : '0 GB'],
+  ]
 
   const stopRun = () => {
+    // Freeze the run at its derived progress. A seeded run has no persisted
+    // record yet, so stopping it writes one as a user override of the fixture.
+    const stoppedRun = { ...run, status: 'Stopped' as const }
+    const isPersisted = preferences.trainingRuns.some(
+      (item) => item.id === run.id,
+    )
     updatePreferences({
-      trainingRuns: preferences.trainingRuns.map((item) =>
-        item.id === run.id ? { ...item, status: 'Stopped' as const } : item,
-      ),
+      trainingRuns: isPersisted
+        ? preferences.trainingRuns.map((item) =>
+            item.id === run.id ? stoppedRun : item,
+          )
+        : [stoppedRun, ...preferences.trainingRuns],
       uploads: [
         {
           id: `training-stopped-${run.id}`,
@@ -117,19 +152,7 @@ function TrainingRunRoute() {
       id="dashboard-main"
       className="mx-auto w-full max-w-[1448px] min-w-0 flex-1 p-4 sm:p-6"
     >
-      <Breadcrumb className="mb-3">
-        <BreadcrumbList>
-          <BreadcrumbItem>{organization.name}</BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>{project.name}</BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>Training</BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{run.name}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <RouteBreadcrumbs className="mb-3" />
 
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -187,26 +210,12 @@ function TrainingRunRoute() {
 
       <Card size="flush">
         <CardContent className="grid gap-5 p-5 sm:grid-cols-2 lg:grid-cols-5">
-          <RunStat
-            label="Epoch"
-            value={`${Math.floor((run.progress / 100) * run.epochs)} / ${run.epochs}`}
-          />
-          <RunStat
-            label="Step"
-            value={`${run.step.toLocaleString()} / ${run.totalSteps.toLocaleString()}`}
-          />
-          <RunStat
-            label="Throughput"
-            value={run.status === 'Running' ? run.throughput : '—'}
-          />
-          <RunStat
-            label="GPU util"
-            value={run.status === 'Running' ? run.gpuUtilization : '0%'}
-          />
-          <RunStat
-            label="GPU memory"
-            value={run.status === 'Running' ? run.gpuMemory : '0 GB'}
-          />
+          {runStats.map(([label, value]) => (
+            <div key={label}>
+              <p className="text-xs text-muted-foreground">{label}</p>
+              <p className="mt-1 text-lg font-semibold">{value}</p>
+            </div>
+          ))}
         </CardContent>
         <Progress
           value={run.progress}

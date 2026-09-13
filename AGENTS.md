@@ -18,11 +18,11 @@ Before editing files for a substantial task:
 editing, not after a review comment.** They encode bugs this codebase has
 already shipped, with the symptom and the detection command for each.
 
-| Rule | Read it when |
-|---|---|
-| [`css-cascade.md`](.agent/rules/css-cascade.md) | Touching any `className`, any `cva` block, or `src/styles.css` |
-| [`shadcn-component.md`](.agent/rules/shadcn-component.md) | Building or restyling any UI element |
-| [`ui-verification.md`](.agent/rules/ui-verification.md) | Before reporting a styling or component change as done |
+| Rule                                                      | Read it when                                                   |
+| --------------------------------------------------------- | -------------------------------------------------------------- |
+| [`css-cascade.md`](.agent/rules/css-cascade.md)           | Touching any `className`, any `cva` block, or `src/styles.css` |
+| [`shadcn-component.md`](.agent/rules/shadcn-component.md) | Building or restyling any UI element                           |
+| [`ui-verification.md`](.agent/rules/ui-verification.md)   | Before reporting a styling or component change as done         |
 
 ### The short version
 

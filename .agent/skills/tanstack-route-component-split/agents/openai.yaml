@@ -1,4 +1,4 @@
 interface:
-  display_name: "TanStack Route Component Split"
-  short_description: "Split large routes into safe local components"
-  default_prompt: "Use $tanstack-route-component-split to extract this large TanStack route into maintainable route-local components."
+  display_name: 'TanStack Route Component Split'
+  short_description: 'Split large routes into safe local components'
+  default_prompt: 'Use $tanstack-route-component-split to extract this large TanStack route into maintainable route-local components.'

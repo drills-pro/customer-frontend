@@ -1,5 +1,8 @@
+# Build scripts are opt-in. `esbuild` and `lightningcss` ship prebuilt binaries
+# and need their install scripts to run; everything else stays denied.
 allowBuilds:
   '@google/genai': false
   esbuild: true
+  lightningcss: true
   protobufjs: false
   unrs-resolver: false

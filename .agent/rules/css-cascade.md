@@ -16,11 +16,17 @@ in the app, and no amount of class-writing can win.
 
 ```css
 /* WRONG — unlayered, beats every utility */
-input { border-radius: 6px; background: white; }
+input {
+  border-radius: 6px;
+  background: white;
+}
 
 /* RIGHT */
 @layer base {
-  input { border-radius: 6px; background: white; }
+  input {
+    border-radius: 6px;
+    background: white;
+  }
 }
 ```
 
@@ -38,8 +44,8 @@ closes.
 all**:
 
 ```js
-cn('ring-2! ring-0')  // => "ring-2! ring-0"   both kept, the `!` always wins
-cn('ring-2 ring-0')   // => "ring-0"           merged correctly
+cn('ring-2! ring-0') // => "ring-2! ring-0"   both kept, the `!` always wins
+cn('ring-2 ring-0') // => "ring-0"           merged correctly
 ```
 
 So a `!` permanently overrides the design system for that element, survives every
@@ -57,8 +63,8 @@ Enforced for focus styling by `scripts/check-focus-styles.sh` (`pnpm lint`).
 
 ## Rule 3 — Two conflict systems run at once, and neither shows in the className
 
-1. **tailwind-merge** resolves classes in the *same* utility group under the
-   *same* modifiers — last one wins, by string order.
+1. **tailwind-merge** resolves classes in the _same_ utility group under the
+   _same_ modifiers — last one wins, by string order.
 2. **CSS specificity** resolves everything else — and a `data-*`/`group-*`
    variant is a whole extra selector.
 
@@ -67,7 +73,7 @@ data-[size=default]:h-8    ->  .cls[data-size=default]     (0,2,0)
 h-9                        ->  .h-9                        (0,1,0)   LOSES
 ```
 
-These are *different* groups to tailwind-merge (different modifiers), so it
+These are _different_ groups to tailwind-merge (different modifiers), so it
 keeps both — then CSS picks the `data-` one. This is real: four call sites wrote
 `<SelectTrigger className="h-9">` and rendered at 32px for months.
 
@@ -85,7 +91,7 @@ declaration overridable:
   still override with a utility. Use this by default.
 - A **`data-[size=*]` class** is (0,2,0) and beats caller utilities. Use it only
   when the primitive already does (`SelectTrigger`), for consistency.
-- A **CSS custom property** (`[--card-inset:--spacing(5)]`) keeps the *consuming*
+- A **CSS custom property** (`[--card-inset:--spacing(5)]`) keeps the _consuming_
   declaration at (0,1,0) while still varying by size. Use this when the base has
   `has-[...]` escape hatches that must keep winning — a `data-[size]:h-9` at
   (0,2,0) would beat `has-[>textarea]:h-auto` at (0,1,1) and break every
@@ -112,18 +118,20 @@ visible at once; a `ring`-based selection indicator would vanish on focus.
 
 `cva` concatenates: **base → variants (in key order) → compoundVariants → class**.
 
-A reset placed in a `variant` string is emitted *before* the `size` string, so
+A reset placed in a `variant` string is emitted _before_ the `size` string, so
 `size`'s padding wins:
 
 ```tsx
 // WRONG — size's px-2.5 survives; tailwind-merge does not drop p-0 for px-2.5
-variant: { link: 'p-0 h-auto text-primary ...' }
+variant: {
+  link: 'p-0 h-auto text-primary ...'
+}
 
 // RIGHT — emitted after size, so p-0 removes px-2.5 and h-auto removes h-8
 compoundVariants: [{ variant: 'link', class: 'h-auto border-none p-0' }]
 ```
 
-Any variant that needs to *cancel* a size (`link`, `option`) belongs in
+Any variant that needs to _cancel_ a size (`link`, `option`) belongs in
 `compoundVariants`.
 
 ## Rule 6 — No `dark:` variants
@@ -140,7 +148,7 @@ Delete `dark:` classes when you touch a component. Do not add new ones.
 
 `ItemGroup` carries **unscoped** `has-data-[size=sm]:gap-2.5` and
 `has-data-[size=xs]:gap-2` (`src/components/ui/item.tsx:15`), so a `data-size`
-on *any* descendant retunes the group's gap.
+on _any_ descendant retunes the group's gap.
 
 When adding a size prop, prefer a plain class map over stamping `data-size`
 (see Rule 3). If a `data-size` is genuinely needed, check for unscoped

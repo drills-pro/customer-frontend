@@ -3,36 +3,30 @@ import { EllipsisVertical, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
+import { RouteBreadcrumbs } from '@/components/breadcrumbs'
 import { Button } from '@/components/ui/button'
 import { useProjectDetail } from '@/features/dashboard/context'
+import {
+  projectSectionLink,
+  projectSections,
+} from '@/features/dashboard/navigation'
 import { Collaborators, ProjectMark } from '@/components/dashboard/project-ui'
 
 export const Route = createFileRoute('/_app/projects_/$projectId/_nav')({
   component: ProjectNavLayout,
 })
 
-const sections = [
-  'Overview',
-  'Datasets',
-  'Training',
-  'Models',
-  'Deployments',
-  'Settings',
-] as const
+// The line-tab treatment from `tabsListVariants`, applied to router links and
+// placeholder buttons. No `!important`: nothing else styles these elements.
+const sectionTabClass =
+  'shrink-0 rounded-none border-x-0 border-t-0 border-b-2 border-transparent bg-transparent px-1 py-3 text-sm font-medium text-slate-500 shadow-none transition-colors outline-hidden hover:bg-transparent hover:text-slate-800 focus-visible:ring-2 focus-visible:ring-ring data-[active]:border-b-indigo-600 data-[active]:text-indigo-600'
 
 function unavailable(label: string) {
   toast.info(`${label} is not available in this dashboard demo.`)
 }
 
 function ProjectNavLayout() {
-  const { project, details, organization } = useProjectDetail()
+  const { project, details } = useProjectDetail()
 
   async function shareProject() {
     try {
@@ -48,15 +42,7 @@ function ProjectNavLayout() {
       id="dashboard-main"
       className="mx-auto w-full max-w-[1448px] flex-1 p-4 sm:p-6"
     >
-      <Breadcrumb className="mb-3">
-        <BreadcrumbList>
-          <BreadcrumbItem>{organization.name}</BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{project.name}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <RouteBreadcrumbs className="mb-3" />
 
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
@@ -111,32 +97,29 @@ function ProjectNavLayout() {
         aria-label="Project sections"
         className="flex items-center gap-6 overflow-x-auto whitespace-nowrap border-b border-slate-200"
       >
-        {sections.map((section) =>
-          section === 'Overview' || section === 'Datasets' ? (
+        {projectSections.map((section) => {
+          const to = projectSectionLink(section)
+          return to ? (
             <Link
               key={section}
-              to={
-                section === 'Overview'
-                  ? '/projects/$projectId/overview'
-                  : '/projects/$projectId/datasets'
-              }
+              to={to}
               params={{ projectId: project.id }}
               activeProps={{ 'data-active': 'true' }}
-              className="shrink-0 rounded-none border-x-0 border-t-0 border-b-2 !border-b-transparent bg-transparent px-1 py-3 font-medium !text-muted-foreground shadow-none hover:!text-indigo-600 data-[active]:!border-b-indigo-600 data-[active]:!text-indigo-600"
+              className={sectionTabClass}
             >
               {section}
             </Link>
           ) : (
-            <Button
+            <button
               key={section}
-              variant="ghost"
-              className="h-auto shrink-0 rounded-none border-x-0 border-t-0 border-b-2 !border-b-transparent bg-transparent px-1 py-3 font-medium !text-muted-foreground shadow-none hover:!bg-transparent hover:!text-indigo-600"
+              type="button"
+              className={sectionTabClass}
               onClick={() => unavailable(section)}
             >
               {section}
-            </Button>
-          ),
-        )}
+            </button>
+          )
+        })}
       </nav>
 
       <Outlet />

@@ -11,6 +11,8 @@ export type DashboardLayoutContextValue = {
   preferences: DashboardPreferences
   updatePreferences: (partial: Partial<DashboardPreferences>) => void
   hydrated: boolean
+  /** False when browser storage is blocked or full; the session stays usable. */
+  persistenceAvailable: boolean
   org: (typeof organizations)[number]
 }
 

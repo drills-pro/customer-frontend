@@ -4,6 +4,8 @@ const tone = {
   Live: 'success',
   Paused: 'warning',
   Running: 'info',
+  Completed: 'success',
+  Stopped: 'neutral',
 } as const
 
 export function DashboardStatusBadge({

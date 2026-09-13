@@ -1,8 +1,14 @@
-import { Brain } from 'lucide-react'
+import { Network } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from '@/components/ui/item'
 import type { ArchitectureOption } from '@/features/dashboard/training'
-import { StepHeading } from './step-heading'
 
 export function ModelStep({
   architectures,
@@ -13,13 +19,47 @@ export function ModelStep({
   architectureId: string
   setArchitectureId: (id: string) => void
 }) {
+  const selected =
+    architectures.find((item) => item.id === architectureId) ?? architectures[0]
+  const metadata = selected.meta.split(' · ')
+
   return (
     <section>
-      <StepHeading
-        title="Choose a model"
-        description="Pick an architecture to fine-tune, or start from scratch."
-      />
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+      <div>
+        <h2 className="text-lg font-semibold tracking-tight">Choose a model</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Pick an architecture to fine-tune, or start from scratch.
+        </p>
+      </div>
+      <Item
+        variant="outline"
+        className="mt-6 flex-nowrap gap-4 rounded-xl border-primary bg-indigo-50/70 p-5"
+      >
+        <ItemMedia className="group-has-data-[slot=item-description]/item:self-center group-has-data-[slot=item-description]/item:translate-y-0">
+          <span className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <Network className="size-6" />
+          </span>
+        </ItemMedia>
+        <ItemContent className="min-w-0">
+          <ItemTitle className="text-base font-semibold">
+            {selected.name}
+          </ItemTitle>
+          <ItemDescription className="leading-relaxed">
+            {selected.description}
+          </ItemDescription>
+          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-indigo-700">
+            {metadata.map((value, index) => (
+              <span key={value} className="flex items-center gap-3">
+                {index > 0 && (
+                  <span className="size-1 rounded-full bg-current" />
+                )}
+                {value}
+              </span>
+            ))}
+          </div>
+        </ItemContent>
+      </Item>
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {architectures.map((item) => (
           <Button
             key={item.id}
@@ -27,19 +67,17 @@ export function ModelStep({
             variant="option"
             onClick={() => setArchitectureId(item.id)}
             aria-pressed={architectureId === item.id}
-            className="flex-col items-stretch justify-start"
+            className="min-w-0 flex-col justify-start gap-2.5 rounded-xl py-5 text-center aria-pressed:[&_[data-model-icon]]:bg-primary aria-pressed:[&_[data-model-icon]]:text-primary-foreground"
           >
-            <div className="flex items-start justify-between">
-              <Brain className="size-5 text-indigo-600" />
-              {architectureId === item.id && (
-                <span className="text-indigo-600">●</span>
-              )}
-            </div>
-            <p className="mt-2 text-sm font-medium">{item.name}</p>
-            <p className="text-xs text-slate-500">{item.description}</p>
-            <p className="mt-2 text-[11px] font-medium text-slate-400">
-              {item.meta}
-            </p>
+            <span
+              data-model-icon
+              className="flex size-10 items-center justify-center rounded-lg bg-indigo-50 text-primary"
+            >
+              <Network className="size-5" />
+            </span>
+            <span className="max-w-full whitespace-normal text-sm font-semibold">
+              {item.name}
+            </span>
           </Button>
         ))}
       </div>

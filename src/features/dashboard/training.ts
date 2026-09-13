@@ -396,46 +396,12 @@ export function formatDuration(hours: number) {
     : `${minutes}m`
 }
 
-export function trainingYaml(values: {
-  datasetName: string
-  architecture: string
-  epochs: number
-  batchSize: number
-  learningRate: string
-  augmentations: string[]
-  earlyStopping: boolean
-  optimizer: string
-  weightDecay: string
-  warmupSteps: number
-  mixedPrecision: string
-  instanceId: string
-  spot: boolean
-}) {
-  return `dataset: ${values.datasetName}
-model: ${values.architecture}
-epochs: ${values.epochs}
-batch_size: ${values.batchSize}
-learning_rate: ${values.learningRate}
-augmentation:
-${values.augmentations.map((item) => `  - ${item}`).join('\n') || '  []'}
-early_stopping:
-  enabled: ${values.earlyStopping}
-  patience: 5
-optimizer: ${values.optimizer}
-weight_decay: ${values.weightDecay}
-warmup_steps: ${values.warmupSteps}
-mixed_precision: ${values.mixedPrecision}
-compute:
-  instance: ${values.instanceId}
-  spot: ${values.spot}`
-}
-
 export function trainingLog(run: TrainingRun, dataset?: Dataset) {
   const epoch = Math.floor((run.progress / 100) * run.epochs)
   return [
     `INFO  Loading dataset ${dataset?.name ?? run.datasetId} (${dataset?.items ?? 0} items)`,
     `INFO  Building ${run.architecture} with pretrained weights`,
-    `INFO  Optimizer=${run.optimizer} lr=${run.learningRate} scheduler=cosine`,
+    `INFO  lr=${formatLearningRate(run.learningRate)} scheduler=${run.scheduler}`,
     ...Array.from({ length: Math.max(epoch, 1) }, (_, index) => {
       const current = index + 1
       const loss = (3.812 / current).toFixed(3)
@@ -446,4 +412,8 @@ export function trainingLog(run: TrainingRun, dataset?: Dataset) {
       ? 'WARN  Run stopped by Alex Rivera.'
       : 'INFO  Checkpoint saved. Waiting for next training step…',
   ]
+}
+
+export function formatLearningRate(value: number) {
+  return value.toExponential(1).replace('.0e', 'e')
 }

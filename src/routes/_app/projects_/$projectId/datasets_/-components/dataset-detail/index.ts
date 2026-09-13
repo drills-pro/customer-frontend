@@ -1,5 +1,13 @@
 export { tabs, type DatasetTab } from './types'
-export { downloadJson, itemNoun, fallbackDetail } from './helpers'
+export {
+  downloadJson,
+  itemNoun,
+  fallbackDetail,
+  getClassHistogram,
+  getClassStats,
+  getQualityScore,
+  getQualityStatus,
+} from './helpers'
 export { DistributionCard } from './distribution-card'
 export { HealthCard } from './health-card'
 export { ImagePreview } from './image-preview'

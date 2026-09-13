@@ -10,6 +10,24 @@ import { ProjectNotFound } from './-components/project-overview'
 
 export const Route = createFileRoute('/_app/projects_/$projectId')({
   component: ProjectDetailRoute,
+  staticData: {
+    breadcrumb: ({ params, preferences }) => {
+      const resolved = resolveProject(params.projectId, preferences)
+      if (!resolved) return null
+      const { project, organization } = resolved
+      const overview = {
+        to: '/projects/$projectId/overview',
+        params: { projectId: project.id },
+      }
+      return {
+        items: [
+          { id: organization.id, label: organization.name, link: overview },
+          { id: project.id, label: project.name, link: overview },
+        ],
+        data: { organization, project },
+      }
+    },
+  },
 })
 
 function ProjectDetailRoute() {

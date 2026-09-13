@@ -14,7 +14,6 @@ import {
 import type { Project } from '@/features/dashboard/data'
 import { Collaborators, ProjectMark } from '@/components/dashboard/project-ui'
 
-import { ProjectCounts } from './project-counts'
 import { ProjectMenu } from './project-menu'
 
 export function ProjectCard({ project }: { project: Project }) {
@@ -48,7 +47,22 @@ export function ProjectCard({ project }: { project: Project }) {
       <CardContent className="pt-3">
         <p className="min-h-10 text-sm text-slate-600">{project.description}</p>
         <div className="mt-4">
-          <ProjectCounts project={project} />
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            {(
+              [
+                [project.datasets, 'datasets'],
+                [project.models, 'models'],
+                [project.deployed, 'deployed'],
+              ] as const
+            ).map(([count, noun]) => (
+              <span key={noun}>
+                <strong className="font-semibold text-foreground">
+                  {count}
+                </strong>{' '}
+                {noun}
+              </span>
+            ))}
+          </div>
         </div>
       </CardContent>
       <CardFooter className="mt-4 flex items-center justify-between border-t bg-white pt-3 pb-5">

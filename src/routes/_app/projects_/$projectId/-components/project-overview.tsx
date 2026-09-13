@@ -11,11 +11,16 @@ import type {
   UsagePeriod,
 } from '@/features/dashboard/data'
 
+/** The unit of a single bar within the selected period, not of the period. */
 export const usagePeriodLabels: Record<UsagePeriod, string> = {
-  hour: 'hours',
-  day: 'days',
-  week: 'weeks',
-  month: 'months',
+  day: 'hours',
+  week: 'days',
+  month: 'days',
+}
+
+/** e.g. "last 24 hours" — the count comes from the series so copy can't drift. */
+export function usageRangeLabel(resource: ResourceUsage, period: UsagePeriod) {
+  return `last ${resource.series[period].length} ${usagePeriodLabels[period]}`
 }
 
 export function unavailable(label: string) {

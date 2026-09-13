@@ -61,7 +61,7 @@ Tenants cannot change `danger`, `focus`, `info` or the `class-*` label colors.
 
 ## DRILLS
 
-A responsive, interactive mock ML workspace built with React, TanStack Start, and Tailwind CSS. The UI follows the supplied DRILLS HTML design.
+A responsive, interactive mock ML workspace built with React, TanStack Start, and Tailwind CSS. The UI follows the supplied DRILLS HTML design. There is no backend: every entity is either seeded fixture data or something you created, saved in `localStorage`.
 
 ### Run locally
 
@@ -72,42 +72,67 @@ pnpm dev
 
 Open the URL printed by Vite (normally `http://localhost:3000`). No backend, credentials, or environment variables are required.
 
-### Demo workflow
+### What you can actually do
 
-1. Create a project. Choose sample data or start with an empty project.
-2. Add a dataset using local files, a simulated S3 bucket path, or sample data. Processing takes about four seconds.
-3. Create a training run through Dataset → Model → Configure → Compute → Review. New runs finish in about 30 seconds and register a model automatically.
-4. Open a model, try a deterministic prediction, and deploy it. New deployments become live in about five seconds.
-5. Pause/resume an endpoint, redeploy, edit scaling, compare or clone runs, and save project settings.
+1. **Create a project** — `/projects/new`. Three steps: basics, task type, and start method (upload, template, or clone). Choosing a template seeds the project with a sample dataset.
+2. **Add a dataset** — from a project's Datasets tab, using local files, a simulated S3 bucket path, or sample data. Processing takes about four seconds.
+3. **Explore a dataset** — preview, statistics, quality findings, and versions, with per-class filtering and downloadable JSON manifests and reports.
+4. **Create a training run** — Dataset → Model → Configure → Compute → Review. A new run finishes in about 30 seconds.
+5. **Watch a run** — progress, step, epoch, and ETA are derived from the run's start time, so they keep advancing and survive a refresh. You can filter its logs, stop it, or clone its configuration into a new run.
 
 The organization selector changes the workspace. Resource URLs include project and resource IDs; direct links restore the correct project and organization.
 
+#### Not implemented
+
+These appear in the navigation but show a "not available in this dashboard demo" toast: All Screens, Models, Deployments, Settings, per-project actions beyond open/clone, model prediction, endpoint scaling, and resetting demo data. Charts, costs, resource usage, logs, and quality findings are illustrative, not computed from real workloads.
+
 ### Mock data and persistence
 
-State is validated and saved to `localStorage` under `drills-demo-v1`. Each browser has its own workspace. Job timestamps persist across refreshes; completed jobs register each model only once. Invalid stored data is replaced with fresh samples. If browser storage is blocked or full, the app remains usable for the current session and displays a notice.
+State is validated and saved to `localStorage` under `drills-dashboard-v1`. Each browser has its own workspace.
 
-**Reset demo data** in the sidebar restores the original workspace after confirmation.
+- Seed data is immutable. Only entities you create — projects, datasets, training runs, activity — are persisted, alongside explicit overrides such as stopping a seeded run.
+- Stored data is migrated and then validated against `zod` schemas (`src/features/dashboard/persistence/`). A record that fails validation is dropped on its own; the rest of the workspace survives. Unparseable storage falls back to the seed workspace.
+- If browser storage is blocked or full, the app stays usable for the current session and shows one non-blocking notice. Nothing persists in that case.
+- Uploaded file contents are not retained — only names and metadata. Downloads provide sample manifests, configurations, and reports, not trained model binaries.
 
-Uploaded file contents are not retained. Only names and metadata are saved; previews, statistics, explanations, costs, resource usage, logs, and predictions are illustrative. Downloads provide sample manifests, configurations, and reports, not trained model binaries. Integration snippets use reserved `.example` endpoints and never run automatically.
-
-Authentication, organization management, billing, personal settings, and dark mode are outside this version's scope.
+Authentication, organization management, billing, personal settings, and dark mode are out of scope. The app ships a light theme only; `pnpm lint` fails on any `dark:` variant.
 
 ### Validation
 
 ```bash
 pnpm typecheck
-pnpm lint
+pnpm lint          # eslint plus the cascade guard (focus styles, !important, dark:)
+pnpm check         # prettier
 pnpm build
-pnpm exec prettier --check src/features/drills src/routes src/styles.css tests playwright.config.ts vite.config.ts package.json README.md
 pnpm exec playwright install chromium  # once, if needed
 pnpm test
 ```
 
-Playwright starts an isolated development server on port 3100. To test an existing server, set `DRILLS_BASE_URL` to its URL. Tests cover the full workflow, persistence, invalid/unavailable storage, organization isolation, filtering, metadata uploads, comparisons, cloning, settings, missing records, and keyboard/mobile navigation. Failure traces and screenshots are written to `test-results/`.
+Playwright starts an isolated development server on port 3100. To test an existing server, set `DRILLS_BASE_URL` to its URL. Tests cover the full workflow, persistence and migration, unavailable storage, organization isolation, filtering, metadata uploads, cloning, missing records, and keyboard/mobile navigation. Failure traces and screenshots are written to `test-results/`.
 
 ### Structure
 
-- `src/features/drills/data.ts`: validated entity schemas, related sample data, and deterministic job transitions.
-- `src/features/drills/store.tsx`: client hydration, persistence, notifications, and simulation scheduling.
-- `src/features/drills/`: shared UI, app shell, and workflow screens.
-- `src/routes/`: native TanStack file routes. Regenerate `src/routeTree.gen.ts` with `pnpm generate-routes`; do not edit it manually.
+```text
+src/
+├── components/
+│   ├── breadcrumbs/       route-aware breadcrumb system
+│   ├── dashboard/         cross-route project presentation helpers
+│   └── ui/                shadcn/Radix primitives and variants
+├── features/dashboard/
+│   ├── domain/            entity types and project factories
+│   ├── data/              immutable seed fixtures
+│   ├── persistence/       zod schemas, migrations, and safe storage access
+│   ├── selectors/         derived views over seed plus persisted state
+│   ├── context.ts         app and project React contexts
+│   ├── navigation.ts      shared project section list
+│   ├── templates.ts       project templates
+│   ├── training.ts        model catalogs and training calculations
+│   └── index.ts           the feature's public surface — import from here
+├── hooks/                 viewport, intersection, and clock hooks
+├── routes/                TanStack file routes with route-local -components/
+├── router.tsx             router construction
+├── routeTree.gen.ts       generated; regenerate with `pnpm generate-routes`
+└── styles.css             layered design-system styles
+```
+
+`src/features/dashboard/data.ts` remains as a compatibility re-export of the modules above.

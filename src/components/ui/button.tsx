@@ -11,13 +11,13 @@ const buttonVariants = cva(
       variant: {
         default: 'bg-primary text-primary-foreground hover:bg-primary/80',
         outline:
-          'border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
+          'border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground',
         secondary:
           'bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground',
         ghost:
-          'hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50',
+          'hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground',
         destructive:
-          'bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:ring-destructive dark:bg-destructive/20 dark:hover:bg-destructive/30',
+          'bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:ring-destructive',
         link: 'text-primary underline-offset-4 hover:underline',
         option:
           'border-slate-200 text-left text-foreground hover:border-indigo-300 hover:bg-transparent aria-pressed:border-indigo-600 aria-pressed:bg-indigo-50/40 aria-pressed:inset-ring-1 aria-pressed:inset-ring-indigo-600 aria-pressed:hover:border-indigo-600 aria-pressed:hover:bg-indigo-50/40',

@@ -1,16 +1,9 @@
-import { toast } from 'sonner'
-
 import type {
   ClassCount,
   Dataset,
-  DatasetDetailMock,
   QualityFinding,
   QualitySeverity,
 } from '@/features/dashboard/data'
-
-export function unavailable(label: string) {
-  toast.info(`${label} is not available in this dashboard demo.`)
-}
 
 export function downloadJson(filename: string, value: unknown) {
   const url = URL.createObjectURL(
@@ -95,56 +88,4 @@ export function getClassHistogram(classes: ClassCount[], bucketCount = 5) {
       .map((item) => item.name)
     return { label: `${from}–${to}`, classes: names.length, names }
   })
-}
-
-function fallbackComposition(
-  dataset: Dataset,
-): DatasetDetailMock['composition'] {
-  if (dataset.modality === 'image')
-    return { fileFormat: 'JPEG', avgDimensions: { width: 1024, height: 768 } }
-  if (dataset.modality === 'text') return { fileFormat: 'CSV' }
-  return { fileFormat: 'Parquet' }
-}
-
-export function fallbackDetail(dataset: Dataset): DatasetDetailMock {
-  return {
-    samples: [],
-    distribution: [],
-    classDistribution: [],
-    composition: fallbackComposition(dataset),
-    healthChecks: [
-      { status: 'pass', label: 'Source files available' },
-      { status: 'pass', label: 'Metadata validated' },
-    ],
-    qualityReport: {
-      lastChecked: 'Not yet checked',
-      findings: [
-        {
-          dimension: 'integrity',
-          severity: 'pass',
-          title: 'Source files available',
-        },
-        {
-          dimension: 'metadata',
-          severity: 'pass',
-          title: 'Metadata validated',
-        },
-      ],
-    },
-    splitDistribution: [
-      { label: 'Train', percent: dataset.split === 'Train' ? 100 : 0 },
-      {
-        label: 'Validation',
-        percent: dataset.split === 'Validation' ? 100 : 0,
-      },
-      { label: 'Test', percent: dataset.split === 'Test' ? 100 : 0 },
-    ],
-    versions: [
-      {
-        version: dataset.version,
-        items: dataset.items,
-        created: dataset.created,
-      },
-    ],
-  }
 }

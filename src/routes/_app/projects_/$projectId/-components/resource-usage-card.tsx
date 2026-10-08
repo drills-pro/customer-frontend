@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useProjectDetail } from '@/features/dashboard/context'
 import type { ResourceUsage, UsagePeriod } from '@/features/dashboard/data'
 import {
   formatUsageValue,
@@ -32,13 +33,12 @@ const BAR_SLOT = 36
 
 export function ResourceUsageCard({
   ref,
-  resources,
   inView,
 }: {
   ref?: React.Ref<HTMLDivElement>
-  resources: ResourceUsage[]
   inView: boolean
 }) {
+  const resources = useProjectDetail().details.resourceUsage
   const [period, setPeriod] = React.useState<UsagePeriod>('day')
 
   return (
@@ -53,7 +53,7 @@ export function ResourceUsageCard({
             onValueChange={(value) => setPeriod(value as UsagePeriod)}
           >
             <SelectTrigger
-              className="h-8 w-24 bg-white"
+              className="h-8 w-24 bg-card"
               aria-label="Usage interval"
             >
               <SelectValue />

@@ -13,7 +13,7 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        'group/card flex flex-col gap-(--card-gap) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-slate-200/90 shadow-xs',
+        'group/card flex flex-col gap-(--card-gap) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-border/90 shadow-xs',
         '[--card-spacing:--spacing(4)] [--card-gap:var(--card-spacing)] [--card-inset:var(--card-spacing)] [--card-section:var(--card-spacing)]',
         'has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0',
         'data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0',

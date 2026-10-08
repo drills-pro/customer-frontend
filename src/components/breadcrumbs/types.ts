@@ -1,6 +1,8 @@
 import type {
   DashboardPreferences,
   Dataset,
+  Deployment,
+  Model,
   Organization,
   Project,
   TrainingRun,
@@ -20,6 +22,8 @@ export type BreadcrumbData = {
   project?: Project
   dataset?: Dataset
   run?: TrainingRun
+  model?: Model
+  deployment?: Deployment
 }
 
 export type BreadcrumbResolverContext = {

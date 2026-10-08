@@ -1,5 +1,6 @@
 import type { DashboardPreferences } from '../domain/types'
-import { organizations, projectOverviews, projects } from '../data/projects'
+import { projectOverviews, projects } from '../data/projects'
+import { findOrganization } from './organization-lookup'
 
 export function allProjects(preferences: DashboardPreferences) {
   return [
@@ -18,7 +19,9 @@ export function resolveProject(
   const project =
     created?.project ?? projects.find((item) => item.id === projectId)
   const details = created?.overview ?? projectOverviews[projectId]
-  const organization = organizations.find((item) => item.id === project?.orgId)
+  const organization = project
+    ? findOrganization(project.orgId, preferences)
+    : undefined
   return project && details && organization
     ? { project, details, organization }
     : undefined

@@ -1,14 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import type { DatasetDetailMock } from '@/features/dashboard/data'
+import { useCurrentDataset } from './use-current-dataset'
 
-export function DistributionCard({
-  title,
-  distribution,
-}: {
-  title: string
-  distribution: DatasetDetailMock['distribution']
-}) {
+export function DistributionCard() {
+  const { dataset, detail } = useCurrentDataset()
+  const { distribution } = detail
+  const title =
+    dataset.modality === 'text' ? 'Label distribution' : 'Class distribution'
   const maximum = Math.max(...distribution.map((item) => item.count), 1)
   return (
     <Card size="lg">

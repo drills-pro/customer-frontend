@@ -1,5 +1,11 @@
 import { Link } from '@tanstack/react-router'
-import { FolderKanban, House, LayoutGrid } from 'lucide-react'
+import {
+  Building2,
+  FolderKanban,
+  House,
+  LayoutGrid,
+  Settings,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import {
@@ -21,28 +27,40 @@ import {
   projectSectionLink,
   projectSections,
 } from '@/features/dashboard/navigation'
-import type { Project } from '@/features/dashboard/data'
-import { unavailable } from './helpers'
+import type { Organization, Project } from '@/features/dashboard/data'
+import { unavailable } from '@/lib/unavailable'
 
 type MainNavigationItem = {
   label: string
   icon: LucideIcon
-} & ({ to: '/' | '/projects' } | { action: 'unavailable' })
+} & (
+  | {
+      to:
+        '/' | '/projects' | '/organizations' | '/organizations/$orgId/settings'
+    }
+  | { action: 'unavailable' }
+)
 
 const mainNavigation: MainNavigationItem[] = [
   { label: 'Home', icon: House, to: '/' },
   { label: 'Projects', icon: FolderKanban, to: '/projects' },
+  { label: 'Organizations', icon: Building2, to: '/organizations' },
+  { label: 'Settings', icon: Settings, to: '/organizations/$orgId/settings' },
   { label: 'All Screens', icon: LayoutGrid, action: 'unavailable' },
 ]
 
 export function AppSidebar({
+  org,
   currentProject,
 }: {
+  org: Organization
   currentProject: Project | undefined
 }) {
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="h-14 justify-center border-b px-3">
+      {/* The collapsed rail is 3rem wide: `px-2` leaves exactly the 2rem the
+          logo mark needs, where `px-3` would clip it. */}
+      <SidebarHeader className="h-14 justify-center border-b px-3 group-data-[collapsible=icon]:px-2">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -50,7 +68,7 @@ export function AppSidebar({
               tooltip="DRILLS home"
               className="font-semibold"
             >
-              <span className="flex size-8 items-center justify-center rounded-lg bg-indigo-600 font-bold text-white">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary font-bold text-primary-foreground">
                 D
               </span>
               <span>DRILLS</span>
@@ -71,7 +89,13 @@ export function AppSidebar({
                       <SidebarMenuButton asChild tooltip={item.label}>
                         <Link
                           to={item.to}
-                          activeOptions={{ exact: item.to === '/' }}
+                          params={{ orgId: org.id }}
+                          // `/organizations` must not light up on an org's
+                          // settings page, which the Settings item owns.
+                          activeOptions={{
+                            exact:
+                              item.to === '/' || item.to === '/organizations',
+                          }}
                           activeProps={{ 'data-active': 'true' }}
                         >
                           <Icon />
@@ -95,7 +119,7 @@ export function AppSidebar({
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] font-semibold tracking-wider text-slate-400">
+          <SidebarGroupLabel className="text-[10px] font-semibold tracking-wider text-muted-foreground/80">
             CURRENT PROJECT
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -110,7 +134,14 @@ export function AppSidebar({
                       to="/projects/$projectId/overview"
                       params={{ projectId: currentProject.id }}
                     >
-                      <span className="size-2 rounded-full bg-indigo-500" />
+                      {/* An icon-sized slot, like the lucide icons above, so
+                          the collapsed button shows only the mark. */}
+                      <span
+                        aria-hidden="true"
+                        className="flex size-4 shrink-0 items-center justify-center"
+                      >
+                        <span className="size-2 rounded-full bg-primary" />
+                      </span>
                       <span>{currentProject.name}</span>
                     </Link>
                   ) : (
@@ -120,30 +151,19 @@ export function AppSidebar({
 
                 {currentProject && (
                   <SidebarMenuSub>
-                    {projectSections.map((label) => {
-                      const to = projectSectionLink(label)
-                      return (
-                        <SidebarMenuSubItem key={label}>
-                          {to ? (
-                            <SidebarMenuSubButton asChild>
-                              <Link
-                                to={to}
-                                params={{ projectId: currentProject.id }}
-                                activeProps={{ 'data-active': 'true' }}
-                              >
-                                {label}
-                              </Link>
-                            </SidebarMenuSubButton>
-                          ) : (
-                            <SidebarMenuSubButton
-                              onClick={() => unavailable(label)}
-                            >
-                              {label}
-                            </SidebarMenuSubButton>
-                          )}
-                        </SidebarMenuSubItem>
-                      )
-                    })}
+                    {projectSections.map((label) => (
+                      <SidebarMenuSubItem key={label}>
+                        <SidebarMenuSubButton asChild>
+                          <Link
+                            to={projectSectionLink(label)}
+                            params={{ projectId: currentProject.id }}
+                            activeProps={{ 'data-active': 'true' }}
+                          >
+                            {label}
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
                   </SidebarMenuSub>
                 )}
               </SidebarMenuItem>

@@ -1,5 +1,4 @@
 export { downloadText } from './helpers'
-export { StatusBadge } from './status-badge'
 export { MetricCard } from './metric-card'
 export { LogsCard } from './logs-card'
 export { ConfigCard } from './config-card'

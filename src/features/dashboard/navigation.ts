@@ -10,9 +10,18 @@ export const projectSections = [
 
 export type ProjectSection = (typeof projectSections)[number]
 
-/** Sections that have a route today; the rest are demo placeholders. */
-export function projectSectionLink(section: ProjectSection) {
-  if (section === 'Overview') return '/projects/$projectId/overview' as const
-  if (section === 'Datasets') return '/projects/$projectId/datasets' as const
-  return undefined
+const sectionLinks = {
+  Overview: '/projects/$projectId/overview',
+  Datasets: '/projects/$projectId/datasets',
+  Training: '/projects/$projectId/training',
+  Models: '/projects/$projectId/models',
+  Deployments: '/projects/$projectId/deployments',
+  Settings: '/projects/$projectId/settings',
+} as const satisfies Record<ProjectSection, string>
+
+/** Every section has a route. */
+export function projectSectionLink<TSection extends ProjectSection>(
+  section: TSection,
+) {
+  return sectionLinks[section]
 }

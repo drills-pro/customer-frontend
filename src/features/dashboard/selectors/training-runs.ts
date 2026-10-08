@@ -37,6 +37,16 @@ export function resolveTrainingRun(
  * Runs key on `projectId`, so the org filter resolves through the projects the
  * workspace currently has (seeded plus user-created).
  */
+/** Every run that belongs to one project, newest first. */
+export function projectTrainingRuns(
+  preferences: DashboardPreferences,
+  projectId: string,
+): TrainingRun[] {
+  return allTrainingRuns(preferences)
+    .filter((run) => run.projectId === projectId)
+    .sort((left, right) => right.startedAt - left.startedAt)
+}
+
 export function orgTrainingRuns(
   preferences: DashboardPreferences,
   orgId: string,

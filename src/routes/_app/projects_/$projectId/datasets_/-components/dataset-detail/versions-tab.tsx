@@ -11,17 +11,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { Dataset, DatasetDetailMock } from '@/features/dashboard/data'
 
 import { downloadJson } from './helpers'
+import { useCurrentDataset } from './use-current-dataset'
 
-export function VersionsTab({
-  dataset,
-  detail,
-}: {
-  dataset: Dataset
-  detail: DatasetDetailMock
-}) {
+export function VersionsTab() {
+  const { dataset, detail } = useCurrentDataset()
   return (
     <Card size="flush">
       <CardHeader className="border-b">

@@ -2,7 +2,6 @@ export { tabs, type DatasetTab } from './types'
 export {
   downloadJson,
   itemNoun,
-  fallbackDetail,
   getClassHistogram,
   getClassStats,
   getQualityScore,

@@ -39,7 +39,7 @@ test('matches the reference page and card spacing', async ({ page }) => {
     lowerContentMarginTop: '24px',
     metricPadding: '20px',
   })
-  await expect(page.getByRole('button', { name: 'New Project' })).toHaveCSS(
+  await expect(page.getByRole('link', { name: 'New Project' })).toHaveCSS(
     'height',
     '36px',
   )
@@ -129,6 +129,34 @@ test('malformed storage recovers and mobile layout does not overflow', async ({
 })
 
 test('unavailable destination gives toast feedback', async ({ page }) => {
-  await page.getByRole('button', { name: 'New Project' }).click()
-  await expect(page.getByText(/New Project is not available/)).toBeVisible()
+  await page.getByRole('button', { name: 'All Screens' }).click()
+  await expect(page.getByText(/All Screens is not available/)).toBeVisible()
+})
+
+test('New Project links to the project creation flow', async ({ page }) => {
+  await page.getByRole('link', { name: 'New Project' }).click()
+  await expect(page).toHaveURL(/\/projects\/new$/)
+})
+
+test('sidebar state is session-only and resets on refresh', async ({
+  page,
+}) => {
+  const sidebar = page.locator('[data-slot=sidebar]').first()
+  await expect(sidebar).toHaveAttribute('data-state', 'expanded')
+
+  await page.getByRole('button', { name: 'Toggle navigation' }).click()
+  await expect(sidebar).toHaveAttribute('data-state', 'collapsed')
+  expect(await page.evaluate(() => document.cookie)).not.toContain(
+    'sidebar_state',
+  )
+
+  await page.reload()
+  await expect(page.getByTestId('dashboard-app')).toHaveAttribute(
+    'data-hydrated',
+    'true',
+  )
+  await expect(page.locator('[data-slot=sidebar]').first()).toHaveAttribute(
+    'data-state',
+    'expanded',
+  )
 })

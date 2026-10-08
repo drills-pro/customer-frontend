@@ -3,7 +3,7 @@ import {
   DASHBOARD_STORAGE_KEY,
   defaultPreferences,
   restorePreferences,
-} from '../src/features/dashboard/data'
+} from '../src/features/dashboard'
 
 test('dashboard preferences recover from invalid storage', () => {
   expect(restorePreferences(null)).toEqual(defaultPreferences)
@@ -19,11 +19,16 @@ test('dashboard preferences retain valid persisted values', () => {
       organizationId: 'northwind',
       onboardingDismissed: true,
       notificationsRead: true,
+      theme: 'dark',
       uploads: [],
     }),
   )
   expect(restored.organizationId).toBe('northwind')
   expect(restored.onboardingDismissed).toBe(true)
+  expect(restored.theme).toBe('dark')
+  expect(restorePreferences(JSON.stringify({ theme: 'sepia' })).theme).toBe(
+    'light',
+  )
   expect(DASHBOARD_STORAGE_KEY).toBe('drills-dashboard-v1')
 })
 

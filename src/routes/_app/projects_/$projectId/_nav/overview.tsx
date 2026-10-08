@@ -21,11 +21,8 @@ import {
 } from '@/components/ui/item'
 import { useProjectDetail } from '@/features/dashboard/context'
 import { useInView } from '@/hooks/use-in-view'
-import {
-  FactList,
-  serializeReadme,
-  unavailable,
-} from '../-components/project-overview'
+import { unavailable } from '@/lib/unavailable'
+import { FactList, serializeReadme } from '../-components/project-overview'
 import { ReadmeCard } from '../-components/readme-editor'
 import { ResourceUsageCard } from '../-components/resource-usage-card'
 
@@ -77,9 +74,9 @@ function ProjectOverviewRoute() {
                   asChild
                   className={`min-w-0 flex-nowrap p-3 ${
                     completed
-                      ? 'border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50/50'
-                      : 'border-slate-200 bg-white hover:bg-white'
-                  } hover:border-indigo-300`}
+                      ? 'border-success/30 bg-success-muted/50 hover:bg-success-muted/50'
+                      : 'border-border bg-card hover:bg-card'
+                  } hover:border-primary/40`}
                 >
                   <Button
                     variant="outline"
@@ -90,8 +87,8 @@ function ProjectOverviewRoute() {
                       <span
                         className={`flex size-8 items-center justify-center rounded-full text-xs font-semibold ${
                           completed
-                            ? 'bg-emerald-500 text-white'
-                            : 'bg-slate-100 text-slate-500'
+                            ? 'bg-success text-background'
+                            : 'bg-muted text-muted-foreground'
                         }`}
                       >
                         {completed ? <Check className="size-4" /> : index + 1}
@@ -106,7 +103,7 @@ function ProjectOverviewRoute() {
                   </Button>
                 </Item>
                 {index < pipeline.length - 1 && (
-                  <ArrowRight className="hidden size-4 text-slate-300 lg:block" />
+                  <ArrowRight className="hidden size-4 text-muted-foreground/60 lg:block" />
                 )}
               </React.Fragment>
             )
@@ -184,7 +181,7 @@ function ProjectOverviewRoute() {
                     <Badge variant="warning" className="font-mono">
                       acc {bestModel.accuracy.toFixed(1)}%
                     </Badge>
-                    <Badge className="border-0 bg-blue-50 font-mono text-blue-700">
+                    <Badge className="border-0 bg-info-muted font-mono text-info">
                       {details.region}
                     </Badge>
                   </div>
@@ -224,7 +221,7 @@ function ProjectOverviewRoute() {
                     <p className="py-2 text-muted-foreground">
                       Call the live endpoint with a base64-encoded shelf image:
                     </p>
-                    <pre className="overflow-x-auto rounded-xl bg-slate-950 p-4 text-xs leading-5 text-slate-100">
+                    <pre className="overflow-x-auto rounded-xl bg-terminal p-4 text-xs leading-5 text-terminal-foreground">
                       <code>{details.readme.quickstart}</code>
                     </pre>
                   </section>
@@ -272,11 +269,7 @@ function ProjectOverviewRoute() {
             </CardContent>
           </Card>
 
-          <ResourceUsageCard
-            ref={usageCardRef}
-            resources={details.resourceUsage}
-            inView={usageChartsInView}
-          />
+          <ResourceUsageCard ref={usageCardRef} inView={usageChartsInView} />
 
           <Card size="lg">
             <CardHeader>

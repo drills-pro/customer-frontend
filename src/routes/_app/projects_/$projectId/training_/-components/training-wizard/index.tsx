@@ -1,15 +1,16 @@
 import * as React from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { RouteBreadcrumbs } from '@/components/breadcrumbs'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useDashboardLayout } from '@/features/dashboard/context'
+import {
+  useDashboardLayout,
+  useProjectDetail,
+} from '@/features/dashboard/context'
 import type {
-  Dataset,
-  Project,
   TrainingRun,
   TrainingScheduler,
   TrainingSplit,
@@ -21,7 +22,11 @@ import {
   formatDuration,
   formatLearningRate,
 } from '@/features/dashboard/training'
-import { allTrainingRuns } from '@/features/dashboard/selectors/training-runs'
+import { useProjectDatasets } from '@/features/dashboard/hooks'
+import {
+  allTrainingRuns,
+  resolveTrainingRun,
+} from '@/features/dashboard/selectors/training-runs'
 import { ComputeStep } from './compute-step'
 import { ConfigureStep } from './configure-step'
 import { DatasetStep } from './dataset-step'
@@ -30,20 +35,17 @@ import { ReviewStep } from './review-step'
 import { steps } from './types'
 
 const defaultSplit: TrainingSplit = { train: 80, validation: 10, test: 10 }
+const route = getRouteApi('/_app/projects_/$projectId/training_/new')
 
-export function TrainingWizard({
-  project,
-  datasets,
-  initialDatasetId,
-  clone,
-}: {
-  project: Project
-  datasets: Dataset[]
-  initialDatasetId?: string
-  clone?: TrainingRun
-}) {
+export function TrainingWizard() {
   const navigate = useNavigate()
+  const { dataset: initialDatasetId, clone: cloneId } = route.useSearch()
+  const { project } = useProjectDetail()
   const { preferences, updatePreferences } = useDashboardLayout()
+  const datasets = useProjectDatasets(project.id, { readyOnly: true })
+  const clone = cloneId
+    ? resolveTrainingRun(preferences, project.id, cloneId)
+    : undefined
   const architectures = architecturesFor(project)
   const [step, setStep] = React.useState(0)
   const [datasetId, setDatasetId] = React.useState(
@@ -195,12 +197,12 @@ export function TrainingWizard({
               onClick={() => setStep(index)}
               aria-label={label}
               aria-current={step === index ? 'step' : undefined}
-              className="h-auto w-full justify-start gap-2.5 rounded-lg px-3 py-2.5 text-left font-normal text-muted-foreground disabled:opacity-100 aria-[current=step]:bg-indigo-50 aria-[current=step]:font-semibold aria-[current=step]:text-indigo-700"
+              className="h-auto w-full justify-start gap-2.5 rounded-lg px-3 py-2.5 text-left font-normal text-muted-foreground disabled:opacity-100 aria-[current=step]:bg-primary-muted aria-[current=step]:font-semibold aria-[current=step]:text-primary"
             >
               <span
                 className={`flex size-5.5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
                   index < step
-                    ? 'bg-emerald-600 text-white'
+                    ? 'bg-success text-background'
                     : index === step
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted text-muted-foreground'
@@ -330,7 +332,7 @@ export function TrainingWizard({
                 Billed per second. You are charged only for actual runtime.
                 {spot ? ' Spot pricing applied.' : ''}
               </p>
-              <div className="mt-3 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800">
+              <div className="mt-3 rounded-lg bg-success-muted p-3 text-xs text-success">
                 Expected metric {architecture.accuracy} based on similar runs.
               </div>
             </CardContent>

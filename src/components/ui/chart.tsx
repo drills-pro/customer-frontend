@@ -6,9 +6,8 @@ import * as RechartsPrimitive from 'recharts'
 import type { TooltipValueType } from 'recharts'
 
 // Format: { THEME_NAME: CSS_SELECTOR }
-// The app forces a light theme and mounts no theme provider, so there is no
-// dark entry here; add one back together with a theme provider.
-const THEMES = { light: '' } as const
+// `.dark` is set on <html> by useApplyTheme (src/features/dashboard/theme.ts).
+const THEMES = { light: '', dark: '.dark' } as const
 
 const INITIAL_DIMENSION = { width: 320, height: 200 } as const
 type TooltipNameType = number | string

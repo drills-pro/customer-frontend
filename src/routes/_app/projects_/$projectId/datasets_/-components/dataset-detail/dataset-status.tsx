@@ -8,12 +8,13 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty'
-import type { Dataset } from '@/features/dashboard/data'
+import { useCurrentDataset } from './use-current-dataset'
 
-export function DatasetStatus({ dataset }: { dataset: Dataset }) {
+export function DatasetStatus() {
+  const { dataset } = useCurrentDataset()
   const failed = dataset.status === 'Error'
   return (
-    <Empty className="min-h-72 border bg-white">
+    <Empty className="min-h-72 border bg-card">
       <EmptyHeader>
         <EmptyTitle>
           {failed ? 'Dataset processing failed' : 'Processing dataset'}

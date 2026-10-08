@@ -1,11 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { useDashboardLayout } from '@/features/dashboard/context'
-import {
-  datasets as seededDatasets,
-  resolveProject,
-} from '@/features/dashboard/data'
-import { resolveTrainingRun } from '@/features/dashboard/selectors/training-runs'
 import { TrainingNotFound } from './-components/training-not-found'
 import { TrainingWizard } from './-components/training-wizard'
 
@@ -31,33 +25,11 @@ export const Route = createFileRoute(
 function NewTrainingRoute() {
   const { projectId } = Route.useParams()
   const search = Route.useSearch()
-  const { preferences, hydrated } = useDashboardLayout()
 
-  if (!hydrated) {
-    return <main id="dashboard-main" className="min-h-96 flex-1" />
-  }
-
-  const resolved = resolveProject(projectId, preferences)
-  if (!resolved) return <TrainingNotFound />
-  const { project } = resolved
-
-  const datasets = [...preferences.datasets, ...seededDatasets].filter(
-    (dataset, index, all) =>
-      dataset.projectId === project.id &&
-      dataset.status === 'Ready' &&
-      all.findIndex((candidate) => candidate.id === dataset.id) === index,
-  )
-  const clone = search.clone
-    ? resolveTrainingRun(preferences, project.id, search.clone)
-    : undefined
-
+  // Keyed on the inputs that prefill the form, so a new prefill resets it.
   return (
     <TrainingWizard
-      key={`${project.id}-${search.dataset ?? ''}-${clone?.id ?? ''}`}
-      project={project}
-      datasets={datasets}
-      initialDatasetId={search.dataset}
-      clone={clone}
+      key={`${projectId}-${search.dataset ?? ''}-${search.clone ?? ''}`}
     />
   )
 }

@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import type { Dataset } from '@/features/dashboard/data'
-import { unavailable } from './helpers'
+import { unavailable } from '@/lib/unavailable'
 
 export function DatasetActions({ dataset }: { dataset: Dataset }) {
   return (

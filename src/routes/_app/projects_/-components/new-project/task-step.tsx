@@ -9,7 +9,7 @@ export function TaskStep({ draft }: { draft: NewProjectDraft }) {
     <section>
       <div>
         <h2 className="text-lg font-semibold">Task type</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Choose what this project is trained to do.
         </p>
       </div>
@@ -24,10 +24,8 @@ export function TaskStep({ draft }: { draft: NewProjectDraft }) {
             className="flex-col items-stretch justify-start"
           >
             <div className="flex items-start justify-between">
-              <FolderKanban className="size-5 text-indigo-600" />
-              {draft.task === item && (
-                <span className="text-indigo-600">●</span>
-              )}
+              <FolderKanban className="size-5 text-primary" />
+              {draft.task === item && <span className="text-primary">●</span>}
             </div>
             <p className="mt-2 text-sm font-medium">{item}</p>
           </Button>

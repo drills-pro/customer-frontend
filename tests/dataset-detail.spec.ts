@@ -13,8 +13,9 @@ test.beforeEach(async ({ page }) => {
 
 test('renders and filters image-classification samples', async ({ page }) => {
   await expect(
-    page.getByText('18,420 images · 240 classes · 4.2 GB · v3'),
+    page.getByText('image dataset · 18,420 images · 240 classes · 4.2 GB'),
   ).toBeVisible()
+  await expect(page.getByText('v3', { exact: true })).toBeVisible()
   await expect(page.getByText('Showing 24 of 18,420')).toBeVisible()
   await expect(
     page.getByRole('img', { name: 'beverages dataset sample' }),
@@ -39,8 +40,9 @@ test('renders and filters text-classification examples', async ({ page }) => {
     page.getByRole('heading', { name: 'support-tickets-train' }),
   ).toBeVisible()
   await expect(
-    page.getByText('42,300 rows · 18 labels · 8.4 MB · v2'),
+    page.getByText('text dataset · 42,300 rows · 18 labels · 8.4 MB'),
   ).toBeVisible()
+  await expect(page.getByText('v2', { exact: true })).toBeVisible()
   await expect(page.getByText(/My order #48213/)).toBeVisible()
   await expect(page.getByText('Label distribution')).toBeVisible()
 
@@ -58,13 +60,32 @@ test('switches tabs, reviews issues, and downloads metadata', async ({
   page,
 }) => {
   await page.getByRole('tab', { name: 'Statistics' }).click()
-  await expect(page.getByText('Dataset statistics')).toBeVisible()
+  await expect(page.getByText('Class distribution')).toBeVisible()
   await expect(page.getByText('Split distribution')).toBeVisible()
+  await expect(page.getByText('Dataset composition')).toBeVisible()
+  // Derived from the generated per-class counts, which sum to 18,420.
+  await expect(page.getByText('77', { exact: true })).toBeVisible()
+  await expect(page.getByText('3.2 : 1')).toBeVisible()
+  await expect(page.getByText('fresh_produce')).toBeVisible()
+  await expect(page.getByText('14,736')).toBeVisible()
+  await expect(page.getByText('1024 × 768 px')).toBeVisible()
 
+  // "Review issues" lives on the Preview tab's health card.
+  await page.getByRole('tab', { name: 'Preview' }).click()
   await page.getByRole('button', { name: 'Review issues' }).click()
   await expect(page.getByText('Quality report')).toBeVisible()
+  await expect(page.getByText('72', { exact: true })).toBeVisible()
+  await expect(
+    page.getByText('Needs attention — lowered by 2 findings below'),
+  ).toBeVisible()
+  await expect(page.getByText('Findings, ranked by impact')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Review class distribution' }).click()
+  await expect(page.getByText('Dataset composition')).toBeVisible()
+
+  await page.getByRole('tab', { name: 'Quality' }).click()
   const reportDownload = page.waitForEvent('download')
-  await page.getByRole('button', { name: 'Download report' }).click()
+  await page.getByRole('button', { name: 'Download full report' }).click()
   expect((await reportDownload).suggestedFilename()).toBe(
     'retail-shelf-train-quality.json',
   )

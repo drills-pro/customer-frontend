@@ -167,6 +167,23 @@ export const createdProjectSchema = z.object({
   clonedFromProjectId: z.string().optional(),
 })
 
+const hexColor = z.string().regex(/^#[0-9a-f]{6}$/i)
+
+export const organizationProfileSchema = z.object({
+  name: z.string().trim().min(1).max(64),
+  slug: z.string().regex(/^[a-z0-9-]{2,40}$/),
+  description: z.string().max(240),
+  color: hexColor,
+})
+
+export const organizationSchema = organizationProfileSchema.extend({
+  id: z.string().min(1),
+  initial: z.string().min(1).max(2),
+  plan: z.enum(['Free', 'Team', 'Enterprise']),
+  createdAt: finite,
+  yourRole: z.enum(['Owner', 'Admin', 'Member', 'Viewer']),
+})
+
 export const preferencesSchema = z.object({
   organizationId: z.string().min(1),
   onboardingDismissed: z.boolean(),
@@ -175,6 +192,9 @@ export const preferencesSchema = z.object({
   datasets: z.array(datasetSchema),
   trainingRuns: z.array(trainingRunSchema),
   createdProjects: z.array(createdProjectSchema),
+  createdOrganizations: z.array(organizationSchema),
+  organizationEdits: z.record(z.string(), organizationProfileSchema),
+  declinedInvitations: z.array(z.string()),
 })
 
 /**

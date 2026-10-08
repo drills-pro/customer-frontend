@@ -1,4 +1,4 @@
-import type { Activity, Deployment, TrainingRun } from '../domain/types'
+import type { Activity, TrainingRun } from '../domain/types'
 
 export const activities: Activity[] = [
   {
@@ -184,39 +184,4 @@ export const seededTrainingRuns: TrainingRun[] = [
     gpuMemory: '8.1 / 16 GB',
     elapsedFraction: 0.3,
   }),
-]
-
-export const deployments: Deployment[] = [
-  {
-    id: 'd1',
-    orgId: 'acme',
-    name: 'sentiment-prod',
-    latency: '82ms',
-    errorRate: '0.02%',
-    status: 'Live',
-  },
-  {
-    id: 'd2',
-    orgId: 'acme',
-    name: 'retail-classify',
-    latency: '140ms',
-    errorRate: '0.11%',
-    status: 'Live',
-  },
-  {
-    id: 'd3',
-    orgId: 'acme',
-    name: 'defect-staging',
-    latency: '—',
-    errorRate: '—',
-    status: 'Paused',
-  },
-  {
-    id: 'd4',
-    orgId: 'northwind',
-    name: 'invoice-extract',
-    latency: '118ms',
-    errorRate: '0.05%',
-    status: 'Live',
-  },
 ]

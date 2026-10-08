@@ -19,7 +19,7 @@ export function ComputeStep({
     <section>
       <div>
         <h2 className="text-lg font-semibold tracking-tight">Choose compute</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Larger instances finish faster but cost more per hour.
         </p>
       </div>

@@ -12,27 +12,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { TrainingRun } from '@/features/dashboard/data'
+import { trainingLog } from '@/features/dashboard/training'
 
 import { downloadText } from './helpers'
+import { useCurrentTrainingRun } from './use-current-training-run'
 
 export function LogsCard({
-  run,
-  lines,
   level,
   setLevel,
   autoscroll,
   setAutoscroll,
   logRef,
 }: {
-  run: TrainingRun
-  lines: string[]
   level: string
   setLevel: (value: string) => void
   autoscroll: boolean
   setAutoscroll: (value: boolean) => void
   logRef: React.RefObject<HTMLPreElement | null>
 }) {
+  const { run, dataset } = useCurrentTrainingRun()
+  const lines = trainingLog(run, dataset).filter(
+    (line) => level === 'all' || line.startsWith(level),
+  )
   const content = lines.join('\n') || 'No logs at this level.'
   return (
     <Card size="flush">
@@ -67,7 +68,7 @@ export function LogsCard({
       </CardHeader>
       <pre
         ref={logRef}
-        className="max-h-72 overflow-auto bg-slate-950 p-4 font-mono text-xs leading-relaxed text-slate-300"
+        className="max-h-72 overflow-auto bg-terminal p-4 font-mono text-xs leading-relaxed text-terminal-foreground"
       >
         {content}
       </pre>

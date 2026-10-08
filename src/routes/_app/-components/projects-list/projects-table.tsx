@@ -17,13 +17,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import type { Project } from '@/features/dashboard/data'
-import { ProjectMark } from '@/components/dashboard/project-ui'
+import { ProjectMark } from '@/features/projects/components/project-ui'
 
 import { ProjectMenu } from './project-menu'
 
 export function ProjectsTable({ projects }: { projects: Array<Project> }) {
   return (
-    <Table className="min-w-[780px] overflow-hidden rounded-xl border border-bordermedium bg-white">
+    <Table className="min-w-[780px] overflow-hidden rounded-xl border border-bordermedium bg-card">
       <TableHeader>
         <TableRow>
           <TableHead>Project</TableHead>

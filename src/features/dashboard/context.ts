@@ -1,10 +1,10 @@
 import * as React from 'react'
 import type {
   Organization,
+  OrgMember,
   Project,
   ProjectOverview,
   DashboardPreferences,
-  organizations,
 } from '@/features/dashboard/data'
 
 export type DashboardLayoutContextValue = {
@@ -13,7 +13,17 @@ export type DashboardLayoutContextValue = {
   hydrated: boolean
   /** False when browser storage is blocked or full; the session stays usable. */
   persistenceAvailable: boolean
-  org: (typeof organizations)[number]
+  org: Organization
+  /** Seeded organizations with edits applied, plus created and joined ones. */
+  organizations: Organization[]
+  switchOrganization: (orgId: string) => void
+  openCreateOrganization: () => void
+  /** Session-only member lists; changes reset on reload like the demo team. */
+  membersOf: (org: Organization) => OrgMember[]
+  updateMembers: (
+    org: Organization,
+    update: (members: OrgMember[]) => OrgMember[],
+  ) => void
 }
 
 export const DashboardLayoutContext =

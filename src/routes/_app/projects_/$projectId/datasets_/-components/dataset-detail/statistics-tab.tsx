@@ -15,12 +15,13 @@ import {
 import type { Dataset, DatasetDetailMock } from '@/features/dashboard/data'
 
 import { getClassHistogram, getClassStats, itemNoun } from './helpers'
+import { useCurrentDataset } from './use-current-dataset'
 
 /** Each split keeps its color even when the others are absent. */
 const SPLIT_COLORS = {
-  Train: 'bg-indigo-600',
-  Validation: 'bg-teal-600',
-  Test: 'bg-amber-500',
+  Train: 'bg-primary',
+  Validation: 'bg-info',
+  Test: 'bg-warning',
 } as const
 
 /** "train, validation, and test" — only the splits this dataset actually has. */
@@ -30,13 +31,8 @@ function splitSentence(labels: string[]) {
   return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
 }
 
-export function StatisticsTab({
-  dataset,
-  detail,
-}: {
-  dataset: Dataset
-  detail: DatasetDetailMock
-}) {
+export function StatisticsTab() {
+  const { dataset, detail } = useCurrentDataset()
   const classNoun = dataset.modality === 'text' ? 'labels' : 'classes'
 
   return (
@@ -132,7 +128,7 @@ function ClassDistribution({
           </span>
         </Stat>
         <Stat label="Imbalance ratio">
-          <span className="text-amber-600">{stats.ratio} : 1</span>
+          <span className="text-warning">{stats.ratio} : 1</span>
         </Stat>
       </div>
 
@@ -218,7 +214,7 @@ function SplitDistribution({
         {splits.map((split) => (
           <div
             key={split.label}
-            className={`flex items-center justify-center text-xs font-semibold text-white ${SPLIT_COLORS[split.label]}`}
+            className={`flex items-center justify-center text-xs font-semibold text-background ${SPLIT_COLORS[split.label]}`}
             style={{ width: `${split.percent}%` }}
           >
             {split.percent >= 8 && `${split.percent}%`}

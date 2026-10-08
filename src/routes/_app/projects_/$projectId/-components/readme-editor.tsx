@@ -68,14 +68,14 @@ export function ReadmeCard({
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             placeholder={PLACEHOLDER}
-            className="field-sizing-fixed h-96 resize-y overflow-y-auto font-mono text-xs leading-5"
+            className="field-sizing-fixed min-h-96 flex-1 resize-none overflow-y-auto font-mono text-xs leading-5"
           />
         ) : draft.trim() ? (
-          <div className="prose prose-sm h-96 max-w-none overflow-y-auto rounded-lg border p-4">
+          <div className="prose prose-sm min-h-96 max-w-none flex-1 overflow-y-auto rounded-lg border p-4">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{draft}</ReactMarkdown>
           </div>
         ) : (
-          <p className="flex h-96 items-center justify-center rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
+          <p className="flex min-h-96 flex-1 items-center justify-center rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
             Nothing to preview yet.
           </p>
         )}

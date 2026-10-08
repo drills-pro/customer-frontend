@@ -12,18 +12,13 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useDashboardLayout } from '@/features/dashboard/context'
-import {
-  datasetDetails,
-  datasets as seededDatasets,
-  resolveProject,
-} from '@/features/dashboard/data'
-import type { DatasetSample } from '@/features/dashboard/data'
+import { useProjectDetail } from '@/features/dashboard/context'
+import { datasets as seededDatasets } from '@/features/dashboard/data'
+import { useDataset } from '@/features/dashboard/hooks'
 import {
   DatasetHeader,
   DatasetStatus,
   DistributionCard,
-  fallbackDetail,
   HealthCard,
   ImagePreview,
   StatisticsTab,
@@ -65,42 +60,13 @@ export const Route = createFileRoute(
 })
 
 function DatasetDetailRoute() {
-  const { projectId, datasetId } = Route.useParams()
-  const { preferences, updatePreferences, hydrated } = useDashboardLayout()
+  const { datasetId } = Route.useParams()
+  const { project, organization } = useProjectDetail()
   const [tab, setTab] = React.useState<DatasetTab>('preview')
-  const resolved = resolveProject(projectId, preferences)
+  const found = useDataset(project.id, datasetId)
 
-  React.useEffect(() => {
-    if (
-      hydrated &&
-      resolved &&
-      preferences.organizationId !== resolved.project.orgId
-    )
-      updatePreferences({ organizationId: resolved.project.orgId })
-  }, [hydrated, preferences.organizationId, resolved, updatePreferences])
-
-  if (!hydrated) {
-    return <main id="dashboard-main" className="min-h-96 flex-1" />
-  }
-  if (!resolved) return <DatasetDetailNotFound projectId={projectId} />
-
-  const { project, organization } = resolved
-
-  const dataset = [...preferences.datasets, ...seededDatasets].find(
-    (item) => item.id === datasetId && item.projectId === project.id,
-  )
-
-  if (!dataset) return <DatasetDetailNotFound projectId={projectId} />
-
-  const detail = datasetDetails[dataset.id] ?? fallbackDetail(dataset)
-  const imageSamples = detail.samples.filter(
-    (sample): sample is Extract<DatasetSample, { modality: 'image' }> =>
-      sample.modality === 'image',
-  )
-  const textSamples = detail.samples.filter(
-    (sample): sample is Extract<DatasetSample, { modality: 'text' }> =>
-      sample.modality === 'text',
-  )
+  if (!found) return <DatasetDetailNotFound projectId={project.id} />
+  const { dataset } = found
 
   return (
     <main
@@ -109,10 +75,10 @@ function DatasetDetailRoute() {
     >
       <RouteBreadcrumbs className="mb-3" />
 
-      <DatasetHeader dataset={dataset} project={project} />
+      <DatasetHeader />
 
       {dataset.status !== 'Ready' ? (
-        <DatasetStatus dataset={dataset} />
+        <DatasetStatus />
       ) : (
         <Tabs
           value={tab}
@@ -135,11 +101,11 @@ function DatasetDetailRoute() {
             <div className="grid min-w-0 items-start gap-6 lg:grid-cols-4">
               <div className="min-w-0 lg:col-span-3">
                 {dataset.modality === 'image' ? (
-                  <ImagePreview dataset={dataset} samples={imageSamples} />
+                  <ImagePreview />
                 ) : dataset.modality === 'text' ? (
-                  <TextPreview dataset={dataset} samples={textSamples} />
+                  <TextPreview />
                 ) : (
-                  <Empty className="min-h-64 border bg-white">
+                  <Empty className="min-h-64 border bg-card">
                     <EmptyHeader>
                       <EmptyTitle>No preview available</EmptyTitle>
                       <EmptyDescription>
@@ -151,18 +117,8 @@ function DatasetDetailRoute() {
               </div>
 
               <aside className="grid gap-6 lg:col-span-1">
-                <DistributionCard
-                  title={
-                    dataset.modality === 'text'
-                      ? 'Label distribution'
-                      : 'Class distribution'
-                  }
-                  distribution={detail.distribution}
-                />
-                <HealthCard
-                  checks={detail.healthChecks}
-                  onReview={() => setTab('quality')}
-                />
+                <DistributionCard />
+                <HealthCard onReview={() => setTab('quality')} />
                 <Card size="lg">
                   <CardHeader>
                     <CardTitle>Dataset owner</CardTitle>
@@ -177,17 +133,13 @@ function DatasetDetailRoute() {
           </TabsContent>
 
           <TabsContent value="statistics">
-            <StatisticsTab dataset={dataset} detail={detail} />
+            <StatisticsTab />
           </TabsContent>
           <TabsContent value="quality">
-            <QualityTab
-              dataset={dataset}
-              detail={detail}
-              onNavigateTab={setTab}
-            />
+            <QualityTab onNavigateTab={setTab} />
           </TabsContent>
           <TabsContent value="versions">
-            <VersionsTab dataset={dataset} detail={detail} />
+            <VersionsTab />
           </TabsContent>
         </Tabs>
       )}
@@ -206,7 +158,7 @@ function DatasetDetailNotFound({ projectId }: { projectId: string }) {
       id="dashboard-main"
       className="mx-auto flex min-h-[60vh] w-full max-w-xl flex-1 items-center p-6"
     >
-      <Empty className="w-full border bg-white">
+      <Empty className="w-full border bg-card">
         <EmptyHeader>
           <EmptyTitle>Dataset not found</EmptyTitle>
           <EmptyDescription>

@@ -18,17 +18,38 @@ function Slider({
   value,
   min = 0,
   max = 100,
+  step = 1,
+  minStepsBetweenThumbs = 0,
+  orientation = 'horizontal',
+  dir,
+  inverted = false,
+  onValueChange,
+  onPointerDown,
+  onPointerMove,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root> & {
   value: number[]
   children: React.ReactNode
 }) {
   const span = max - min || 1
+  const activeIndexRef = React.useRef(0)
 
   const context: SliderContextValue = {
     toPercent: (current) => ((current - min) / span) * 100,
     boundAt: (index) =>
       index < 0 ? min : index >= value.length ? max : value[index],
+  }
+
+  // Radix re-sorts values on every move, so a fast drag can jump a thumb past
+  // its neighbour. Horizontal drags are handled here instead, keeping each
+  // thumb between its neighbours.
+  const handlesDrag = orientation === 'horizontal' && value.length > 1
+
+  const valueFromPointer = (event: React.PointerEvent<HTMLSpanElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const ratio = (event.clientX - rect.left) / (rect.width || 1)
+    const fromLeft = (dir === 'rtl') === inverted
+    return min + (fromLeft ? ratio : 1 - ratio) * span
   }
 
   return (
@@ -37,6 +58,46 @@ function Slider({
       value={value}
       min={min}
       max={max}
+      step={step}
+      minStepsBetweenThumbs={minStepsBetweenThumbs}
+      orientation={orientation}
+      dir={dir}
+      inverted={inverted}
+      onValueChange={onValueChange}
+      onPointerDown={(event) => {
+        onPointerDown?.(event)
+        if (!handlesDrag) return
+        const pointerValue = valueFromPointer(event)
+        const distances = value.map((current) =>
+          Math.abs(current - pointerValue),
+        )
+        activeIndexRef.current = distances.indexOf(Math.min(...distances))
+      }}
+      onPointerMove={(event) => {
+        onPointerMove?.(event)
+        if (
+          !handlesDrag ||
+          event.defaultPrevented ||
+          !(event.target as HTMLElement).hasPointerCapture(event.pointerId)
+        ) {
+          return
+        }
+        event.preventDefault()
+
+        const index = activeIndexRef.current
+        const gap = minStepsBetweenThumbs * step
+        const lower = index > 0 ? value[index - 1] + gap : min
+        const upper = index < value.length - 1 ? value[index + 1] - gap : max
+        const snapped =
+          Math.round((valueFromPointer(event) - min) / step) * step + min
+        const next = Math.min(Math.max(snapped, lower), upper)
+
+        if (next !== value[index]) {
+          const nextValues = [...value]
+          nextValues[index] = next
+          onValueChange?.(nextValues)
+        }
+      }}
       className={cn(
         'relative flex w-full touch-none items-center select-none',
         className,
@@ -115,7 +176,7 @@ function SliderDragger({
       aria-label={label}
       aria-valuetext={valueText}
       className={cn(
-        'relative block size-3 shrink-0 cursor-ew-resize rounded-full border border-ring bg-white ring-ring/50 transition-[color,box-shadow] select-none after:absolute after:-inset-2 outline-hidden hover:ring-2 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring active:ring-3 disabled:pointer-events-none disabled:opacity-50',
+        'relative block size-3 shrink-0 cursor-ew-resize rounded-full border border-ring bg-card ring-ring/50 transition-[color,box-shadow] select-none after:absolute after:-inset-2 outline-hidden hover:ring-2 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring active:ring-3 disabled:pointer-events-none disabled:opacity-50',
         className,
       )}
       {...props}

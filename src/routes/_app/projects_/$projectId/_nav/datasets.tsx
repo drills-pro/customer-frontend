@@ -41,13 +41,13 @@ import {
 } from '@/features/dashboard/context'
 import { datasets as seededDatasets } from '@/features/dashboard/data'
 import type { Dataset } from '@/features/dashboard/data'
+import { unavailable } from '@/lib/unavailable'
 import {
   AddDatasetDialog,
   DatasetActions,
   StatusBadge,
   splitOptions,
   statusOptions,
-  unavailable,
 } from '../-components/dataset-list'
 
 type ProjectDatasetsSearch = { add?: boolean }
@@ -191,7 +191,7 @@ function ProjectDatasetsRoute() {
       </div>
 
       {visibleDatasets.length === 0 ? (
-        <Empty className="min-h-64 border bg-white">
+        <Empty className="min-h-64 border bg-card">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Search />
@@ -209,76 +209,74 @@ function ProjectDatasetsRoute() {
           </EmptyContent>
         </Empty>
       ) : view === 'table' ? (
-        <div className="overflow-hidden rounded-xl border bg-white shadow-xs">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Size</TableHead>
-                <TableHead>Classes</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
+        <Table containerClassName="overflow-y-hidden rounded-xl border bg-card shadow-xs">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Items</TableHead>
+              <TableHead>Size</TableHead>
+              <TableHead>Classes</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead>
+                <span className="sr-only">Actions</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {visibleDatasets.map((dataset) => (
+              <TableRow key={dataset.id}>
+                <TableCell>
+                  <Link
+                    to="/projects/$projectId/datasets/$datasetId"
+                    params={{
+                      projectId: dataset.projectId,
+                      datasetId: dataset.id,
+                    }}
+                    className="h-auto border-none p-0 font-medium text-primary"
+                  >
+                    {dataset.name}
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="secondary" className="font-normal">
+                    {dataset.split}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {dataset.items.toLocaleString('en-US')}{' '}
+                  {project.task.includes('Image') ? 'images' : 'items'}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {dataset.size}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {dataset.classes || '—'}
+                </TableCell>
+                <TableCell>
+                  <StatusBadge status={dataset.status} />
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {dataset.created}
+                </TableCell>
+                <TableCell className="text-right">
+                  <DatasetActions dataset={dataset} />
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visibleDatasets.map((dataset) => (
-                <TableRow key={dataset.id}>
-                  <TableCell>
-                    <Link
-                      to="/projects/$projectId/datasets/$datasetId"
-                      params={{
-                        projectId: dataset.projectId,
-                        datasetId: dataset.id,
-                      }}
-                      className="h-auto border-none p-0 font-medium text-indigo-600"
-                    >
-                      {dataset.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="font-normal">
-                      {dataset.split}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {dataset.items.toLocaleString('en-US')}{' '}
-                    {project.task.includes('Image') ? 'images' : 'items'}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {dataset.size}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {dataset.classes || '—'}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={dataset.status} />
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {dataset.created}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DatasetActions dataset={dataset} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+            ))}
+          </TableBody>
+        </Table>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {visibleDatasets.map((dataset) => (
             <Card key={dataset.id} className="gap-3">
               <CardHeader className="flex-row items-start">
-                <div className="flex size-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                <div className="flex size-9 items-center justify-center rounded-lg bg-primary-muted text-primary">
                   <Box className="size-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <CardTitle className="truncate text-sm text-indigo-600">
+                  <CardTitle className="truncate text-sm text-primary">
                     <Link
                       to="/projects/$projectId/datasets/$datasetId"
                       params={{
@@ -306,11 +304,11 @@ function ProjectDatasetsRoute() {
         </div>
       )}
 
-      <Empty className="mt-6 gap-0 border-2 bg-white px-6 py-16">
+      <Empty className="mt-6 gap-0 border-2 bg-card px-6 py-16">
         <EmptyHeader className="gap-0">
           <EmptyMedia
             variant="icon"
-            className="mb-4 size-12 bg-indigo-50 text-indigo-600"
+            className="mb-4 size-12 bg-primary-muted text-primary"
           >
             <Box className="size-6" />
           </EmptyMedia>

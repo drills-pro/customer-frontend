@@ -176,14 +176,14 @@ export function AddDatasetDialog({
               <Field>
                 <FieldLabel
                   htmlFor="dataset-files"
-                  className="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed bg-slate-50 text-center"
+                  className="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed bg-muted/50 text-center"
                   onDragOver={(event) => event.preventDefault()}
                   onDrop={(event) => {
                     event.preventDefault()
                     chooseFiles(event.dataTransfer.files)
                   }}
                 >
-                  <Upload className="size-6 text-indigo-600" />
+                  <Upload className="size-6 text-primary" />
                   <span className="font-medium">
                     {files.length
                       ? `${files.length} file${files.length === 1 ? '' : 's'} selected`

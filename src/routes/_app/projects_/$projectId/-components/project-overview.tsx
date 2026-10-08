@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { Link } from '@tanstack/react-router'
 import { FolderKanban } from 'lucide-react'
-import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -21,10 +20,6 @@ export const usagePeriodLabels: Record<UsagePeriod, string> = {
 /** e.g. "last 24 hours" — the count comes from the series so copy can't drift. */
 export function usageRangeLabel(resource: ResourceUsage, period: UsagePeriod) {
   return `last ${resource.series[period].length} ${usagePeriodLabels[period]}`
-}
-
-export function unavailable(label: string) {
-  toast.info(`${label} is not available in this dashboard demo.`)
 }
 
 export function FactList({
@@ -97,7 +92,7 @@ export function ProjectNotFound({ projectId }: { projectId: string }) {
     >
       <Card className="w-full max-w-md text-center">
         <CardContent className="flex flex-col items-center py-8">
-          <span className="flex size-12 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+          <span className="flex size-12 items-center justify-center rounded-full bg-primary-muted text-primary">
             <FolderKanban />
           </span>
           <h1 className="mt-4 text-xl">Project not found</h1>

@@ -1,3 +1,5 @@
+import { FolderKanban } from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -7,32 +9,31 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
+import {
   Item,
   ItemContent,
   ItemDescription,
   ItemMedia,
   ItemTitle,
 } from '@/components/ui/item'
-import { allProjects } from '@/features/dashboard/data'
-import { useDashboardLayout } from '@/features/dashboard/context'
-import { showUnavailable } from './helpers'
-import { DashboardEmptyMessage } from './dashboard-empty-message'
+import { useOrgProjects } from '@/features/dashboard/hooks'
+import { unavailable } from '@/lib/unavailable'
 
 export function YourProjectsCard() {
-  const { preferences, org } = useDashboardLayout()
-  const orgProjects = allProjects(preferences).filter(
-    (item) => item.orgId === org.id,
-  )
+  const orgProjects = useOrgProjects()
 
   return (
     <Card size="flush">
       <CardHeader className="border-b">
         <CardTitle>Your projects</CardTitle>
         <CardAction>
-          <Button
-            variant="link"
-            onClick={() => showUnavailable('All projects')}
-          >
+          <Button variant="link" onClick={() => unavailable('All projects')}>
             View all
           </Button>
         </CardAction>
@@ -45,12 +46,12 @@ export function YourProjectsCard() {
                 asChild
                 variant="outline"
                 key={project.id}
-                className="p-0 hover:border-indigo-300 hover:bg-indigo-50/40"
+                className="p-0 hover:border-primary/40 hover:bg-primary-muted/40"
               >
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => showUnavailable(project.name)}
+                  onClick={() => unavailable(project.name)}
                   className="h-auto w-full justify-start gap-3 p-3 text-left whitespace-normal"
                 >
                   <ItemMedia>
@@ -64,7 +65,7 @@ export function YourProjectsCard() {
                     <ItemDescription>
                       {project.task} · {project.models} models
                     </ItemDescription>
-                    <ItemDescription className="text-slate-400">
+                    <ItemDescription className="text-muted-foreground/80">
                       Updated {project.updated}
                     </ItemDescription>
                   </ItemContent>
@@ -73,10 +74,17 @@ export function YourProjectsCard() {
             ))}
           </div>
         ) : (
-          <DashboardEmptyMessage
-            title="Create your first project"
-            text="New projects for this organization will appear here."
-          />
+          <Empty className="min-h-36 gap-3 py-8">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <FolderKanban />
+              </EmptyMedia>
+              <EmptyTitle>Create your first project</EmptyTitle>
+              <EmptyDescription>
+                New projects for this organization will appear here.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
       </CardContent>
     </Card>

@@ -30,7 +30,6 @@ export const Route = createFileRoute('/_app/projects')({
 
 const defaultProjectFilters: ProjectFiltersState = {
   query: '',
-  organization: 'all',
   task: 'all',
   status: 'all',
   sort: 'recent',
@@ -43,24 +42,22 @@ const taskTypes = [
 const statuses: Array<Project['status']> = ['Active', 'Draft', 'Archived']
 
 function ProjectsPage() {
-  const { preferences } = useDashboardLayout()
+  const { preferences, org } = useDashboardLayout()
   const [filters, setFilters] = React.useState<ProjectFiltersState>(
     defaultProjectFilters,
   )
   const updateFilters = (patch: Partial<ProjectFiltersState>) =>
     setFilters((current) => ({ ...current, ...patch }))
 
-  const availableProjects = allProjects(preferences)
-  const organizationCount = new Set(
-    availableProjects.map((project) => project.orgId),
-  ).size
+  // The header switcher owns the organization: this page lists only its projects.
+  const orgProjects = allProjects(preferences).filter(
+    (project) => project.orgId === org.id,
+  )
   const normalizedQuery = filters.query.trim().toLowerCase()
-  const visibleProjects = availableProjects
+  const visibleProjects = orgProjects
     .filter(
       (project) =>
         project.name.toLowerCase().includes(normalizedQuery) &&
-        (filters.organization === 'all' ||
-          project.orgId === filters.organization) &&
         (filters.task === 'all' || project.task === filters.task) &&
         (filters.status === 'all' || project.status === filters.status),
     )
@@ -79,8 +76,8 @@ function ProjectsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Projects</h1>
           <p className="mt-1 text-muted-foreground">
-            {availableProjects.length} projects across {organizationCount}{' '}
-            {organizationCount === 1 ? 'organization' : 'organizations'}
+            {orgProjects.length}{' '}
+            {orgProjects.length === 1 ? 'project' : 'projects'} in {org.name}
           </p>
         </div>
         <Button asChild size="lg" className="px-3.5">
@@ -110,7 +107,7 @@ function ProjectsPage() {
             ))}
             <Link
               to="/projects/new"
-              className="flex min-h-[200px] w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-slate-300 text-sm font-medium text-slate-500 transition-colors hover:border-indigo-400 hover:bg-indigo-50/30 hover:text-indigo-600"
+              className="flex min-h-[200px] w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-input text-sm font-medium text-muted-foreground transition-colors hover:border-primary/60 hover:bg-primary-muted/30 hover:text-primary"
             >
               <Plus className="size-6" />
               New project
@@ -120,16 +117,30 @@ function ProjectsPage() {
           <ProjectsTable projects={visibleProjects} />
         )
       ) : (
-        <Empty className="min-h-80 border bg-white">
+        <Empty className="min-h-80 border bg-card">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Search />
             </EmptyMedia>
-            <EmptyTitle>No matching projects</EmptyTitle>
+            <EmptyTitle>
+              {orgProjects.length
+                ? 'No matching projects'
+                : `No projects in ${org.name} yet`}
+            </EmptyTitle>
             <EmptyDescription>
-              Try a different search or change the selected filters.
+              {orgProjects.length
+                ? 'Try a different search or change the selected filters.'
+                : 'Create a project to start training models, or switch organization.'}
             </EmptyDescription>
           </EmptyHeader>
+          {orgProjects.length === 0 && (
+            <Button asChild>
+              <Link to="/projects/new">
+                <Plus />
+                New project
+              </Link>
+            </Button>
+          )}
         </Empty>
       )}
     </main>

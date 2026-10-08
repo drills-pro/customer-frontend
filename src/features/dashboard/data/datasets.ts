@@ -424,3 +424,55 @@ export const datasetDetails: Partial<Record<string, DatasetDetailMock>> = {
     ],
   },
 }
+
+function fallbackComposition(
+  dataset: Dataset,
+): DatasetDetailMock['composition'] {
+  if (dataset.modality === 'image')
+    return { fileFormat: 'JPEG', avgDimensions: { width: 1024, height: 768 } }
+  if (dataset.modality === 'text') return { fileFormat: 'CSV' }
+  return { fileFormat: 'Parquet' }
+}
+
+export function fallbackDetail(dataset: Dataset): DatasetDetailMock {
+  return {
+    samples: [],
+    distribution: [],
+    classDistribution: [],
+    composition: fallbackComposition(dataset),
+    healthChecks: [
+      { status: 'pass', label: 'Source files available' },
+      { status: 'pass', label: 'Metadata validated' },
+    ],
+    qualityReport: {
+      lastChecked: 'Not yet checked',
+      findings: [
+        {
+          dimension: 'integrity',
+          severity: 'pass',
+          title: 'Source files available',
+        },
+        {
+          dimension: 'metadata',
+          severity: 'pass',
+          title: 'Metadata validated',
+        },
+      ],
+    },
+    splitDistribution: [
+      { label: 'Train', percent: dataset.split === 'Train' ? 100 : 0 },
+      {
+        label: 'Validation',
+        percent: dataset.split === 'Validation' ? 100 : 0,
+      },
+      { label: 'Test', percent: dataset.split === 'Test' ? 100 : 0 },
+    ],
+    versions: [
+      {
+        version: dataset.version,
+        items: dataset.items,
+        created: dataset.created,
+      },
+    ],
+  }
+}

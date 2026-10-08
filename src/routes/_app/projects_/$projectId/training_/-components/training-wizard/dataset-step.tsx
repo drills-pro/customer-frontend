@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/slider'
 import type { Dataset, TrainingSplit } from '@/features/dashboard/data'
 
-const splitColors = ['bg-primary', 'bg-indigo-400', 'bg-indigo-200']
+const splitColors = ['bg-primary', 'bg-primary/70', 'bg-primary/25']
 
 export function DatasetStep({
   datasets,
@@ -35,8 +35,7 @@ export function DatasetStep({
   projectId: string
 }) {
   const dataset = datasets.find((item) => item.id === datasetId)
-  const sliderMin = 5
-  const sliderMax = 95
+  const minSplit = 5
   const boundaries = [split.train, split.train + split.validation]
   const splitRows = [
     ['Train', split.train],
@@ -50,7 +49,7 @@ export function DatasetStep({
         <h2 className="text-lg font-semibold tracking-tight">
           Choose a dataset
         </h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Pick the ready dataset this run will train on, then set how it's
           split.
         </p>
@@ -70,7 +69,7 @@ export function DatasetStep({
                 <span className="flex min-w-0 items-center gap-3.5">
                   <span
                     data-dataset-icon
-                    className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-primary"
+                    className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-muted text-primary"
                   >
                     <Database className="size-4.5" />
                   </span>
@@ -102,32 +101,42 @@ export function DatasetStep({
               </span>
             </div>
             <Slider
-              min={sliderMin}
-              max={sliderMax}
+              min={0}
+              max={100}
               step={1}
-              minStepsBetweenThumbs={5}
+              minStepsBetweenThumbs={minSplit}
               value={boundaries}
-              onValueChange={([train, validationEnd]) =>
+              onValueChange={([nextTrain, nextValidationEnd]) => {
+                // The bar spans 0–100 so segment widths match their
+                // percentages; every split still keeps at least minSplit.
+                const validationEnd = Math.min(
+                  Math.max(nextValidationEnd, minSplit * 2),
+                  100 - minSplit,
+                )
+                const train = Math.min(
+                  Math.max(nextTrain, minSplit),
+                  validationEnd - minSplit,
+                )
                 setSplit({
                   train,
                   validation: validationEnd - train,
                   test: 100 - validationEnd,
                 })
-              }
+              }}
             >
               <SliderBar className="h-8">
                 <SliderMark index={0} className="bg-primary">
-                  <span className="truncate text-xs font-semibold text-white">
+                  <span className="truncate text-xs font-semibold text-primary-foreground">
                     Train {split.train}%
                   </span>
                 </SliderMark>
-                <SliderMark index={1} className="bg-indigo-400">
-                  <span className="truncate text-xs font-semibold text-white">
+                <SliderMark index={1} className="bg-primary/70">
+                  <span className="truncate text-xs font-semibold text-primary-foreground">
                     {split.validation}%
                   </span>
                 </SliderMark>
-                <SliderMark index={2} className="bg-indigo-200">
-                  <span className="truncate text-xs font-semibold text-white">
+                <SliderMark index={2} className="bg-primary/25">
+                  <span className="truncate text-xs font-semibold text-foreground">
                     {split.test}%
                   </span>
                 </SliderMark>
@@ -135,12 +144,12 @@ export function DatasetStep({
               <SliderDragger
                 label="Train split"
                 valueText={`Train ${split.train}%`}
-                className="h-5 w-1 rounded-sm border-0 bg-white"
+                className="h-5 w-1 rounded-sm border-0 bg-card"
               />
               <SliderDragger
                 label="Validation split"
                 valueText={`Validation ${split.validation}%, test ${split.test}%`}
-                className="h-5 w-1 rounded-sm border-0 bg-white"
+                className="h-5 w-1 rounded-sm border-0 bg-card"
               />
             </Slider>
             <div className="mt-3 grid grid-cols-3 gap-2">

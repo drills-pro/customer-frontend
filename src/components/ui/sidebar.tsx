@@ -236,7 +236,7 @@ function Sidebar({
           // Adjust the padding for floating and inset variants.
           variant === 'floating' || variant === 'inset'
             ? 'p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]'
-            : 'group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=left]:border-slate-200 group-data-[side=right]:border-l group-data-[side=right]:border-slate-200',
+            : 'group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=left]:border-border group-data-[side=right]:border-l group-data-[side=right]:border-border',
           className,
         )}
         {...props}
@@ -670,7 +670,7 @@ function SidebarMenuSubButton({
       data-size={size}
       data-active={isActive ? 'true' : undefined}
       className={cn(
-        'flex h-8 min-w-0 items-center gap-2 overflow-hidden rounded-md px-3 text-slate-600 ring-sidebar-ring outline-hidden group-data-[collapsible=icon]:hidden bg-transparent hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-2 active:bg-slate-100 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[size=md]:text-sm data-[size=sm]:text-xs data-[active=true]:bg-indigo-50 data-[active=true]:font-medium data-[active=true]:text-indigo-700 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
+        'flex h-8 min-w-0 items-center gap-2 overflow-hidden rounded-md px-3 text-muted-foreground ring-sidebar-ring outline-hidden group-data-[collapsible=icon]:hidden bg-transparent hover:bg-muted hover:text-foreground focus-visible:ring-2 active:bg-muted disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[size=md]:text-sm data-[size=sm]:text-xs data-[active=true]:bg-primary-muted data-[active=true]:font-medium data-[active=true]:text-primary [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
         className,
       )}
       {...props}

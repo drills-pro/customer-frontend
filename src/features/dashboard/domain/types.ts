@@ -1,10 +1,49 @@
 /** Every entity the dashboard works with. Pure types, no dependencies. */
 
+export const orgPlans = ['Free', 'Team', 'Enterprise'] as const
+export type OrgPlan = (typeof orgPlans)[number]
+
+export const orgRoles = ['Owner', 'Admin', 'Member', 'Viewer'] as const
+export type OrgRole = (typeof orgRoles)[number]
+
 export type Organization = {
   id: string
   name: string
   initial: string
   color: string
+  /** URL handle, unique across DRILLS: `drills.ai/<slug>`. */
+  slug: string
+  plan: OrgPlan
+  description: string
+  createdAt: number
+  /** The signed-in user's role in this organization. */
+  yourRole: OrgRole
+}
+
+/** The editable identity fields of an organization. */
+export type OrganizationProfile = Pick<
+  Organization,
+  'name' | 'slug' | 'description' | 'color'
+>
+
+export type OrgMember = {
+  id: string
+  name: string
+  email: string
+  initials: string
+  color: string
+  role: OrgRole
+  joinedAt: number
+  lastActive: string
+  status: 'active' | 'invited'
+  you?: boolean
+}
+
+export type OrgInvitation = {
+  id: string
+  organization: Organization
+  invitedBy: string
+  sentAt: number
 }
 export type Project = {
   id: string
@@ -126,13 +165,56 @@ export type CreatedProject = {
   template?: string
   clonedFromProjectId?: string
 }
+export type ModelStage = 'Production' | 'Staging' | 'Archived'
+/** A trained model version, produced by one training run. */
+export type Model = {
+  id: string
+  projectId: string
+  /** Shared across versions: `resnet50` v1, v2 and v3 are three `Model`s. */
+  name: string
+  version: number
+  architecture: string
+  framework: string
+  /** The `TrainingRun` this version came out of. */
+  runId: string
+  /** Percent, e.g. `94.2`. */
+  accuracy: number
+  /** Macro F1, e.g. `0.938`. */
+  f1: number
+  latencyP95: string
+  size: string
+  stage: ModelStage
+  author: string
+  created: string
+}
+
+export type DeploymentStatus = 'Live' | 'Paused' | 'Deploying'
+export type DeploymentEnvironment = 'Production' | 'Staging' | 'Batch' | 'Edge'
+/**
+ * A served model. Keyed on `projectId`, like `TrainingRun`; the org is resolved
+ * through the project rather than stored twice.
+ */
 export type Deployment = {
   id: string
-  orgId: string
+  projectId: string
+  modelId: string
   name: string
-  latency: string
+  status: DeploymentStatus
+  environment: DeploymentEnvironment
+  endpoint: string
+  region: string
+  instanceName: string
+  minReplicas: number
+  maxReplicas: number
+  activeReplicas: number
+  /** Display strings: a paused deployment reads `—`, not `0`. */
+  requests24h: string
+  latencyP50: string
+  latencyP95: string
+  latencyP99: string
   errorRate: string
-  status: 'Live' | 'Paused'
+  costPerDay: string
+  deployed: string
 }
 export type Dataset = {
   id: string
@@ -219,12 +301,23 @@ export type DatasetDetailMock = {
     created: string
   }>
 }
+export const themePreferences = ['light', 'dark', 'system'] as const
+export type ThemePreference = (typeof themePreferences)[number]
+
 export type DashboardPreferences = {
   organizationId: string
   onboardingDismissed: boolean
   notificationsRead: boolean
+  /** Applied to `<html>` by `useApplyTheme`; "system" follows the OS. */
+  theme: ThemePreference
   uploads: Activity[]
   datasets: Dataset[]
   trainingRuns: TrainingRun[]
   createdProjects: CreatedProject[]
+  /** Organizations created or joined in this browser. */
+  createdOrganizations: Organization[]
+  /** Saved identity edits to the seeded organizations, keyed by org id. */
+  organizationEdits: Record<string, OrganizationProfile>
+  /** Invitation ids the user declined. */
+  declinedInvitations: string[]
 }

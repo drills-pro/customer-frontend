@@ -1,4 +1,8 @@
-import { defaultPreferences, organizations } from '@/features/dashboard/data'
+import {
+  defaultPreferences,
+  isSeedOrganization,
+  themePreferences,
+} from '@/features/dashboard/data'
 import type { DashboardPreferences } from '@/features/dashboard/data'
 import {
   migrateCreatedProject,
@@ -9,6 +13,8 @@ import {
   activitySchema,
   createdProjectSchema,
   datasetSchema,
+  organizationProfileSchema,
+  organizationSchema,
   parseEntry,
   trainingRunSchema,
 } from './schema'
@@ -31,6 +37,19 @@ function restoreList<T>(
 
 const identity = (entry: unknown) => entry
 
+/** Keeps only edits to seeded organizations that still validate. */
+function restoreEdits(
+  value: unknown,
+): DashboardPreferences['organizationEdits'] {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+  const edits: DashboardPreferences['organizationEdits'] = {}
+  for (const [orgId, entry] of Object.entries(value)) {
+    const profile = parseEntry(organizationProfileSchema, entry)
+    if (profile && isSeedOrganization(orgId)) edits[orgId] = profile
+  }
+  return edits
+}
+
 /**
  * Turns the raw stored string into preferences. Each field is restored
  * independently so a missing or invalid one falls back to its default rather
@@ -45,14 +64,29 @@ export function restorePreferences(value: string | null): DashboardPreferences {
     }
     const saved = parsed as Record<string, unknown>
 
+    const createdOrganizations = restoreList(
+      saved.createdOrganizations,
+      identity,
+      organizationSchema,
+    ).filter(
+      (org, index, list) =>
+        !isSeedOrganization(org.id) &&
+        list.findIndex((item) => item.id === org.id) === index,
+    )
+    const organizationId =
+      typeof saved.organizationId === 'string' &&
+      (isSeedOrganization(saved.organizationId) ||
+        createdOrganizations.some((org) => org.id === saved.organizationId))
+        ? saved.organizationId
+        : defaultPreferences.organizationId
+
     return {
-      organizationId: organizations.some(
-        (org) => org.id === saved.organizationId,
-      )
-        ? (saved.organizationId as string)
-        : defaultPreferences.organizationId,
+      organizationId,
       onboardingDismissed: saved.onboardingDismissed === true,
       notificationsRead: saved.notificationsRead === true,
+      theme:
+        themePreferences.find((theme) => theme === saved.theme) ??
+        defaultPreferences.theme,
       uploads: restoreList(saved.uploads, identity, activitySchema),
       datasets: restoreList(saved.datasets, migrateDataset, datasetSchema),
       trainingRuns: restoreList(
@@ -65,6 +99,13 @@ export function restorePreferences(value: string | null): DashboardPreferences {
         migrateCreatedProject,
         createdProjectSchema,
       ),
+      createdOrganizations,
+      organizationEdits: restoreEdits(saved.organizationEdits),
+      declinedInvitations: Array.isArray(saved.declinedInvitations)
+        ? saved.declinedInvitations.filter(
+            (id): id is string => typeof id === 'string',
+          )
+        : [],
     }
   } catch {
     return defaultPreferences

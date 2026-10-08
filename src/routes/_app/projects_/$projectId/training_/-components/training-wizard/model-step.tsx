@@ -27,13 +27,13 @@ export function ModelStep({
     <section>
       <div>
         <h2 className="text-lg font-semibold tracking-tight">Choose a model</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Pick an architecture to fine-tune, or start from scratch.
         </p>
       </div>
       <Item
         variant="outline"
-        className="mt-6 flex-nowrap gap-4 rounded-xl border-primary bg-indigo-50/70 p-5"
+        className="mt-6 flex-nowrap gap-4 rounded-xl border-primary bg-primary-muted/70 p-5"
       >
         <ItemMedia className="group-has-data-[slot=item-description]/item:self-center group-has-data-[slot=item-description]/item:translate-y-0">
           <span className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
@@ -47,7 +47,7 @@ export function ModelStep({
           <ItemDescription className="leading-relaxed">
             {selected.description}
           </ItemDescription>
-          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-indigo-700">
+          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-primary">
             {metadata.map((value, index) => (
               <span key={value} className="flex items-center gap-3">
                 {index > 0 && (
@@ -71,7 +71,7 @@ export function ModelStep({
           >
             <span
               data-model-icon
-              className="flex size-10 items-center justify-center rounded-lg bg-indigo-50 text-primary"
+              className="flex size-10 items-center justify-center rounded-lg bg-primary-muted text-primary"
             >
               <Network className="size-5" />
             </span>

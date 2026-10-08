@@ -51,14 +51,29 @@ fi
 
 echo "✓ no application-level important utilities"
 
-# There is no supported dark mode: the root forces light and no theme provider
-# is mounted, so a `dark:` rule can activate from the OS preference alone and
-# paint light-only tokens into a dark variant.
-if grep -rn "dark:" src --include='*.tsx' --include='*.ts' --include='*.css'; then
+# Colors come from the tokens in src/styles.css, which switch with the theme.
+# A raw palette class (`bg-white`, `text-slate-500`, `bg-emerald-50`) stays the
+# same in dark mode, and a `dark:` variant would fork the theme outside the
+# tokens. `text-white` is allowed: it sits on user-chosen avatar colors.
+# The appearance page is exempt: its swatches depict each theme literally.
+PALETTE='(^|[^a-z-])(bg|text|border|border-[trblxy]|ring|ring-offset|divide|outline|from|via|to|fill|stroke)-(white|slate|gray|zinc|neutral|stone|indigo|emerald|amber|rose|red|green|blue|violet|sky|teal|purple|orange|yellow|cyan|pink|fuchsia|lime)(-[0-9]+)?([^a-z0-9-]|$)'
+
+if grep -rnE "$PALETTE" src --include='*.tsx' --include='*.ts' |
+  grep -v 'src/routes/_app/account/appearance.tsx' |
+  grep -v 'text-white'; then
   echo
-  echo "✗ Unsupported dark: variant found (see above)."
-  echo "  This app ships a light theme only; remove the dark variant."
+  echo "✗ Raw palette color found (see above)."
+  echo "  Use a theme token instead, e.g. bg-card, text-muted-foreground, bg-success-muted."
   exit 1
 fi
 
-echo "✓ no unsupported dark variants"
+echo "✓ colors use theme tokens"
+
+if grep -rnE "(^|[^a-z-])dark:[a-z[!-]" src --include='*.tsx' --include='*.ts'; then
+  echo
+  echo "✗ dark: variant found (see above)."
+  echo "  Give the token a dark value in src/styles.css instead."
+  exit 1
+fi
+
+echo "✓ no dark: variants"

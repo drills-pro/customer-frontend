@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import type { Project } from '@/features/dashboard/data'
 
-import { unavailable } from './helpers'
+import { unavailable } from '@/lib/unavailable'
 
 export function ProjectMenu({ project }: { project: Project }) {
   return (

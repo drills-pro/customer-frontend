@@ -41,12 +41,12 @@ test('renders the Retail Vision project overview', async ({ page }) => {
   await expect(
     content.getByRole('definition').filter({ hasText: 'PyTorch 2.4' }),
   ).toBeVisible()
-  await expect(content.getByText('42 / 100 GPU hours')).toBeVisible()
-  await expect(content.getByText('Usage, last 7 days')).toBeVisible()
+  await expect(content.getByText('8 / 100 GPU hours')).toBeVisible()
+  await expect(content.getByText('Usage, last 24 hours')).toBeVisible()
   await expect(content.getByText('Alex Rivera', { exact: true })).toBeVisible()
   await expect(
     content.getByRole('img', {
-      name: 'GPU hours usage for the last 7 days',
+      name: 'GPU hours usage for the last 24 hours',
     }),
   ).toBeVisible()
   await expect(content.getByText('README.md')).toBeVisible()
@@ -72,20 +72,56 @@ test('changes the resource usage interval for every chart', async ({
   page,
 }) => {
   await page.getByRole('combobox', { name: 'Usage interval' }).click()
+  await expect(page.getByRole('option', { name: 'Hour' })).toHaveCount(0)
+  await page.getByRole('option', { name: 'Week' }).click()
+
+  await expect(page.getByText('Usage, last 7 days')).toBeVisible()
+  await expect(page.getByText('42 / 100 GPU hours')).toBeVisible()
+
+  await page.getByRole('combobox', { name: 'Usage interval' }).click()
   await page.getByRole('option', { name: 'Month' }).click()
 
-  await expect(page.getByText('Usage, last 7 months')).toBeVisible()
+  await expect(page.getByText('Usage, last 30 days')).toBeVisible()
   await expect(page.getByText('91 / 100 GPU hours')).toBeVisible()
   await expect(
     page.getByRole('img', {
-      name: 'Storage usage for the last 7 months',
+      name: 'Storage usage for the last 30 days',
     }),
   ).toBeVisible()
   await expect(
     page.getByRole('img', {
-      name: 'Endpoints usage for the last 7 months',
+      name: 'Endpoints usage for the last 30 days',
     }),
   ).toBeVisible()
+})
+
+test('scrolls the usage chart when the bars overflow the card', async ({
+  page,
+}) => {
+  const scroller = page.getByTestId('usage-scroller-gpu-hours')
+
+  // Day renders 24 hourly bars, so the chart is wider than the card.
+  const day = await scroller.evaluate((node) => ({
+    scrollWidth: node.scrollWidth,
+    clientWidth: node.clientWidth,
+    scrollLeft: node.scrollLeft,
+  }))
+  expect(day.scrollWidth).toBeGreaterThan(day.clientWidth)
+  // It opens on the latest bar, at the right edge, not at the start.
+  expect(day.scrollLeft + day.clientWidth).toBeGreaterThanOrEqual(
+    day.scrollWidth - 1,
+  )
+
+  // Week renders 7 bars, which fit without scrolling.
+  await page.getByRole('combobox', { name: 'Usage interval' }).click()
+  await page.getByRole('option', { name: 'Week' }).click()
+  await expect(page.getByText('Usage, last 7 days')).toBeVisible()
+
+  const week = await scroller.evaluate((node) => ({
+    scrollWidth: node.scrollWidth,
+    clientWidth: node.clientWidth,
+  }))
+  expect(week.scrollWidth).toBeLessThanOrEqual(week.clientWidth)
 })
 
 test('shows an exact usage value when a bar is hovered', async ({ page }) => {
@@ -94,9 +130,10 @@ test('shows an exact usage value when a bar is hovered', async ({ page }) => {
     .locator('.recharts-bar-rectangle')
     .last()
 
+  await latestGpuBar.scrollIntoViewIfNeeded()
   await latestGpuBar.hover()
-  await expect(page.getByText('Sunday', { exact: true })).toBeVisible()
-  await expect(page.getByText('8 GPU hours', { exact: true })).toBeVisible()
+  await expect(page.getByText('11 PM', { exact: true })).toBeVisible()
+  await expect(page.getByText('0.7 GPU hours', { exact: true })).toBeVisible()
 })
 
 test('share works and project actions navigate', async ({ page }) => {

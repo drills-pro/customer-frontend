@@ -1,5 +1,4 @@
 import type {
-  Organization,
   Project,
   ProjectOverview,
   ResourceUsage,
@@ -11,12 +10,6 @@ const DAY = 24 * HOUR
 /** Fixtures are relative to load so their relative times stay plausible. */
 const SEED_NOW = Date.now()
 
-export const organizations: Organization[] = [
-  { id: 'acme', name: 'Acme AI', initial: 'A', color: '#10b981' },
-  { id: 'northwind', name: 'Northwind Labs', initial: 'N', color: '#0ea5e9' },
-  { id: 'solo', name: 'Solo Sandbox', initial: 'S', color: '#f59e0b' },
-]
-
 export const projects: Project[] = [
   {
     id: 'retail',
@@ -25,7 +18,7 @@ export const projects: Project[] = [
     task: 'Image Classification',
     description: 'Classify 240 SKU categories from shelf photos',
     datasets: 4,
-    models: 8,
+    models: 5,
     deployed: 2,
     status: 'Active',
     updatedAt: SEED_NOW - HOUR * 2,

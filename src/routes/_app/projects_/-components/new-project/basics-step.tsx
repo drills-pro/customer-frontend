@@ -8,21 +8,17 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { useDashboardLayout } from '@/features/dashboard/context'
 import { projectRegions } from '@/features/dashboard/data'
 import type { NewProjectDraft } from './use-new-project-draft'
 
-export function BasicsStep({
-  draft,
-  orgName,
-}: {
-  draft: NewProjectDraft
-  orgName: string
-}) {
+export function BasicsStep({ draft }: { draft: NewProjectDraft }) {
+  const orgName = useDashboardLayout().org.name
   return (
     <section className="grid gap-5">
       <div>
         <h2 className="text-lg font-semibold">Basics</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Name your project and choose where it lives.
         </p>
       </div>
@@ -58,7 +54,9 @@ export function BasicsStep({
         >
           <span className="text-sm font-medium">
             Description{' '}
-            <span className="font-normal text-slate-400">(optional)</span>
+            <span className="font-normal text-muted-foreground/80">
+              (optional)
+            </span>
           </span>
         </FieldLabel>
         <Textarea

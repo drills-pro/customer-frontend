@@ -6,24 +6,24 @@ import { Badge } from '@/components/ui/badge'
 import { RouteBreadcrumbs } from '@/components/breadcrumbs'
 import { Button } from '@/components/ui/button'
 import { useProjectDetail } from '@/features/dashboard/context'
+import { unavailable } from '@/lib/unavailable'
 import {
   projectSectionLink,
   projectSections,
 } from '@/features/dashboard/navigation'
-import { Collaborators, ProjectMark } from '@/components/dashboard/project-ui'
+import {
+  Collaborators,
+  ProjectMark,
+} from '@/features/projects/components/project-ui'
 
 export const Route = createFileRoute('/_app/projects_/$projectId/_nav')({
   component: ProjectNavLayout,
 })
 
-// The line-tab treatment from `tabsListVariants`, applied to router links and
-// placeholder buttons. No `!important`: nothing else styles these elements.
+// The line-tab treatment from `tabsListVariants`, applied to router links.
+// No `!important`: nothing else styles these elements.
 const sectionTabClass =
-  'shrink-0 rounded-none border-x-0 border-t-0 border-b-2 border-transparent bg-transparent px-1 py-3 text-sm font-medium text-slate-500 shadow-none transition-colors outline-hidden hover:bg-transparent hover:text-slate-800 focus-visible:ring-2 focus-visible:ring-ring data-[active]:border-b-indigo-600 data-[active]:text-indigo-600'
-
-function unavailable(label: string) {
-  toast.info(`${label} is not available in this dashboard demo.`)
-}
+  'shrink-0 rounded-none border-x-0 border-t-0 border-b-2 border-transparent bg-transparent px-1 py-3 text-sm font-medium text-muted-foreground shadow-none transition-colors outline-hidden hover:bg-transparent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-[active]:border-b-primary data-[active]:text-primary'
 
 function ProjectNavLayout() {
   const { project, details } = useProjectDetail()
@@ -52,7 +52,7 @@ function ProjectNavLayout() {
               <h1>{project.name}</h1>
               <Badge
                 variant="secondary"
-                className="border-0 bg-slate-100 font-medium text-slate-600"
+                className="border-0 bg-muted font-medium text-muted-foreground"
               >
                 {project.task}
               </Badge>
@@ -95,31 +95,19 @@ function ProjectNavLayout() {
 
       <nav
         aria-label="Project sections"
-        className="flex items-center gap-6 overflow-x-auto whitespace-nowrap border-b border-slate-200"
+        className="flex items-center gap-6 overflow-x-auto whitespace-nowrap border-b border-border"
       >
-        {projectSections.map((section) => {
-          const to = projectSectionLink(section)
-          return to ? (
-            <Link
-              key={section}
-              to={to}
-              params={{ projectId: project.id }}
-              activeProps={{ 'data-active': 'true' }}
-              className={sectionTabClass}
-            >
-              {section}
-            </Link>
-          ) : (
-            <button
-              key={section}
-              type="button"
-              className={sectionTabClass}
-              onClick={() => unavailable(section)}
-            >
-              {section}
-            </button>
-          )
-        })}
+        {projectSections.map((section) => (
+          <Link
+            key={section}
+            to={projectSectionLink(section)}
+            params={{ projectId: project.id }}
+            activeProps={{ 'data-active': 'true' }}
+            className={sectionTabClass}
+          >
+            {section}
+          </Link>
+        ))}
       </nav>
 
       <Outlet />

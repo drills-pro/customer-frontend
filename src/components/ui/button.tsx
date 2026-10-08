@@ -20,7 +20,7 @@ const buttonVariants = cva(
           'bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:ring-destructive',
         link: 'text-primary underline-offset-4 hover:underline',
         option:
-          'border-slate-200 text-left text-foreground hover:border-indigo-300 hover:bg-transparent aria-pressed:border-indigo-600 aria-pressed:bg-indigo-50/40 aria-pressed:inset-ring-1 aria-pressed:inset-ring-indigo-600 aria-pressed:hover:border-indigo-600 aria-pressed:hover:bg-indigo-50/40',
+          'border-border text-left text-foreground hover:border-primary/40 hover:bg-transparent aria-pressed:border-primary aria-pressed:bg-primary-muted/40 aria-pressed:inset-ring-1 aria-pressed:inset-ring-indigo-600 aria-pressed:hover:border-primary aria-pressed:hover:bg-primary-muted/40',
       },
       size: {
         default:

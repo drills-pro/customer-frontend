@@ -48,7 +48,7 @@ export function ConfigureStep(props: ConfigureStepProps) {
         <h2 className="text-lg font-semibold tracking-tight">
           Configure training
         </h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Tune the run's hyperparameters and augmentation.
         </p>
       </div>

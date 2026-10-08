@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { Toaster } from '@/components/ui/sonner'
+import { themeBootScript } from '@/features/dashboard/theme'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
@@ -37,8 +38,11 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="light">
+    // The boot script sets the theme class before hydration, so React must not
+    // treat that attribute as a mismatch.
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
         <HeadContent />
       </head>
       <body>

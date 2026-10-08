@@ -21,7 +21,7 @@ export const Route = createFileRoute('/_app/projects_/$projectId')({
       }
       return {
         items: [
-          { id: organization.id, label: organization.name, link: overview },
+          { id: organization.id, label: organization.name, link: { to: '/' } },
           { id: project.id, label: project.name, link: overview },
         ],
         data: { organization, project },

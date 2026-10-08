@@ -1,5 +1,4 @@
 export type { View, ProjectFiltersState } from './types'
-export { unavailable } from './helpers'
 export { ProjectMenu } from './project-menu'
 export { ProjectCard } from './project-card'
 export { ProjectFilters } from './project-filters'

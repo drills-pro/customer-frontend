@@ -15,7 +15,7 @@ export function TrainingNotFound() {
       id="dashboard-main"
       className="mx-auto flex min-h-[60vh] w-full max-w-xl flex-1 items-center p-6"
     >
-      <Empty className="w-full border bg-white">
+      <Empty className="w-full border bg-card">
         <EmptyHeader>
           <EmptyTitle>Project not found</EmptyTitle>
           <EmptyDescription>

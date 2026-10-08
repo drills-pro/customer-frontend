@@ -54,7 +54,7 @@ function NewProjectFlow() {
                 <React.Fragment key={label}>
                   {index > 0 && (
                     <div
-                      className={`h-px flex-1 ${index <= step ? 'bg-indigo-600' : 'bg-slate-200'}`}
+                      className={`h-px flex-1 ${index <= step ? 'bg-primary' : 'bg-border'}`}
                     />
                   )}
                   <Button
@@ -66,7 +66,7 @@ function NewProjectFlow() {
                     className="h-auto gap-2 px-0 text-sm font-medium hover:bg-transparent disabled:cursor-not-allowed"
                   >
                     <span
-                      className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${index < step ? 'bg-emerald-500 text-white' : index === step ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500'}`}
+                      className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${index < step ? 'bg-success text-background' : index === step ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
                     >
                       {index < step ? (
                         <Check className="size-3.5" />
@@ -76,7 +76,9 @@ function NewProjectFlow() {
                     </span>
                     <span
                       className={
-                        index === step ? 'text-foreground' : 'text-slate-500'
+                        index === step
+                          ? 'text-foreground'
+                          : 'text-muted-foreground'
                       }
                     >
                       {label}
@@ -86,9 +88,9 @@ function NewProjectFlow() {
               ))}
             </div>
 
-            {step === 0 && <BasicsStep draft={draft} orgName={org.name} />}
+            {step === 0 && <BasicsStep draft={draft} />}
             {step === 1 && <TaskStep draft={draft} />}
-            {step === 2 && <StartMethodStep draft={draft} orgName={org.name} />}
+            {step === 2 && <StartMethodStep draft={draft} />}
 
             <div className="mt-8 flex justify-between border-t pt-5">
               {step === 0 ? (

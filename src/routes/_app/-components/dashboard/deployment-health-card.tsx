@@ -1,5 +1,16 @@
+import { Link } from '@tanstack/react-router'
+import { Rocket } from 'lucide-react'
+
+import { DeploymentStatusBadge } from '@/features/deployments/components/deployment-status-badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
 import {
   Item,
   ItemActions,
@@ -7,15 +18,10 @@ import {
   ItemDescription,
   ItemGroup,
 } from '@/components/ui/item'
-import { deployments } from '@/features/dashboard/data'
-import { useDashboardLayout } from '@/features/dashboard/context'
-import { showUnavailable } from './helpers'
-import { DashboardStatusBadge } from './dashboard-status-badge'
-import { DashboardEmptyMessage } from './dashboard-empty-message'
+import { useOrgDeployments } from '@/features/dashboard/hooks'
 
 export function DeploymentHealthCard() {
-  const { org } = useDashboardLayout()
-  const orgDeployments = deployments.filter((item) => item.orgId === org.id)
+  const deployments = useOrgDeployments()
 
   return (
     <Card size="flush">
@@ -23,9 +29,9 @@ export function DeploymentHealthCard() {
         <CardTitle>Deployment health</CardTitle>
       </CardHeader>
       <CardContent className="px-0">
-        {orgDeployments.length ? (
+        {deployments.length ? (
           <ItemGroup className="gap-0">
-            {orgDeployments.slice(0, 3).map((deployment) => (
+            {deployments.slice(0, 3).map((deployment) => (
               <Item
                 key={deployment.id}
                 role="listitem"
@@ -33,27 +39,42 @@ export function DeploymentHealthCard() {
               >
                 <ItemContent>
                   <Button
+                    asChild
                     variant="link"
-                    className="font-semibold text-foreground hover:text-indigo-600"
-                    onClick={() => showUnavailable(deployment.name)}
+                    className="font-semibold text-foreground hover:text-primary self-start"
                   >
-                    {deployment.name}
+                    <Link
+                      to="/projects/$projectId/deployments/$deploymentId"
+                      params={{
+                        projectId: deployment.projectId,
+                        deploymentId: deployment.id,
+                      }}
+                    >
+                      {deployment.name}
+                    </Link>
                   </Button>
                   <ItemDescription className="text-xs">
-                    p95 {deployment.latency} · err {deployment.errorRate}
+                    p95 {deployment.latencyP95} · err {deployment.errorRate}
                   </ItemDescription>
                 </ItemContent>
                 <ItemActions>
-                  <DashboardStatusBadge status={deployment.status} />
+                  <DeploymentStatusBadge status={deployment.status} />
                 </ItemActions>
               </Item>
             ))}
           </ItemGroup>
         ) : (
-          <DashboardEmptyMessage
-            title="No deployments"
-            text="Deployed models will appear here."
-          />
+          <Empty className="min-h-36 gap-3 py-8">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Rocket />
+              </EmptyMedia>
+              <EmptyTitle>No deployments</EmptyTitle>
+              <EmptyDescription>
+                Deployed models will appear here.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
       </CardContent>
     </Card>

@@ -2,17 +2,12 @@ import { Download } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { Dataset, TrainingRun } from '@/features/dashboard/data'
 
 import { downloadText } from './helpers'
+import { useCurrentTrainingRun } from './use-current-training-run'
 
-export function ConfigCard({
-  run,
-  dataset,
-}: {
-  run: TrainingRun
-  dataset?: Dataset
-}) {
+export function ConfigCard() {
+  const { run, dataset } = useCurrentTrainingRun()
   const config = {
     dataset: dataset?.name ?? run.datasetId,
     architecture: run.architecture,

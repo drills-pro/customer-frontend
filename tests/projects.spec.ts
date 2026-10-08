@@ -21,23 +21,24 @@ test('matches the reference page and toolbar spacing', async ({ page }) => {
     page.getByRole('textbox', { name: 'Search projects' }),
   ).toHaveCSS('height', '36px')
   await expect(
-    page.getByRole('combobox', { name: 'Filter by organization' }),
+    page.getByRole('combobox', { name: 'Filter by task type' }),
   ).toHaveCSS('height', '36px')
+  await expect(
+    page.getByRole('combobox', { name: 'Filter by organization' }),
+  ).toHaveCount(0)
 })
 
 test('renders projects and navigates with active sidebar links', async ({
   page,
 }) => {
   const content = page.locator('#dashboard-main')
-  await expect(
-    page.getByText('6 projects across 2 organizations'),
-  ).toBeVisible()
+  await expect(page.getByText('4 projects in Acme AI')).toBeVisible()
   await expect(
     content.getByRole('link', { name: 'Retail Vision', exact: true }),
   ).toBeVisible()
   await expect(
     content.getByRole('link', { name: 'Demand Forecast', exact: true }),
-  ).toBeVisible()
+  ).not.toBeVisible()
 
   const projectsLink = page.getByRole('link', { name: 'Projects' })
   await expect(projectsLink).toHaveAttribute('data-active', 'true')
@@ -53,26 +54,15 @@ test('renders projects and navigates with active sidebar links', async ({
 
 test('searches, filters, sorts, and switches views', async ({ page }) => {
   const content = page.locator('#dashboard-main')
-  await page.getByRole('textbox', { name: 'Search projects' }).fill('doc')
+  await page.getByRole('textbox', { name: 'Search projects' }).fill('churn')
   await expect(
-    content.getByRole('link', { name: 'Doc Extractor', exact: true }),
+    content.getByRole('link', { name: 'Churn Predictor', exact: true }),
   ).toBeVisible()
   await expect(
     content.getByRole('link', { name: 'Retail Vision', exact: true }),
   ).not.toBeVisible()
 
   await page.getByRole('textbox', { name: 'Search projects' }).clear()
-  await page.getByRole('combobox', { name: 'Filter by organization' }).click()
-  await page.getByRole('option', { name: 'Northwind Labs' }).click()
-  await expect(
-    content.getByRole('link', { name: 'Demand Forecast', exact: true }),
-  ).toBeVisible()
-  await expect(
-    content.getByRole('link', { name: 'Retail Vision', exact: true }),
-  ).not.toBeVisible()
-
-  await page.getByRole('combobox', { name: 'Filter by organization' }).click()
-  await page.getByRole('option', { name: 'All organizations' }).click()
   await page.getByRole('combobox', { name: 'Filter by task type' }).click()
   await page.getByRole('option', { name: 'Text Classification' }).click()
   await page.getByRole('combobox', { name: 'Filter by status' }).click()
@@ -93,24 +83,36 @@ test('searches, filters, sorts, and switches views', async ({ page }) => {
   )
   await page.getByRole('combobox', { name: 'Sort projects' }).click()
   await page.getByRole('option', { name: 'Name A–Z' }).click()
-  await page.getByRole('button', { name: 'List view' }).click()
+  await page.getByRole('radio', { name: 'List view' }).click()
   await expect(page.getByRole('table')).toBeVisible()
   const rows = page.getByRole('row')
   await expect(rows.nth(1)).toContainText('Churn Predictor')
 })
 
-test('header organization is independent and project cards navigate', async ({
+test('the header organization scopes the list and project cards navigate', async ({
   page,
 }) => {
   const content = page.locator('#dashboard-main')
   await page.getByRole('button', { name: /Current organization/ }).click()
   await page.getByRole('menuitem', { name: /Northwind Labs/ }).click()
+  await expect(page.getByText('2 projects in Northwind Labs')).toBeVisible()
+  await expect(
+    content.getByRole('link', { name: 'Demand Forecast', exact: true }),
+  ).toBeVisible()
   await expect(
     content.getByRole('link', { name: 'Retail Vision', exact: true }),
-  ).toBeVisible()
+  ).not.toBeVisible()
 
-  await page.getByRole('button', { name: 'New Project', exact: true }).click()
-  await expect(page.getByText(/New Project is not available/)).toBeVisible()
+  await page.getByRole('button', { name: /Current organization/ }).click()
+  await page.getByRole('menuitem', { name: /Solo Sandbox/ }).click()
+  await expect(page.getByText('No projects in Solo Sandbox yet')).toBeVisible()
+
+  await page.getByRole('button', { name: /Current organization/ }).click()
+  await page.getByRole('menuitem', { name: /Acme AI/ }).click()
+
+  await expect(
+    page.getByRole('link', { name: 'New Project', exact: true }),
+  ).toHaveAttribute('href', '/projects/new')
   await content
     .getByRole('link', { name: 'Retail Vision', exact: true })
     .click()
@@ -120,8 +122,57 @@ test('header organization is independent and project cards navigate', async ({
   ).toBeVisible()
 })
 
+test('new project basics fields are accessible and report name conflicts', async ({
+  page,
+}) => {
+  await page.getByRole('link', { name: 'New Project', exact: true }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Create project' }),
+  ).toBeVisible()
+
+  const name = page.getByRole('textbox', { name: 'Project name' })
+  const description = page.getByRole('textbox', { name: /Description/ })
+  const organization = page.getByRole('textbox', { name: 'Organization' })
+  const region = page.getByRole('combobox', { name: 'Region' })
+  const visibility = page.getByRole('combobox', { name: 'Visibility' })
+
+  await expect(name).toBeVisible()
+  await expect(description).toBeVisible()
+  await expect(organization).toBeVisible()
+  await expect(region).toBeVisible()
+  await expect(visibility).toBeVisible()
+
+  await name.fill('Retail Vision')
+  const error = page.getByRole('alert')
+  await expect(error).toHaveText(
+    'A project with this name already exists in this organization.',
+  )
+  await expect(name).toHaveAttribute('aria-invalid', 'true')
+  await expect(name).toHaveAttribute(
+    'aria-describedby',
+    'new-project-name-error',
+  )
+
+  await name.fill('Accessible Project')
+  await description.fill('A project created from the accessible basics step.')
+  await region.click()
+  await page.getByRole('option', { name: 'EU (Ireland)' }).click()
+  await visibility.click()
+  await page.getByRole('option', { name: /Private — visible only/ }).click()
+
+  await expect(error).not.toBeVisible()
+  await expect(description).toHaveValue(
+    'A project created from the accessible basics step.',
+  )
+  await expect(region).toContainText('EU (Ireland)')
+  await expect(visibility).toContainText('Private')
+  await expect(page.locator('aside')).toContainText('Accessible Project')
+  await expect(page.locator('aside')).toContainText('EU (Ireland)')
+  await expect(page.locator('aside')).toContainText('Private')
+})
+
 test('list rows and project menus open project details', async ({ page }) => {
-  await page.getByRole('button', { name: 'List view' }).click()
+  await page.getByRole('radio', { name: 'List view' }).click()
   await page
     .getByRole('table')
     .getByRole('link', { name: 'Churn Predictor', exact: true })
@@ -140,7 +191,7 @@ test('list rows and project menus open project details', async ({ page }) => {
 
 test('projects page does not overflow on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await expect(page.getByRole('button', { name: 'Grid view' })).toBeVisible()
+  await expect(page.getByRole('radio', { name: 'Grid view' })).toBeVisible()
   const overflows = await page.evaluate(
     () =>
       document.documentElement.scrollWidth >

@@ -12,26 +12,29 @@ import {
 } from '@/components/ui/command'
 import type {
   Deployment,
+  Organization,
   Project,
   TrainingRun,
 } from '@/features/dashboard/data'
-import { unavailable } from './helpers'
+import { unavailable } from '@/lib/unavailable'
 
 type SearchItem = {
   id: string
   label: string
   group: string
-  /** Present for training runs, which live under a project route. */
+  /** Present for training runs and deployments, which live under a project. */
   projectId?: string
 }
 
-const groups = ['Projects', 'Training runs', 'Deployments']
+const groups = ['Projects', 'Training runs', 'Deployments', 'Organizations']
 
 export function buildSearchItems({
+  organizations,
   projects,
   trainingRuns,
   deployments,
 }: {
+  organizations: Organization[]
   projects: Project[]
   trainingRuns: TrainingRun[]
   deployments: Deployment[]
@@ -52,6 +55,12 @@ export function buildSearchItems({
       id: item.id,
       label: item.name,
       group: 'Deployments',
+      projectId: item.projectId,
+    })),
+    ...organizations.map((item) => ({
+      id: item.id,
+      label: item.name,
+      group: 'Organizations',
     })),
   ]
 }
@@ -69,10 +78,20 @@ export function WorkspaceSearch({
 
   function select(item: SearchItem) {
     onOpenChange(false)
-    if (item.group === 'Projects') {
+    if (item.group === 'Organizations') {
+      void navigate({
+        to: '/organizations/$orgId/overview',
+        params: { orgId: item.id },
+      })
+    } else if (item.group === 'Projects') {
       void navigate({
         to: '/projects/$projectId/overview',
         params: { projectId: item.id },
+      })
+    } else if (item.group === 'Deployments' && item.projectId) {
+      void navigate({
+        to: '/projects/$projectId/deployments/$deploymentId',
+        params: { projectId: item.projectId, deploymentId: item.id },
       })
     } else if (item.projectId) {
       void navigate({
@@ -89,7 +108,7 @@ export function WorkspaceSearch({
       open={open}
       onOpenChange={onOpenChange}
       title="Search workspace"
-      description="Search projects, training runs, and deployments."
+      description="Search projects, training runs, deployments, and organizations."
     >
       <Command>
         <CommandInput placeholder="Search projects, models, runs..." />

@@ -15,15 +15,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { Dataset, DatasetSample } from '@/features/dashboard/data'
+import type { DatasetSample } from '@/features/dashboard/data'
+import { useCurrentDataset } from './use-current-dataset'
 
-export function ImagePreview({
-  dataset,
-  samples,
-}: {
-  dataset: Dataset
-  samples: Extract<DatasetSample, { modality: 'image' }>[]
-}) {
+export function ImagePreview() {
+  const { dataset, detail } = useCurrentDataset()
+  const samples = detail.samples.filter(
+    (sample): sample is Extract<DatasetSample, { modality: 'image' }> =>
+      sample.modality === 'image',
+  )
   const [label, setLabel] = React.useState('all')
   const [split, setSplit] = React.useState('all')
   const labels = Array.from(new Set(samples.map((sample) => sample.label)))
@@ -80,7 +80,7 @@ export function ImagePreview({
             {visible.map((sample) => (
               <figure
                 key={sample.id}
-                className="group relative aspect-square overflow-hidden rounded-lg bg-slate-100"
+                className="group relative aspect-square overflow-hidden rounded-lg bg-muted"
               >
                 <img
                   src={sample.image}
@@ -89,7 +89,7 @@ export function ImagePreview({
                   className="size-full object-cover transition-transform group-hover:scale-105"
                 />
                 <figcaption className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-2">
-                  <Badge className="border-0 bg-slate-950/75 text-white">
+                  <Badge className="border-0 bg-black/70 text-white">
                     {sample.label}
                   </Badge>
                   <span className="sr-only">{sample.split} split</span>

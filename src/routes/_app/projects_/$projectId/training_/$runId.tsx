@@ -3,6 +3,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { Square, TriangleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { TrainingStatusBadge } from '@/features/training/components/training-status-badge'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,14 +27,13 @@ import {
 } from '@/components/ui/empty'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useDashboardLayout } from '@/features/dashboard/context'
 import {
-  datasets as seededDatasets,
-  resolveProject,
-} from '@/features/dashboard/data'
-import { formatDuration, trainingLog } from '@/features/dashboard/training'
+  useDashboardLayout,
+  useProjectDetail,
+} from '@/features/dashboard/context'
+import { useTrainingRun } from '@/features/dashboard/hooks'
+import { formatDuration } from '@/features/dashboard/training'
 import {
-  liveRun,
   resolveTrainingRun,
   runProgressAt,
 } from '@/features/dashboard/selectors/training-runs'
@@ -43,7 +43,6 @@ import {
   LogsCard,
   MetricCard,
   RunNotFound,
-  StatusBadge,
 } from './-components/training-run-detail'
 
 export const Route = createFileRoute(
@@ -58,7 +57,14 @@ export const Route = createFileRoute(
       if (!run) return null
       return {
         items: [
-          { id: 'training', label: 'Training' },
+          {
+            id: 'training',
+            label: 'Training',
+            link: {
+              to: '/projects/$projectId/training',
+              params: { projectId: project.id },
+            },
+          },
           { id: run.id, label: run.name },
         ],
         data: { run },
@@ -68,31 +74,16 @@ export const Route = createFileRoute(
 })
 
 function TrainingRunRoute() {
-  const { projectId, runId } = Route.useParams()
-  const { preferences, updatePreferences, hydrated } = useDashboardLayout()
+  const { runId } = Route.useParams()
+  const { project } = useProjectDetail()
+  const { preferences, updatePreferences } = useDashboardLayout()
   const [tab, setTab] = React.useState('metrics')
   const [level, setLevel] = React.useState('all')
   const [autoscroll, setAutoscroll] = React.useState(true)
   const logRef = React.useRef<HTMLPreElement>(null)
 
   const now = useNow()
-  const resolved = resolveProject(projectId, preferences)
-  const stored = resolved
-    ? resolveTrainingRun(preferences, resolved.project.id, runId)
-    : undefined
-  // Progress, step, and status come from elapsed time, not the frozen values
-  // written when the run was created.
-  const run = stored ? liveRun(stored, now) : undefined
-  const dataset = resolved
-    ? [...preferences.datasets, ...seededDatasets].find(
-        (item) =>
-          item.id === run?.datasetId && item.projectId === resolved.project.id,
-      )
-    : undefined
-  const logLines = run ? trainingLog(run, dataset) : []
-  const visibleLogs = logLines.filter(
-    (line) => level === 'all' || line.startsWith(level),
-  )
+  const run = useTrainingRun(project.id, runId)?.run
 
   React.useEffect(() => {
     if (autoscroll && logRef.current) {
@@ -100,11 +91,7 @@ function TrainingRunRoute() {
     }
   }, [autoscroll, tab, level, run?.status])
 
-  if (!hydrated) {
-    return <main id="dashboard-main" className="min-h-96 flex-1" />
-  }
-  if (!resolved || !run) return <RunNotFound projectId={projectId} />
-  const { project } = resolved
+  if (!run) return <RunNotFound projectId={project.id} />
 
   const live = runProgressAt(run, now)
   const runStats: Array<[string, string]> = [
@@ -160,7 +147,7 @@ function TrainingRunRoute() {
             <h1 className="text-2xl font-semibold tracking-tight">
               {run.name}
             </h1>
-            <StatusBadge status={run.status} />
+            <TrainingStatusBadge status={run.status} />
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             Run {run.id} · started by {run.author} · estimated{' '}
@@ -187,7 +174,7 @@ function TrainingRunRoute() {
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogMedia className="bg-rose-50 text-rose-600">
+                  <AlertDialogMedia className="bg-destructive-muted text-destructive">
                     <TriangleAlert />
                   </AlertDialogMedia>
                   <AlertDialogTitle>Stop this training run?</AlertDialogTitle>
@@ -219,7 +206,7 @@ function TrainingRunRoute() {
         </CardContent>
         <Progress
           value={run.progress}
-          className="h-1.5 rounded-none [&_[data-slot=progress-indicator]]:bg-sky-500"
+          className="h-1.5 rounded-none [&_[data-slot=progress-indicator]]:bg-info"
         />
       </Card>
 
@@ -232,12 +219,14 @@ function TrainingRunRoute() {
         </TabsList>
         <TabsContent value="metrics" className="mt-4 grid gap-6">
           <div className="grid gap-6 lg:grid-cols-2">
-            <MetricCard title="Loss" dataKey="loss" color="#4f46e5" />
-            <MetricCard title="Accuracy" dataKey="accuracy" color="#10b981" />
+            <MetricCard title="Loss" dataKey="loss" color="var(--primary)" />
+            <MetricCard
+              title="Accuracy"
+              dataKey="accuracy"
+              color="var(--success)"
+            />
           </div>
           <LogsCard
-            run={run}
-            lines={visibleLogs}
             level={level}
             setLevel={setLevel}
             autoscroll={autoscroll}
@@ -247,8 +236,6 @@ function TrainingRunRoute() {
         </TabsContent>
         <TabsContent value="logs" className="mt-4">
           <LogsCard
-            run={run}
-            lines={visibleLogs}
             level={level}
             setLevel={setLevel}
             autoscroll={autoscroll}
@@ -257,10 +244,10 @@ function TrainingRunRoute() {
           />
         </TabsContent>
         <TabsContent value="config" className="mt-4">
-          <ConfigCard run={run} dataset={dataset} />
+          <ConfigCard />
         </TabsContent>
         <TabsContent value="artifacts" className="mt-4">
-          <Empty className="min-h-64 border bg-white">
+          <Empty className="min-h-64 border bg-card">
             <EmptyHeader>
               <EmptyTitle>No artifacts yet</EmptyTitle>
               <EmptyDescription>

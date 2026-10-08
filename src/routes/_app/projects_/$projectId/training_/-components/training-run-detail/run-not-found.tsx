@@ -15,7 +15,7 @@ export function RunNotFound({ projectId }: { projectId: string }) {
       id="dashboard-main"
       className="mx-auto flex min-h-[60vh] w-full max-w-xl flex-1 items-center p-6"
     >
-      <Empty className="w-full border bg-white">
+      <Empty className="w-full border bg-card">
         <EmptyHeader>
           <EmptyTitle>Training run not found</EmptyTitle>
           <EmptyDescription>

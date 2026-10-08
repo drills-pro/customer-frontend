@@ -20,12 +20,12 @@ const badgeVariants = cva(
         link: 'text-primary underline-offset-4 hover:underline',
         // Tonal variants: the `border-0 bg-<hue>-50 text-<hue>-700` pattern
         // that call sites used to spell out by hand.
-        success: 'border-0 bg-emerald-50 text-emerald-700',
-        warning: 'border-0 bg-amber-50 text-amber-700',
-        info: 'border-0 bg-sky-50 text-sky-700',
-        neutral: 'border-0 bg-slate-100 text-slate-600',
-        error: 'border-0 bg-rose-50 text-rose-700',
-        accent: 'border-0 bg-violet-50 text-violet-700',
+        success: 'border-0 bg-success-muted text-success',
+        warning: 'border-0 bg-warning-muted text-warning',
+        info: 'border-0 bg-info-muted text-info',
+        neutral: 'border-0 bg-muted text-muted-foreground',
+        error: 'border-0 bg-destructive-muted text-destructive',
+        accent: 'border-0 bg-highlight-muted text-highlight',
       },
     },
     defaultVariants: {

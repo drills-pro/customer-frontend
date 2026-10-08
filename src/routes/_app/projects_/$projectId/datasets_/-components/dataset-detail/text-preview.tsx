@@ -29,15 +29,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { Dataset, DatasetSample } from '@/features/dashboard/data'
+import type { DatasetSample } from '@/features/dashboard/data'
+import { useCurrentDataset } from './use-current-dataset'
 
-export function TextPreview({
-  dataset,
-  samples,
-}: {
-  dataset: Dataset
-  samples: Extract<DatasetSample, { modality: 'text' }>[]
-}) {
+export function TextPreview() {
+  const { dataset, detail } = useCurrentDataset()
+  const samples = detail.samples.filter(
+    (sample): sample is Extract<DatasetSample, { modality: 'text' }> =>
+      sample.modality === 'text',
+  )
   const [label, setLabel] = React.useState('all')
   const [split, setSplit] = React.useState('all')
   const [query, setQuery] = React.useState('')
@@ -105,7 +105,7 @@ export function TextPreview({
         {visible.length ? (
           <Table className="min-w-[720px]">
             <TableHeader>
-              <TableRow className="bg-slate-50">
+              <TableRow className="bg-muted/50">
                 <TableHead>Text</TableHead>
                 <TableHead>Label</TableHead>
                 <TableHead>Words</TableHead>

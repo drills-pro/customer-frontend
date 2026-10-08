@@ -65,7 +65,7 @@ export function ReviewStep({
         <h2 className="text-lg font-semibold tracking-tight">
           Review and start
         </h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Double-check your configuration before starting the run.
         </p>
       </div>
@@ -96,7 +96,7 @@ export function ReviewStep({
           onEdit={() => onEditStep(3)}
         />
       </div>
-      <div className="mt-5 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
+      <div className="mt-5 rounded-lg bg-warning-muted p-3 text-xs text-warning">
         Starting this run will immediately begin billing against your workspace
         credits.
       </div>

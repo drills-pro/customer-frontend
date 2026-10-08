@@ -1,22 +1,25 @@
 import { Link } from '@tanstack/react-router'
+import { Activity } from 'lucide-react'
 
+import { TrainingStatusBadge } from '@/features/training/components/training-status-badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
 import { Item, ItemFooter, ItemGroup, ItemHeader } from '@/components/ui/item'
 import { Progress } from '@/components/ui/progress'
-import { useDashboardLayout } from '@/features/dashboard/context'
-import {
-  orgTrainingRuns,
-  runProgressAt,
-} from '@/features/dashboard/selectors/training-runs'
+import { useOrgTrainingRuns } from '@/features/dashboard/hooks'
+import { runProgressAt } from '@/features/dashboard/selectors/training-runs'
 import { useNow } from '@/hooks/use-now'
-import { DashboardStatusBadge } from './dashboard-status-badge'
-import { DashboardEmptyMessage } from './dashboard-empty-message'
 
 export function LiveTrainingsCard() {
-  const { preferences, org } = useDashboardLayout()
   const now = useNow()
-  const orgTrainings = orgTrainingRuns(preferences, org.id)
+  const orgTrainings = useOrgTrainingRuns()
     .map((run) => ({ run, live: runProgressAt(run, now) }))
     .filter(({ live }) => live.status !== 'Stopped')
 
@@ -43,11 +46,11 @@ export function LiveTrainingsCard() {
                       {run.name}
                     </Link>
                   </Button>
-                  <DashboardStatusBadge status={live.status} />
+                  <TrainingStatusBadge status={live.status} />
                 </ItemHeader>
                 <Progress
                   value={live.progress}
-                  className="h-1.5 [&_[data-slot=progress-indicator]]:bg-sky-500"
+                  className="h-1.5 [&_[data-slot=progress-indicator]]:bg-info"
                 />
                 <ItemFooter className="mt-1.5 text-xs text-muted-foreground">
                   <span>
@@ -59,10 +62,17 @@ export function LiveTrainingsCard() {
             ))}
           </ItemGroup>
         ) : (
-          <DashboardEmptyMessage
-            title="No live trainings"
-            text="Running jobs will appear here."
-          />
+          <Empty className="min-h-36 gap-3 py-8">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Activity />
+              </EmptyMedia>
+              <EmptyTitle>No live trainings</EmptyTitle>
+              <EmptyDescription>
+                Running jobs will appear here.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
       </CardContent>
     </Card>

@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { EllipsisVertical } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -9,10 +10,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import type { Project } from '@/features/dashboard/data'
-
-import { unavailable } from '@/lib/unavailable'
+import { useArchiveProject } from '@/features/projects/queries'
 
 export function ProjectMenu({ project }: { project: Project }) {
+  const archive = useArchiveProject(project.id)
+  const archived = project.status === 'Archived'
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -34,14 +37,27 @@ export function ProjectMenu({ project }: { project: Project }) {
             Open project
           </Link>
         </DropdownMenuItem>
-        {['Project settings', 'Archive project'].map((action) => (
-          <DropdownMenuItem
-            key={action}
-            onSelect={() => unavailable(`${action}: ${project.name}`)}
+        <DropdownMenuItem asChild>
+          <Link
+            to="/projects/$projectId/settings"
+            params={{ projectId: project.id }}
           >
-            {action}
-          </DropdownMenuItem>
-        ))}
+            Project settings
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={archive.isPending}
+          onSelect={() =>
+            archive.mutate(!archived, {
+              onSuccess: () =>
+                toast.success(
+                  `${project.name} ${archived ? 'unarchived' : 'archived'}.`,
+                ),
+            })
+          }
+        >
+          {archived ? 'Unarchive project' : 'Archive project'}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

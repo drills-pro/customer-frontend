@@ -32,7 +32,7 @@ function ProjectSettingsRoute() {
       <div key={project.id} className="grid min-w-0 max-w-4xl gap-6">
         <GeneralCard />
         <MembersCard />
-        <ApiKeysCard />
+        <ApiKeysCard projectId={project.id} />
         <IntegrationsCard />
         <DangerZoneCard />
       </div>

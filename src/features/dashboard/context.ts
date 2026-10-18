@@ -1,11 +1,11 @@
 import * as React from 'react'
 import type {
+  DashboardPreferences,
+  OrgSummary,
   Organization,
-  OrgMember,
   Project,
   ProjectOverview,
-  DashboardPreferences,
-} from '@/features/dashboard/data'
+} from '@/features/dashboard/domain/types'
 
 export type DashboardLayoutContextValue = {
   preferences: DashboardPreferences
@@ -14,16 +14,12 @@ export type DashboardLayoutContextValue = {
   /** False when browser storage is blocked or full; the session stays usable. */
   persistenceAvailable: boolean
   org: Organization
-  /** Seeded organizations with edits applied, plus created and joined ones. */
+  /** Every organization the user belongs to. */
   organizations: Organization[]
+  /** The counts of each organization, by id. */
+  orgSummaries: Record<string, OrgSummary>
   switchOrganization: (orgId: string) => void
   openCreateOrganization: () => void
-  /** Session-only member lists; changes reset on reload like the demo team. */
-  membersOf: (org: Organization) => OrgMember[]
-  updateMembers: (
-    org: Organization,
-    update: (members: OrgMember[]) => OrgMember[],
-  ) => void
 }
 
 export const DashboardLayoutContext =

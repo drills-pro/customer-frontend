@@ -30,9 +30,11 @@ import {
   ItemGroup,
   ItemMedia,
 } from '@/components/ui/item'
+import { toActivity } from '@/features/dashboard/format'
+import { useDashboardSummary } from '@/features/dashboard/queries'
 import type { Activity } from '@/features/dashboard/data'
-import { useOrgActivity } from '@/features/dashboard/hooks'
 import { unavailable } from '@/lib/unavailable'
+import { CardError, CardLoading } from './card-states'
 
 const activityStyles: Record<Activity['icon'], string> = {
   success: 'bg-success-muted text-success',
@@ -51,7 +53,8 @@ const activityIcons: Record<Activity['icon'], typeof Check> = {
 }
 
 export function RecentActivityCard() {
-  const orgActivity = useOrgActivity()
+  const { data, error, isPending, refetch } = useDashboardSummary()
+  const orgActivity = (data?.activity ?? []).map((item) => toActivity(item))
   const [allActivity, setAllActivity] = React.useState(false)
 
   return (
@@ -68,7 +71,15 @@ export function RecentActivityCard() {
         </CardAction>
       </CardHeader>
       <CardContent className="px-0">
-        {orgActivity.length ? (
+        {isPending ? (
+          <CardLoading rows={5} />
+        ) : error ? (
+          <CardError
+            title="Could not load activity"
+            error={error}
+            onRetry={() => void refetch()}
+          />
+        ) : orgActivity.length ? (
           <ItemGroup className="gap-0">
             {orgActivity.slice(0, allActivity ? 20 : 5).map((item) => {
               const Icon = activityIcons[item.icon]

@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { useDashboardLayout } from '@/features/dashboard/context'
-import { projectRegions } from '@/features/dashboard/data'
 import type { NewProjectDraft } from './use-new-project-draft'
 
 export function BasicsStep({ draft }: { draft: NewProjectDraft }) {
@@ -100,7 +99,7 @@ export function BasicsStep({ draft }: { draft: NewProjectDraft }) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {projectRegions.map((item) => (
+              {draft.regions.map((item) => (
                 <SelectItem key={item.id} value={item.id}>
                   {item.label}
                 </SelectItem>

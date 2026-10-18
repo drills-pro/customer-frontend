@@ -51,16 +51,26 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import { useDashboardLayout } from '@/features/dashboard/context'
+import { ApiError } from '@/api/client'
 import {
-  isSeedOrganization,
-  organizations as seedOrganizations,
-  withInitial,
-} from '@/features/dashboard/data'
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useDashboardLayout } from '@/features/dashboard/context'
 import type {
   Organization,
   OrganizationProfile,
-} from '@/features/dashboard/data'
+} from '@/features/dashboard/domain/types'
+import { initialOf, toApiVisibility } from '@/features/organizations/mappers'
+import {
+  useDeleteOrganization,
+  useLeaveOrganization,
+  useTransferOwnership,
+  useUpdateOrganization,
+} from '@/features/organizations/queries'
 import { useOrgDetail } from '../-components/org-context'
 import {
   ColorSwatches,
@@ -89,7 +99,11 @@ function OrgSettings() {
       <div className="grid max-w-4xl min-w-0 gap-6">
         {/* Keyed so a different org, or a saved rename, resets the form. */}
         <GeneralCard key={`${org.id}-${org.name}-${org.slug}`} org={org} />
-        <DefaultsCard key={`${org.id}-defaults`} canManage={canManage} />
+        <DefaultsCard
+          key={`${org.id}-defaults`}
+          org={org}
+          canManage={canManage}
+        />
         <DangerZoneCard org={org} />
       </div>
     </div>
@@ -106,13 +120,19 @@ function profileOf(org: Organization): OrganizationProfile {
 }
 
 function GeneralCard({ org }: { org: Organization }) {
-  const { preferences, updatePreferences, organizations } = useDashboardLayout()
+  const { organizations } = useDashboardLayout()
   const { canManage } = useOrgDetail()
+  const saveOrg = useUpdateOrganization(org.id)
   const [values, setValues] = React.useState(() => profileOf(org))
+  // A slug taken by an organization the user is not in is only known to the API.
+  const [takenSlug, setTakenSlug] = React.useState<string>()
   const saved = profileOf(org)
 
   const nameMessage = orgNameError(values.name)
-  const slugMessage = orgSlugError(values.slug, organizations, org.id)
+  const slugMessage =
+    values.slug === takenSlug
+      ? 'That URL is already taken.'
+      : orgSlugError(values.slug, organizations, org.id)
   const dirty = (Object.keys(saved) as Array<keyof OrganizationProfile>).some(
     (key) => values[key] !== saved[key],
   )
@@ -126,20 +146,18 @@ function GeneralCard({ org }: { org: Organization }) {
 
   function save(event: React.FormEvent) {
     event.preventDefault()
-    if (!dirty || nameMessage || slugMessage) return
-    const next = { ...values, name: values.name.trim() }
-    if (isSeedOrganization(org.id)) {
-      updatePreferences({
-        organizationEdits: { ...preferences.organizationEdits, [org.id]: next },
-      })
-    } else {
-      updatePreferences({
-        createdOrganizations: preferences.createdOrganizations.map((item) =>
-          item.id === org.id ? withInitial({ ...item, ...next }) : item,
-        ),
-      })
-    }
-    toast.success('Organization settings saved.')
+    if (!dirty || nameMessage || slugMessage || saveOrg.isPending) return
+    saveOrg.mutate(
+      { ...values, name: values.name.trim() },
+      {
+        onSuccess: () => toast.success('Organization settings saved.'),
+        onError: (error) => {
+          if (error instanceof ApiError && error.status === 409) {
+            setTakenSlug(values.slug)
+          }
+        },
+      },
+    )
   }
 
   return (
@@ -156,10 +174,10 @@ function GeneralCard({ org }: { org: Organization }) {
           <CardContent className="grid gap-5 p-5">
             <div className="flex flex-wrap items-center gap-4 rounded-lg bg-muted/50 p-3">
               <OrgMark
-                org={withInitial({
-                  name: values.name || '?',
+                org={{
+                  initial: initialOf(values.name),
                   color: values.color,
-                })}
+                }}
                 className="size-11 rounded-xl text-base"
               />
               <div className="mr-auto min-w-0">
@@ -273,7 +291,11 @@ function GeneralCard({ org }: { org: Organization }) {
                 type="submit"
                 size="lg"
                 className="px-3.5"
-                disabled={!dirty || Boolean(nameMessage || slugMessage)}
+                disabled={
+                  !dirty ||
+                  Boolean(nameMessage || slugMessage) ||
+                  saveOrg.isPending
+                }
               >
                 Save changes
               </Button>
@@ -285,13 +307,21 @@ function GeneralCard({ org }: { org: Organization }) {
   )
 }
 
-function DefaultsCard({ canManage }: { canManage: boolean }) {
-  const [visibility, setVisibility] = React.useState('Organization')
-  const [require2fa, setRequire2fa] = React.useState(false)
-  const [domainJoin, setDomainJoin] = React.useState(true)
+function DefaultsCard({
+  org,
+  canManage,
+}: {
+  org: Organization
+  canManage: boolean
+}) {
+  const update = useUpdateOrganization(org.id)
+  const { visibility } = org.defaults
+  const require2fa = org.defaults.requireTwoFactor
+  const { domainJoin } = org.defaults
 
-  function notify(message: string) {
-    toast.success(`${message} (saved for this session).`)
+  /** Each control saves on its own; the card has no submit button. */
+  function save(changes: Parameters<typeof update.mutate>[0], message: string) {
+    update.mutate(changes, { onSuccess: () => toast.success(`${message}.`) })
   }
 
   return (
@@ -309,10 +339,16 @@ function DefaultsCard({ canManage }: { canManage: boolean }) {
           </legend>
           <RadioGroup
             value={visibility}
-            onValueChange={(value) => {
-              setVisibility(value)
-              notify(`New projects default to ${value.toLowerCase()}`)
-            }}
+            onValueChange={(value) =>
+              save(
+                {
+                  default_project_visibility: toApiVisibility(
+                    value as Organization['defaults']['visibility'],
+                  ),
+                },
+                `New projects default to ${value.toLowerCase()}`,
+              )
+            }
             className="grid gap-3 sm:grid-cols-2"
           >
             {[
@@ -365,10 +401,12 @@ function DefaultsCard({ canManage }: { canManage: boolean }) {
               id="org-require-2fa"
               checked={require2fa}
               disabled={!canManage}
-              onCheckedChange={(checked) => {
-                setRequire2fa(checked)
-                notify(checked ? '2FA is now required' : '2FA is optional')
-              }}
+              onCheckedChange={(checked) =>
+                save(
+                  { require_two_factor: checked },
+                  checked ? '2FA is now required' : '2FA is optional',
+                )
+              }
             />
           </Field>
           <Field orientation="horizontal" className="p-4">
@@ -384,14 +422,14 @@ function DefaultsCard({ canManage }: { canManage: boolean }) {
               id="org-domain-join"
               checked={domainJoin}
               disabled={!canManage}
-              onCheckedChange={(checked) => {
-                setDomainJoin(checked)
-                notify(
+              onCheckedChange={(checked) =>
+                save(
+                  { allow_domain_join: checked },
                   checked
                     ? 'Domain joining enabled'
                     : 'Domain joining disabled',
                 )
-              }}
+              }
             />
           </Field>
         </div>
@@ -401,30 +439,33 @@ function DefaultsCard({ canManage }: { canManage: boolean }) {
 }
 
 function DangerZoneCard({ org }: { org: Organization }) {
-  const { preferences, updatePreferences } = useDashboardLayout()
+  const { preferences, updatePreferences, organizations } = useDashboardLayout()
   const { summary } = useOrgDetail()
   const navigate = useNavigate()
+  const leave = useLeaveOrganization(org.id)
+  const remove = useDeleteOrganization(org.id)
   const isOwner = org.yourRole === 'Owner'
-  const seeded = isSeedOrganization(org.id)
 
-  /** Drops a created or joined org and anything created inside it. */
-  function removeOrganization(message: string) {
+  /** Leaves or deletes the organization, then moves on to another one. */
+  function removeOrganization(
+    action: typeof leave | typeof remove,
+    message: string,
+  ) {
     const fallback =
       preferences.organizationId === org.id
-        ? seedOrganizations[0].id
+        ? organizations.find((item) => item.id !== org.id)?.id
         : preferences.organizationId
-    void navigate({ to: '/organizations' }).then(() => {
-      updatePreferences({
-        organizationId: fallback,
-        createdOrganizations: preferences.createdOrganizations.filter(
-          (item) => item.id !== org.id,
-        ),
-        createdProjects: preferences.createdProjects.filter(
-          (item) => item.project.orgId !== org.id,
-        ),
+    // Leave this page before its organization disappears from under it. That
+    // unmounts this card, so the result is read from the promise: a callback
+    // passed to `mutate` would be dropped with the component.
+    void navigate({ to: '/organizations' })
+      .then(() => action.mutateAsync())
+      .then(() => {
+        if (fallback) updatePreferences({ organizationId: fallback })
+        toast.success(message)
       })
-      toast.success(message)
-    })
+      // The failure is already reported by the global mutation handler.
+      .catch(() => undefined)
   }
 
   return (
@@ -472,11 +513,7 @@ function DangerZoneCard({ org }: { org: Organization }) {
                 <AlertDialogAction
                   variant="destructive"
                   onClick={() =>
-                    seeded
-                      ? toast.info(
-                          'Leaving this demo organization is not available.',
-                        )
-                      : removeOrganization(`You left ${org.name}.`)
+                    removeOrganization(leave, `You left ${org.name}.`)
                   }
                 >
                   Leave organization
@@ -491,19 +528,7 @@ function DangerZoneCard({ org }: { org: Organization }) {
           title="Transfer ownership"
           description="Hand full control and billing to another admin."
         >
-          <Button
-            variant="outline"
-            size="lg"
-            className="px-3.5 text-destructive hover:bg-destructive-muted hover:text-destructive"
-            disabled={!isOwner}
-            onClick={() =>
-              toast.info(
-                'Transferring ownership is not available in this demo.',
-              )
-            }
-          >
-            Transfer
-          </Button>
+          <TransferOwnershipDialog org={org} disabled={!isOwner} />
         </DangerRow>
 
         <DangerRow
@@ -519,11 +544,7 @@ function DangerZoneCard({ org }: { org: Organization }) {
             org={org}
             disabled={!isOwner}
             onDelete={() =>
-              seeded
-                ? toast.info(
-                    'Deleting this demo organization is not available.',
-                  )
-                : removeOrganization(`${org.name} was deleted.`)
+              removeOrganization(remove, `${org.name} was deleted.`)
             }
           />
         </DangerRow>
@@ -616,5 +637,83 @@ function DangerRow({
       </div>
       {children}
     </div>
+  )
+}
+
+/** Hands the owner role to another active member; the caller becomes admin. */
+function TransferOwnershipDialog({
+  org,
+  disabled,
+}: {
+  org: Organization
+  disabled: boolean
+}) {
+  const { members } = useOrgDetail()
+  const transfer = useTransferOwnership(org.id)
+  const [memberId, setMemberId] = React.useState('')
+  const candidates = members.filter(
+    (member) => member.status === 'active' && !member.you,
+  )
+  const chosen = candidates.find((member) => member.id === memberId)
+
+  return (
+    <AlertDialog onOpenChange={(open) => !open && setMemberId('')}>
+      <AlertDialogTrigger asChild>
+        <Button
+          variant="outline"
+          size="lg"
+          className="px-3.5 text-destructive hover:bg-destructive-muted hover:text-destructive"
+          disabled={disabled}
+        >
+          Transfer
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Transfer {org.name}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            The new owner gets full control and billing. You stay on as an
+            admin.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <Field>
+          <FieldLabel htmlFor="transfer-owner">New owner</FieldLabel>
+          <Select value={memberId} onValueChange={setMemberId}>
+            <SelectTrigger id="transfer-owner" size="lg" className="w-full">
+              <SelectValue
+                placeholder={
+                  candidates.length
+                    ? 'Choose a member'
+                    : 'No other active members'
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {candidates.map((member) => (
+                <SelectItem key={member.id} value={member.id}>
+                  {member.name} · {member.email}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            disabled={!chosen || transfer.isPending}
+            onClick={() =>
+              chosen &&
+              transfer.mutate(chosen.id, {
+                onSuccess: () =>
+                  toast.success(`${chosen.name} now owns ${org.name}.`),
+              })
+            }
+          >
+            Transfer ownership
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }

@@ -6,27 +6,24 @@ import { toast } from 'sonner'
 import { RouteBreadcrumbs } from '@/components/breadcrumbs'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  useDashboardLayout,
-  useProjectDetail,
-} from '@/features/dashboard/context'
+import { isNotFound } from '@/api/errors'
+import { PageError, PageLoading } from '@/components/shared/query-states'
+import type { ApiArchitecture, ApiComputeOption } from '@/features/catalog/api'
+import { useArchitectures, useComputeOptions } from '@/features/catalog/queries'
+import { useProjectDetail } from '@/features/dashboard/context'
 import type {
+  Dataset,
   TrainingRun,
   TrainingScheduler,
   TrainingSplit,
 } from '@/features/dashboard/data'
+import { useProjectDatasets } from '@/features/datasets/queries'
+import { formatDuration, formatLearningRate } from '@/features/training/format'
 import {
-  architecturesFor,
-  computeOptions,
-  estimateTraining,
-  formatDuration,
-  formatLearningRate,
-} from '@/features/dashboard/training'
-import { useProjectDatasets } from '@/features/dashboard/hooks'
-import {
-  allTrainingRuns,
-  resolveTrainingRun,
-} from '@/features/dashboard/selectors/training-runs'
+  useStartTraining,
+  useTrainingEstimate,
+  useTrainingRun,
+} from '@/features/training/queries'
 import { ComputeStep } from './compute-step'
 import { ConfigureStep } from './configure-step'
 import { DatasetStep } from './dataset-step'
@@ -37,16 +34,75 @@ import { steps } from './types'
 const defaultSplit: TrainingSplit = { train: 80, validation: 10, test: 10 }
 const route = getRouteApi('/_app/projects_/$projectId/training_/new')
 
+/**
+ * Loads what the form's first render needs: the ready datasets, the model and
+ * compute catalogs, and the run being cloned. The form starts from them once.
+ */
 export function TrainingWizard() {
-  const navigate = useNavigate()
   const { dataset: initialDatasetId, clone: cloneId } = route.useSearch()
   const { project } = useProjectDetail()
-  const { preferences, updatePreferences } = useDashboardLayout()
   const datasets = useProjectDatasets(project.id, { readyOnly: true })
-  const clone = cloneId
-    ? resolveTrainingRun(preferences, project.id, cloneId)
-    : undefined
-  const architectures = architecturesFor(project)
+  const architectures = useArchitectures(project.taskType)
+  const computeOptions = useComputeOptions()
+  const clone = useTrainingRun(project.id, cloneId ?? '', {
+    enabled: Boolean(cloneId),
+  })
+
+  // A run to clone that no longer exists just means starting from defaults.
+  const cloneError =
+    clone.error && !isNotFound(clone.error) ? clone.error : null
+  const error =
+    datasets.error ?? architectures.error ?? computeOptions.error ?? cloneError
+  if (error) {
+    return (
+      <PageError
+        title="Could not load the training options"
+        error={error}
+        onRetry={() => {
+          void datasets.refetch()
+          void architectures.refetch()
+          void computeOptions.refetch()
+          if (cloneId) void clone.refetch()
+        }}
+      />
+    )
+  }
+  if (
+    !datasets.data ||
+    !architectures.data?.length ||
+    !computeOptions.data?.length ||
+    (cloneId && clone.isPending)
+  ) {
+    return <PageLoading />
+  }
+
+  return (
+    <TrainingWizardForm
+      datasets={datasets.data}
+      architectures={architectures.data}
+      computeOptions={computeOptions.data}
+      clone={clone.data}
+      initialDatasetId={initialDatasetId}
+    />
+  )
+}
+
+function TrainingWizardForm({
+  datasets,
+  architectures,
+  computeOptions,
+  clone,
+  initialDatasetId,
+}: {
+  datasets: Dataset[]
+  architectures: ApiArchitecture[]
+  computeOptions: ApiComputeOption[]
+  clone: TrainingRun | undefined
+  initialDatasetId: string | undefined
+}) {
+  const navigate = useNavigate()
+  const { project } = useProjectDetail()
+  const startRun = useStartTraining(project.id)
   const [step, setStep] = React.useState(0)
   const [datasetId, setDatasetId] = React.useState(
     clone
@@ -82,16 +138,29 @@ export function TrainingWizard() {
     clone?.instanceId ?? 'a10g-1',
   )
   const [spot, setSpot] = React.useState(clone?.spot ?? false)
-  const [starting, setStarting] = React.useState(false)
+  const starting = startRun.isPending
 
   const dataset = datasets.find((item) => item.id === datasetId)
   const architecture =
     architectures.find((item) => item.id === architectureId) ?? architectures[0]
+  // A cloned run may name an instance that is no longer offered.
   const compute =
     computeOptions.find((item) => item.id === instanceId) ?? computeOptions[0]
-  const estimate = dataset
-    ? estimateTraining(dataset, architecture, epochs, batchSize, compute, spot)
-    : { hours: 0, cost: 0 }
+  const estimated = useTrainingEstimate(
+    project.id,
+    dataset && {
+      dataset_id: dataset.id,
+      architecture_id: architecture.id,
+      epochs,
+      batch_size: batchSize,
+      instance_id: compute.id,
+      spot,
+    },
+  ).data
+  const estimate = {
+    hours: estimated?.hours ?? 0,
+    cost: estimated?.cost_usd ?? 0,
+  }
   const summaryRows = [
     ['Dataset', dataset?.name ?? '—'],
     ['Split', `${split.train} / ${split.validation} / ${split.test}`],
@@ -110,64 +179,34 @@ export function TrainingWizard() {
     )
   }
 
-  async function startTraining() {
+  function startTraining() {
     if (!dataset || starting) return
-    setStarting(true)
-    const runId = `run-${crypto.randomUUID().slice(0, 8)}`
-    const projectRunCount = allTrainingRuns(preferences).filter(
-      (run) => run.projectId === project.id,
-    ).length
-    const runName = `${architecture.id}-${projectRunCount + 1}`
-    const run: TrainingRun = {
-      id: runId,
-      projectId: project.id,
-      datasetId: dataset.id,
-      name: runName,
-      architecture: architecture.name,
-      status: 'Running',
-      epochs,
-      batchSize,
-      split,
-      learningRate,
-      scheduler,
-      augmentations: selectedAugmentations,
-      earlyStopping,
-      instanceId: compute.id,
-      instanceName: compute.name,
-      spot,
-      estimatedHours: estimate.hours,
-      estimatedCost: estimate.cost,
-      // Progress and step are derived from `startedAt`; these are the values
-      // a reader sees only if the derived state is unavailable.
-      progress: 0,
-      step: 0,
-      totalSteps: 12_000,
-      throughput: dataset.modality === 'image' ? '312 img/s' : '312 items/s',
-      gpuUtilization: compute.id === 'cpu' ? '0%' : '94%',
-      gpuMemory: compute.id === 'cpu' ? '0 / 0 GB' : '18.2 / 24 GB',
-      author: 'Alex Rivera',
-      startedAt: Date.now(),
-    }
-    updatePreferences({
-      trainingRuns: [run, ...preferences.trainingRuns],
-      uploads: [
-        {
-          id: `training-${runId}`,
-          orgId: project.orgId,
-          icon: 'success',
-          lead: `Training ${runName}`,
-          text: 'started',
-          time: 'Just now',
-          action: 'View',
+    startRun.mutate(
+      {
+        dataset_id: dataset.id,
+        architecture_id: architecture.id,
+        config: {
+          epochs,
+          batch_size: batchSize,
+          split,
+          learning_rate: learningRate,
+          scheduler,
+          augmentations: selectedAugmentations,
+          early_stopping: earlyStopping,
+          instance_id: compute.id,
+          spot,
         },
-        ...preferences.uploads,
-      ],
-    })
-    toast.success(`Training ${runName} started.`)
-    await navigate({
-      to: '/projects/$projectId/training/$runId',
-      params: { projectId: project.id, runId },
-    })
+      },
+      {
+        onSuccess: (run) => {
+          toast.success(`Training ${run.name} started.`)
+          void navigate({
+            to: '/projects/$projectId/training/$runId',
+            params: { projectId: project.id, runId: run.id },
+          })
+        },
+      },
+    )
   }
 
   return (
@@ -252,7 +291,8 @@ export function TrainingWizard() {
             )}
             {step === 3 && (
               <ComputeStep
-                instanceId={instanceId}
+                computeOptions={computeOptions}
+                instanceId={compute.id}
                 setInstanceId={setInstanceId}
                 spot={spot}
                 setSpot={setSpot}
@@ -333,7 +373,8 @@ export function TrainingWizard() {
                 {spot ? ' Spot pricing applied.' : ''}
               </p>
               <div className="mt-3 rounded-lg bg-success-muted p-3 text-xs text-success">
-                Expected metric {architecture.accuracy} based on similar runs.
+                Expected metric {architecture.expected_accuracy} based on
+                similar runs.
               </div>
             </CardContent>
           </Card>

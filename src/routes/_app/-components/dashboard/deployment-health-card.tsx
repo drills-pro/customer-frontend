@@ -1,7 +1,6 @@
-import { Link } from '@tanstack/react-router'
 import { Rocket } from 'lucide-react'
 
-import { DeploymentStatusBadge } from '@/features/deployments/components/deployment-status-badge'
+import { Badge, BadgeDot } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -18,10 +17,21 @@ import {
   ItemDescription,
   ItemGroup,
 } from '@/components/ui/item'
-import { useOrgDeployments } from '@/features/dashboard/hooks'
+import { deploymentPlaceholders } from '@/features/dashboard/placeholders'
+import { useDashboardSummary } from '@/features/dashboard/queries'
+import type { ApiDeployment } from '@/features/dashboard/api'
+import { unavailable } from '@/lib/unavailable'
+import { CardError, CardLoading } from './card-states'
+
+const deploymentStatus = {
+  active: { label: 'Live', tone: 'success' },
+  deploying: { label: 'Deploying', tone: 'warning' },
+  failed: { label: 'Failed', tone: 'error' },
+} as const satisfies Record<ApiDeployment['status'], unknown>
 
 export function DeploymentHealthCard() {
-  const deployments = useOrgDeployments()
+  const { data, error, isPending, refetch } = useDashboardSummary()
+  const deployments = data?.deployments ?? []
 
   return (
     <Card size="flush">
@@ -29,39 +39,53 @@ export function DeploymentHealthCard() {
         <CardTitle>Deployment health</CardTitle>
       </CardHeader>
       <CardContent className="px-0">
-        {deployments.length ? (
+        {isPending ? (
+          <CardLoading />
+        ) : error ? (
+          <CardError
+            title="Could not load deployments"
+            error={error}
+            onRetry={() => void refetch()}
+          />
+        ) : deployments.length ? (
           <ItemGroup className="gap-0">
-            {deployments.slice(0, 3).map((deployment) => (
-              <Item
-                key={deployment.id}
-                role="listitem"
-                className="flex-nowrap rounded-none border-x-0 border-t-0 border-b border-border px-5 py-3 last:border-b-0"
-              >
-                <ItemContent>
-                  <Button
-                    asChild
-                    variant="link"
-                    className="font-semibold text-foreground hover:text-primary self-start"
-                  >
-                    <Link
-                      to="/projects/$projectId/deployments/$deploymentId"
-                      params={{
-                        projectId: deployment.projectId,
-                        deploymentId: deployment.id,
-                      }}
+            {deployments.slice(0, 3).map((deployment) => {
+              const status = deploymentStatus[deployment.status]
+              return (
+                <Item
+                  key={deployment.id}
+                  role="listitem"
+                  className="flex-nowrap rounded-none border-x-0 border-t-0 border-b border-border px-5 py-3 last:border-b-0"
+                >
+                  <ItemContent>
+                    {/* The deployment page still reads mock data, so no link yet. */}
+                    <Button
+                      variant="link"
+                      className="self-start font-semibold text-foreground hover:text-primary"
+                      onClick={() => unavailable(deployment.route_prefix)}
                     >
-                      {deployment.name}
-                    </Link>
-                  </Button>
-                  <ItemDescription className="text-xs">
-                    p95 {deployment.latencyP95} · err {deployment.errorRate}
-                  </ItemDescription>
-                </ItemContent>
-                <ItemActions>
-                  <DeploymentStatusBadge status={deployment.status} />
-                </ItemActions>
-              </Item>
-            ))}
+                      {deployment.route_prefix}
+                    </Button>
+                    <ItemDescription className="text-xs">
+                      p95 {deploymentPlaceholders.latencyP95} · err{' '}
+                      {deploymentPlaceholders.errorRate}
+                    </ItemDescription>
+                  </ItemContent>
+                  <ItemActions>
+                    <Badge variant={status.tone}>
+                      <BadgeDot
+                        className={
+                          deployment.status === 'active'
+                            ? 'animate-pulse'
+                            : undefined
+                        }
+                      />
+                      {status.label}
+                    </Badge>
+                  </ItemActions>
+                </Item>
+              )
+            })}
           </ItemGroup>
         ) : (
           <Empty className="min-h-36 gap-3 py-8">

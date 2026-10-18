@@ -36,11 +36,19 @@ curl -X POST https://api.example.com/predict -d '{"input": "..."}'
 export function ReadmeCard({
   readme,
   initialMarkdown,
+  markdown,
+  onSave,
 }: {
+  /** The generated summary, shown until a README has been written. */
   readme?: React.ReactNode
   initialMarkdown?: string
+  /** The saved README. */
+  markdown?: string
+  onSave: (markdown: string) => void
 }) {
-  const [content, setContent] = React.useState('')
+  // What was just saved, shown until the saved README comes back from the API.
+  const [justSaved, setJustSaved] = React.useState<string>()
+  const content = justSaved ?? markdown ?? ''
   const [isEditing, setIsEditing] = React.useState(false)
   const [draft, setDraft] = React.useState('')
   const [tab, setTab] = React.useState<'edit' | 'preview'>('edit')
@@ -92,7 +100,8 @@ export function ReadmeCard({
           <Button
             disabled={!draft.trim()}
             onClick={() => {
-              setContent(draft)
+              setJustSaved(draft)
+              onSave(draft)
               setIsEditing(false)
               setTab('edit')
             }}

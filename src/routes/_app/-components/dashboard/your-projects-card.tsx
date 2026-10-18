@@ -22,11 +22,16 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@/components/ui/item'
-import { useOrgProjects } from '@/features/dashboard/hooks'
+import { toDashboardProject } from '@/features/dashboard/format'
+import { useDashboardSummary } from '@/features/dashboard/queries'
 import { unavailable } from '@/lib/unavailable'
+import { CardError, CardLoading } from './card-states'
 
 export function YourProjectsCard() {
-  const orgProjects = useOrgProjects()
+  const { data, error, isPending, refetch } = useDashboardSummary()
+  const orgProjects = (data?.projects ?? []).map((project) =>
+    toDashboardProject(project),
+  )
 
   return (
     <Card size="flush">
@@ -39,7 +44,15 @@ export function YourProjectsCard() {
         </CardAction>
       </CardHeader>
       <CardContent className="px-0">
-        {orgProjects.length ? (
+        {isPending ? (
+          <CardLoading rows={2} />
+        ) : error ? (
+          <CardError
+            title="Could not load projects"
+            error={error}
+            onRetry={() => void refetch()}
+          />
+        ) : orgProjects.length ? (
           <div className="grid gap-3 p-4 sm:grid-cols-2">
             {orgProjects.slice(0, 4).map((project) => (
               <Item
@@ -81,7 +94,7 @@ export function YourProjectsCard() {
               </EmptyMedia>
               <EmptyTitle>Create your first project</EmptyTitle>
               <EmptyDescription>
-                New projects for this organization will appear here.
+                New projects in this workspace will appear here.
               </EmptyDescription>
             </EmptyHeader>
           </Empty>

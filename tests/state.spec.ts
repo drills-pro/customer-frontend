@@ -8,9 +8,10 @@ import {
 test('dashboard preferences recover from invalid storage', () => {
   expect(restorePreferences(null)).toEqual(defaultPreferences)
   expect(restorePreferences('{broken')).toEqual(defaultPreferences)
-  expect(
-    restorePreferences(JSON.stringify({ organizationId: 'unknown' })),
-  ).toEqual(defaultPreferences)
+  expect(restorePreferences('[]')).toEqual(defaultPreferences)
+  expect(restorePreferences(JSON.stringify({ organizationId: 42 }))).toEqual(
+    defaultPreferences,
+  )
 })
 
 test('dashboard preferences retain valid persisted values', () => {
@@ -18,27 +19,34 @@ test('dashboard preferences retain valid persisted values', () => {
     JSON.stringify({
       organizationId: 'northwind',
       onboardingDismissed: true,
-      notificationsRead: true,
       theme: 'dark',
-      uploads: [],
     }),
   )
-  expect(restored.organizationId).toBe('northwind')
-  expect(restored.onboardingDismissed).toBe(true)
-  expect(restored.theme).toBe('dark')
+  expect(restored).toEqual({
+    organizationId: 'northwind',
+    onboardingDismissed: true,
+    theme: 'dark',
+  })
   expect(restorePreferences(JSON.stringify({ theme: 'sepia' })).theme).toBe(
     'light',
   )
   expect(DASHBOARD_STORAGE_KEY).toBe('drills-dashboard-v1')
 })
 
-test('dashboard preferences discard malformed training runs', () => {
+test('one invalid field does not cost the others, and old fields are ignored', () => {
   const restored = restorePreferences(
     JSON.stringify({
-      organizationId: 'acme',
+      organizationId: 'northwind',
+      onboardingDismissed: 'yes',
+      theme: 'dark',
+      // Written by versions that kept workspace records in the browser.
       trainingRuns: [{ id: 'incomplete-run', projectId: 'retail' }],
+      createdProjects: [],
     }),
   )
-
-  expect(restored.trainingRuns).toEqual([])
+  expect(restored).toEqual({
+    organizationId: 'northwind',
+    onboardingDismissed: false,
+    theme: 'dark',
+  })
 })

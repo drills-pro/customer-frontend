@@ -6,12 +6,8 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart'
-
-const metricData = Array.from({ length: 12 }, (_, index) => ({
-  epoch: index + 1,
-  loss: Number((3.812 / (index + 1)).toFixed(3)),
-  accuracy: Number((0.412 + (0.5 * (index + 1)) / 12).toFixed(3)),
-}))
+import { useTrainingMetrics } from '@/features/training/queries'
+import { useCurrentTrainingRun } from './use-current-training-run'
 
 export function MetricCard({
   title,
@@ -22,6 +18,9 @@ export function MetricCard({
   dataKey: 'loss' | 'accuracy'
   color: string
 }) {
+  const { project, run } = useCurrentTrainingRun()
+  const metricData = useTrainingMetrics(project.id, run.id).data ?? []
+
   return (
     <Card size="flush">
       <CardHeader className="border-b [--card-section:--spacing(3.5)]">

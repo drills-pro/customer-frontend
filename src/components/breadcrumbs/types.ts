@@ -1,12 +1,11 @@
 import type {
-  DashboardPreferences,
   Dataset,
   Deployment,
   Model,
   Organization,
   Project,
   TrainingRun,
-} from '@/features/dashboard/data'
+} from '@/features/dashboard/domain/types'
 
 export type Crumb = {
   id: string
@@ -28,7 +27,13 @@ export type BreadcrumbData = {
 
 export type BreadcrumbResolverContext = {
   params: Record<string, string>
-  preferences: DashboardPreferences
+  /** Every organization the user belongs to. */
+  organizations: Organization[]
+  /**
+   * The records the route params point at. One is absent until its request
+   * has answered, and stays absent when the record does not exist.
+   */
+  entities: Omit<BreadcrumbData, 'organization'>
   parent: BreadcrumbData
 }
 

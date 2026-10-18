@@ -9,7 +9,7 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import type { TrainingScheduler } from '@/features/dashboard/data'
-import { formatLearningRate } from '@/features/dashboard/training'
+import { formatLearningRate } from '@/features/training/format'
 
 const augmentations = [
   'Random flip',

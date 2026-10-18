@@ -1,34 +1,17 @@
 /**
- * Compatibility surface for the dashboard feature.
- *
- * The contents moved into `domain/`, `data/`, `selectors/`, and `persistence/`;
- * this file keeps the old import path working. Prefer `@/features/dashboard`.
+ * The UI's types and stored-preference defaults, on the import path most of
+ * the app already uses. The records themselves come from the API; see
+ * `src/features/<area>/` for the calls and `src/api/mock/` for the mock.
  */
 import type { DashboardPreferences } from './domain/types'
 
 export * from './domain/types'
-export * from './domain/project'
-export * from './data/projects'
-export * from './data/organizations'
-export * from './data/operations'
-export * from './data/datasets'
-export * from './data/models'
-export * from './data/deployments'
-export * from './selectors/projects'
-export * from './selectors/organization-lookup'
 
 export const DASHBOARD_STORAGE_KEY = 'drills-dashboard-v1'
 
 export const defaultPreferences: DashboardPreferences = {
-  organizationId: 'acme',
+  // Empty until the user picks one; the shell then uses the first organization.
+  organizationId: '',
   onboardingDismissed: false,
-  notificationsRead: false,
   theme: 'light',
-  uploads: [],
-  datasets: [],
-  trainingRuns: [],
-  createdProjects: [],
-  createdOrganizations: [],
-  organizationEdits: {},
-  declinedInvitations: [],
 }

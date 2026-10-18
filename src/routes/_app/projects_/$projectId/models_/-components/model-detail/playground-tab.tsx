@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import { ImageUp, Play } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -5,6 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import { modelsApi } from '@/features/models/api'
+import { modelKeys } from '@/features/models/queries'
 import { cn } from 'cn'
 import { useCurrentModel } from './use-current-model'
 
@@ -14,22 +17,6 @@ import { useCurrentModel } from './use-current-model'
  * labels it as an example.
  */
 const SAMPLE_IMAGE = '/dataset-samples/retail/beverages.png'
-
-const predictions = [
-  { label: 'beverages_cola_330ml', confidence: 96.4 },
-  { label: 'beverages_cola_500ml', confidence: 2.1 },
-  { label: 'beverages_soda_330ml', confidence: 0.9 },
-  { label: 'snacks_chips_large', confidence: 0.4 },
-  { label: 'other', confidence: 0.2 },
-]
-
-const contributions = [
-  { label: 'Label region — top-left quadrant', weight: 31 },
-  { label: 'Color histogram — red channel', weight: 24 },
-  { label: 'Texture uniformity', weight: 18 },
-  { label: 'Aspect ratio', weight: 12 },
-  { label: 'Background contrast', weight: 9 },
-]
 
 function Bar({
   label,
@@ -81,8 +68,17 @@ function Saliency({ className }: { className?: string }) {
 }
 
 export function PlaygroundTab() {
-  const { model } = useCurrentModel()
-  const top = predictions[0]
+  const { project, model } = useCurrentModel()
+  // The panel opens on the model's answer for the example image; "Run
+  // prediction" asks for it again.
+  const prediction = useQuery({
+    queryKey: [...modelKeys.one(project.id, model.id), 'example-prediction'],
+    queryFn: () => modelsApi.predict(project.id, model.id),
+    staleTime: Infinity,
+  })
+  const predictions = prediction.data?.predictions ?? []
+  const contributions = prediction.data?.contributions ?? []
+  const top = predictions.at(0)
 
   return (
     <div className="grid min-w-0 items-start gap-6 lg:grid-cols-2">
@@ -111,8 +107,12 @@ export function PlaygroundTab() {
               </p>
             </div>
             <Button
+              disabled={prediction.isFetching}
               onClick={() =>
-                toast.info('Live inference is not available in this demo.')
+                void prediction.refetch().then((result) => {
+                  if (result.error) toast.error(result.error.message)
+                  else toast.success('Prediction complete.')
+                })
               }
             >
               <Play />
@@ -134,11 +134,11 @@ export function PlaygroundTab() {
                 Top prediction
               </p>
               <p className="truncate font-mono text-[15px] font-semibold text-success">
-                {top.label}
+                {top?.label}
               </p>
             </div>
             <p className="shrink-0 text-2xl font-semibold tabular-nums text-success">
-              {top.confidence}%
+              {top ? `${top.confidence}%` : ''}
             </p>
           </div>
 

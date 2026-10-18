@@ -1,6 +1,10 @@
 import * as React from 'react'
 
-import type { OrgMember, OrgSummary, Organization } from '@/features/dashboard'
+import type {
+  OrgMember,
+  OrgSummary,
+  Organization,
+} from '@/features/dashboard/domain/types'
 
 export type OrgDetailContextValue = {
   org: Organization
@@ -9,7 +13,6 @@ export type OrgDetailContextValue = {
   isCurrent: boolean
   /** Owners and admins can invite, change roles and edit settings. */
   canManage: boolean
-  updateMembers: (update: (members: OrgMember[]) => OrgMember[]) => void
 }
 
 export const OrgDetailContext =

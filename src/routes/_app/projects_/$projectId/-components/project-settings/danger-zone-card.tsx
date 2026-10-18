@@ -17,8 +17,25 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { useProjectDetail } from '@/features/dashboard/context'
+import { useNavigate } from '@tanstack/react-router'
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  useDashboardLayout,
+  useProjectDetail,
+} from '@/features/dashboard/context'
 import type { Project } from '@/features/dashboard/data'
+import {
+  useArchiveProject,
+  useDeleteProject,
+  useTransferProject,
+} from '@/features/projects/queries'
 
 function plural(count: number, noun: string) {
   return `${count} ${noun}${count === 1 ? '' : 's'}`
@@ -26,6 +43,7 @@ function plural(count: number, noun: string) {
 
 export function DangerZoneCard() {
   const { project } = useProjectDetail()
+  const archive = useArchiveProject(project.id)
   const archived = project.status === 'Archived'
 
   return (
@@ -46,16 +64,7 @@ export function DangerZoneCard() {
           title="Transfer ownership"
           description="Move this project to another member or organization."
         >
-          <Button
-            variant="outline"
-            size="lg"
-            className="px-3.5 text-destructive hover:bg-destructive-muted hover:text-destructive"
-            onClick={() =>
-              toast.info('Transferring projects is not available in this demo.')
-            }
-          >
-            Transfer
-          </Button>
+          <TransferProjectDialog project={project} />
         </DangerRow>
 
         <DangerRow
@@ -93,9 +102,12 @@ export function DangerZoneCard() {
                 <AlertDialogAction
                   variant="destructive"
                   onClick={() =>
-                    toast.info(
-                      `${archived ? 'Unarchiving' : 'Archiving'} is not available in this demo.`,
-                    )
+                    archive.mutate(!archived, {
+                      onSuccess: () =>
+                        toast.success(
+                          `${project.name} ${archived ? 'unarchived' : 'archived'}.`,
+                        ),
+                    })
                   }
                 >
                   {archived ? 'Unarchive project' : 'Archive project'}
@@ -146,6 +158,8 @@ function DangerRow({
 }
 
 function DeleteProjectDialog({ project }: { project: Project }) {
+  const navigate = useNavigate()
+  const remove = useDeleteProject(project.id)
   const [open, setOpen] = React.useState(false)
   const [confirmation, setConfirmation] = React.useState('')
   const confirmed = confirmation === project.name
@@ -211,12 +225,96 @@ function DeleteProjectDialog({ project }: { project: Project }) {
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
-            disabled={!confirmed}
+            disabled={!confirmed || remove.isPending}
             onClick={() =>
-              toast.info('Deleting a project is not available in this demo.')
+              // Leave the project's pages before it disappears from under
+              // them. That unmounts this dialog, so the result is read from
+              // the promise; a failure is reported by the global handler.
+              void navigate({ to: '/projects' })
+                .then(() => remove.mutateAsync())
+                .then(() => toast.success(`${project.name} was deleted.`))
+                .catch(() => undefined)
             }
           >
             Delete this project
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
+
+/** Moves the project to another organization the user belongs to. */
+function TransferProjectDialog({ project }: { project: Project }) {
+  const { organizations, updatePreferences } = useDashboardLayout()
+  const transfer = useTransferProject(project.id)
+  const [orgId, setOrgId] = React.useState('')
+  const targets = organizations.filter((item) => item.id !== project.orgId)
+  const chosen = targets.find((item) => item.id === orgId)
+
+  return (
+    <AlertDialog onOpenChange={(open) => !open && setOrgId('')}>
+      <AlertDialogTrigger asChild>
+        <Button
+          variant="outline"
+          size="lg"
+          className="px-3.5 text-destructive hover:bg-destructive-muted hover:text-destructive"
+        >
+          Transfer
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Transfer {project.name}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            The project, its datasets, models and deployments move to the
+            organization you choose.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <Field>
+          <FieldLabel htmlFor="transfer-project-target">
+            New organization
+          </FieldLabel>
+          <Select value={orgId} onValueChange={setOrgId}>
+            <SelectTrigger
+              id="transfer-project-target"
+              size="lg"
+              className="w-full"
+            >
+              <SelectValue
+                placeholder={
+                  targets.length
+                    ? 'Choose an organization'
+                    : 'You belong to no other organization'
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {targets.map((item) => (
+                <SelectItem key={item.id} value={item.id}>
+                  {item.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            disabled={!chosen || transfer.isPending}
+            onClick={() =>
+              chosen &&
+              transfer.mutate(chosen.id, {
+                onSuccess: () => {
+                  // Follow the project, so its page stays the current one.
+                  updatePreferences({ organizationId: chosen.id })
+                  toast.success(`${project.name} moved to ${chosen.name}.`)
+                },
+              })
+            }
+          >
+            Transfer project
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

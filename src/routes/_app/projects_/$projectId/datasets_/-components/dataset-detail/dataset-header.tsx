@@ -1,9 +1,11 @@
 import { Link } from '@tanstack/react-router'
 import { Download, FileText, Image as ImageIcon, Table2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EntityHeader } from '@/components/shared/entity-header'
+import { projectDatasetsApi } from '@/features/datasets/api'
 import { cn } from 'cn'
 
 import { downloadJson, itemNoun } from './helpers'
@@ -56,7 +58,12 @@ export function DatasetHeader() {
             size="lg"
             className="px-3.5 shadow-xs"
             onClick={() =>
-              downloadJson(`${dataset.name}-manifest.json`, dataset)
+              void projectDatasetsApi
+                .getManifest(project.id, dataset.id)
+                .then((manifest) =>
+                  downloadJson(`${dataset.name}-manifest.json`, manifest),
+                )
+                .catch((error: Error) => toast.error(error.message))
             }
           >
             <Download className="size-4" />

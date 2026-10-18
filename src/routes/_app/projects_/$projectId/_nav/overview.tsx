@@ -20,6 +20,7 @@ import {
   ItemTitle,
 } from '@/components/ui/item'
 import { useProjectDetail } from '@/features/dashboard/context'
+import { useUpdateProject } from '@/features/projects/queries'
 import { useInView } from '@/hooks/use-in-view'
 import { unavailable } from '@/lib/unavailable'
 import { FactList, serializeReadme } from '../-components/project-overview'
@@ -37,6 +38,7 @@ function ProjectOverviewRoute() {
   const { ref: usageCardRef, inView: usageChartsInView } =
     useInView<HTMLDivElement>()
   const bestModel = details.bestModel
+  const updateProject = useUpdateProject(project.id)
 
   const pipeline = [
     {
@@ -144,7 +146,14 @@ function ProjectOverviewRoute() {
                     </div>
                   ))}
                 </div>
-                <Button onClick={() => unavailable('Deploy')}>Deploy →</Button>
+                <Button asChild>
+                  <Link
+                    to="/projects/$projectId/models"
+                    params={{ projectId: project.id }}
+                  >
+                    Deploy →
+                  </Link>
+                </Button>
               </CardContent>
             </Card>
           ) : (
@@ -246,6 +255,10 @@ function ProjectOverviewRoute() {
               details.readme && bestModel
                 ? serializeReadme(details.readme, bestModel, details.region)
                 : undefined
+            }
+            markdown={details.readmeMarkdown}
+            onSave={(markdown) =>
+              updateProject.mutate({ readme_markdown: markdown })
             }
           />
         </div>

@@ -49,9 +49,14 @@ import {
 import { useDashboardLayout } from '@/features/dashboard/context'
 import { Input } from '@/components/ui/input'
 import {
-  currentUser,
-  sessions as seededSessions,
-} from './-components/account-data'
+  useChangePassword,
+  useCurrentUser,
+  useDeleteAccount,
+  useEndSession,
+  useSecurity,
+  useSessions,
+} from '@/features/account/queries'
+import { relativeTimeLong } from '@/lib/format'
 import { PageHeader, SettingRow } from './-components/page-header'
 
 export const Route = createFileRoute('/_app/account/security')({
@@ -77,7 +82,10 @@ const offBadge = 'border-0 bg-muted text-muted-foreground'
 
 function PasswordCard() {
   const [open, setOpen] = React.useState(false)
-  const [lastChanged, setLastChanged] = React.useState('4 months ago')
+  const security = useSecurity().data
+  const lastChanged = security
+    ? relativeTimeLong(security.password_changed_at)
+    : '…'
 
   return (
     <Card size="flush">
@@ -95,10 +103,7 @@ function PasswordCard() {
       <ChangePasswordDialog
         open={open}
         onOpenChange={setOpen}
-        onChanged={() => {
-          setLastChanged('just now')
-          toast.success('Password changed for this session (demo only).')
-        }}
+        onChanged={() => toast.success('Password changed.')}
       />
     </Card>
   )
@@ -116,6 +121,7 @@ function ChangePasswordDialog({
   onOpenChange: (open: boolean) => void
   onChanged: () => void
 }) {
+  const changePassword = useChangePassword()
   const [values, setValues] = React.useState(emptyPasswords)
   const [errors, setErrors] = React.useState<Partial<PasswordValues>>({})
 
@@ -137,9 +143,16 @@ function ChangePasswordDialog({
     if (values.confirm !== values.next)
       nextErrors.confirm = 'Passwords do not match.'
     setErrors(nextErrors)
-    if (Object.keys(nextErrors).length) return
-    onChanged()
-    close(false)
+    if (Object.keys(nextErrors).length || changePassword.isPending) return
+    changePassword.mutate(
+      { current: values.current, next: values.next },
+      {
+        onSuccess: () => {
+          onChanged()
+          close(false)
+        },
+      },
+    )
   }
 
   const fields: Array<{
@@ -230,6 +243,9 @@ function ChangePasswordDialog({
 
 function SignInMethodsCard() {
   const orgName = useDashboardLayout().org.name
+  const security = useSecurity().data
+  const twoFactor = security?.two_factor_enabled ?? false
+  const google = security?.sso.find((item) => item.provider === 'Google')
   return (
     <Card size="flush">
       <CardContent className="divide-y p-0">
@@ -238,8 +254,8 @@ function SignInMethodsCard() {
           title="Two-factor authentication"
           description="Require a code from your authenticator app at sign-in."
         >
-          <Badge variant="secondary" className={offBadge}>
-            Off
+          <Badge variant="secondary" className={twoFactor ? onBadge : offBadge}>
+            {twoFactor ? 'On' : 'Off'}
           </Badge>
           <Button
             variant="outline"
@@ -257,8 +273,11 @@ function SignInMethodsCard() {
           title="Google SSO"
           description={`Sign in with your ${orgName} Google Workspace account.`}
         >
-          <Badge variant="secondary" className={onBadge}>
-            Connected
+          <Badge
+            variant="secondary"
+            className={google?.connected ? onBadge : offBadge}
+          >
+            {google?.connected ? 'Connected' : 'Not connected'}
           </Badge>
         </SettingRow>
       </CardContent>
@@ -267,7 +286,8 @@ function SignInMethodsCard() {
 }
 
 function SessionsCard() {
-  const [sessions, setSessions] = React.useState(seededSessions)
+  const sessions = useSessions().data ?? []
+  const endSession = useEndSession()
 
   return (
     <Card size="flush">
@@ -283,7 +303,11 @@ function SessionsCard() {
             key={session.id}
             icon={session.kind === 'mobile' ? Smartphone : Monitor}
             title={`${session.device} — ${session.location}`}
-            description={session.lastActive}
+            description={
+              session.current
+                ? 'Current session'
+                : `Last active ${relativeTimeLong(session.last_active_at)}`
+            }
           >
             {session.current ? (
               <Badge variant="secondary" className={onBadge}>
@@ -293,12 +317,13 @@ function SessionsCard() {
               <Button
                 variant="ghost"
                 aria-label={`Sign out ${session.device}`}
-                onClick={() => {
-                  setSessions((current) =>
-                    current.filter((item) => item.id !== session.id),
-                  )
-                  toast.success(`Signed out of ${session.device}.`)
-                }}
+                disabled={endSession.isPending}
+                onClick={() =>
+                  endSession.mutate(session.id, {
+                    onSuccess: () =>
+                      toast.success(`Signed out of ${session.device}.`),
+                  })
+                }
               >
                 Sign out
               </Button>
@@ -313,8 +338,9 @@ function SessionsCard() {
 function DeleteAccountCard() {
   const [open, setOpen] = React.useState(false)
   const [confirmation, setConfirmation] = React.useState('')
-  const confirmWord = currentUser.profile.username
-  const confirmed = confirmation === confirmWord
+  const deleteAccount = useDeleteAccount()
+  const confirmWord = useCurrentUser().data?.username ?? ''
+  const confirmed = Boolean(confirmWord) && confirmation === confirmWord
 
   return (
     <Card size="flush" className="ring-destructive/30">
@@ -370,11 +396,13 @@ function DeleteAccountCard() {
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
                 variant="destructive"
-                disabled={!confirmed}
+                disabled={!confirmed || deleteAccount.isPending}
                 onClick={() =>
-                  toast.info(
-                    'Deleting an account is not available in this demo.',
-                  )
+                  // Refused while the user still owns an organization; the
+                  // reason comes back from the API and is shown as a toast.
+                  deleteAccount.mutate(undefined, {
+                    onSuccess: () => toast.info('Your account was deleted.'),
+                  })
                 }
               >
                 Delete my account

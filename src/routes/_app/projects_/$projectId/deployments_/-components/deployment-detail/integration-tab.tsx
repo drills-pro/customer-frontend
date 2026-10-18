@@ -7,24 +7,28 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CopyButton } from '@/components/shared/copy-button'
+import {
+  useDeploymentKey,
+  useRotateDeploymentKey,
+  useTestDeployment,
+} from '@/features/deployments/queries'
+import { relativeTimeLong } from '@/lib/format'
 import { useCurrentDeployment } from './use-current-deployment'
-
-const API_KEY = 'drl_sk_••••••••3f9c'
 
 const languages = ['cURL', 'Python', 'JavaScript', 'Go'] as const
 type Language = (typeof languages)[number]
 
-function snippet(language: Language, endpoint: string) {
+function snippet(language: Language, endpoint: string, apiKey: string) {
   if (language === 'cURL') {
     return `curl -X POST "${endpoint}" \\
-  -H "Authorization: Bearer ${API_KEY}" \\
+  -H "Authorization: Bearer ${apiKey}" \\
   -F "image=@shelf.jpg"`
   }
   if (language === 'Python') {
     return `import requests
 
 url  = "${endpoint}"
-head = {"Authorization": "Bearer ${API_KEY}"}
+head = {"Authorization": "Bearer ${apiKey}"}
 
 with open("shelf.jpg", "rb") as f:
     r = requests.post(url, headers=head, files={"image": f})
@@ -37,7 +41,7 @@ body.append("image", file)
 
 const res = await fetch("${endpoint}", {
   method: "POST",
-  headers: { Authorization: "Bearer ${API_KEY}" },
+  headers: { Authorization: "Bearer ${apiKey}" },
   body,
 })
 
@@ -45,16 +49,22 @@ console.log(await res.json())`
   }
   return `req, _ := http.NewRequest("POST",
     "${endpoint}", body)
-req.Header.Set("Authorization", "Bearer ${API_KEY}")
+req.Header.Set("Authorization", "Bearer ${apiKey}")
 req.Header.Set("Content-Type", writer.FormDataContentType())
 
 res, err := http.DefaultClient.Do(req)`
 }
 
 export function IntegrationTab() {
-  const { deployment, model } = useCurrentDeployment()
+  const { project, deployment, model } = useCurrentDeployment()
   const [language, setLanguage] = React.useState<Language>('Python')
-  const code = snippet(language, deployment.endpoint)
+  const testCall = useTestDeployment(project.id, deployment.id)
+  const key = useDeploymentKey(project.id, deployment.id).data
+  const rotate = useRotateDeploymentKey(project.id, deployment.id)
+  // A rotated key is readable once, in the answer to the rotation.
+  const freshKey = rotate.data?.key
+  // The samples carry the masked key: enough to recognise, useless to copy.
+  const code = snippet(language, deployment.endpoint, key?.masked_key ?? '')
   const modelLabel = model
     ? `${model.name} v${model.version}`
     : deployment.modelId
@@ -105,10 +115,14 @@ export function IntegrationTab() {
               <Button
                 size="lg"
                 className="mt-3 w-full"
+                disabled={testCall.isPending}
                 onClick={() =>
-                  toast.info(
-                    'Calling a live endpoint is not available in this demo.',
-                  )
+                  testCall.mutate(undefined, {
+                    onSuccess: (result) =>
+                      toast.success(
+                        `${result.status} OK in ${result.latency_ms} ms.`,
+                      ),
+                  })
                 }
               >
                 <Play />
@@ -185,16 +199,27 @@ export function IntegrationTab() {
           </CardHeader>
           <CardContent className="p-5">
             <code className="block truncate rounded bg-muted px-2 py-1.5 text-xs">
-              {API_KEY}
+              {freshKey ?? key?.masked_key}
             </code>
             <p className="mt-2.5 text-xs text-muted-foreground">
-              Created 4 months ago · last used 2 minutes ago.
+              {freshKey
+                ? 'Copy this key now. It will not be shown again.'
+                : key &&
+                  `Created ${relativeTimeLong(key.created_at)} · ${
+                    key.last_used_at
+                      ? `last used ${relativeTimeLong(key.last_used_at)}`
+                      : 'never used'
+                  }.`}
             </p>
             <Button
               variant="outline"
               className="mt-3 w-full"
+              disabled={rotate.isPending}
               onClick={() =>
-                toast.info('Rotating keys is not available in this demo.')
+                rotate.mutate(undefined, {
+                  onSuccess: () =>
+                    toast.success('Key rotated. The old key no longer works.'),
+                })
               }
             >
               Rotate key

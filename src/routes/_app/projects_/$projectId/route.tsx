@@ -1,20 +1,23 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import * as React from 'react'
 
+import { isNotFound } from '@/api/errors'
+import { PageError, PageLoading } from '@/components/shared/query-states'
 import {
   ProjectDetailContext,
   useDashboardLayout,
 } from '@/features/dashboard/context'
-import { resolveProject } from '@/features/dashboard/data'
+import { useProject } from '@/features/projects/queries'
 import { ProjectNotFound } from './-components/project-overview'
 
 export const Route = createFileRoute('/_app/projects_/$projectId')({
   component: ProjectDetailRoute,
   staticData: {
-    breadcrumb: ({ params, preferences }) => {
-      const resolved = resolveProject(params.projectId, preferences)
-      if (!resolved) return null
-      const { project, organization } = resolved
+    breadcrumb: ({ organizations, entities: { project } }) => {
+      const organization = organizations.find(
+        (item) => item.id === project?.orgId,
+      )
+      if (!project || !organization) return null
       const overview = {
         to: '/projects/$projectId/overview',
         params: { projectId: project.id },
@@ -32,28 +35,37 @@ export const Route = createFileRoute('/_app/projects_/$projectId')({
 
 function ProjectDetailRoute() {
   const { projectId } = Route.useParams()
-  const { preferences, updatePreferences, hydrated } = useDashboardLayout()
-  const resolved = resolveProject(projectId, preferences)
+  const { preferences, updatePreferences, organizations } = useDashboardLayout()
+  const { data, error, refetch } = useProject(projectId)
+  const organization = organizations.find(
+    (item) => item.id === data?.project.orgId,
+  )
 
+  // Opening a project by link makes its organization the current one.
+  const projectOrgId = organization?.id
   React.useEffect(() => {
-    if (
-      hydrated &&
-      resolved &&
-      preferences.organizationId !== resolved.project.orgId
-    ) {
-      updatePreferences({ organizationId: resolved.project.orgId })
+    if (projectOrgId && preferences.organizationId !== projectOrgId) {
+      updatePreferences({ organizationId: projectOrgId })
     }
-  }, [hydrated, preferences.organizationId, resolved, updatePreferences])
+  }, [preferences.organizationId, projectOrgId, updatePreferences])
 
-  if (!hydrated) {
-    return <main id="dashboard-main" className="min-h-96 flex-1" />
+  if (error) {
+    return isNotFound(error) ? (
+      <ProjectNotFound projectId={projectId} />
+    ) : (
+      <PageError
+        title="Could not load this project"
+        error={error}
+        onRetry={() => void refetch()}
+      />
+    )
   }
-  if (!resolved) return <ProjectNotFound projectId={projectId} />
-
-  const { project, details, organization } = resolved
+  if (!data) return <PageLoading />
+  // A project in an organization the user is not in reads as missing.
+  if (!organization) return <ProjectNotFound projectId={projectId} />
 
   return (
-    <ProjectDetailContext.Provider value={{ project, details, organization }}>
+    <ProjectDetailContext.Provider value={{ ...data, organization }}>
       <Outlet />
     </ProjectDetailContext.Provider>
   )

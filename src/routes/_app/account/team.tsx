@@ -37,8 +37,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { isEmail, teamMembers } from './-components/account-data'
-import type { TeamMember, TeamRole } from './-components/account-data'
+import { CardError, CardLoading } from '@/components/shared/query-states'
+import {
+  useInviteMembers,
+  useOrgMembers,
+} from '@/features/organizations/queries'
+import { isEmail } from '@/lib/validation'
+import type { TeamRole } from './-components/account-data'
 import { PageHeader } from './-components/page-header'
 
 export const Route = createFileRoute('/_app/account/team')({
@@ -58,11 +63,14 @@ function TeamRoute() {
 }
 
 const teamRoles: TeamRole[] = ['Member', 'Admin']
-const inviteColors = ['#0ea5e9', '#14b8a6', '#ec4899', '#6366f1']
 
+/** The current organization's members: the same list its Members page edits. */
 function TeamCard() {
-  const orgName = useDashboardLayout().org.name
-  const [members, setMembers] = React.useState<TeamMember[]>(teamMembers)
+  const { org } = useDashboardLayout()
+  const orgName = org.name
+  const membersQuery = useOrgMembers(org.id)
+  const invite = useInviteMembers(org.id)
+  const members = membersQuery.data ?? []
   const [inviteOpen, setInviteOpen] = React.useState(false)
 
   return (
@@ -84,6 +92,14 @@ function TeamCard() {
       </CardHeader>
 
       <CardContent className="p-0">
+        {membersQuery.error && (
+          <CardError
+            title="Could not load members"
+            error={membersQuery.error}
+            onRetry={() => void membersQuery.refetch()}
+          />
+        )}
+        {membersQuery.isPending && <CardLoading />}
         <ul className="divide-y">
           {members.map((member) => (
             <li
@@ -109,7 +125,7 @@ function TeamCard() {
                       </span>
                     )}
                   </span>
-                  {member.invited && (
+                  {member.status === 'invited' && (
                     <Badge
                       variant="secondary"
                       className="border-0 bg-warning-muted text-warning"
@@ -125,7 +141,7 @@ function TeamCard() {
               <Badge
                 variant="secondary"
                 className={
-                  member.role === 'Admin'
+                  member.role === 'Admin' || member.role === 'Owner'
                     ? 'border-0 bg-success-muted text-success'
                     : 'border-0 bg-muted text-muted-foreground'
                 }
@@ -142,20 +158,12 @@ function TeamCard() {
         onOpenChange={setInviteOpen}
         orgName={orgName}
         existing={members.map((member) => member.email)}
-        onInvite={(email, role) => {
-          setMembers((current) => [
-            ...current,
-            {
-              name: email.split('@')[0],
-              email,
-              initials: email.slice(0, 2).toUpperCase(),
-              color: inviteColors[current.length % inviteColors.length],
-              role,
-              invited: true,
-            },
-          ])
-          toast.success(`Invitation sent to ${email}.`)
-        }}
+        onInvite={(email, role) =>
+          invite.mutate(
+            { emails: [email], role },
+            { onSuccess: () => toast.success(`Invitation sent to ${email}.`) },
+          )
+        }
       />
     </Card>
   )

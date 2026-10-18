@@ -11,7 +11,9 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import { useDashboardSummary } from '@/features/dashboard/queries'
 import { useDashboardLayout } from '@/features/dashboard/context'
+import { getSession } from '@/api/session'
 import {
   RecentActivityCard,
   UploadDialog,
@@ -24,8 +26,22 @@ import {
 export const Route = createFileRoute('/_app/')({ component: DashboardPage })
 
 function DashboardPage() {
-  const { preferences, updatePreferences, org } = useDashboardLayout()
+  const { preferences, updatePreferences } = useDashboardLayout()
   const [uploadOpen, setUploadOpen] = React.useState(false)
+  const { data } = useDashboardSummary()
+  const projects = data?.projects ?? []
+  const totals = data?.metrics
+
+  const onboarding = [
+    { label: 'Create a project', done: projects.length > 0 },
+    { label: 'Upload a dataset', done: (totals?.datasets ?? 0) > 0 },
+    {
+      label: 'Run your first training',
+      done: (totals?.training_runs ?? 0) > 0,
+    },
+    { label: 'Deploy a model', done: (totals?.deployments ?? 0) > 0 },
+  ]
+  const onboardingDone = onboarding.filter((step) => step.done).length
 
   return (
     <>
@@ -36,7 +52,8 @@ function DashboardPage() {
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
-              Good morning, Alex <span aria-hidden="true">👋</span>
+              Good morning, {getSession().displayName}{' '}
+              <span aria-hidden="true">👋</span>
             </h1>
             <p className="mt-1 text-muted-foreground">
               Here is what happened across your workspace.
@@ -88,25 +105,23 @@ function DashboardPage() {
                   </CardAction>
                 </CardHeader>
                 <CardContent className="space-y-3 p-5">
-                  {[
-                    'Create a project',
-                    'Upload a dataset',
-                    'Run your first training',
-                    'Deploy a model',
-                  ].map((label, index) => (
+                  {onboarding.map(({ label, done }, index) => (
                     <div
                       className="flex items-center gap-3 text-sm"
                       key={label}
                     >
                       <span
-                        className={`flex size-5 items-center justify-center rounded-full ${index < 2 ? 'bg-success-muted text-success' : 'bg-muted text-muted-foreground'}`}
+                        className={`flex size-5 items-center justify-center rounded-full ${done ? 'bg-success-muted text-success' : 'bg-muted text-muted-foreground'}`}
                       >
-                        {index < 2 ? <Check className="size-3.5" /> : index + 1}
+                        {done ? <Check className="size-3.5" /> : index + 1}
                       </span>
                       {label}
                     </div>
                   ))}
-                  <Progress value={50} className="mt-4 h-1.5" />
+                  <Progress
+                    value={(onboardingDone / onboarding.length) * 100}
+                    className="mt-4 h-1.5"
+                  />
                 </CardContent>
               </Card>
             )}
@@ -117,12 +132,7 @@ function DashboardPage() {
       <UploadDialog
         open={uploadOpen}
         onOpenChange={setUploadOpen}
-        organizationId={org.id}
-        onUpload={(activity) =>
-          updatePreferences({
-            uploads: [activity, ...preferences.uploads],
-          })
-        }
+        projects={projects}
       />
     </>
   )

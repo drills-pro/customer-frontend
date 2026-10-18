@@ -1,5 +1,4 @@
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
-import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,13 +15,8 @@ import {
 } from '@/components/ui/empty'
 import { Progress } from '@/components/ui/progress'
 import { cn } from 'cn'
-import { requestVolume24h } from '@/features/dashboard/data'
+import { useDeploymentMetrics } from '@/features/deployments/queries'
 import { useCurrentDeployment } from './use-current-deployment'
-
-const volumeData = requestVolume24h.map((requests, index) => ({
-  hour: index === 23 ? 'now' : `${23 - index}h ago`,
-  requests,
-}))
 
 /** Parses the leading number out of `140 ms`; `—` has none. */
 function ms(value: string) {
@@ -30,8 +24,17 @@ function ms(value: string) {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
-export function MonitoringTab() {
-  const { deployment } = useCurrentDeployment()
+export function MonitoringTab({
+  onEditScaling,
+}: {
+  onEditScaling: () => void
+}) {
+  const { project, deployment } = useCurrentDeployment()
+  const metrics = useDeploymentMetrics(project.id, deployment.id).data
+  const volumeData = (metrics?.request_volume ?? []).map((point) => ({
+    hour: point.hours_ago === 0 ? 'now' : `${point.hours_ago}h ago`,
+    requests: point.requests,
+  }))
   const live = deployment.status === 'Live'
   /**
    * All three percentiles share one scale — p99, the slowest value shown — so
@@ -191,8 +194,11 @@ export function MonitoringTab() {
               [
                 ['Min replicas', String(deployment.minReplicas)],
                 ['Max replicas', String(deployment.maxReplicas)],
-                ['Target concurrency', '40'],
-                ['Scale-down delay', '5 min'],
+                ['Target concurrency', String(deployment.targetConcurrency)],
+                [
+                  'Scale-down delay',
+                  `${Math.round(deployment.scaleDownDelaySeconds / 60)} min`,
+                ],
               ] as const
             ).map(([label, value]) => (
               <div
@@ -207,9 +213,7 @@ export function MonitoringTab() {
               variant="outline"
               size="lg"
               className="mt-4 w-full"
-              onClick={() =>
-                toast.info('Editing scaling is not available in this demo.')
-              }
+              onClick={onEditScaling}
             >
               Edit scaling
             </Button>

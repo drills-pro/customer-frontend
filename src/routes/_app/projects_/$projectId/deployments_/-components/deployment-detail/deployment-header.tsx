@@ -6,12 +6,16 @@ import { Button } from '@/components/ui/button'
 import { CopyButton } from '@/components/shared/copy-button'
 import { EntityHeader } from '@/components/shared/entity-header'
 import { DeploymentStatusBadge } from '@/features/deployments/components/deployment-status-badge'
+import { useDeploymentAction } from '@/features/deployments/queries'
 import { EnvironmentBadge } from '../../../-components/deployment-list'
 import { useCurrentDeployment } from './use-current-deployment'
 
 export function DeploymentHeader() {
-  const { deployment, model } = useCurrentDeployment()
+  const { project, deployment, model } = useCurrentDeployment()
+  const act = useDeploymentAction(project.id, deployment.id)
   const idle = deployment.status !== 'Live'
+  // Nothing to pause or resume while a rollout is still in progress.
+  const rollingOut = deployment.status === 'Deploying'
 
   return (
     <EntityHeader
@@ -60,10 +64,14 @@ export function DeploymentHeader() {
             variant="outline"
             size="lg"
             className="px-3.5 shadow-xs"
+            disabled={rollingOut || act.isPending}
             onClick={() =>
-              toast.info(
-                `${idle ? 'Resuming' : 'Pausing'} a deployment is not available in this demo.`,
-              )
+              act.mutate(idle ? 'resume' : 'pause', {
+                onSuccess: () =>
+                  toast.success(
+                    `${deployment.name} ${idle ? 'resumed' : 'paused'}.`,
+                  ),
+              })
             }
           >
             {idle ? <Play className="size-4" /> : <Pause className="size-4" />}
@@ -72,8 +80,12 @@ export function DeploymentHeader() {
           <Button
             size="lg"
             className="px-3.5 shadow-xs"
+            disabled={rollingOut || act.isPending}
             onClick={() =>
-              toast.info('Redeploying is not available in this demo.')
+              act.mutate('redeploy', {
+                onSuccess: () =>
+                  toast.success(`Redeploying ${deployment.name}.`),
+              })
             }
           >
             <RefreshCw className="size-4" />

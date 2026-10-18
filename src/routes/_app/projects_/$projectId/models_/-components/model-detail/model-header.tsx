@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { EntityHeader } from '@/components/shared/entity-header'
+import { useCreateDeployment } from '@/features/deployments/queries'
 import { cn } from 'cn'
 import {
   formatAccuracy,
@@ -40,8 +41,9 @@ function DeltaLine({ delta, lower }: { delta: Delta; lower?: boolean }) {
 }
 
 export function ModelHeader() {
-  const { model, versions, deployment } = useCurrentModel()
+  const { project, model, versions, deployment } = useCurrentModel()
   const navigate = useNavigate()
+  const deploy = useCreateDeployment(project.id)
   const index = versions.findIndex((item) => item.id === model.id)
   const deltas = versionDeltas(
     model,
@@ -136,8 +138,23 @@ export function ModelHeader() {
             <Button
               size="lg"
               className="px-3.5 shadow-xs"
+              disabled={deploy.isPending}
               onClick={() =>
-                toast.info('Deploying is not available in this demo.')
+                deploy.mutate(
+                  { model_id: model.id },
+                  {
+                    onSuccess: (created) => {
+                      toast.success(`Deploying ${created.name}.`)
+                      void navigate({
+                        to: '/projects/$projectId/deployments/$deploymentId',
+                        params: {
+                          projectId: project.id,
+                          deploymentId: created.id,
+                        },
+                      })
+                    },
+                  },
+                )
               }
             >
               <Rocket className="size-4" />

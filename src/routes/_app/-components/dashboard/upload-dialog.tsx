@@ -18,53 +18,67 @@ import {
   FieldLabel,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import type { Activity } from '@/features/dashboard/data'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Spinner } from '@/components/ui/spinner'
+import { taskLabel } from '@/features/dashboard/format'
+import { useUploadDataset } from '@/features/dashboard/queries'
+import { acceptedUploads, uploadKind } from '@/features/datasets/upload-rules'
+import type { ApiProject } from '@/features/dashboard/api'
 
 export function UploadDialog({
   open,
   onOpenChange,
-  organizationId,
-  onUpload,
+  projects,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  organizationId: string
-  onUpload: (activity: Activity) => void
+  /** A dataset always belongs to a project, so the user has to pick one. */
+  projects: ApiProject[]
 }) {
+  const [projectId, setProjectId] = React.useState('')
   const [name, setName] = React.useState('')
   const [file, setFile] = React.useState<File | null>(null)
   const [error, setError] = React.useState('')
+  const upload = useUploadDataset()
+
   const submit = (event: React.FormEvent) => {
     event.preventDefault()
-    const allowed = [
-      'text/csv',
-      'application/zip',
-      'application/x-zip-compressed',
-      'image/jpeg',
-      'image/png',
-    ]
-    if (!name.trim()) return setError('Enter a dataset name.')
-    if (!file) return setError('Choose a CSV, ZIP, JPG, or PNG file.')
-    if (
-      !allowed.includes(file.type) &&
-      !/\.(csv|zip|jpe?g|png)$/i.test(file.name)
-    )
-      return setError('Choose a CSV, ZIP, JPG, or PNG file.')
-    onUpload({
-      id: `upload-${Date.now()}`,
-      orgId: organizationId,
-      icon: 'dataset',
-      lead: `Dataset ${name.trim()}`,
-      text: `uploaded (${file.name})`,
-      time: 'Just now',
-      action: 'View',
-    })
-    toast.success(`${name.trim()} uploaded successfully.`)
-    setName('')
-    setFile(null)
+    const datasetName = name.trim()
+    const project = projects.find((item) => item.id === projectId)
+    if (!datasetName) return setError('Enter a dataset name.')
+    if (!project) return setError('Choose a project.')
+    const kind = file ? uploadKind(file) : undefined
+    if (!file || !kind) return setError('Choose a ZIP or CSV file.')
+    const accepted = acceptedUploads(project.task_type)
+    if (!accepted.includes(kind)) {
+      return setError(
+        accepted.length
+          ? `${taskLabel(project.task_type)} projects take a ${accepted.join(' or ').toUpperCase()} file here.`
+          : `${taskLabel(project.task_type)} projects cannot be uploaded to from here yet.`,
+      )
+    }
+
     setError('')
-    onOpenChange(false)
+    upload.mutate(
+      { project, name: datasetName, file },
+      {
+        onSuccess: () => {
+          toast.success(`${datasetName} uploaded to ${project.name}.`)
+          setName('')
+          setFile(null)
+          onOpenChange(false)
+        },
+        onError: (cause) => setError(cause.message),
+      },
+    )
   }
+
   return (
     <Dialog
       open={open}
@@ -78,11 +92,31 @@ export function UploadDialog({
           <DialogHeader>
             <DialogTitle>Upload dataset</DialogTitle>
             <DialogDescription>
-              Add a local file to the current organization. This demo stores
-              metadata only.
+              Add a ZIP of labelled image folders or a CSV to one of your
+              projects.
             </DialogDescription>
           </DialogHeader>
           <FieldGroup className="gap-4 py-2">
+            <Field>
+              <FieldLabel htmlFor="dataset-project">Project</FieldLabel>
+              <Select value={projectId} onValueChange={setProjectId}>
+                <SelectTrigger id="dataset-project" className="w-full">
+                  <SelectValue
+                    placeholder={
+                      projects.length ? 'Choose a project' : 'No projects yet'
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+
             <Field>
               <FieldLabel htmlFor="dataset-name">Dataset name</FieldLabel>
               <Input
@@ -98,7 +132,7 @@ export function UploadDialog({
               <Input
                 id="dataset-files"
                 type="file"
-                accept=".csv,.zip,.jpg,.jpeg,.png"
+                accept=".csv,.zip"
                 onChange={(event) => setFile(event.target.files?.[0] ?? null)}
               />
             </Field>
@@ -113,8 +147,8 @@ export function UploadDialog({
             >
               Cancel
             </Button>
-            <Button type="submit">
-              <Upload />
+            <Button type="submit" disabled={upload.isPending}>
+              {upload.isPending ? <Spinner /> : <Upload />}
               Upload dataset
             </Button>
           </DialogFooter>

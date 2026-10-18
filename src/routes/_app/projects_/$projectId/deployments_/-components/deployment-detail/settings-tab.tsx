@@ -1,6 +1,19 @@
+import * as React from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { Trash2, TriangleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
@@ -12,15 +25,51 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useComputeOptions } from '@/features/catalog/queries'
+import {
+  useDeleteDeployment,
+  useUpdateDeployment,
+} from '@/features/deployments/queries'
 import { useCurrentDeployment } from './use-current-deployment'
 
-const instanceTypes = ['a10g-1', 't4-1', 'cpu-4', 'edge-arm64']
-
 export function SettingsTab() {
-  const { deployment, model } = useCurrentDeployment()
+  const { project, deployment, model } = useCurrentDeployment()
+  const navigate = useNavigate()
+  const update = useUpdateDeployment(project.id, deployment.id)
+  const remove = useDeleteDeployment(project.id, deployment.id)
+  // The current type stays selectable even if it is no longer offered.
+  const instanceTypes = [
+    ...new Set([
+      deployment.instanceName,
+      ...(useComputeOptions('serving').data ?? []).map((item) => item.id),
+    ]),
+  ]
+  const [values, setValues] = React.useState({
+    name: deployment.name,
+    serving: deployment.serving,
+    minReplicas: String(deployment.minReplicas),
+    maxReplicas: String(deployment.maxReplicas),
+    instanceType: deployment.instanceName,
+  })
+  const set = (changes: Partial<typeof values>) =>
+    setValues((current) => ({ ...current, ...changes }))
+
   const modelLabel = model
     ? `${model.name} v${model.version}`
     : deployment.modelId
+
+  function save() {
+    update.mutate(
+      {
+        name: values.name,
+        serving: values.serving,
+        min_replicas: Number(values.minReplicas),
+        max_replicas: Number(values.maxReplicas),
+        instance_type: values.instanceType,
+      },
+      { onSuccess: () => toast.success('Deployment settings saved.') },
+    )
+  }
 
   return (
     <div className="grid min-w-0 items-start gap-6 lg:grid-cols-3">
@@ -35,13 +84,19 @@ export function SettingsTab() {
               <Input
                 id="deployment-name"
                 size="lg"
-                defaultValue={deployment.name}
+                value={values.name}
+                onChange={(event) => set({ name: event.target.value })}
               />
             </Field>
 
             <Field>
               <FieldLabel htmlFor="deployment-model">Serving model</FieldLabel>
-              <Select defaultValue="pinned">
+              <Select
+                value={values.serving}
+                onValueChange={(value) =>
+                  set({ serving: value as typeof values.serving })
+                }
+              >
                 <SelectTrigger
                   id="deployment-model"
                   size="lg"
@@ -69,7 +124,9 @@ export function SettingsTab() {
                   id="deployment-min"
                   type="number"
                   size="lg"
-                  defaultValue={deployment.minReplicas}
+                  min={0}
+                  value={values.minReplicas}
+                  onChange={(event) => set({ minReplicas: event.target.value })}
                 />
               </Field>
               <Field>
@@ -78,7 +135,9 @@ export function SettingsTab() {
                   id="deployment-max"
                   type="number"
                   size="lg"
-                  defaultValue={deployment.maxReplicas}
+                  min={1}
+                  value={values.maxReplicas}
+                  onChange={(event) => set({ maxReplicas: event.target.value })}
                 />
               </Field>
             </div>
@@ -87,7 +146,10 @@ export function SettingsTab() {
               <FieldLabel htmlFor="deployment-instance">
                 Instance type
               </FieldLabel>
-              <Select defaultValue={deployment.instanceName}>
+              <Select
+                value={values.instanceType}
+                onValueChange={(value) => set({ instanceType: value })}
+              >
                 <SelectTrigger
                   id="deployment-instance"
                   size="lg"
@@ -109,11 +171,8 @@ export function SettingsTab() {
             <Button
               size="lg"
               className="px-3.5"
-              onClick={() =>
-                toast.info(
-                  'Saving deployment settings is not available in this demo.',
-                )
-              }
+              disabled={update.isPending}
+              onClick={save}
             >
               Save settings
             </Button>
@@ -135,19 +194,46 @@ export function SettingsTab() {
                 not deleted.
               </p>
             </div>
-            <Button
-              variant="destructive"
-              size="lg"
-              className="px-3.5"
-              onClick={() =>
-                toast.info(
-                  'Deleting a deployment is not available in this demo.',
-                )
-              }
-            >
-              <Trash2 />
-              Delete deployment
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="lg" className="px-3.5">
+                  <Trash2 />
+                  Delete deployment
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete {deployment.name}?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    The endpoint stops answering immediately. This cannot be
+                    undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    variant="destructive"
+                    disabled={remove.isPending}
+                    onClick={() =>
+                      // Leave the page before its deployment disappears.
+                      // That unmounts this tab, so the result is read from the
+                      // promise; a failure is reported by the global handler.
+                      void navigate({
+                        to: '/projects/$projectId/deployments',
+                        params: { projectId: project.id },
+                      })
+                        .then(() => remove.mutateAsync())
+                        .then(() =>
+                          toast.success(`${deployment.name} was deleted.`),
+                        )
+                        .catch(() => undefined)
+                    }
+                  >
+                    Delete deployment
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
       </div>

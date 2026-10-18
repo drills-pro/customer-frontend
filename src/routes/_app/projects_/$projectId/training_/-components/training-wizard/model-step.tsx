@@ -8,14 +8,14 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@/components/ui/item'
-import type { ArchitectureOption } from '@/features/dashboard/training'
+import type { ApiArchitecture } from '@/features/catalog/api'
 
 export function ModelStep({
   architectures,
   architectureId,
   setArchitectureId,
 }: {
-  architectures: ArchitectureOption[]
+  architectures: ApiArchitecture[]
   architectureId: string
   setArchitectureId: (id: string) => void
 }) {

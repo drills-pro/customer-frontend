@@ -26,9 +26,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { orgRoleDescriptions } from '@/features/dashboard/data'
-import type { OrgRole, Organization } from '@/features/dashboard/data'
-import { isEmail } from '../../account/-components/account-data'
+import type { OrgRole, Organization } from '@/features/dashboard/domain/types'
+import { orgRoleDescriptions } from '@/features/organizations/constants'
+import { isEmail } from '@/lib/validation'
 
 /** Owners are made by transferring ownership, never by invitation. */
 const invitableRoles: OrgRole[] = ['Admin', 'Member', 'Viewer']

@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { trainingLog } from '@/features/dashboard/training'
+import { useTrainingLogs } from '@/features/training/queries'
 
 import { downloadText } from './helpers'
 import { useCurrentTrainingRun } from './use-current-training-run'
@@ -30,10 +30,12 @@ export function LogsCard({
   setAutoscroll: (value: boolean) => void
   logRef: React.RefObject<HTMLPreElement | null>
 }) {
-  const { run, dataset } = useCurrentTrainingRun()
-  const lines = trainingLog(run, dataset).filter(
-    (line) => level === 'all' || line.startsWith(level),
-  )
+  const { project, run } = useCurrentTrainingRun()
+  const logs = useTrainingLogs(project.id, run.id, run.status === 'Running')
+  // `INFO  Loading dataset …`: the level, padded so the messages line up.
+  const lines = (logs.data ?? [])
+    .map((line) => `${line.level.toUpperCase().padEnd(5)} ${line.message}`)
+    .filter((line) => level === 'all' || line.startsWith(level))
   const content = lines.join('\n') || 'No logs at this level.'
   return (
     <Card size="flush">

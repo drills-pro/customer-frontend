@@ -35,8 +35,8 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty'
 import { Progress } from '@/components/ui/progress'
-import { useDashboardLayout } from '@/features/dashboard/context'
-import { allProjects } from '@/features/dashboard'
+import { CardLoading } from '@/components/shared/query-states'
+import { useProjects } from '@/features/projects/queries'
 import { useOrgDetail } from '../-components/org-context'
 
 export const Route = createFileRoute('/_app/organizations_/$orgId/overview')({
@@ -44,11 +44,11 @@ export const Route = createFileRoute('/_app/organizations_/$orgId/overview')({
 })
 
 function OrgOverview() {
-  const { preferences } = useDashboardLayout()
   const { org, members, summary, canManage } = useOrgDetail()
-  const projects = allProjects(preferences)
-    .filter((project) => project.orgId === org.id)
-    .sort((left, right) => right.updatedAt - left.updatedAt)
+  const projectsQuery = useProjects(org.id)
+  const projects = [...(projectsQuery.data ?? [])].sort(
+    (left, right) => right.updatedAt - left.updatedAt,
+  )
   const activeMembers = members.filter((member) => member.status === 'active')
   const { limits } = summary
 
@@ -134,7 +134,9 @@ function OrgOverview() {
               </CardAction>
             </CardHeader>
             <CardContent className="p-0">
-              {projects.length === 0 ? (
+              {projectsQuery.isPending ? (
+                <CardLoading />
+              ) : projects.length === 0 ? (
                 <Empty className="py-10">
                   <EmptyHeader>
                     <EmptyMedia variant="icon">

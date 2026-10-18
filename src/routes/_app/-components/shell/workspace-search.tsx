@@ -10,12 +10,8 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
-import type {
-  Deployment,
-  Organization,
-  Project,
-  TrainingRun,
-} from '@/features/dashboard/data'
+import type { Organization } from '@/features/dashboard/domain/types'
+import type { ApiSearchHit } from '@/features/organizations/api'
 import { unavailable } from '@/lib/unavailable'
 
 type SearchItem = {
@@ -28,34 +24,26 @@ type SearchItem = {
 
 const groups = ['Projects', 'Training runs', 'Deployments', 'Organizations']
 
+const hitGroups: Record<ApiSearchHit['kind'], string> = {
+  project: 'Projects',
+  training_run: 'Training runs',
+  deployment: 'Deployments',
+}
+
+/** Search hits from the API, plus the organizations the user can jump to. */
 export function buildSearchItems({
   organizations,
-  projects,
-  trainingRuns,
-  deployments,
+  hits,
 }: {
   organizations: Organization[]
-  projects: Project[]
-  trainingRuns: TrainingRun[]
-  deployments: Deployment[]
+  hits: ApiSearchHit[]
 }): SearchItem[] {
   return [
-    ...projects.map((item) => ({
-      id: item.id,
-      label: item.name,
-      group: 'Projects',
-    })),
-    ...trainingRuns.map((item) => ({
-      id: item.id,
-      label: item.name,
-      group: 'Training runs',
-      projectId: item.projectId,
-    })),
-    ...deployments.map((item) => ({
-      id: item.id,
-      label: item.name,
-      group: 'Deployments',
-      projectId: item.projectId,
+    ...hits.map((hit) => ({
+      id: hit.id,
+      label: hit.name,
+      group: hitGroups[hit.kind],
+      projectId: hit.kind === 'project' ? undefined : hit.project_id,
     })),
     ...organizations.map((item) => ({
       id: item.id,

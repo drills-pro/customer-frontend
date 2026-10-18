@@ -12,7 +12,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart'
-import type { Dataset, DatasetDetailMock } from '@/features/dashboard/data'
+import type { Dataset, DatasetDetail } from '@/features/dashboard/data'
 
 import { getClassHistogram, getClassStats, itemNoun } from './helpers'
 import { useCurrentDataset } from './use-current-dataset'
@@ -89,7 +89,7 @@ function ClassDistribution({
   detail,
 }: {
   dataset: Dataset
-  detail: DatasetDetailMock
+  detail: DatasetDetail
 }) {
   const stats = getClassStats(detail.classDistribution)
   const histogram = getClassHistogram(detail.classDistribution)
@@ -204,7 +204,7 @@ function SplitDistribution({
   detail,
 }: {
   dataset: Dataset
-  detail: DatasetDetailMock
+  detail: DatasetDetail
 }) {
   const splits = detail.splitDistribution.filter((split) => split.percent > 0)
 
@@ -245,7 +245,7 @@ function Composition({
   detail,
 }: {
   dataset: Dataset
-  detail: DatasetDetailMock
+  detail: DatasetDetail
 }) {
   const { composition } = detail
   const { avgDimensions, avgWords } = composition

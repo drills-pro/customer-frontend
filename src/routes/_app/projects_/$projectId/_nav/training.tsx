@@ -19,17 +19,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  useDashboardLayout,
-  useProjectDetail,
-} from '@/features/dashboard/context'
-import { datasets as seededDatasets } from '@/features/dashboard/data'
-import {
-  liveRun,
-  projectTrainingRuns,
-} from '@/features/dashboard/selectors/training-runs'
-import { formatDuration } from '@/features/dashboard/training'
-import { useNow } from '@/hooks/use-now'
+import { SectionError, SectionLoading } from '@/components/shared/query-states'
+import { useProjectDetail } from '@/features/dashboard/context'
+import { useProjectDatasets } from '@/features/datasets/queries'
+import { formatDuration } from '@/features/training/format'
+import { useTrainingRuns } from '@/features/training/queries'
 import { TrainingStatusBadge } from '@/features/training/components/training-status-badge'
 
 export const Route = createFileRoute(
@@ -40,17 +34,21 @@ export const Route = createFileRoute(
 
 function ProjectTrainingRoute() {
   const { project } = useProjectDetail()
-  const { preferences } = useDashboardLayout()
-  const now = useNow()
-
-  const runs = projectTrainingRuns(preferences, project.id).map((run) =>
-    liveRun(run, now),
-  )
-  const allDatasets = [...preferences.datasets, ...seededDatasets]
+  const runsQuery = useTrainingRuns(project.id)
+  const runs = runsQuery.data ?? []
+  const allDatasets = useProjectDatasets(project.id).data ?? []
 
   return (
     <div className="mt-6">
-      {runs.length === 0 ? (
+      {runsQuery.error ? (
+        <SectionError
+          title="Could not load training runs"
+          error={runsQuery.error}
+          onRetry={() => void runsQuery.refetch()}
+        />
+      ) : runsQuery.isPending ? (
+        <SectionLoading />
+      ) : runs.length === 0 ? (
         <Empty className="min-h-64 border bg-card">
           <EmptyHeader>
             <EmptyMedia variant="icon">

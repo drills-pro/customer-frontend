@@ -73,12 +73,15 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { orgRoles } from '@/features/dashboard/domain/types'
+import type { OrgMember, OrgRole } from '@/features/dashboard/domain/types'
+import { orgRoleDescriptions } from '@/features/organizations/constants'
 import {
-  orgColors,
-  orgRoleDescriptions,
-  orgRoles,
-} from '@/features/dashboard/data'
-import type { OrgMember, OrgRole } from '@/features/dashboard/data'
+  useInviteMembers,
+  useRemoveMember,
+  useResendInvitation,
+  useSetMemberRole,
+} from '@/features/organizations/queries'
 import { useOrgDetail } from '../-components/org-context'
 import { InviteMembersDialog } from '../-components/invite-members-dialog'
 
@@ -98,7 +101,11 @@ const assignableRoles: OrgRole[] = ['Admin', 'Member', 'Viewer']
 function OrgMembers() {
   const search = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
-  const { org, members, summary, canManage, updateMembers } = useOrgDetail()
+  const { org, members, summary, canManage } = useOrgDetail()
+  const inviteMembers = useInviteMembers(org.id)
+  const setRole = useSetMemberRole(org.id)
+  const removeMember = useRemoveMember(org.id)
+  const resendInvitation = useResendInvitation(org.id)
 
   const [tab, setTab] = React.useState<'members' | 'invitations'>('members')
   const [query, setQuery] = React.useState('')
@@ -142,44 +149,42 @@ function OrgMembers() {
   }
 
   function changeRole(member: OrgMember, role: OrgRole) {
-    updateMembers((current) =>
-      current.map((item) => (item.id === member.id ? { ...item, role } : item)),
-    )
-    toast.success(
-      `${member.name} is now ${role === 'Admin' ? 'an' : 'a'} ${role}.`,
+    setRole.mutate(
+      { memberId: member.id, role },
+      {
+        onSuccess: () =>
+          toast.success(
+            `${member.name} is now ${role === 'Admin' ? 'an' : 'a'} ${role}.`,
+          ),
+      },
     )
   }
 
   function remove(member: OrgMember) {
-    updateMembers((current) => current.filter((item) => item.id !== member.id))
-    toast.success(
-      member.status === 'invited'
-        ? `Invitation to ${member.email} revoked.`
-        : `${member.name} was removed from ${org.name}.`,
-    )
+    removeMember.mutate(member.id, {
+      onSuccess: () =>
+        toast.success(
+          member.status === 'invited'
+            ? `Invitation to ${member.email} revoked.`
+            : `${member.name} was removed from ${org.name}.`,
+        ),
+    })
   }
 
   function invite(emails: string[], role: OrgRole) {
-    updateMembers((current) => [
-      ...current,
-      ...emails.map((email, index) => ({
-        id: `${org.id}-invite-${Date.now().toString(36)}-${index}`,
-        name: email.split('@')[0],
-        email,
-        initials: email.slice(0, 2).toUpperCase(),
-        color: orgColors[(current.length + index) % orgColors.length],
-        role,
-        joinedAt: Date.now(),
-        lastActive: 'Pending',
-        status: 'invited' as const,
-      })),
-    ])
-    setTab('invitations')
-    setPage(0)
-    toast.success(
-      emails.length === 1
-        ? `Invitation sent to ${emails[0]}.`
-        : `${emails.length} invitations sent.`,
+    inviteMembers.mutate(
+      { emails, role },
+      {
+        onSuccess: () => {
+          setTab('invitations')
+          setPage(0)
+          toast.success(
+            emails.length === 1
+              ? `Invitation sent to ${emails[0]}.`
+              : `${emails.length} invitations sent.`,
+          )
+        },
+      },
     )
   }
 
@@ -390,9 +395,12 @@ function OrgMembers() {
                               <>
                                 <DropdownMenuItem
                                   onSelect={() =>
-                                    toast.success(
-                                      `Invitation resent to ${member.email}.`,
-                                    )
+                                    resendInvitation.mutate(member.id, {
+                                      onSuccess: () =>
+                                        toast.success(
+                                          `Invitation resent to ${member.email}.`,
+                                        ),
+                                    })
                                   }
                                 >
                                   <Send />

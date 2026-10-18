@@ -12,9 +12,10 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { isNotFound } from '@/api/errors'
+import { PageError, PageLoading } from '@/components/shared/query-states'
 import { useProjectDetail } from '@/features/dashboard/context'
-import { datasets as seededDatasets } from '@/features/dashboard/data'
-import { useDataset } from '@/features/dashboard/hooks'
+import { useDataset } from '@/features/datasets/queries'
 import {
   DatasetHeader,
   DatasetStatus,
@@ -35,12 +36,8 @@ export const Route = createFileRoute(
   component: DatasetDetailRoute,
   notFoundComponent: DatasetDetailNotFoundRoute,
   staticData: {
-    breadcrumb: ({ params, preferences, parent: { project } }) => {
-      if (!project) return null
-      const dataset = [...preferences.datasets, ...seededDatasets].find(
-        (item) => item.id === params.datasetId && item.projectId === project.id,
-      )
-      if (!dataset) return null
+    breadcrumb: ({ entities: { dataset }, parent: { project } }) => {
+      if (!project || !dataset) return null
       return {
         items: [
           {
@@ -63,9 +60,20 @@ function DatasetDetailRoute() {
   const { datasetId } = Route.useParams()
   const { project, organization } = useProjectDetail()
   const [tab, setTab] = React.useState<DatasetTab>('preview')
-  const found = useDataset(project.id, datasetId)
+  const { data: found, error, refetch } = useDataset(project.id, datasetId)
 
-  if (!found) return <DatasetDetailNotFound projectId={project.id} />
+  if (error) {
+    return isNotFound(error) ? (
+      <DatasetDetailNotFound projectId={project.id} />
+    ) : (
+      <PageError
+        title="Could not load this dataset"
+        error={error}
+        onRetry={() => void refetch()}
+      />
+    )
+  }
+  if (!found) return <PageLoading />
   const { dataset } = found
 
   return (

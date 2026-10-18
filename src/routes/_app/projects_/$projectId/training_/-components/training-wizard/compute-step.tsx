@@ -1,15 +1,16 @@
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import type { ComputeOption } from '@/features/dashboard/training'
-import { computeOptions } from '@/features/dashboard/training'
+import type { ApiComputeOption } from '@/features/catalog/api'
 
 export function ComputeStep({
+  computeOptions,
   instanceId,
   setInstanceId,
   spot,
   setSpot,
 }: {
+  computeOptions: ApiComputeOption[]
   instanceId: string
   setInstanceId: (id: string) => void
   spot: boolean
@@ -24,7 +25,7 @@ export function ComputeStep({
         </p>
       </div>
       <div className="mt-6 grid gap-2.5">
-        {computeOptions.map((item: ComputeOption) => (
+        {computeOptions.map((item) => (
           <Button
             key={item.id}
             type="button"
@@ -40,7 +41,7 @@ export function ComputeStep({
               </span>
             </span>
             <span className="flex items-center gap-3 text-sm font-semibold">
-              ${item.hourlyRate.toFixed(2)}/hr
+              ${item.hourly_rate_usd.toFixed(2)}/hr
               <span
                 aria-hidden="true"
                 className="size-2 rounded-full bg-primary opacity-0 group-aria-pressed/button:opacity-100"

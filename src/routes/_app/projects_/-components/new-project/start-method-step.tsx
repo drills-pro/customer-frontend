@@ -122,7 +122,8 @@ export function StartMethodStep({ draft }: { draft: NewProjectDraft }) {
               <EmptyHeader>
                 <EmptyTitle>No compatible projects to clone</EmptyTitle>
                 <EmptyDescription>
-                  There are no other {draft.task} projects in {orgName} yet.
+                  There are no other {draft.taskLabel} projects in {orgName}{' '}
+                  yet.
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>

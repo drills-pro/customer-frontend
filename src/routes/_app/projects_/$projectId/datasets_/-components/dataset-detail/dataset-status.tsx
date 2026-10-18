@@ -8,10 +8,12 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty'
+import { useReprocessDataset } from '@/features/datasets/queries'
 import { useCurrentDataset } from './use-current-dataset'
 
 export function DatasetStatus() {
-  const { dataset } = useCurrentDataset()
+  const { project, dataset } = useCurrentDataset()
+  const reprocess = useReprocessDataset(project.id, dataset.id)
   const failed = dataset.status === 'Error'
   return (
     <Empty className="min-h-72 border bg-card">
@@ -21,14 +23,19 @@ export function DatasetStatus() {
         </EmptyTitle>
         <EmptyDescription>
           {failed
-            ? 'This import contains invalid labels. Retry to reprocess the demo dataset.'
+            ? 'This import contains invalid labels. Retry to reprocess the dataset.'
             : 'Preparing sample statistics and preview. This page will update when processing completes.'}
         </EmptyDescription>
       </EmptyHeader>
       {failed && (
         <EmptyContent>
           <Button
-            onClick={() => toast.info('Retry started for this demo dataset.')}
+            disabled={reprocess.isPending}
+            onClick={() =>
+              reprocess.mutate(undefined, {
+                onSuccess: () => toast.info('Reprocessing started.'),
+              })
+            }
           >
             Retry processing
           </Button>

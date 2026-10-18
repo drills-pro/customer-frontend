@@ -11,14 +11,11 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import { CardError, CardLoading } from '@/components/shared/query-states'
+import { useDashboardLayout } from '@/features/dashboard/context'
+import { useBilling, useInvoices } from '@/features/organizations/queries'
+import { formatCount, formatUsd } from '@/lib/format'
 import { unavailable } from '@/lib/unavailable'
-import {
-  creditsLabel,
-  creditsPercent,
-  invoices,
-  paymentMethod,
-  plan,
-} from './-components/account-data'
 import { PageHeader, SettingRow } from './-components/page-header'
 
 export const Route = createFileRoute('/_app/account/billing')({
@@ -39,14 +36,46 @@ function BillingRoute() {
   )
 }
 
+const monthDay = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+
+const monthYear = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+
+/** Billing belongs to the organization the user is working in. */
+function useCurrentBilling() {
+  return useBilling(useDashboardLayout().org.id)
+}
+
 function PlanCard() {
+  const { data: billing, error, refetch } = useCurrentBilling()
+
+  if (error) {
+    return (
+      <Card size="flush">
+        <CardError
+          title="Could not load billing"
+          error={error}
+          onRetry={() => void refetch()}
+        />
+      </Card>
+    )
+  }
+  if (!billing) {
+    return (
+      <Card size="flush">
+        <CardLoading rows={2} />
+      </Card>
+    )
+  }
+
   return (
     <Card size="flush">
       <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-        <CardTitle>{plan.name}</CardTitle>
+        <CardTitle>{billing.plan_name}</CardTitle>
         <CardDescription>
-          {plan.creditsTotal.toLocaleString('en-US')} credits / month · renews{' '}
-          {plan.renews}
+          {formatCount(billing.credits_total)} credits / month · renews{' '}
+          {monthDay(billing.renews_at)}
         </CardDescription>
         <CardAction>
           <Button
@@ -60,10 +89,15 @@ function PlanCard() {
       <CardContent className="grid gap-2 p-5">
         <div className="flex justify-between text-[13px]">
           <span>Credits used</span>
-          <span className="font-semibold tabular-nums">{creditsLabel()}</span>
+          <span className="font-semibold tabular-nums">
+            {formatCount(billing.credits_used)} /{' '}
+            {formatCount(billing.credits_total)}
+          </span>
         </div>
         <Progress
-          value={creditsPercent()}
+          value={Math.round(
+            (billing.credits_used / billing.credits_total) * 100,
+          )}
           aria-label="Credits used"
           className="h-2"
         />
@@ -76,6 +110,8 @@ function PlanCard() {
 }
 
 function PaymentMethodCard() {
+  const paymentMethod = useCurrentBilling().data?.payment_method
+
   return (
     <Card size="flush">
       <CardHeader className="border-b [--card-section:--spacing(3.5)]">
@@ -84,8 +120,16 @@ function PaymentMethodCard() {
       <CardContent className="p-0">
         <SettingRow
           icon={CreditCard}
-          title={`${paymentMethod.brand} ending in ${paymentMethod.last4}`}
-          description={`Expires ${paymentMethod.expires}`}
+          title={
+            paymentMethod
+              ? `${paymentMethod.brand} ending in ${paymentMethod.last4}`
+              : 'No payment method'
+          }
+          description={
+            paymentMethod
+              ? `Expires ${paymentMethod.expires}`
+              : 'Add a card to move to a paid plan.'
+          }
         >
           <Button
             variant="ghost"
@@ -100,6 +144,8 @@ function PaymentMethodCard() {
 }
 
 function InvoicesCard() {
+  const invoices = useInvoices(useDashboardLayout().org.id).data ?? []
+
   return (
     <Card size="flush">
       <CardHeader className="border-b [--card-section:--spacing(3.5)]">
@@ -109,12 +155,12 @@ function InvoicesCard() {
         {invoices.map((invoice) => (
           <SettingRow
             key={invoice.id}
-            title={invoice.period}
-            description={invoice.amount}
+            title={monthYear(invoice.period_start)}
+            description={formatUsd(invoice.amount_usd)}
           >
             <Button
               variant="ghost"
-              aria-label={`Download ${invoice.period} invoice`}
+              aria-label={`Download ${monthYear(invoice.period_start)} invoice`}
               onClick={() => unavailable('Downloading invoices')}
             >
               <Download />

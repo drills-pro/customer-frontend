@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
+import { API_URL, TENANT_ID } from './tests/fixtures/api'
 
 const baseURL = process.env.DRILLS_BASE_URL || 'http://127.0.0.1:3100'
 export default defineConfig({
@@ -17,5 +18,15 @@ export default defineConfig({
         url: baseURL,
         reuseExistingServer: !process.env.CI,
         timeout: 60000,
+        // Mock auth plus an API origin nothing listens on: tests answer
+        // core-api calls with `page.route`, never a real backend.
+        // Every other call is answered by the in-app mock, with no delay,
+        // including the ones core-api now serves (VITE_API_MOCK=all).
+        env: {
+          VITE_API_MOCK: 'all',
+          VITE_API_URL: API_URL,
+          VITE_DEV_TENANT_ID: TENANT_ID,
+          VITE_API_MOCK_DELAY_MS: '0',
+        },
       },
 })

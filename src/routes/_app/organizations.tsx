@@ -26,8 +26,16 @@ import {
 } from '@/components/ui/input-group'
 import { Progress } from '@/components/ui/progress'
 import { useDashboardLayout } from '@/features/dashboard/context'
-import { orgSummary, pendingInvitations } from '@/features/dashboard'
-import type { OrgSummary, Organization } from '@/features/dashboard'
+import type {
+  OrgInvitation,
+  OrgSummary,
+  Organization,
+} from '@/features/dashboard/domain/types'
+import {
+  useAcceptInvitation,
+  useDeclineInvitation,
+  useInvitations,
+} from '@/features/organizations/queries'
 import { PageHeader } from './account/-components'
 
 export const Route = createFileRoute('/_app/organizations')({
@@ -47,16 +55,30 @@ export const Route = createFileRoute('/_app/organizations')({
 
 function OrganizationsPage() {
   const {
-    preferences,
-    updatePreferences,
-    hydrated,
     org: currentOrg,
     organizations,
+    orgSummaries,
     switchOrganization,
     openCreateOrganization,
-    membersOf,
   } = useDashboardLayout()
   const [query, setQuery] = React.useState('')
+  const invitations = useInvitations().data ?? []
+  const accept = useAcceptInvitation()
+  const decline = useDeclineInvitation()
+  const answering = accept.isPending || decline.isPending
+
+  function answer(invite: OrgInvitation, accepted: boolean) {
+    const { name } = invite.organization
+    if (accepted) {
+      accept.mutate(invite.id, {
+        onSuccess: () => toast.success(`You joined ${name}.`),
+      })
+    } else {
+      decline.mutate(invite.id, {
+        onSuccess: () => toast.info(`Declined the invitation to ${name}.`),
+      })
+    }
+  }
 
   const normalized = query.trim().toLowerCase()
   const visible = organizations.filter(
@@ -65,7 +87,6 @@ function OrganizationsPage() {
       org.name.toLowerCase().includes(normalized) ||
       org.slug.includes(normalized),
   )
-  const invitations = hydrated ? pendingInvitations(preferences) : []
 
   return (
     <main
@@ -99,38 +120,18 @@ function OrganizationsPage() {
               </p>
               <p className="mt-0.5 text-xs text-muted-foreground">
                 {invite.organization.plan} plan · joining as{' '}
-                {invite.organization.yourRole.toLowerCase()} ·{' '}
-                {invite.organization.description}
+                {invite.role.toLowerCase()} · {invite.organization.description}
               </p>
             </div>
             <div className="flex gap-2">
               <Button
                 variant="ghost"
-                onClick={() => {
-                  updatePreferences({
-                    declinedInvitations: [
-                      ...preferences.declinedInvitations,
-                      invite.id,
-                    ],
-                  })
-                  toast.info(
-                    `Declined the invitation to ${invite.organization.name}.`,
-                  )
-                }}
+                disabled={answering}
+                onClick={() => answer(invite, false)}
               >
                 Decline
               </Button>
-              <Button
-                onClick={() => {
-                  updatePreferences({
-                    createdOrganizations: [
-                      ...preferences.createdOrganizations,
-                      invite.organization,
-                    ],
-                  })
-                  toast.success(`You joined ${invite.organization.name}.`)
-                }}
-              >
+              <Button disabled={answering} onClick={() => answer(invite, true)}>
                 Accept invitation
               </Button>
             </div>
@@ -170,7 +171,7 @@ function OrganizationsPage() {
             <li key={org.id} className="min-w-0">
               <OrgCard
                 org={org}
-                summary={orgSummary(org, membersOf(org), preferences)}
+                summary={orgSummaries[org.id]}
                 current={org.id === currentOrg.id}
                 onSwitch={() => {
                   switchOrganization(org.id)

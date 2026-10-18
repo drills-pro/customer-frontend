@@ -27,14 +27,14 @@ import {
   InputGroupText,
 } from '@/components/ui/input-group'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import {
-  orgColors,
-  orgPlans,
-  planDetails,
-  slugify,
-  withInitial,
-} from '@/features/dashboard/data'
-import type { OrgPlan, Organization } from '@/features/dashboard/data'
+import { ApiError } from '@/api/client'
+import { usePlans } from '@/features/catalog/queries'
+import { orgPlans } from '@/features/dashboard/domain/types'
+import type { OrgPlan, Organization } from '@/features/dashboard/domain/types'
+import { orgColors } from '@/features/organizations/constants'
+import { initialOf, toApiPlan } from '@/features/organizations/mappers'
+import { useCreateOrganization } from '@/features/organizations/queries'
+import { slugify } from '@/features/organizations/utils'
 import {
   ColorSwatches,
   cleanSlugInput,
@@ -52,13 +52,17 @@ export function CreateOrganizationDialog({
   open,
   onOpenChange,
   organizations,
-  onCreate,
+  onCreated,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   organizations: Organization[]
-  onCreate: (org: Organization) => void
+  onCreated: (org: Organization) => void
 }) {
+  const plans = usePlans().data
+  const create = useCreateOrganization()
+  // A slug taken by an organization the user is not in is only known to the API.
+  const [takenSlug, setTakenSlug] = React.useState<string>()
   const [name, setName] = React.useState('')
   const [slug, setSlug] = React.useState('')
   const [slugEdited, setSlugEdited] = React.useState(false)
@@ -73,9 +77,14 @@ export function CreateOrganizationDialog({
       : ''
   const nameMessage = submitted ? orgNameError(name) : undefined
   const slugMessage =
-    submitted || slugEdited
-      ? orgSlugError(effectiveSlug, organizations)
-      : undefined
+    effectiveSlug === takenSlug
+      ? 'That URL is already taken.'
+      : submitted || slugEdited
+        ? orgSlugError(effectiveSlug, organizations)
+        : undefined
+
+  const limitsOf = (option: OrgPlan) =>
+    plans?.find((item) => item.id === toApiPlan(option))
 
   function close(next: boolean) {
     onOpenChange(next)
@@ -86,26 +95,33 @@ export function CreateOrganizationDialog({
       setPlan('Team')
       setColor(orgColors[2])
       setSubmitted(false)
+      setTakenSlug(undefined)
     }
   }
 
   function submit(event: React.FormEvent) {
     event.preventDefault()
     setSubmitted(true)
-    if (orgNameError(name) || orgSlugError(effectiveSlug, organizations)) return
-    onCreate(
-      withInitial({
-        id: `org-${Date.now().toString(36)}`,
-        name: name.trim(),
-        slug: effectiveSlug,
-        plan,
-        color,
-        description: '',
-        createdAt: Date.now(),
-        yourRole: 'Owner',
-      }),
+    if (
+      create.isPending ||
+      orgNameError(name) ||
+      orgSlugError(effectiveSlug, organizations)
     )
-    close(false)
+      return
+    create.mutate(
+      { name: name.trim(), slug: effectiveSlug, plan: toApiPlan(plan), color },
+      {
+        onSuccess: (created) => {
+          close(false)
+          onCreated(created)
+        },
+        onError: (error) => {
+          if (error instanceof ApiError && error.status === 409) {
+            setTakenSlug(effectiveSlug)
+          }
+        },
+      },
+    )
   }
 
   return (
@@ -122,7 +138,7 @@ export function CreateOrganizationDialog({
           <FieldGroup className="gap-5 py-2">
             <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
               <OrgMark
-                org={withInitial({ name: name || '?', color })}
+                org={{ initial: initialOf(name), color }}
                 className="size-10 text-base"
               />
               <div className="min-w-0">
@@ -196,11 +212,11 @@ export function CreateOrganizationDialog({
                         <FieldTitle>
                           {option}
                           <span className="font-normal text-muted-foreground">
-                            · {planDetails[option].price}
+                            · {limitsOf(option)?.price}
                           </span>
                         </FieldTitle>
                         <FieldDescription>
-                          {planBlurbs[option]} Up to {planDetails[option].seats}{' '}
+                          {planBlurbs[option]} Up to {limitsOf(option)?.seats}{' '}
                           seats.
                         </FieldDescription>
                       </FieldContent>
@@ -223,7 +239,9 @@ export function CreateOrganizationDialog({
             >
               Cancel
             </Button>
-            <Button type="submit">Create organization</Button>
+            <Button type="submit" disabled={create.isPending}>
+              Create organization
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

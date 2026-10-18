@@ -1,5 +1,5 @@
-import * as React from 'react'
-import { Bell, Database, GitBranch, Webhook } from 'lucide-react'
+import { Bell, Database, GitBranch, Plug, Webhook } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
@@ -10,58 +10,36 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
+import { useProjectDetail } from '@/features/dashboard/context'
+import {
+  useProjectIntegrations,
+  useSetProjectIntegration,
+} from '@/features/projects/queries'
 
-const integrations = [
-  {
-    id: 'github',
-    name: 'GitHub',
-    description: 'Start a training run when a config changes on main.',
-    icon: GitBranch,
-    tint: 'bg-foreground text-background',
-    enabled: true,
-  },
-  {
-    id: 'slack',
-    name: 'Slack notifications',
-    description: 'Post run results and deployment alerts to #ml-alerts.',
-    icon: Bell,
-    tint: 'bg-highlight-muted text-highlight',
-    enabled: true,
-  },
-  {
-    id: 'webhook',
-    name: 'Webhooks',
-    description: 'Send run and deployment events to your own endpoint.',
-    icon: Webhook,
-    tint: 'bg-info-muted text-info',
-    enabled: false,
-  },
-  {
-    id: 's3',
-    name: 'S3 bucket sync',
-    description: 'Import new images from a bucket as a dataset version.',
-    icon: Database,
-    tint: 'bg-warning-muted text-warning',
-    enabled: false,
-  },
-]
+/** How each integration the API knows is drawn; an unknown one gets a default. */
+const appearance: Record<string, { icon: LucideIcon; tint: string }> = {
+  github: { icon: GitBranch, tint: 'bg-foreground text-background' },
+  slack: { icon: Bell, tint: 'bg-highlight-muted text-highlight' },
+  webhook: { icon: Webhook, tint: 'bg-info-muted text-info' },
+  s3: { icon: Database, tint: 'bg-warning-muted text-warning' },
+}
+const fallbackAppearance = { icon: Plug, tint: 'bg-muted text-foreground' }
 
 export function IntegrationsCard() {
-  const [enabled, setEnabled] = React.useState(
-    () =>
-      new Set(
-        integrations.filter((item) => item.enabled).map((item) => item.id),
-      ),
+  const { project } = useProjectDetail()
+  const integrations = (useProjectIntegrations(project.id).data ?? []).map(
+    (item) => ({ ...item, ...(appearance[item.id] ?? fallbackAppearance) }),
   )
+  const setIntegration = useSetProjectIntegration(project.id)
 
   function toggle(item: (typeof integrations)[number], on: boolean) {
-    setEnabled((current) => {
-      const next = new Set(current)
-      if (on) next.add(item.id)
-      else next.delete(item.id)
-      return next
-    })
-    toast.success(`${item.name} ${on ? 'connected' : 'disconnected'}.`)
+    setIntegration.mutate(
+      { id: item.id, enabled: on },
+      {
+        onSuccess: () =>
+          toast.success(`${item.name} ${on ? 'connected' : 'disconnected'}.`),
+      },
+    )
   }
 
   return (
@@ -74,7 +52,7 @@ export function IntegrationsCard() {
       </CardHeader>
       <CardContent className="grid gap-px bg-border p-0 sm:grid-cols-2">
         {integrations.map((item) => {
-          const on = enabled.has(item.id)
+          const on = item.enabled
           return (
             <div key={item.id} className="flex items-start gap-3 bg-card p-5">
               <span

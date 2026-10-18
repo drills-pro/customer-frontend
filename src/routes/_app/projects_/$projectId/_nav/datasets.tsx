@@ -35,12 +35,10 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import {
-  useDashboardLayout,
-  useProjectDetail,
-} from '@/features/dashboard/context'
-import { datasets as seededDatasets } from '@/features/dashboard/data'
-import type { Dataset } from '@/features/dashboard/data'
+import { SectionError, SectionLoading } from '@/components/shared/query-states'
+import { useProjectDetail } from '@/features/dashboard/context'
+import { useAddDataset, useProjectDatasets } from '@/features/datasets/queries'
+import type { NewDataset } from '@/features/datasets/queries'
 import { unavailable } from '@/lib/unavailable'
 import {
   AddDatasetDialog,
@@ -64,16 +62,15 @@ export const Route = createFileRoute(
 function ProjectDatasetsRoute() {
   const search = Route.useSearch()
   const { project } = useProjectDetail()
-  const { preferences, updatePreferences } = useDashboardLayout()
+  const datasetsQuery = useProjectDatasets(project.id)
+  const addDatasetMutation = useAddDataset(project.id)
   const [query, setQuery] = React.useState('')
   const [split, setSplit] = React.useState('all')
   const [status, setStatus] = React.useState('all')
   const [view, setView] = React.useState('table')
   const [addOpen, setAddOpen] = React.useState(search.add === true)
 
-  const allDatasets = [...preferences.datasets, ...seededDatasets].filter(
-    (item) => item.projectId === project.id,
-  )
+  const allDatasets = datasetsQuery.data ?? []
   const visibleDatasets = allDatasets.filter(
     (item) =>
       item.name.toLowerCase().includes(query.toLowerCase()) &&
@@ -81,45 +78,11 @@ function ProjectDatasetsRoute() {
       (status === 'all' || item.status === status),
   )
 
-  function addDataset(dataset: Dataset) {
-    updatePreferences({
-      datasets: [dataset, ...preferences.datasets],
-      createdProjects: preferences.createdProjects.map((saved) =>
-        saved.project.id === project.id
-          ? {
-              ...saved,
-              project: {
-                ...saved.project,
-                datasets: saved.project.datasets + 1,
-                updated: 'Just now',
-              },
-              overview: {
-                ...saved.overview,
-                pipeline: {
-                  ...saved.overview.pipeline,
-                  completeThrough: Math.max(
-                    2,
-                    saved.overview.pipeline.completeThrough,
-                  ) as 2 | 3 | 4,
-                },
-              },
-            }
-          : saved,
-      ),
-      uploads: [
-        {
-          id: `dataset-${dataset.id}`,
-          orgId: project.orgId,
-          icon: 'dataset',
-          lead: `Dataset ${dataset.name}`,
-          text: 'added for processing',
-          time: 'Just now',
-          action: 'View',
-        },
-        ...preferences.uploads,
-      ],
+  function addDataset(dataset: NewDataset) {
+    addDatasetMutation.mutate(dataset, {
+      onSuccess: (created) =>
+        toast.success(`Dataset ${created.name} added for processing.`),
     })
-    toast.success(`Dataset ${dataset.name} added for processing.`)
   }
 
   return (
@@ -190,7 +153,15 @@ function ProjectDatasetsRoute() {
         </div>
       </div>
 
-      {visibleDatasets.length === 0 ? (
+      {datasetsQuery.error ? (
+        <SectionError
+          title="Could not load datasets"
+          error={datasetsQuery.error}
+          onRetry={() => void datasetsQuery.refetch()}
+        />
+      ) : datasetsQuery.isPending ? (
+        <SectionLoading />
+      ) : visibleDatasets.length === 0 ? (
         <Empty className="min-h-64 border bg-card">
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -329,7 +300,6 @@ function ProjectDatasetsRoute() {
         </EmptyContent>
       </Empty>
       <AddDatasetDialog
-        project={project}
         open={addOpen}
         onOpenChange={setAddOpen}
         existing={allDatasets}

@@ -11,7 +11,16 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Kbd } from '@/components/ui/kbd'
 import { SidebarTrigger } from '@/components/ui/sidebar'
-import type { Organization, ThemePreference } from '@/features/dashboard/data'
+import {
+  useMarkNotificationsRead,
+  useNotifications,
+} from '@/features/account/queries'
+import type {
+  Organization,
+  ThemePreference,
+} from '@/features/dashboard/domain/types'
+import { useBilling } from '@/features/organizations/queries'
+import { formatCount } from '@/lib/format'
 import { OrgSwitcher } from './org-switcher'
 import type { OrgSwitcherEntry } from './org-switcher'
 import { UserMenu } from './user-menu'
@@ -20,23 +29,24 @@ export function AppHeader({
   org,
   orgEntries,
   theme,
-  notificationsRead,
   onSwitchOrganization,
   onCreateOrganization,
-  onMarkNotificationsRead,
   onOpenSearch,
   onOpenShortcuts,
 }: {
   org: Organization
   orgEntries: OrgSwitcherEntry[]
   theme: ThemePreference
-  notificationsRead: boolean
   onSwitchOrganization: (orgId: string) => void
   onCreateOrganization: () => void
-  onMarkNotificationsRead: () => void
   onOpenSearch: () => void
   onOpenShortcuts: () => void
 }) {
+  const billing = useBilling(org.id).data
+  const notifications = useNotifications().data ?? []
+  const markRead = useMarkNotificationsRead()
+  const notificationsRead = notifications.every((item) => item.read)
+
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-card/95 px-3 backdrop-blur sm:px-5">
       <SidebarTrigger aria-label="Toggle navigation" />
@@ -62,12 +72,17 @@ export function AppHeader({
         <Kbd>⌘K</Kbd>
       </Button>
 
-      <Badge
-        variant="secondary"
-        className="hidden rounded-full bg-primary-muted font-medium text-primary sm:flex"
-      >
-        1,240 credits
-      </Badge>
+      {billing && (
+        <Badge
+          variant="secondary"
+          className="hidden rounded-full bg-primary-muted font-medium text-primary sm:flex"
+        >
+          {formatCount(
+            Math.max(0, billing.credits_total - billing.credits_used),
+          )}{' '}
+          credits
+        </Badge>
+      )}
 
       <Button
         variant="ghost"
@@ -79,7 +94,11 @@ export function AppHeader({
         <Search />
       </Button>
 
-      <DropdownMenu onOpenChange={(open) => open && onMarkNotificationsRead()}>
+      <DropdownMenu
+        onOpenChange={(open) => {
+          if (open && !notificationsRead) markRead.mutate()
+        }}
+      >
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
@@ -96,12 +115,17 @@ export function AppHeader({
         <DropdownMenuContent align="end" className="w-72">
           <DropdownMenuLabel>Notifications</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <div className="p-3 text-sm">
-            <strong>Training complete</strong>
-            <p className="mt-1 text-muted-foreground">
-              resnet50-v3 reached 94.2% accuracy.
+          {notifications.length === 0 && (
+            <p className="p-3 text-sm text-muted-foreground">
+              You're all caught up.
             </p>
-          </div>
+          )}
+          {notifications.map((item) => (
+            <div className="p-3 text-sm" key={item.id}>
+              <strong>{item.title}</strong>
+              <p className="mt-1 text-muted-foreground">{item.body}</p>
+            </div>
+          ))}
         </DropdownMenuContent>
       </DropdownMenu>
 

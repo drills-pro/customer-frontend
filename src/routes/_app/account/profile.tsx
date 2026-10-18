@@ -20,7 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { accountRoles, currentUser, isEmail } from './-components/account-data'
+import { PageError } from '@/components/shared/query-states'
+import type { CurrentUser } from '@/features/account/mappers'
+import { useCurrentUser, useUpdateUser } from '@/features/account/queries'
+import { isEmail } from '@/lib/validation'
+import { accountRoles } from './-components/account-data'
 import type { AccountProfile, AccountRole } from './-components/account-data'
 import { PageHeader } from './-components/page-header'
 
@@ -29,28 +33,41 @@ export const Route = createFileRoute('/_app/account/profile')({
 })
 function ProfileRoute() {
   const { org } = useDashboardLayout()
+  const { data: user, error, refetch } = useCurrentUser()
   return (
     <>
       <PageHeader
         title="Profile"
         description={`This information is visible to other members of ${org.name}.`}
       />
-      <ProfilePhotoCard />
-      <ProfileFormCard />
+      {error ? (
+        <PageError
+          title="Could not load your profile"
+          error={error}
+          onRetry={() => void refetch()}
+        />
+      ) : (
+        user && (
+          <>
+            <ProfilePhotoCard user={user} />
+            <ProfileFormCard user={user} />
+          </>
+        )
+      )}
     </>
   )
 }
 
-function ProfilePhotoCard() {
+function ProfilePhotoCard({ user }: { user: CurrentUser }) {
   return (
     <Card size="flush">
       <CardContent className="flex flex-wrap items-center gap-4 p-5">
         <Avatar className="size-16">
           <AvatarFallback
             className="text-xl font-semibold text-white"
-            style={{ backgroundColor: currentUser.color }}
+            style={{ backgroundColor: user.color }}
           >
-            {currentUser.initials}
+            {user.initials}
           </AvatarFallback>
         </Avatar>
         <div className="mr-auto min-w-0">
@@ -94,9 +111,16 @@ function validate(values: AccountProfile): Errors {
   return errors
 }
 
-function ProfileFormCard() {
+function ProfileFormCard({ user }: { user: CurrentUser }) {
   const orgName = useDashboardLayout().org.name
-  const [saved, setSaved] = React.useState<AccountProfile>(currentUser.profile)
+  const updateUser = useUpdateUser()
+  const saved: AccountProfile = {
+    fullName: user.fullName,
+    username: user.username,
+    email: user.email,
+    role: user.role as AccountRole,
+    bio: user.bio,
+  }
   const [values, setValues] = React.useState(saved)
   const [submitted, setSubmitted] = React.useState(false)
 
@@ -115,7 +139,8 @@ function ProfileFormCard() {
   function save(event: React.FormEvent) {
     event.preventDefault()
     setSubmitted(true)
-    if (!dirty || Object.keys(validate(values)).length) return
+    if (!dirty || updateUser.isPending || Object.keys(validate(values)).length)
+      return
     const next = {
       ...values,
       fullName: values.fullName.trim(),
@@ -123,10 +148,22 @@ function ProfileFormCard() {
       email: values.email.trim(),
       bio: values.bio.trim(),
     }
-    setValues(next)
-    setSaved(next)
-    setSubmitted(false)
-    toast.success('Profile saved for this session (demo only).')
+    updateUser.mutate(
+      {
+        full_name: next.fullName,
+        username: next.username,
+        email: next.email,
+        job_role: next.role,
+        bio: next.bio,
+      },
+      {
+        onSuccess: () => {
+          setValues(next)
+          setSubmitted(false)
+          toast.success('Profile saved.')
+        },
+      },
+    )
   }
 
   return (

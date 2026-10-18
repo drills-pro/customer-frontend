@@ -23,8 +23,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Textarea } from '@/components/ui/textarea'
+import { ApiError } from '@/api/client'
 import { useProjectDetail } from '@/features/dashboard/context'
 import type { ProjectOverview } from '@/features/dashboard/data'
+import { toApiVisibility } from '@/features/organizations/mappers'
+import { useUpdateProject } from '@/features/projects/queries'
 
 const NAME_MAX = 64
 const DESCRIPTION_MAX = 240
@@ -66,14 +69,20 @@ function nameError(name: string) {
 
 export function GeneralCard() {
   const { project, details } = useProjectDetail()
-  const [saved, setSaved] = React.useState<GeneralValues>({
+  const updateProject = useUpdateProject(project.id)
+  const saved: GeneralValues = {
     name: project.name,
     description: project.description,
     visibility: details.visibility,
-  })
+  }
   const [values, setValues] = React.useState(saved)
+  /** A name the API refused because another project already has it. */
+  const [takenName, setTakenName] = React.useState<string>()
 
-  const error = nameError(values.name)
+  const error =
+    values.name.trim() === takenName
+      ? 'A project with this name already exists.'
+      : nameError(values.name)
   const dirty =
     values.name !== saved.name ||
     values.description !== saved.description ||
@@ -89,11 +98,32 @@ export function GeneralCard() {
 
   function save(event: React.FormEvent) {
     event.preventDefault()
-    if (!dirty || error) return
+    if (!dirty || error || updateProject.isPending) return
     const next = { ...values, name: values.name.trim() }
-    setValues(next)
-    setSaved(next)
-    toast.success('Project settings saved for this session (demo only).')
+    updateProject.mutate(
+      {
+        // Only what changed: the API has one call for the name and
+        // description and another for the visibility.
+        ...(next.name !== saved.name ? { name: next.name } : {}),
+        ...(next.description !== saved.description
+          ? { description: next.description }
+          : {}),
+        ...(next.visibility !== saved.visibility
+          ? { visibility: toApiVisibility(next.visibility) }
+          : {}),
+      },
+      {
+        onSuccess: () => {
+          setValues(next)
+          toast.success('Project settings saved.')
+        },
+        onError: (failure) => {
+          if (failure instanceof ApiError && failure.status === 409) {
+            setTakenName(next.name)
+          }
+        },
+      },
+    )
   }
 
   return (

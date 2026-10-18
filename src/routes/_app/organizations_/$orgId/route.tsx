@@ -11,15 +11,18 @@ import { formatDate } from '@/features/organizations/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { PageError, PageLoading } from '@/components/shared/query-states'
 import { useDashboardLayout } from '@/features/dashboard/context'
-import { findOrganization, orgSummary } from '@/features/dashboard'
+import { useOrgMembers } from '@/features/organizations/queries'
 import { OrgDetailContext } from '../-components/org-context'
 
 export const Route = createFileRoute('/_app/organizations_/$orgId')({
   component: OrgDetailLayout,
   staticData: {
-    breadcrumb: ({ params, preferences }) => {
-      const organization = findOrganization(params.orgId, preferences)
+    breadcrumb: ({ params, organizations }) => {
+      const organization = organizations.find(
+        (item) => item.id === params.orgId,
+      )
       if (!organization) return null
       return {
         items: [
@@ -56,23 +59,28 @@ const sectionTabClass =
 function OrgDetailLayout() {
   const { orgId } = Route.useParams()
   const {
-    preferences,
-    hydrated,
+    organizations,
+    orgSummaries,
     org: currentOrg,
     switchOrganization,
-    membersOf,
-    updateMembers,
   } = useDashboardLayout()
+  const org = organizations.find((item) => item.id === orgId)
+  const membersQuery = useOrgMembers(orgId, { enabled: Boolean(org) })
 
-  if (!hydrated) {
-    return <main id="dashboard-main" className="min-h-96 flex-1" />
-  }
-
-  const org = findOrganization(orgId, preferences)
   if (!org) return <OrgNotFound orgId={orgId} />
+  if (membersQuery.error) {
+    return (
+      <PageError
+        title="Could not load this organization"
+        error={membersQuery.error}
+        onRetry={() => void membersQuery.refetch()}
+      />
+    )
+  }
+  if (!membersQuery.data) return <PageLoading />
 
-  const members = membersOf(org)
-  const summary = orgSummary(org, members, preferences)
+  const members = membersQuery.data
+  const summary = orgSummaries[org.id]
   const isCurrent = currentOrg.id === org.id
   const canManage = org.yourRole === 'Owner' || org.yourRole === 'Admin'
 
@@ -84,7 +92,6 @@ function OrgDetailLayout() {
         summary,
         isCurrent,
         canManage,
-        updateMembers: (update) => updateMembers(org, update),
       }}
     >
       <main

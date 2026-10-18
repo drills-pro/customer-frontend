@@ -3,7 +3,7 @@ import type {
   TrainingScheduler,
   TrainingSplit,
 } from '@/features/dashboard/data'
-import { formatLearningRate } from '@/features/dashboard/training'
+import { formatLearningRate } from '@/features/training/format'
 
 export function ReviewBlock({
   label,

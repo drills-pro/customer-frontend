@@ -134,21 +134,6 @@ test('an unknown deployment renders a recovery path', async ({ page }) => {
   await expect(page).toHaveURL(/\/projects\/retail\/deployments$/)
 })
 
-test('the dashboard deployment card opens a real deployment', async ({
-  page,
-}) => {
-  await page.goto('/')
-  await expect(page.getByTestId('dashboard-app')).toHaveAttribute(
-    'data-hydrated',
-    'true',
-  )
-
-  await page.getByRole('link', { name: 'retail-classify-prod' }).click()
-  await expect(page).toHaveURL(
-    /\/projects\/retail\/deployments\/retail-classify-prod$/,
-  )
-})
-
 test('deployment pages do not overflow on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
 

@@ -1,10 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from '@playwright/test'
-import {
-  createEmptyProjectOverview,
-  createProjectRecord,
-  DASHBOARD_STORAGE_KEY,
-} from '../src/features/dashboard/data'
+import { emptyProject, seedMockDb, storedRecords } from './fixtures/mock-db'
 
 async function advanceToReview(page: Page) {
   for (let step = 0; step < 4; step += 1) {
@@ -133,15 +129,15 @@ test('prefills from dataset detail and starts a persisted run', async ({
   await expect(page).toHaveURL(/\/projects\/retail\/training\/run-[a-z0-9]+$/)
   await expect(page.getByText('Running', { exact: true })).toBeVisible()
 
-  const persistedRuns = await page.evaluate((key) => {
-    const value = localStorage.getItem(key)
-    return value ? JSON.parse(value).trainingRuns : []
-  }, DASHBOARD_STORAGE_KEY)
+  // The mock API stores the run it created, in the API's own shape.
+  const persistedRuns = await storedRecords(page, 'training_runs')
   expect(persistedRuns).toHaveLength(1)
   expect(persistedRuns[0]).toMatchObject({
-    split: { train: 80, validation: 10, test: 10 },
-    learningRate: 0.001,
-    scheduler: 'cosine',
+    config: {
+      split: { train: 80, validation: 10, test: 10 },
+      learning_rate: 0.001,
+      scheduler: 'cosine',
+    },
   })
 
   await page.reload()
@@ -178,64 +174,14 @@ test('filters logs, stops a run, and clones its complete configuration', async (
   await expect(page.getByText('79 / 11 / 10')).toBeVisible()
 })
 
-test('migrates legacy saved training configuration', async ({ page }) => {
-  await advanceToReview(page)
-  await page.getByRole('button', { name: /Start training/ }).click()
-  await page.evaluate((key) => {
-    const saved = JSON.parse(localStorage.getItem(key) ?? '{}')
-    const run = saved.trainingRuns[0]
-    run.learningRate = 'low'
-    delete run.split
-    delete run.scheduler
-    run.optimizer = 'AdamW'
-    run.weightDecay = '0.01'
-    run.warmupSteps = 500
-    run.mixedPrecision = 'bf16'
-    localStorage.setItem(key, JSON.stringify(saved))
-  }, DASHBOARD_STORAGE_KEY)
-
-  await page.reload()
-  await page.getByRole('tab', { name: 'Config' }).click()
-  await expect(page.getByText('0.0001')).toBeVisible()
-  await expect(page.getByText('80% / 10% / 10%')).toBeVisible()
-  await expect(page.getByText('cosine')).toBeVisible()
-})
-
 test('uses task-specific models, handles empty datasets, and remains responsive', async ({
   page,
 }) => {
-  const emptyProject = {
-    ...createProjectRecord({
-      name: 'Empty Training Project',
-      description: '',
-      orgId: 'acme',
-      task: 'Image Classification',
-      hasDataset: false,
-    }),
-    id: 'empty-training-project',
-  }
-  const emptyOverview = createEmptyProjectOverview({
-    region: 'us-east-1',
-    visibility: 'Organization',
-    task: emptyProject.task,
-    hasDataset: false,
+  await seedMockDb(page, {
+    projects: [
+      emptyProject('empty-training-project', 'Empty Training Project'),
+    ],
   })
-  await page.evaluate(
-    ({ key, project, overview }) => {
-      localStorage.setItem(
-        key,
-        JSON.stringify({
-          organizationId: 'acme',
-          createdProjects: [{ project, overview, startMethod: 'upload' }],
-        }),
-      )
-    },
-    {
-      key: DASHBOARD_STORAGE_KEY,
-      project: emptyProject,
-      overview: emptyOverview,
-    },
-  )
   await page.goto('/projects/empty-training-project/training/new')
   await expect(page.getByText('Add a ready dataset first')).toBeVisible()
   await expect(page.getByRole('button', { name: /Continue/ })).toBeDisabled()

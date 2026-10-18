@@ -1,8 +1,8 @@
 import { Check } from 'lucide-react'
 
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { orgColors } from '@/features/dashboard/data'
-import type { Organization } from '@/features/dashboard/data'
+import type { Organization } from '@/features/dashboard/domain/types'
+import { orgColors } from '@/features/organizations/constants'
 
 export const ORG_NAME_MAX = 64
 export const ORG_DESCRIPTION_MAX = 240

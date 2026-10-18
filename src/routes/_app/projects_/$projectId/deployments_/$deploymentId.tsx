@@ -3,9 +3,10 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { RouteBreadcrumbs } from '@/components/breadcrumbs'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { isNotFound } from '@/api/errors'
+import { PageError, PageLoading } from '@/components/shared/query-states'
 import { useProjectDetail } from '@/features/dashboard/context'
-import { useDeployment } from '@/features/dashboard/hooks'
-import { resolveDeployment } from '@/features/dashboard/selectors/deployments'
+import { useDeployment } from '@/features/deployments/queries'
 import {
   DeploymentHeader,
   DeploymentNotFound,
@@ -23,10 +24,8 @@ export const Route = createFileRoute(
   component: DeploymentDetailRoute,
   notFoundComponent: DeploymentDetailNotFoundRoute,
   staticData: {
-    breadcrumb: ({ params, parent: { project } }) => {
-      if (!project) return null
-      const deployment = resolveDeployment(project.id, params.deploymentId)
-      if (!deployment) return null
+    breadcrumb: ({ entities: { deployment }, parent: { project } }) => {
+      if (!project || !deployment) return null
       return {
         items: [
           {
@@ -49,9 +48,24 @@ function DeploymentDetailRoute() {
   const { deploymentId } = Route.useParams()
   const { project } = useProjectDetail()
   const [tab, setTab] = React.useState<DeploymentTab>('monitoring')
-  const found = useDeployment(project.id, deploymentId)
+  const {
+    data: found,
+    error,
+    refetch,
+  } = useDeployment(project.id, deploymentId)
 
-  if (!found) return <DeploymentNotFound projectId={project.id} />
+  if (error) {
+    return isNotFound(error) ? (
+      <DeploymentNotFound projectId={project.id} />
+    ) : (
+      <PageError
+        title="Could not load this deployment"
+        error={error}
+        onRetry={() => void refetch()}
+      />
+    )
+  }
+  if (!found) return <PageLoading />
 
   return (
     <main
@@ -80,7 +94,7 @@ function DeploymentDetailRoute() {
         </TabsList>
 
         <TabsContent value="monitoring">
-          <MonitoringTab />
+          <MonitoringTab onEditScaling={() => setTab('settings')} />
         </TabsContent>
         <TabsContent value="integration">
           <IntegrationTab />

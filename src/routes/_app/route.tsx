@@ -8,22 +8,27 @@ import {
 
 import { toast } from 'sonner'
 
+import { setCurrentOrganizationId } from '@/api/session'
+import { PageError } from '@/components/shared/query-states'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { Spinner } from '@/components/ui/spinner'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { allOrganizations, allProjects } from '@/features/dashboard/data'
 import type {
-  OrgMember,
+  DashboardPreferences,
   Organization,
   Project,
-} from '@/features/dashboard/data'
-import { initialMembers } from '@/features/dashboard/selectors/organizations'
-import { orgDeployments } from '@/features/dashboard/selectors/deployments'
-import { orgTrainingRuns } from '@/features/dashboard/selectors/training-runs'
+} from '@/features/dashboard/domain/types'
 import {
   DashboardLayoutContext,
   useDashboardLayout,
 } from '@/features/dashboard/context'
 import { useApplyTheme } from '@/features/dashboard/theme'
+import {
+  useOrganizations,
+  useWorkspaceSearch,
+} from '@/features/organizations/queries'
+import type { OrganizationEntry } from '@/features/organizations/queries'
+import { useProjects } from '@/features/projects/queries'
 import {
   AppHeader,
   AppSidebar,
@@ -41,17 +46,53 @@ export const Route = createFileRoute('/_app')({
   component: AppLayout,
 })
 
+type PreferencesState = ReturnType<typeof usePreferences>
+
+/**
+ * The shell needs to know which organizations exist before it can render, so
+ * it waits for them. Every page below can then rely on a current organization.
+ */
 function AppLayout() {
-  const { preferences, updatePreferences, hydrated, persistenceAvailable } =
-    usePreferences()
+  const preferencesState = usePreferences()
+  const organizations = useOrganizations()
+  useApplyTheme(preferencesState.preferences.theme, preferencesState.hydrated)
+
+  if (organizations.error) {
+    return (
+      <div className="flex min-h-svh bg-background">
+        <PageError
+          title="Could not load your workspace"
+          error={organizations.error}
+          onRetry={() => void organizations.refetch()}
+        />
+      </div>
+    )
+  }
+  if (!preferencesState.hydrated || !organizations.data?.length) {
+    return (
+      <div
+        className="flex min-h-svh items-center justify-center bg-background"
+        aria-busy="true"
+        aria-label="Loading workspace"
+      >
+        <Spinner />
+      </div>
+    )
+  }
+  return <AppShell {...preferencesState} entries={organizations.data} />
+}
+
+function AppShell({
+  preferences,
+  updatePreferences,
+  hydrated,
+  persistenceAvailable,
+  entries,
+}: PreferencesState & { entries: OrganizationEntry[] }) {
   const [searchOpen, setSearchOpen] = React.useState(false)
   const [shortcutsOpen, setShortcutsOpen] = React.useState(false)
   const [createOrgOpen, setCreateOrgOpen] = React.useState(false)
-  const [memberLists, setMemberLists] = React.useState<
-    Record<string, OrgMember[]>
-  >({})
   const navigate = useNavigate()
-  useApplyTheme(preferences.theme, hydrated)
   const { projectId } = useParams({ strict: false })
 
   useAppShortcuts({
@@ -66,47 +107,39 @@ function AppLayout() {
     openShortcuts: () => setShortcutsOpen(true),
   })
 
-  const organizations = allOrganizations(preferences)
+  const organizations = entries.map((entry) => entry.organization)
+  const orgSummaries = Object.fromEntries(
+    entries.map((entry) => [entry.organization.id, entry.summary]),
+  )
   const org =
     organizations.find((item) => item.id === preferences.organizationId) ??
     organizations[0]
+  // During render, not in an effect: children's queries start before a
+  // parent's effects run, and their first requests must already name it.
+  setCurrentOrganizationId(org.id)
 
-  const membersOf = (item: Organization) =>
-    memberLists[item.id] ?? initialMembers(item)
-
-  const updateMembers = React.useCallback(
-    (item: Organization, update: (members: OrgMember[]) => OrgMember[]) =>
-      setMemberLists((current) => ({
-        ...current,
-        [item.id]: update(current[item.id] ?? initialMembers(item)),
-      })),
-    [],
-  )
-
-  const availableProjects = allProjects(preferences)
-  const orgProjects = availableProjects.filter((item) => item.orgId === org.id)
+  const orgProjects = useProjects(org.id).data
   const currentProject: Project | undefined =
-    availableProjects.find((item) => item.id === projectId) ?? orgProjects.at(0)
+    orgProjects?.find((item) => item.id === projectId) ?? orgProjects?.at(0)
+  const searchHits = useWorkspaceSearch(org.id).data
 
-  function switchOrganization(nextOrgId: string) {
-    if (nextOrgId === preferences.organizationId) return
-    const openProject = availableProjects.find((item) => item.id === projectId)
-    if (openProject && openProject.orgId !== nextOrgId) {
-      // Leave the project page first so its own org-sync effect can't
-      // immediately flip organizationId back once it re-renders.
-      navigate({ to: '/' }).then(() =>
-        updatePreferences({ organizationId: nextOrgId }),
-      )
+  function selectOrganization(partial: Partial<DashboardPreferences>) {
+    // An open project belongs to the organization being left. Leave its page
+    // first so its own org-sync effect can't immediately flip the choice back.
+    if (projectId) {
+      void navigate({ to: '/' }).then(() => updatePreferences(partial))
     } else {
-      updatePreferences({ organizationId: nextOrgId })
+      updatePreferences(partial)
     }
   }
 
-  function createOrganization(created: Organization) {
-    updatePreferences({
-      createdOrganizations: [...preferences.createdOrganizations, created],
-      organizationId: created.id,
-    })
+  function switchOrganization(nextOrgId: string) {
+    if (nextOrgId === org.id) return
+    selectOrganization({ organizationId: nextOrgId })
+  }
+
+  function organizationCreated(created: Organization) {
+    updatePreferences({ organizationId: created.id })
     void navigate({
       to: '/organizations/$orgId/overview',
       params: { orgId: created.id },
@@ -114,20 +147,11 @@ function AppLayout() {
     toast.success(`${created.name} created. You're now working in it.`)
   }
 
-  const orgEntries = organizations.map((item) => ({
-    org: item,
-    projects: availableProjects.filter((project) => project.orgId === item.id)
-      .length,
-    members: membersOf(item).filter((member) => member.status === 'active')
-      .length,
+  const orgEntries = entries.map(({ organization, summary }) => ({
+    org: organization,
+    projects: summary.projects,
+    members: summary.members,
   }))
-
-  const searchItems = buildSearchItems({
-    organizations,
-    projects: orgProjects,
-    trainingRuns: orgTrainingRuns(preferences, org.id),
-    deployments: orgDeployments(preferences, org.id),
-  })
 
   return (
     <DashboardLayoutContext.Provider
@@ -138,10 +162,9 @@ function AppLayout() {
         persistenceAvailable,
         org,
         organizations,
+        orgSummaries,
         switchOrganization,
         openCreateOrganization: () => setCreateOrgOpen(true),
-        membersOf,
-        updateMembers,
       }}
     >
       <TooltipProvider>
@@ -163,12 +186,8 @@ function AppLayout() {
               org={org}
               orgEntries={orgEntries}
               theme={preferences.theme}
-              notificationsRead={preferences.notificationsRead}
               onSwitchOrganization={switchOrganization}
               onCreateOrganization={() => setCreateOrgOpen(true)}
-              onMarkNotificationsRead={() =>
-                updatePreferences({ notificationsRead: true })
-              }
               onOpenSearch={() => setSearchOpen(true)}
               onOpenShortcuts={() => setShortcutsOpen(true)}
             />
@@ -178,7 +197,7 @@ function AppLayout() {
           <WorkspaceSearch
             open={searchOpen}
             onOpenChange={setSearchOpen}
-            items={searchItems}
+            items={buildSearchItems({ organizations, hits: searchHits ?? [] })}
           />
           <KeyboardShortcutsDialog
             open={shortcutsOpen}
@@ -188,7 +207,7 @@ function AppLayout() {
             open={createOrgOpen}
             onOpenChange={setCreateOrgOpen}
             organizations={organizations}
-            onCreate={createOrganization}
+            onCreated={organizationCreated}
           />
         </SidebarProvider>
       </TooltipProvider>

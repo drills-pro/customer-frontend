@@ -3,9 +3,10 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { RouteBreadcrumbs } from '@/components/breadcrumbs'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { isNotFound } from '@/api/errors'
+import { PageError, PageLoading } from '@/components/shared/query-states'
 import { useProjectDetail } from '@/features/dashboard/context'
-import { useModel } from '@/features/dashboard/hooks'
-import { resolveModel } from '@/features/dashboard/selectors/models'
+import { useModel } from '@/features/models/queries'
 import {
   FilesTab,
   ModelHeader,
@@ -23,10 +24,8 @@ export const Route = createFileRoute(
   component: ModelDetailRoute,
   notFoundComponent: ModelDetailNotFoundRoute,
   staticData: {
-    breadcrumb: ({ params, parent: { project } }) => {
-      if (!project) return null
-      const model = resolveModel(project.id, params.modelId)
-      if (!model) return null
+    breadcrumb: ({ entities: { model }, parent: { project } }) => {
+      if (!project || !model) return null
       return {
         items: [
           {
@@ -50,9 +49,20 @@ function ModelDetailRoute() {
   const { project } = useProjectDetail()
   const [tab, setTab] = React.useState<ModelTab>('overview')
 
-  const found = useModel(project.id, modelId)
+  const { data: found, error, refetch } = useModel(project.id, modelId)
 
-  if (!found) return <ModelNotFound projectId={project.id} />
+  if (error) {
+    return isNotFound(error) ? (
+      <ModelNotFound projectId={project.id} />
+    ) : (
+      <PageError
+        title="Could not load this model"
+        error={error}
+        onRetry={() => void refetch()}
+      />
+    )
+  }
+  if (!found) return <PageLoading />
 
   return (
     <main

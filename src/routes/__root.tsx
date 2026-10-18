@@ -4,9 +4,17 @@ import {
   Scripts,
   createRootRoute,
 } from '@tanstack/react-router'
+import {
+  MutationCache,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
+import { toast } from 'sonner'
+import * as React from 'react'
 import type { ReactNode } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { themeBootScript } from '@/features/dashboard/theme'
+import { ApiError } from '@/api/client'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
@@ -28,10 +36,51 @@ export const Route = createRootRoute({
   component: RootComponent,
 })
 
+declare module '@tanstack/react-query' {
+  interface Register {
+    mutationMeta: {
+      /** The caller shows the failure itself; no toast. */
+      quiet?: boolean
+      /** The caller shows a 409 next to the field it is about; no toast. */
+      inlineConflict?: boolean
+    }
+  }
+}
+
+function createQueryClient() {
+  return new QueryClient({
+    // One place reports a failed change, so no action can fail silently.
+    mutationCache: new MutationCache({
+      onError: (error, _variables, _context, mutation) => {
+        const { meta } = mutation
+        if (meta?.quiet) return
+        const conflict = error instanceof ApiError && error.status === 409
+        if (meta?.inlineConflict && conflict) return
+        toast.error(error.message)
+      },
+    }),
+    defaultOptions: {
+      queries: {
+        staleTime: 10_000,
+        // One retry for a server hiccup. A 4xx, a missing tenant id or an
+        // unreachable API will not fix itself, so show the error right away.
+        retry: (failureCount, error) =>
+          failureCount < 1 && error instanceof ApiError && error.status >= 500,
+      },
+    },
+  })
+}
+
 function RootComponent() {
+  // Created per mount, not at module scope: on the server a shared client
+  // would leak one request's cache into the next.
+  const [queryClient] = React.useState(createQueryClient)
+
   return (
     <RootDocument>
-      <Outlet />
+      <QueryClientProvider client={queryClient}>
+        <Outlet />
+      </QueryClientProvider>
     </RootDocument>
   )
 }

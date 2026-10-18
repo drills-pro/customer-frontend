@@ -1,4 +1,8 @@
-/** Every entity the dashboard works with. Pure types, no dependencies. */
+/**
+ * Every entity the pages render, in the shape the components use. The API's
+ * wire shapes live in `src/features/<area>/api/types.ts`; each feature's
+ * `mappers.ts` turns one into the other.
+ */
 
 export const orgPlans = ['Free', 'Team', 'Enterprise'] as const
 export type OrgPlan = (typeof orgPlans)[number]
@@ -18,6 +22,31 @@ export type Organization = {
   createdAt: number
   /** The signed-in user's role in this organization. */
   yourRole: OrgRole
+  /** What new projects and members in this organization start with. */
+  defaults: {
+    visibility: 'Organization' | 'Private'
+    requireTwoFactor: boolean
+    domainJoin: boolean
+  }
+}
+
+/** What a plan allows. */
+export type PlanLimits = {
+  seats: number
+  projects: number
+  credits: number
+  price: string
+}
+
+/** The counts shown on an organization's card, switcher row and overview. */
+export type OrgSummary = {
+  projects: number
+  members: number
+  invited: number
+  runningTrainings: number
+  deployments: number
+  creditsUsed: number
+  limits: PlanLimits
 }
 
 /** The editable identity fields of an organization. */
@@ -39,9 +68,15 @@ export type OrgMember = {
   you?: boolean
 }
 
+/** An invitation to the signed-in user to join another organization. */
 export type OrgInvitation = {
   id: string
-  organization: Organization
+  organization: Pick<
+    Organization,
+    'id' | 'name' | 'initial' | 'color' | 'slug' | 'plan' | 'description'
+  >
+  /** The role the user would join with. */
+  role: OrgRole
   invitedBy: string
   sentAt: number
 }
@@ -49,7 +84,9 @@ export type Project = {
   id: string
   orgId: string
   name: string
+  /** The task type's display name; `taskType` is its id. */
   task: string
+  taskType: string
   description: string
   datasets: number
   models: number
@@ -98,6 +135,8 @@ export type ProjectOverview = {
     size: string
   }
   resourceUsage: ResourceUsage[]
+  /** Markdown saved from the README editor; shown instead of `readme`. */
+  readmeMarkdown?: string
   readme?: {
     about: string
     architecture: string
@@ -123,7 +162,7 @@ export type Activity = {
   time: string
   action: string
 }
-export type TrainingRunStatus = 'Running' | 'Stopped' | 'Completed'
+export type TrainingRunStatus = 'Running' | 'Stopped' | 'Completed' | 'Failed'
 export type TrainingSplit = {
   train: number
   validation: number
@@ -152,18 +191,14 @@ export type TrainingRun = {
   progress: number
   step: number
   totalSteps: number
+  /** The epoch the run is in, and the time left: `~12m`, or `—` when idle. */
+  epoch: number
+  eta: string
   throughput: string
   gpuUtilization: string
   gpuMemory: string
   author: string
   startedAt: number
-}
-export type CreatedProject = {
-  project: Project
-  overview: ProjectOverview
-  startMethod: 'upload' | 'template' | 'clone'
-  template?: string
-  clonedFromProjectId?: string
 }
 export type ModelStage = 'Production' | 'Staging' | 'Archived'
 /** A trained model version, produced by one training run. */
@@ -186,6 +221,8 @@ export type Model = {
   stage: ModelStage
   author: string
   created: string
+  /** The deployment serving this version, if any. */
+  deploymentId?: string
 }
 
 export type DeploymentStatus = 'Live' | 'Paused' | 'Deploying'
@@ -204,9 +241,13 @@ export type Deployment = {
   endpoint: string
   region: string
   instanceName: string
+  /** `pinned` keeps serving `modelId`; `latest` follows new promotions. */
+  serving: 'pinned' | 'latest'
   minReplicas: number
   maxReplicas: number
   activeReplicas: number
+  targetConcurrency: number
+  scaleDownDelaySeconds: number
   /** Display strings: a paused deployment reads `—`, not `0`. */
   requests24h: string
   latencyP50: string
@@ -280,7 +321,8 @@ export type DatasetComposition = {
   /** Text datasets only. */
   avgWords?: number
 }
-export type DatasetDetailMock = {
+/** Everything the dataset page's tabs show for one dataset. */
+export type DatasetDetail = {
   samples: DatasetSample[]
   distribution: Array<{ label: string; count: number }>
   /** One entry per class/label, generated so the counts sum to the item total. */
@@ -304,20 +346,11 @@ export type DatasetDetailMock = {
 export const themePreferences = ['light', 'dark', 'system'] as const
 export type ThemePreference = (typeof themePreferences)[number]
 
+/** The user's choices about the interface, kept in browser storage. */
 export type DashboardPreferences = {
+  /** The organization being worked in; empty means "the first one". */
   organizationId: string
   onboardingDismissed: boolean
-  notificationsRead: boolean
   /** Applied to `<html>` by `useApplyTheme`; "system" follows the OS. */
   theme: ThemePreference
-  uploads: Activity[]
-  datasets: Dataset[]
-  trainingRuns: TrainingRun[]
-  createdProjects: CreatedProject[]
-  /** Organizations created or joined in this browser. */
-  createdOrganizations: Organization[]
-  /** Saved identity edits to the seeded organizations, keyed by org id. */
-  organizationEdits: Record<string, OrganizationProfile>
-  /** Invitation ids the user declined. */
-  declinedInvitations: string[]
 }

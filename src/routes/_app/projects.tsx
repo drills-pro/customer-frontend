@@ -10,13 +10,11 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty'
+import { SectionError, SectionLoading } from '@/components/shared/query-states'
+import { useTaskTypes } from '@/features/catalog/queries'
 import { useDashboardLayout } from '@/features/dashboard/context'
-import {
-  allProjects,
-  projectTaskTypes,
-  projects,
-} from '@/features/dashboard/data'
 import type { Project } from '@/features/dashboard/data'
+import { useProjects } from '@/features/projects/queries'
 import {
   ProjectCard,
   ProjectFilters,
@@ -36,13 +34,12 @@ const defaultProjectFilters: ProjectFiltersState = {
   view: 'grid',
 }
 
-const taskTypes = [
-  ...new Set([...projects.map((project) => project.task), ...projectTaskTypes]),
-]
 const statuses: Array<Project['status']> = ['Active', 'Draft', 'Archived']
 
 function ProjectsPage() {
-  const { preferences, org } = useDashboardLayout()
+  const { org } = useDashboardLayout()
+  const projectsQuery = useProjects(org.id)
+  const taskTypes = (useTaskTypes().data ?? []).map((item) => item.label)
   const [filters, setFilters] = React.useState<ProjectFiltersState>(
     defaultProjectFilters,
   )
@@ -50,9 +47,7 @@ function ProjectsPage() {
     setFilters((current) => ({ ...current, ...patch }))
 
   // The header switcher owns the organization: this page lists only its projects.
-  const orgProjects = allProjects(preferences).filter(
-    (project) => project.orgId === org.id,
-  )
+  const orgProjects = projectsQuery.data ?? []
   const normalizedQuery = filters.query.trim().toLowerCase()
   const visibleProjects = orgProjects
     .filter(
@@ -76,8 +71,9 @@ function ProjectsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Projects</h1>
           <p className="mt-1 text-muted-foreground">
-            {orgProjects.length}{' '}
-            {orgProjects.length === 1 ? 'project' : 'projects'} in {org.name}
+            {projectsQuery.data
+              ? `${orgProjects.length} ${orgProjects.length === 1 ? 'project' : 'projects'} in ${org.name}`
+              : org.name}
           </p>
         </div>
         <Button asChild size="lg" className="px-3.5">
@@ -96,7 +92,15 @@ function ProjectsPage() {
         statuses={statuses}
       />
 
-      {visibleProjects.length ? (
+      {projectsQuery.error ? (
+        <SectionError
+          title="Could not load projects"
+          error={projectsQuery.error}
+          onRetry={() => void projectsQuery.refetch()}
+        />
+      ) : projectsQuery.isPending ? (
+        <SectionLoading />
+      ) : visibleProjects.length ? (
         filters.view === 'grid' ? (
           <section
             aria-label="Projects"

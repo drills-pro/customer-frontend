@@ -42,8 +42,9 @@ import {
 } from '@/components/ui/table'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { useProjectDetail } from '@/features/dashboard/context'
-import { projectDeployments } from '@/features/dashboard/selectors/deployments'
-import { projectModels } from '@/features/dashboard/selectors/models'
+import { SectionError, SectionLoading } from '@/components/shared/query-states'
+import { useDeployments } from '@/features/deployments/queries'
+import { useModels } from '@/features/models/queries'
 import {
   formatAccuracy,
   formatF1,
@@ -62,8 +63,9 @@ function ProjectModelsRoute() {
   const [architecture, setArchitecture] = React.useState('all')
   const [view, setView] = React.useState('table')
 
-  const models = projectModels(project.id)
-  const deployments = projectDeployments(project.id)
+  const modelsQuery = useModels(project.id)
+  const models = modelsQuery.data ?? []
+  const deployments = useDeployments(project.id).data ?? []
   const architectures = [...new Set(models.map((item) => item.architecture))]
 
   const visibleModels = models.filter(
@@ -78,6 +80,24 @@ function ProjectModelsRoute() {
     deployments.map((item) => [item.modelId, item]),
   )
 
+  if (modelsQuery.error) {
+    return (
+      <div className="mt-6">
+        <SectionError
+          title="Could not load models"
+          error={modelsQuery.error}
+          onRetry={() => void modelsQuery.refetch()}
+        />
+      </div>
+    )
+  }
+  if (modelsQuery.isPending) {
+    return (
+      <div className="mt-6">
+        <SectionLoading />
+      </div>
+    )
+  }
   if (models.length === 0) {
     return (
       <div className="mt-6">

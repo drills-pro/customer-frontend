@@ -44,8 +44,9 @@ import {
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { cn } from 'cn'
 import { useProjectDetail } from '@/features/dashboard/context'
-import { projectDeployments } from '@/features/dashboard/selectors/deployments'
-import { projectModels } from '@/features/dashboard/selectors/models'
+import { SectionError, SectionLoading } from '@/components/shared/query-states'
+import { useDeployments } from '@/features/deployments/queries'
+import { useModels } from '@/features/models/queries'
 import type { Deployment } from '@/features/dashboard/data'
 import {
   EnvironmentBadge,
@@ -66,8 +67,9 @@ function ProjectDeploymentsRoute() {
   const [status, setStatus] = React.useState('all')
   const [view, setView] = React.useState('grid')
 
-  const deployments = projectDeployments(project.id)
-  const models = projectModels(project.id)
+  const deploymentsQuery = useDeployments(project.id)
+  const deployments = deploymentsQuery.data ?? []
+  const models = useModels(project.id).data ?? []
   const modelById = new Map(models.map((item) => [item.id, item]))
 
   const visibleDeployments = deployments.filter(
@@ -97,6 +99,24 @@ function ProjectDeploymentsRoute() {
     )
   }
 
+  if (deploymentsQuery.error) {
+    return (
+      <div className="mt-6">
+        <SectionError
+          title="Could not load deployments"
+          error={deploymentsQuery.error}
+          onRetry={() => void deploymentsQuery.refetch()}
+        />
+      </div>
+    )
+  }
+  if (deploymentsQuery.isPending) {
+    return (
+      <div className="mt-6">
+        <SectionLoading />
+      </div>
+    )
+  }
   if (deployments.length === 0) {
     return (
       <Empty className="min-h-64 border bg-card mt-6">

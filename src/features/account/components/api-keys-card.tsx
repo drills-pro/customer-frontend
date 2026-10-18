@@ -2,7 +2,16 @@ import * as React from 'react'
 import { KeyRound, Plus, TriangleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { ApiError } from '@/api/client'
 import { CopyButton } from '@/components/shared/copy-button'
+import { CardError, CardLoading } from '@/components/shared/query-states'
+import type { ApiKey, ApiKeyScope } from '@/features/account/api'
+import {
+  useApiKeys,
+  useCreateApiKey,
+  useRevokeApiKey,
+} from '@/features/account/queries'
+import { relativeTime } from '@/lib/format'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,50 +75,32 @@ const scopes = [
   'datasets:write',
   'admin',
 ] as const
-type Scope = (typeof scopes)[number]
+type Scope = ApiKeyScope
 
-type ApiKey = {
-  id: string
-  name: string
-  suffix: string
-  scope: Scope
-  created: string
-  lastUsed: string
-}
-
-const seededKeys: ApiKey[] = [
-  {
-    id: 'key-prod',
-    name: 'prod-inference',
-    suffix: '3f9c',
-    scope: 'inference:read',
-    created: 'Aug 2, 2026',
-    lastUsed: '2m ago',
-  },
-  {
-    id: 'key-ci',
-    name: 'ci-pipeline',
-    suffix: 'a71b',
-    scope: 'train:write',
-    created: 'Jun 18, 2026',
-    lastUsed: '3d ago',
-  },
-]
-
-function generateSecret() {
-  const bytes = new Uint8Array(18)
-  crypto.getRandomValues(bytes)
-  return `drl_sk_${Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')}`
+function createdLabel(iso: string) {
+  const age = Date.now() - new Date(iso).getTime()
+  return age < 7 * 24 * 60 * 60 * 1000
+    ? relativeTime(iso)
+    : new Date(iso).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
 }
 
 export function ApiKeysCard({
   id = 'api-keys',
   description = 'Authenticate scripts and services against this project.',
+  projectId,
 }: {
   id?: string
   description?: string
+  /** Lists the keys usable in this project, and limits new keys to it. */
+  projectId?: string
 }) {
-  const [keys, setKeys] = React.useState(seededKeys)
+  const keysQuery = useApiKeys(projectId)
+  const revoke = useRevokeApiKey()
+  const keys = keysQuery.data ?? []
   const [generateOpen, setGenerateOpen] = React.useState(false)
   const [revoking, setRevoking] = React.useState<ApiKey>()
 
@@ -126,7 +117,15 @@ export function ApiKeysCard({
         </CardAction>
       </CardHeader>
 
-      {keys.length === 0 ? (
+      {keysQuery.error ? (
+        <CardError
+          title="Could not load API keys"
+          error={keysQuery.error}
+          onRetry={() => void keysQuery.refetch()}
+        />
+      ) : keysQuery.isPending ? (
+        <CardLoading rows={2} />
+      ) : keys.length === 0 ? (
         <Empty className="min-h-48">
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -158,7 +157,7 @@ export function ApiKeysCard({
                   <TableCell className="pl-5">
                     <p className="font-medium text-foreground">{key.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      Created {key.created}
+                      Created {createdLabel(key.created_at)}
                     </p>
                   </TableCell>
                   <TableCell>
@@ -172,7 +171,9 @@ export function ApiKeysCard({
                     </code>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {key.lastUsed}
+                    {key.last_used_at
+                      ? relativeTime(key.last_used_at)
+                      : 'Never'}
                   </TableCell>
                   <TableCell className="pr-5 text-right">
                     <Button
@@ -196,7 +197,7 @@ export function ApiKeysCard({
         open={generateOpen}
         onOpenChange={setGenerateOpen}
         existing={keys.map((key) => key.name)}
-        onGenerate={(key) => setKeys((current) => [key, ...current])}
+        projectId={projectId}
       />
 
       <AlertDialog
@@ -217,10 +218,10 @@ export function ApiKeysCard({
               variant="destructive"
               onClick={() => {
                 if (!revoking) return
-                setKeys((current) =>
-                  current.filter((key) => key.id !== revoking.id),
-                )
-                toast.success(`${revoking.name} was revoked.`)
+                revoke.mutate(revoking.id, {
+                  onSuccess: () =>
+                    toast.success(`${revoking.name} was revoked.`),
+                })
               }}
             >
               Revoke key
@@ -236,13 +237,14 @@ function GenerateKeyDialog({
   open,
   onOpenChange,
   existing,
-  onGenerate,
+  projectId,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   existing: string[]
-  onGenerate: (key: ApiKey) => void
+  projectId?: string
 }) {
+  const create = useCreateApiKey()
   const [name, setName] = React.useState('')
   const [scope, setScope] = React.useState<Scope>('inference:read')
   const [error, setError] = React.useState('')
@@ -269,16 +271,19 @@ function GenerateKeyDialog({
       setError('A key with this name already exists.')
       return
     }
-    const generated = generateSecret()
-    setSecret(generated)
-    onGenerate({
-      id: `key-${generated.slice(-8)}`,
-      name: value,
-      suffix: generated.slice(-4),
-      scope,
-      created: 'Just now',
-      lastUsed: 'Never',
-    })
+    if (create.isPending) return
+    create.mutate(
+      { name: value, scope, project_id: projectId },
+      {
+        // The secret is only readable in this answer; it is shown once.
+        onSuccess: (created) => setSecret(created.secret),
+        onError: (failure) => {
+          if (failure instanceof ApiError && failure.status === 409) {
+            setError('A key with this name already exists.')
+          }
+        },
+      },
+    )
   }
 
   return (

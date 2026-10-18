@@ -26,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { deploymentLogs } from '@/features/dashboard/data'
+import { useDeploymentLogs } from '@/features/deployments/queries'
 import { useCurrentDeployment } from './use-current-deployment'
 
 /** 2xx succeeded, 4xx is the caller's problem, 5xx is ours. */
@@ -37,9 +37,9 @@ function statusTone(status: number) {
 }
 
 export function LogsTab() {
-  const { deployment } = useCurrentDeployment()
+  const { project, deployment } = useCurrentDeployment()
   const [filter, setFilter] = React.useState('all')
-  const logs = deploymentLogs(deployment)
+  const logs = useDeploymentLogs(project.id, deployment.id).data ?? []
   const visible = logs.filter(
     (entry) =>
       filter === 'all' || String(entry.status).startsWith(filter.charAt(0)),

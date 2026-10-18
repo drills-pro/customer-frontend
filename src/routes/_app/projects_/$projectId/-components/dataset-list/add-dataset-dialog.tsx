@@ -24,21 +24,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { Dataset, Project } from '@/features/dashboard/data'
+import type { Dataset } from '@/features/dashboard/data'
+import type { NewDataset } from '@/features/datasets/queries'
 import { splitOptions, supportedFile } from './types'
 
 export function AddDatasetDialog({
-  project,
   open,
   onOpenChange,
   existing,
   onAdd,
 }: {
-  project: Project
   open: boolean
   onOpenChange: (open: boolean) => void
   existing: Dataset[]
-  onAdd: (dataset: Dataset) => void
+  onAdd: (dataset: NewDataset) => void
 }) {
   const [name, setName] = React.useState('')
   const [split, setSplit] = React.useState<Dataset['split']>('Train')
@@ -82,28 +81,11 @@ export function AddDatasetDialog({
     if (source === 'bucket' && !/^s3:\/\/[^\s]+$/.test(bucket)) {
       return setError('Enter a bucket path such as s3://my-bucket/dataset.')
     }
-    const bytes = files.reduce((total, file) => total + file.size, 0)
-    onAdd({
-      id: `dataset-${crypto.randomUUID().slice(0, 8)}`,
-      projectId: project.id,
-      name: trimmed,
-      modality: project.task.includes('Image')
-        ? 'image'
-        : project.task.includes('Text')
-          ? 'text'
-          : 'tabular',
-      split,
-      items: source === 'bucket' ? 1200 : files.length,
-      size:
-        source === 'bucket'
-          ? '24 MB'
-          : `${(bytes / 1024 / 1024).toFixed(2)} MB`,
-      classes: 0,
-      version: 1,
-      status: 'Processing',
-      created: 'Just now',
-      files: source === 'bucket' ? [bucket] : files.map((file) => file.name),
-    })
+    onAdd(
+      source === 'bucket'
+        ? { name: trimmed, split, source, bucketUri: bucket }
+        : { name: trimmed, split, source, files },
+    )
     reset()
     onOpenChange(false)
   }

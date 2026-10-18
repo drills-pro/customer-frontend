@@ -36,13 +36,19 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useProjectDetail } from '@/features/dashboard/context'
-import type { ProjectOverview } from '@/features/dashboard/data'
+import type {
+  ProjectMember,
+  ProjectTeamRole,
+} from '@/features/projects/mappers'
+import {
+  useInviteProjectMember,
+  useProjectMembers,
+  useRemoveProjectMember,
+  useSetProjectMemberRole,
+} from '@/features/projects/queries'
 
-type Role = ProjectOverview['team'][number]['role']
-type Member = ProjectOverview['team'][number] & {
-  email: string
-  invited?: boolean
-}
+type Role = ProjectTeamRole
+type Member = ProjectMember
 
 const assignableRoles: Array<Exclude<Role, 'Owner'>> = ['Editor', 'Viewer']
 const roleDescriptions: Record<Role, string> = {
@@ -50,39 +56,36 @@ const roleDescriptions: Record<Role, string> = {
   Editor: 'Upload data, train and deploy models',
   Viewer: 'Read-only access to runs and metrics',
 }
-const inviteColors = ['#0ea5e9', '#14b8a6', '#f59e0b', '#ec4899']
-
-function emailFor(name: string) {
-  return `${name.toLowerCase().replace(/[^a-z]+/g, '.')}@acme.ai`
-}
 
 export function MembersCard() {
-  const { team } = useProjectDetail().details
-  const [members, setMembers] = React.useState<Member[]>(() =>
-    team.map((person) => ({ ...person, email: emailFor(person.name) })),
-  )
+  const { project } = useProjectDetail()
+  const members = useProjectMembers(project.id).data ?? []
+  const inviteMember = useInviteProjectMember(project.id)
+  const setRole = useSetProjectMemberRole(project.id)
+  const removeMember = useRemoveProjectMember(project.id)
   const [inviteOpen, setInviteOpen] = React.useState(false)
 
   function changeRole(member: Member, role: Role) {
-    setMembers((current) =>
-      current.map((item) =>
-        item.email === member.email ? { ...item, role } : item,
-      ),
-    )
-    toast.success(
-      `${member.name} is now ${role === 'Editor' ? 'an' : 'a'} ${role}.`,
+    setRole.mutate(
+      { userId: member.id, role },
+      {
+        onSuccess: () =>
+          toast.success(
+            `${member.name} is now ${role === 'Editor' ? 'an' : 'a'} ${role}.`,
+          ),
+      },
     )
   }
 
   function remove(member: Member) {
-    setMembers((current) =>
-      current.filter((item) => item.email !== member.email),
-    )
-    toast.success(
-      member.invited
-        ? `Invitation to ${member.email} cancelled.`
-        : `${member.name} was removed from the project.`,
-    )
+    removeMember.mutate(member.id, {
+      onSuccess: () =>
+        toast.success(
+          member.invited
+            ? `Invitation to ${member.email} cancelled.`
+            : `${member.name} was removed from the project.`,
+        ),
+    })
   }
 
   return (
@@ -181,20 +184,12 @@ export function MembersCard() {
         open={inviteOpen}
         onOpenChange={setInviteOpen}
         existing={members.map((member) => member.email)}
-        onInvite={(email, role) => {
-          setMembers((current) => [
-            ...current,
-            {
-              name: email.split('@')[0],
-              initials: email.slice(0, 2).toUpperCase(),
-              color: inviteColors[current.length % inviteColors.length],
-              email,
-              role,
-              invited: true,
-            },
-          ])
-          toast.success(`Invitation sent to ${email}.`)
-        }}
+        onInvite={(email, role) =>
+          inviteMember.mutate(
+            { email, role },
+            { onSuccess: () => toast.success(`Invitation sent to ${email}.`) },
+          )
+        }
       />
     </Card>
   )

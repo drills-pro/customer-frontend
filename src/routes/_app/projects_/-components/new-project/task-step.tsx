@@ -1,7 +1,6 @@
 import { FolderKanban } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { projectTaskTypes } from '@/features/dashboard/data'
 import type { NewProjectDraft } from './use-new-project-draft'
 
 export function TaskStep({ draft }: { draft: NewProjectDraft }) {
@@ -14,20 +13,22 @@ export function TaskStep({ draft }: { draft: NewProjectDraft }) {
         </p>
       </div>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        {projectTaskTypes.map((item) => (
+        {draft.taskTypes.map((item) => (
           <Button
-            key={item}
+            key={item.id}
             type="button"
             variant="option"
-            onClick={() => draft.selectTask(item)}
-            aria-pressed={draft.task === item}
+            onClick={() => draft.selectTask(item.id)}
+            aria-pressed={draft.task === item.id}
             className="flex-col items-stretch justify-start"
           >
             <div className="flex items-start justify-between">
               <FolderKanban className="size-5 text-primary" />
-              {draft.task === item && <span className="text-primary">●</span>}
+              {draft.task === item.id && (
+                <span className="text-primary">●</span>
+              )}
             </div>
-            <p className="mt-2 text-sm font-medium">{item}</p>
+            <p className="mt-2 text-sm font-medium">{item.label}</p>
           </Button>
         ))}
       </div>

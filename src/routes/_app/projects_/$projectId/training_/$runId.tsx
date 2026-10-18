@@ -27,17 +27,11 @@ import {
 } from '@/components/ui/empty'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  useDashboardLayout,
-  useProjectDetail,
-} from '@/features/dashboard/context'
-import { useTrainingRun } from '@/features/dashboard/hooks'
-import { formatDuration } from '@/features/dashboard/training'
-import {
-  resolveTrainingRun,
-  runProgressAt,
-} from '@/features/dashboard/selectors/training-runs'
-import { useNow } from '@/hooks/use-now'
+import { isNotFound } from '@/api/errors'
+import { PageError, PageLoading } from '@/components/shared/query-states'
+import { useProjectDetail } from '@/features/dashboard/context'
+import { formatDuration } from '@/features/training/format'
+import { useCancelTraining, useTrainingRun } from '@/features/training/queries'
 import {
   ConfigCard,
   LogsCard,
@@ -51,10 +45,8 @@ export const Route = createFileRoute(
   component: TrainingRunRoute,
   notFoundComponent: RunNotFoundRoute,
   staticData: {
-    breadcrumb: ({ params, preferences, parent: { project } }) => {
-      if (!project) return null
-      const run = resolveTrainingRun(preferences, project.id, params.runId)
-      if (!run) return null
+    breadcrumb: ({ entities: { run }, parent: { project } }) => {
+      if (!project || !run) return null
       return {
         items: [
           {
@@ -76,14 +68,14 @@ export const Route = createFileRoute(
 function TrainingRunRoute() {
   const { runId } = Route.useParams()
   const { project } = useProjectDetail()
-  const { preferences, updatePreferences } = useDashboardLayout()
   const [tab, setTab] = React.useState('metrics')
   const [level, setLevel] = React.useState('all')
   const [autoscroll, setAutoscroll] = React.useState(true)
   const logRef = React.useRef<HTMLPreElement>(null)
 
-  const now = useNow()
-  const run = useTrainingRun(project.id, runId)?.run
+  // Refreshes itself while the run is running, so the numbers keep moving.
+  const { data: run, error, refetch } = useTrainingRun(project.id, runId)
+  const cancel = useCancelTraining(project.id, runId)
 
   React.useEffect(() => {
     if (autoscroll && logRef.current) {
@@ -91,11 +83,21 @@ function TrainingRunRoute() {
     }
   }, [autoscroll, tab, level, run?.status])
 
-  if (!run) return <RunNotFound projectId={project.id} />
+  if (error) {
+    return isNotFound(error) ? (
+      <RunNotFound projectId={project.id} />
+    ) : (
+      <PageError
+        title="Could not load this training run"
+        error={error}
+        onRetry={() => void refetch()}
+      />
+    )
+  }
+  if (!run) return <PageLoading />
 
-  const live = runProgressAt(run, now)
   const runStats: Array<[string, string]> = [
-    ['Epoch', `${live.epoch} / ${run.epochs}`],
+    ['Epoch', `${run.epoch} / ${run.epochs}`],
     [
       'Step',
       `${run.step.toLocaleString()} / ${run.totalSteps.toLocaleString()}`,
@@ -105,34 +107,10 @@ function TrainingRunRoute() {
     ['GPU memory', run.status === 'Running' ? run.gpuMemory : '0 GB'],
   ]
 
-  const stopRun = () => {
-    // Freeze the run at its derived progress. A seeded run has no persisted
-    // record yet, so stopping it writes one as a user override of the fixture.
-    const stoppedRun = { ...run, status: 'Stopped' as const }
-    const isPersisted = preferences.trainingRuns.some(
-      (item) => item.id === run.id,
-    )
-    updatePreferences({
-      trainingRuns: isPersisted
-        ? preferences.trainingRuns.map((item) =>
-            item.id === run.id ? stoppedRun : item,
-          )
-        : [stoppedRun, ...preferences.trainingRuns],
-      uploads: [
-        {
-          id: `training-stopped-${run.id}`,
-          orgId: project.orgId,
-          icon: 'error',
-          lead: `Training ${run.name}`,
-          text: 'stopped by Alex Rivera',
-          time: 'Just now',
-          action: 'View',
-        },
-        ...preferences.uploads,
-      ],
+  const stopRun = () =>
+    cancel.mutate(undefined, {
+      onSuccess: () => toast.info(`Training ${run.name} stopped.`),
     })
-    toast.info(`Training ${run.name} stopped.`)
-  }
 
   return (
     <main
@@ -253,7 +231,9 @@ function TrainingRunRoute() {
               <EmptyDescription>
                 {run.status === 'Stopped'
                   ? 'This run was stopped before producing model artifacts.'
-                  : 'Artifacts will appear when training completes.'}
+                  : run.status === 'Failed'
+                    ? 'This run failed before producing model artifacts. Its logs say why.'
+                    : 'Artifacts will appear when training completes.'}
               </EmptyDescription>
             </EmptyHeader>
           </Empty>

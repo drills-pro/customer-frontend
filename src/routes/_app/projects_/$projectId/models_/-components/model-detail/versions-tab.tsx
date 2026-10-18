@@ -16,10 +16,12 @@ import {
   formatF1,
   StageBadge,
 } from '../../../-components/model-list'
+import { useSetModelStage } from '@/features/models/queries'
 import { useCurrentModel } from './use-current-model'
 
 export function VersionsTab() {
-  const { model, versions } = useCurrentModel()
+  const { project, model, versions } = useCurrentModel()
+  const setStage = useSetModelStage(project.id)
   return (
     <Card size="flush">
       <CardHeader className="flex-row items-center border-b [--card-section:--spacing(3.5)]">
@@ -91,11 +93,22 @@ export function VersionsTab() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() =>
-                      toast.info(
-                        `Changing the stage of v${item.version} is not available in this demo.`,
+                    disabled={setStage.isPending}
+                    onClick={() => {
+                      const archiving = item.stage === 'Production'
+                      setStage.mutate(
+                        {
+                          modelId: item.id,
+                          stage: archiving ? 'archived' : 'production',
+                        },
+                        {
+                          onSuccess: () =>
+                            toast.success(
+                              `v${item.version} ${archiving ? 'archived' : 'promoted to production'}.`,
+                            ),
+                        },
                       )
-                    }
+                    }}
                   >
                     {item.stage === 'Production' ? 'Archive' : 'Promote'}
                   </Button>

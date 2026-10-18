@@ -25,14 +25,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Progress } from '@/components/ui/progress'
-import type { Organization, ThemePreference } from '@/features/dashboard/data'
-import {
-  creditsLabel,
-  creditsPercent,
-  currentUser,
-  plan,
-  themeLabel,
-} from '../../account/-components/account-data'
+import type { CurrentUser } from '@/features/account/mappers'
+import { useCurrentUser } from '@/features/account/queries'
+import type {
+  Organization,
+  ThemePreference,
+} from '@/features/dashboard/domain/types'
+import { useBilling } from '@/features/organizations/queries'
+import { formatCount } from '@/lib/format'
+import { themeLabel } from '../../account/-components/account-data'
 import { unavailable } from '@/lib/unavailable'
 import {
   Item,
@@ -73,7 +74,8 @@ export function UserMenu({
   theme: ThemePreference
   onOpenShortcuts: () => void
 }) {
-  const { profile } = currentUser
+  const user = useCurrentUser().data
+  const billing = useBilling(org.id).data
 
   return (
     <DropdownMenu>
@@ -84,19 +86,19 @@ export function UserMenu({
           aria-label="User menu"
           className="rounded-full data-[state=open]:ring-3 data-[state=open]:ring-primary/20"
         >
-          <UserAvatar />
+          <UserAvatar user={user} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-74 p-0">
         <Item size="sm" className="rounded-none border-0 p-4 pb-3">
           <ItemMedia variant="image">
-            <UserAvatar className="size-9.5" />
+            <UserAvatar user={user} className="size-9.5" />
           </ItemMedia>
 
           <ItemContent className="min-w-0">
-            <ItemTitle>{profile.fullName}</ItemTitle>
+            <ItemTitle>{user?.fullName}</ItemTitle>
             <ItemDescription className="truncate text-xs">
-              {profile.email}
+              {user?.email}
             </ItemDescription>
           </ItemContent>
         </Item>
@@ -104,18 +106,31 @@ export function UserMenu({
         <Item variant="muted" size="sm" className="mx-4 mb-3 w-auto">
           <ItemHeader>
             <ItemTitle className="text-xs">{org.name}</ItemTitle>
-            <Badge variant="accent">{plan.badge}</Badge>
+            {billing && (
+              <Badge variant="accent">{billing.plan_name.toUpperCase()}</Badge>
+            )}
           </ItemHeader>
 
           <ItemContent>
             <ItemFooter className="text-xs text-muted-foreground">
               <span>Credits used</span>
               <span className="font-semibold text-foreground tabular-nums">
-                {creditsLabel()}
+                {billing
+                  ? `${formatCount(billing.credits_used)} / ${formatCount(billing.credits_total)}`
+                  : ''}
               </span>
             </ItemFooter>
 
-            <Progress value={creditsPercent()} aria-label="Credits used" />
+            <Progress
+              value={
+                billing
+                  ? Math.round(
+                      (billing.credits_used / billing.credits_total) * 100,
+                    )
+                  : 0
+              }
+              aria-label="Credits used"
+            />
           </ItemContent>
         </Item>
 
@@ -200,14 +215,20 @@ function MenuLink({
   )
 }
 
-function UserAvatar({ className }: { className?: string }) {
+function UserAvatar({
+  user,
+  className,
+}: {
+  user: CurrentUser | undefined
+  className?: string
+}) {
   return (
     <Avatar className={className}>
       <AvatarFallback
         className="text-xs font-semibold text-white"
-        style={{ backgroundColor: currentUser.color }}
+        style={{ backgroundColor: user?.color }}
       >
-        {currentUser.initials}
+        {user?.initials}
       </AvatarFallback>
     </Avatar>
   )

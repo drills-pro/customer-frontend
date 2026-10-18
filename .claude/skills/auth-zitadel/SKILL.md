@@ -13,6 +13,7 @@ auth token type **JWT**, redirect `<origin>/auth/callback`, post-logout `<origin
 `http://localhost:5173`. Self-registration must be on for signup.
 
 Why each piece exists:
+
 - Scope `urn:zitadel:iam:org:project:id:<projectId>:aud` puts the project in `aud`; core-api (`core/auth.py`) rejects tokens without it.
 - Opaque tokens fail core-api's JWT decode. 401 with "invalid token" means the app's token type or the audience scope.
 - `/v1/me` fills email/name from Zitadel userinfo when the token lacks them; `tenants: []` is a valid new user (`POST /v1/tenants` needs a verified email).

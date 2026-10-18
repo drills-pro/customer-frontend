@@ -38,17 +38,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const onGone = () => setUser(null);
     manager.events.addUserLoaded(onLoaded);
     manager.events.addUserUnloaded(onGone);
-    manager.getUser().then((u) => setUser(u && !u.expired ? u : null)).finally(() => setLoading(false));
-    return () => { manager.events.removeUserLoaded(onLoaded); manager.events.removeUserUnloaded(onGone); };
+    manager
+      .getUser()
+      .then((u) => setUser(u && !u.expired ? u : null))
+      .finally(() => setLoading(false));
+    return () => {
+      manager.events.removeUserLoaded(onLoaded);
+      manager.events.removeUserUnloaded(onGone);
+    };
   }, []);
 
-  const value = useMemo<AuthCtx>(() => ({
-    user, loading,
-    signIn: (returnTo = '/') => void manager.signinRedirect({ state: returnTo }),
-    signUp: (returnTo = '/') => void manager.signinRedirect({ state: returnTo, extraQueryParams: { prompt: 'create' } }),
-    signOut: () => void manager.signoutRedirect({ id_token_hint: user?.id_token }),
-    expire: () => void manager.removeUser(),
-  }), [user, loading]);
+  const value = useMemo<AuthCtx>(
+    () => ({
+      user,
+      loading,
+      signIn: (returnTo = '/') => void manager.signinRedirect({ state: returnTo }),
+      signUp: (returnTo = '/') => void manager.signinRedirect({ state: returnTo, extraQueryParams: { prompt: 'create' } }),
+      signOut: () => void manager.signoutRedirect({ id_token_hint: user?.id_token }),
+      expire: () => void manager.removeUser(),
+    }),
+    [user, loading],
+  );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

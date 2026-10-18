@@ -5,10 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -p . && vite build",
+    "build": "sh scripts/check-project.sh && tsc -p . && vite build",
     "typecheck": "tsc -p .",
     "tokens": "node scripts/gen-tokens.mjs",
-    "typegen": "chakra typegen src/theme/index.ts"
+    "typegen": "chakra typegen src/theme/index.ts",
+    "lint": "oxlint --deny-warnings && sh scripts/check-project.sh",
+    "lint:fix": "oxlint --fix",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm build",
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
+    "lint:project": "sh scripts/check-project.sh",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@chakra-ui/react": "3.37.0",
@@ -27,6 +34,8 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.1",
+    "oxlint": "^1.88.0",
+    "prettier": "^3.9.10",
     "typescript": "6.0.3",
     "vite": "8.3.2"
   }

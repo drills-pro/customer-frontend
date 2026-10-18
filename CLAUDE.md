@@ -9,7 +9,9 @@ routes, one context.
 ```bash
 pnpm install          # pnpm via mise/corepack; node_modules from another pnpm major needs a reinstall
 pnpm dev              # http://localhost:5173, needs .env.local (cp .env.example .env.local)
-pnpm typecheck && pnpm build
+pnpm check            # prettier check + oxlint + project rules + typecheck + build; the pre-commit hook runs this
+pnpm lint:fix         # oxlint autofixes
+pnpm format           # prettier --write (print width 140, single quotes)
 pnpm tokens           # tokens/tokens.json -> src/theme/tokens.generated.ts (never edit the generated file)
 pnpm typegen          # after adding a token or recipe
 ```
@@ -27,11 +29,14 @@ the dashboard. Check size, spacing and focus from computed styles, not from the 
 
 - Use Chakra tokens and recipe variants (`bg="surface-raised"`, `<Button variant="solid">`), never raw hex or blurred shadows.
   Status always has a glyph and a word. Display type (Pixelify Sans) is for `display` and `h1` only.
+- No native form controls or links: use Chakra (`SimpleSelect` for selects). `pnpm lint:project` (`scripts/check-project.sh`) enforces it, plus: no raw hex outside tokens, env only in `config.ts`, fetch only in `api.ts`, no `!important` or inline `style`, no secrets in `VITE_*`. It runs in `pnpm check`; `lint-ok` on a line marks an exception.
 - Auth is Zitadel hosted login, code + PKCE. Do not build password or signup forms; signup is `prompt=create`.
 - `VITE_*` values are public and inlined at build time. Never put a secret in them.
 - Cross-repo: a new env var, port or route needs the matching change in `../k8s` and the workflow's build args
   (skill `deploy-k8s`). Do not edit or push `../k8s` unless asked; a push there deploys to production.
 
 ## Commits
+
+The `.githooks/pre-commit` hook (no Husky; `pnpm install` sets `core.hooksPath`) runs `pnpm check`. Fix failures; do not `--no-verify`.
 
 Conventional style (`feat(scope):`, `fix(scope):`), imperative, say why. No Claude co-author trailer. Stage files by name.

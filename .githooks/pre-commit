@@ -1,0 +1,6 @@
+#!/bin/sh
+# Runs lint, typecheck and build before every commit. Enabled by `pnpm install` (prepare) or:
+#   git config core.hooksPath .githooks
+# Skip once with `git commit --no-verify`.
+cd "$(git rev-parse --show-toplevel)" || exit 1
+exec pnpm check

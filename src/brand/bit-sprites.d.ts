@@ -5,8 +5,15 @@ export interface BitFrameOptions {
   pose?: BitPose;
   /** Tenant accent (hex). Replaces the orange family; shades are derived. */
   accent?: string | null;
-  lookX?: number; lookY?: number; blink?: number; squash?: number; bob?: number;
-  armL?: number; armR?: number; pulse?: number; mouth?: 'smile' | 'flat' | 'open' | 'wavy';
+  lookX?: number;
+  lookY?: number;
+  blink?: number;
+  squash?: number;
+  bob?: number;
+  armL?: number;
+  armR?: number;
+  pulse?: number;
+  mouth?: 'smile' | 'flat' | 'open' | 'wavy';
   /** Opaque full-bleed square for OS masks. */
   mask?: boolean;
   /** 1px paper rim for transparent grounds; pass false to drop it. */
@@ -14,7 +21,10 @@ export interface BitFrameOptions {
   flash?: number;
   label?: string;
 }
-export interface BitTimeline { T: number; at(seconds: number): BitFrameOptions }
+export interface BitTimeline {
+  T: number;
+  at(seconds: number): BitFrameOptions;
+}
 declare const Bit: {
   N: number;
   frame(o: BitFrameOptions): string;

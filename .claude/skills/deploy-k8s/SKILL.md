@@ -10,6 +10,7 @@ description: Use when changing the Dockerfile, nginx.conf, build args, env vars,
 That commits the pin to `../k8s/apps/frontend-user/kustomization.yaml`, and Flux rolls it out. Needs repo secret `K8S_REPO_PAT`.
 
 Must stay in sync with `../k8s/apps/frontend-user`:
+
 - nginx listens on **3000** (Deployment, Service, probes hit `/`); SPA fallback `try_files $uri /index.html`.
 - Host `app.drills.pro`; its callback and logout URLs are registered in the Zitadel app.
 - Pull secret `ghcr-pull`; image path must not change.

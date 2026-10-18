@@ -1,13 +1,23 @@
 import { cfg } from './config';
 
-export interface Me { sub: string; email: string | null; name: string | null; tenants: { id: string; name: string; role: string }[] }
+export interface Me {
+  sub: string;
+  email: string | null;
+  name: string | null;
+  tenants: { id: string; name: string; role: string }[];
+}
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) { super(message); }
+  constructor(
+    public status: number,
+    message: string,
+  ) {
+    super(message);
+  }
 }
 
 export async function api<T>(path: string, token: string): Promise<T> {
-  const res = await fetch(`${cfg.apiUrl}${path}`, { headers: { Authorization: `Bearer ${token}` } });
+  const res = await fetch(`${cfg.apiUrl}${path}`, { headers: { Authorization: `Bearer ${token}` } }); // lint-ok
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     throw new ApiError(res.status, body?.detail ?? res.statusText);

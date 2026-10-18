@@ -7,7 +7,13 @@ import { CallbackPage, LoginPage, SignupPage } from './AuthPages';
 import { Dashboard } from './Dashboard';
 import { navigate, usePath } from './router';
 
-const read = () => { try { return localStorage.getItem('drills-theme'); } catch { return null; } };
+const read = () => {
+  try {
+    return localStorage.getItem('drills-theme');
+  } catch {
+    return null;
+  }
+};
 
 function Routes({ theme, onTheme }: { theme: string; onTheme: (n: string) => void }) {
   const path = usePath();
@@ -27,13 +33,29 @@ function Routes({ theme, onTheme }: { theme: string; onTheme: (n: string) => voi
 }
 
 function Root() {
-  const [theme, setTheme] = useState(() => { const t = read(); return t && t in TENANTS ? t : 'drills.pro'; });
-  const onTheme = (n: string) => { setTheme(n); try { localStorage.setItem('drills-theme', n); } catch { /* private mode */ } };
+  const [theme, setTheme] = useState(() => {
+    const t = read();
+    return t && t in TENANTS ? t : 'drills.pro';
+  });
+  const onTheme = (n: string) => {
+    setTheme(n);
+    try {
+      localStorage.setItem('drills-theme', n);
+    } catch {
+      /* private mode */
+    }
+  };
   return (
     <DrillsProvider tenant={TENANTS[theme] ?? null}>
-      <AuthProvider><Routes theme={theme} onTheme={onTheme} /></AuthProvider>
+      <AuthProvider>
+        <Routes theme={theme} onTheme={onTheme} />
+      </AuthProvider>
     </DrillsProvider>
   );
 }
 
-createRoot(document.getElementById('root')!).render(<StrictMode><Root /></StrictMode>);
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <Root />
+  </StrictMode>,
+);

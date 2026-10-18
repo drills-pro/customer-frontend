@@ -1,4 +1,4 @@
-const env = import.meta.env;
+const env = import.meta.env; // lint-ok
 
 /** Build-time settings. Defaults are production; local overrides live in .env.local (see .env.example). */
 export const cfg = {

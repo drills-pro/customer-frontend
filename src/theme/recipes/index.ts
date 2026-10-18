@@ -30,11 +30,29 @@ export const recipes = {
     base: { borderWidth: '2px', fontWeight: 'semibold', ...ring, _active: pressed },
     variants: {
       variant: {
-        solid: { bg: 'colorPalette.solid', color: 'colorPalette.contrast', borderColor: 'outline', boxShadow: 'raised', _hover: { bg: 'colorPalette.solid/90' } },
-        outline: { bg: 'control-bg', color: 'fg', borderColor: 'control-border', boxShadow: 'raised', _hover: { bg: 'bg.subtle', borderColor: 'fg' }, _expanded: { bg: 'bg.subtle' } },
+        solid: {
+          bg: 'colorPalette.solid',
+          color: 'colorPalette.contrast',
+          borderColor: 'outline',
+          boxShadow: 'raised',
+          _hover: { bg: 'colorPalette.solid/90' },
+        },
+        outline: {
+          bg: 'control-bg',
+          color: 'fg',
+          borderColor: 'control-border',
+          boxShadow: 'raised',
+          _hover: { bg: 'bg.subtle', borderColor: 'fg' },
+          _expanded: { bg: 'bg.subtle' },
+        },
         subtle: { bg: 'colorPalette.subtle', color: 'fg', borderColor: 'transparent', _hover: { bg: 'colorPalette.muted' } },
         surface: { bg: 'colorPalette.subtle', color: 'fg', borderColor: 'colorPalette.border', boxShadow: 'raised' },
-        ghost: { color: 'colorPalette.fg', borderColor: 'transparent', _hover: { bg: 'bg.subtle' }, _active: { transform: 'none', boxShadow: 'none' } },
+        ghost: {
+          color: 'colorPalette.fg',
+          borderColor: 'transparent',
+          _hover: { bg: 'bg.subtle' },
+          _active: { transform: 'none', boxShadow: 'none' },
+        },
         plain: { color: 'colorPalette.fg', borderColor: 'transparent', _active: { transform: 'none', boxShadow: 'none' } },
       },
     },
@@ -51,11 +69,31 @@ export const recipes = {
 
   checkmark: defineRecipe({
     base: { borderWidth: '2px', borderRadius: 'l1' },
-    variants: { variant: { solid: { borderColor: 'control-border', bg: 'control-bg', '&:is([data-state=checked], [data-state=indeterminate])': { bg: 'colorPalette.solid', color: 'colorPalette.contrast', borderColor: 'outline' } } } },
+    variants: {
+      variant: {
+        solid: {
+          borderColor: 'control-border',
+          bg: 'control-bg',
+          '&:is([data-state=checked], [data-state=indeterminate])': {
+            bg: 'colorPalette.solid',
+            color: 'colorPalette.contrast',
+            borderColor: 'outline',
+          },
+        },
+      },
+    },
   }),
   radiomark: defineRecipe({
     base: { borderWidth: '2px', _focusVisible: { outline: '3px solid', outlineColor: 'focus', outlineOffset: '2px' } },
-    variants: { variant: { solid: { borderColor: 'control-border', bg: 'control-bg', _checked: { bg: 'colorPalette.solid', color: 'colorPalette.contrast', borderColor: 'outline' } } } },
+    variants: {
+      variant: {
+        solid: {
+          borderColor: 'control-border',
+          bg: 'control-bg',
+          _checked: { bg: 'colorPalette.solid', color: 'colorPalette.contrast', borderColor: 'outline' },
+        },
+      },
+    },
   }),
 };
 
@@ -63,7 +101,21 @@ export const slotRecipes = {
   checkbox: defineSlotRecipe({
     slots: ['root', 'label', 'control', 'indicator', 'group'],
     base: { control: { borderWidth: '2px', borderRadius: 'l1', _hover: { borderColor: 'fg' } }, label: { fontWeight: 'medium' } },
-    variants: { variant: { solid: { control: { borderColor: 'control-border', bg: 'control-bg', '&:is([data-state=checked], [data-state=indeterminate])': { bg: 'colorPalette.solid', color: 'colorPalette.contrast', borderColor: 'outline' } } } } },
+    variants: {
+      variant: {
+        solid: {
+          control: {
+            borderColor: 'control-border',
+            bg: 'control-bg',
+            '&:is([data-state=checked], [data-state=indeterminate])': {
+              bg: 'colorPalette.solid',
+              color: 'colorPalette.contrast',
+              borderColor: 'outline',
+            },
+          },
+        },
+      },
+    },
   }),
   checkboxCard: defineSlotRecipe({
     slots: ['root', 'control', 'label', 'description', 'addon', 'indicator', 'content'],
@@ -71,11 +123,36 @@ export const slotRecipes = {
   }),
   radioGroup: defineSlotRecipe({
     slots: ['root', 'label', 'item', 'itemText', 'itemControl', 'indicator', 'itemAddon', 'itemIndicator'],
-    base: { itemControl: { borderWidth: '2px', _focusVisible: { outline: '3px solid', outlineColor: 'focus', outlineOffset: '2px' } }, itemText: { fontWeight: 'medium' } },
-    variants: { variant: { solid: { itemControl: { borderColor: 'control-border', bg: 'control-bg', _hover: { borderColor: 'fg' }, _checked: { bg: 'colorPalette.solid', color: 'colorPalette.contrast', borderColor: 'outline' } } } } },
+    base: {
+      itemControl: { borderWidth: '2px', _focusVisible: { outline: '3px solid', outlineColor: 'focus', outlineOffset: '2px' } },
+      itemText: { fontWeight: 'medium' },
+    },
+    variants: {
+      variant: {
+        solid: {
+          itemControl: {
+            borderColor: 'control-border',
+            bg: 'control-bg',
+            _hover: { borderColor: 'fg' },
+            _checked: { bg: 'colorPalette.solid', color: 'colorPalette.contrast', borderColor: 'outline' },
+          },
+        },
+      },
+    },
   }),
   radioCard: defineSlotRecipe({
-    slots: ['root', 'item', 'label', 'itemText', 'itemDescription', 'itemControl', 'itemContent', 'itemIndicator', 'itemAddon', 'indicator'],
+    slots: [
+      'root',
+      'item',
+      'label',
+      'itemText',
+      'itemDescription',
+      'itemControl',
+      'itemContent',
+      'itemIndicator',
+      'itemAddon',
+      'indicator',
+    ],
     base: { item: { borderWidth: '2px', borderRadius: 'l2', _checked: { bg: 'selected-bg', borderColor: 'selected-edge' } } },
   }),
   switch: defineSlotRecipe({
@@ -89,8 +166,22 @@ export const slotRecipes = {
     variants: {
       variant: {
         solid: {
-          control: { borderRadius: 'l1', bg: 'control-bg', borderColor: 'control-border', ...ring, _hover: { borderColor: 'fg' }, _checked: { bg: 'colorPalette.solid', borderColor: 'outline' } },
-          thumb: { bg: 'control-border', boxShadow: 'none', scale: '0.8', width: 'calc(var(--switch-height) - 4px)', height: 'calc(var(--switch-height) - 4px)', _checked: { bg: 'colorPalette.contrast' } },
+          control: {
+            borderRadius: 'l1',
+            bg: 'control-bg',
+            borderColor: 'control-border',
+            ...ring,
+            _hover: { borderColor: 'fg' },
+            _checked: { bg: 'colorPalette.solid', borderColor: 'outline' },
+          },
+          thumb: {
+            bg: 'control-border',
+            boxShadow: 'none',
+            scale: '0.8',
+            width: 'calc(var(--switch-height) - 4px)',
+            height: 'calc(var(--switch-height) - 4px)',
+            _checked: { bg: 'colorPalette.contrast' },
+          },
         },
       },
       size: {
@@ -108,8 +199,15 @@ export const slotRecipes = {
         line: {
           list: { borderColor: 'border', _horizontal: { borderBottomWidth: '2px' } },
           trigger: {
-            color: 'fg.muted', borderTopRadius: 'l2', _hover: { bg: 'bg.subtle', color: 'fg' },
-            _selected: { color: 'fg', bg: 'selected-bg', fontWeight: 'semibold', _horizontal: { '--indicator-thickness': '4px', '--indicator-offset-y': '-2px', '--indicator-color': 'colors.selected-edge' } },
+            color: 'fg.muted',
+            borderTopRadius: 'l2',
+            _hover: { bg: 'bg.subtle', color: 'fg' },
+            _selected: {
+              color: 'fg',
+              bg: 'selected-bg',
+              fontWeight: 'semibold',
+              _horizontal: { '--indicator-thickness': '4px', '--indicator-offset-y': '-2px', '--indicator-color': 'colors.selected-edge' },
+            },
           },
         },
       },
@@ -118,33 +216,115 @@ export const slotRecipes = {
   segmentGroup: defineSlotRecipe({
     slots: ['root', 'label', 'item', 'itemText', 'itemControl', 'indicator'],
     base: {
-      root: { '--segment-indicator-bg': 'colors.selected-bg', '--segment-indicator-shadow': 'inset 0 0 0 2px var(--chakra-colors-selected-edge)', bg: 'bg.subtle', borderWidth: '2px', borderColor: 'control-border', boxShadow: 'pressed', p: '0.5' },
+      root: {
+        '--segment-indicator-bg': 'colors.selected-bg',
+        '--segment-indicator-shadow': 'inset 0 0 0 2px var(--chakra-colors-selected-edge)',
+        bg: 'bg.subtle',
+        borderWidth: '2px',
+        borderColor: 'control-border',
+        boxShadow: 'pressed',
+        p: '0.5',
+      },
       item: { color: 'fg.muted', fontWeight: 'medium', _checked: { color: 'fg', fontWeight: 'semibold' } },
     },
   }),
   nativeSelect: defineSlotRecipe({
     slots: ['root', 'field', 'indicator'],
-    variants: { variant: { outline: { field: { ...trigger, _expanded: { borderColor: 'fg' } } }, subtle: { field: { ...trigger, bg: 'bg.subtle' } } } },
+    variants: {
+      variant: { outline: { field: { ...trigger, _expanded: { borderColor: 'fg' } } }, subtle: { field: { ...trigger, bg: 'bg.subtle' } } },
+    },
   }),
   select: defineSlotRecipe({
-    slots: ['label', 'positioner', 'trigger', 'indicator', 'clearTrigger', 'item', 'itemText', 'itemIndicator', 'itemGroup', 'itemGroupLabel', 'list', 'content', 'root', 'control', 'valueText', 'indicatorGroup'],
+    slots: [
+      'label',
+      'positioner',
+      'trigger',
+      'indicator',
+      'clearTrigger',
+      'item',
+      'itemText',
+      'itemIndicator',
+      'itemGroup',
+      'itemGroupLabel',
+      'list',
+      'content',
+      'root',
+      'control',
+      'valueText',
+      'indicatorGroup',
+    ],
     base: {
       content: panel,
-      item: { _highlighted: { bg: 'bg.subtle' }, _checked: { bg: 'selected-bg', fontWeight: 'semibold', boxShadow: 'inset 4px 0 0 0 var(--chakra-colors-selected-edge)' } },
+      item: {
+        _highlighted: { bg: 'bg.subtle' },
+        _checked: { bg: 'selected-bg', fontWeight: 'semibold', boxShadow: 'inset 4px 0 0 0 var(--chakra-colors-selected-edge)' },
+      },
       itemIndicator: { color: 'brand-text' },
     },
-    variants: { variant: { outline: { trigger: { ...trigger, _expanded: { borderColor: 'fg' } } }, subtle: { trigger: { ...trigger, bg: 'bg.subtle' } } } },
+    variants: {
+      variant: {
+        outline: { trigger: { ...trigger, _expanded: { borderColor: 'fg' } } },
+        subtle: { trigger: { ...trigger, bg: 'bg.subtle' } },
+      },
+    },
   }),
   combobox: defineSlotRecipe({
-    slots: ['root', 'clearTrigger', 'content', 'control', 'input', 'item', 'itemGroup', 'itemGroupLabel', 'itemIndicator', 'itemText', 'label', 'list', 'positioner', 'trigger', 'empty', 'indicatorGroup'],
+    slots: [
+      'root',
+      'clearTrigger',
+      'content',
+      'control',
+      'input',
+      'item',
+      'itemGroup',
+      'itemGroupLabel',
+      'itemIndicator',
+      'itemText',
+      'label',
+      'list',
+      'positioner',
+      'trigger',
+      'empty',
+      'indicatorGroup',
+    ],
     base: { content: panel, item: { _highlighted: { bg: 'bg.subtle' } }, itemIndicator: { color: 'brand-text' } },
   }),
   menu: defineSlotRecipe({
-    slots: ['arrow', 'arrowTip', 'content', 'contextTrigger', 'indicator', 'item', 'itemGroup', 'itemGroupLabel', 'itemIndicator', 'itemText', 'positioner', 'separator', 'trigger', 'triggerItem', 'itemCommand'],
+    slots: [
+      'arrow',
+      'arrowTip',
+      'content',
+      'contextTrigger',
+      'indicator',
+      'item',
+      'itemGroup',
+      'itemGroupLabel',
+      'itemIndicator',
+      'itemText',
+      'positioner',
+      'separator',
+      'trigger',
+      'triggerItem',
+      'itemCommand',
+    ],
     base: { content: panel, item: { _highlighted: { bg: 'bg.subtle' } } },
   }),
   popover: defineSlotRecipe({
-    slots: ['arrow', 'arrowTip', 'anchor', 'trigger', 'indicator', 'positioner', 'content', 'title', 'description', 'closeTrigger', 'header', 'body', 'footer'],
+    slots: [
+      'arrow',
+      'arrowTip',
+      'anchor',
+      'trigger',
+      'indicator',
+      'positioner',
+      'content',
+      'title',
+      'description',
+      'closeTrigger',
+      'header',
+      'body',
+      'footer',
+    ],
     base: { content: panel },
   }),
   dialog: defineSlotRecipe({
@@ -172,7 +352,11 @@ export const slotRecipes = {
   }),
   field: defineSlotRecipe({
     slots: ['root', 'errorText', 'helperText', 'input', 'label', 'select', 'textarea', 'requiredIndicator'],
-    base: { label: { textStyle: 'body-sm', fontWeight: 'medium' }, helperText: { color: 'fg.muted', textStyle: 'body-sm' }, errorText: { color: 'fg.error', textStyle: 'body-sm' } },
+    base: {
+      label: { textStyle: 'body-sm', fontWeight: 'medium' },
+      helperText: { color: 'fg.muted', textStyle: 'body-sm' },
+      errorText: { color: 'fg.error', textStyle: 'body-sm' },
+    },
   }),
   alert: defineSlotRecipe({
     slots: ['title', 'description', 'root', 'indicator', 'content'],

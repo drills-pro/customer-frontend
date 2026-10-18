@@ -5,7 +5,10 @@ import { fontFamilies, radiusValues, shadowValues, textStyleValues, pixelValues 
 
 const famToken: Record<string, string> = { sans: 'body', mono: 'mono', display: 'display' };
 const textStyles = Object.fromEntries(
-  Object.entries(textStyleValues).map(([name, s]) => [name, { description: s.description, value: { ...s.value, fontFamily: famToken[s.value.fontFamily] ?? 'body' } }]),
+  Object.entries(textStyleValues).map(([name, s]) => [
+    name,
+    { description: s.description, value: { ...s.value, fontFamily: famToken[s.value.fontFamily] ?? 'body' } },
+  ]),
 );
 
 const sh = (v: { _light: string; _dark: string }) => ({ value: v });
@@ -38,7 +41,12 @@ export const config = defineConfig({
         mono: { value: fontFamilies.mono },
         display: { value: fontFamilies.display },
       },
-      radii: { sm: { value: radiusValues.sm }, md: { value: radiusValues.md }, lg: { value: radiusValues.lg }, pill: { value: radiusValues.pill } },
+      radii: {
+        sm: { value: radiusValues.sm },
+        md: { value: radiusValues.md },
+        lg: { value: radiusValues.lg },
+        pill: { value: radiusValues.pill },
+      },
       durations: { pixel: { value: pixelValues['pixel-step'] } },
       easings: { pixel: { value: pixelValues['pixel-timing'] } },
       sizes: {

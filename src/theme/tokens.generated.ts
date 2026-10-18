@@ -277,6 +277,48 @@ export const roleColors = {
       "_dark": "{colors.brand-text}"
     },
     "description": "2px edge of a selected card or tab. 4.8:1 or better on `surface`, `surface-raised` and `surface-sunken`."
+  },
+  "chart-1": {
+    "value": {
+      "_light": "{colors.brand-text}",
+      "_dark": "{colors.brand-text}"
+    },
+    "description": "Chart series 1: the tenant primary, as text-safe orange. Lines, bars and areas on `surface`, `surface-raised` and `surface-sunken`; 4.5:1 or better in both themes. Bars carry the 2px `outline`."
+  },
+  "chart-2": {
+    "value": {
+      "_light": "{colors.lens}",
+      "_dark": "{colors.lens}"
+    },
+    "description": "Chart series 2: the tenant secondary (teal for drills.pro). Marks on all three surfaces, 4.5:1 or better in both themes."
+  },
+  "chart-3": {
+    "value": {
+      "_light": "#1A3F9C",
+      "_dark": "#8DB4FF"
+    },
+    "description": "Chart series 3: blue. 3:1 or better on all three surfaces in both themes. Fixed: a tenant cannot override it."
+  },
+  "chart-4": {
+    "value": {
+      "_light": "#C0357F",
+      "_dark": "#F08CC4"
+    },
+    "description": "Chart series 4: magenta. 3:1 or better on all three surfaces in both themes. Fixed."
+  },
+  "chart-5": {
+    "value": {
+      "_light": "#5F7A00",
+      "_dark": "#D9CC4A"
+    },
+    "description": "Chart series 5: olive in light, yellow in dark. 3:1 or better on all three surfaces in both themes. Fixed."
+  },
+  "chart-6": {
+    "value": {
+      "_light": "#8062D6",
+      "_dark": "#B79CFF"
+    },
+    "description": "Chart series 6: violet. 3:1 or better on all three surfaces in both themes. Fixed. Never the only cue: pair with a dash pattern or direct label."
   }
 } as const;
 

@@ -10,7 +10,7 @@
     "browser": true,
     "es2022": true
   },
-  "ignorePatterns": ["dist", "src/theme/tokens.generated.ts", "src/brand/bit-sprites.js"],
+  "ignorePatterns": ["dist", ".agents", ".claude", ".codegraph", "src/theme/tokens.generated.ts", "src/brand/bit-sprites.js"],
   "rules": {
     "react/react-in-jsx-scope": "off",
     "typescript/no-explicit-any": "error",

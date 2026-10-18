@@ -257,7 +257,7 @@ export const slotRecipes = {
       content: panel,
       item: {
         _highlighted: { bg: 'bg.subtle' },
-        _checked: { bg: 'selected-bg', fontWeight: 'semibold', boxShadow: 'inset 4px 0 0 0 var(--chakra-colors-selected-edge)' },
+        _checked: { bg: 'selected-bg', fontWeight: 'semibold' },
       },
       itemIndicator: { color: 'brand-text' },
     },
@@ -369,6 +369,93 @@ export const slotRecipes = {
   table: defineSlotRecipe({
     slots: ['root', 'header', 'body', 'row', 'columnHeader', 'cell', 'footer', 'caption'],
     base: { columnHeader: { fontWeight: 'semibold', color: 'fg.muted', textStyle: 'body-sm' }, row: { _selected: { bg: 'selected-bg' } } },
+  }),
+  // Square pixel-style marks: no round thumbs or avatars, hard 2px edges.
+  slider: defineSlotRecipe({
+    slots: [
+      'root',
+      'label',
+      'thumb',
+      'valueText',
+      'track',
+      'range',
+      'control',
+      'markerGroup',
+      'marker',
+      'draggingIndicator',
+      'markerIndicator',
+    ],
+    base: {
+      track: { borderRadius: '0', borderWidth: '2px', borderColor: 'control-border', bg: 'control-bg' },
+      range: { borderRadius: '0' },
+      thumb: {
+        borderRadius: '0',
+        bg: 'colorPalette.solid',
+        borderWidth: '2px',
+        borderColor: 'outline',
+        boxShadow: 'raised',
+        _focusVisible: { outline: '3px solid', outlineColor: 'focus', outlineOffset: '2px' },
+      },
+    },
+  }),
+  steps: defineSlotRecipe({
+    slots: [
+      'root',
+      'list',
+      'item',
+      'trigger',
+      'indicator',
+      'separator',
+      'content',
+      'title',
+      'description',
+      'nextTrigger',
+      'prevTrigger',
+      'progress',
+    ],
+    base: {
+      indicator: {
+        borderRadius: 'l2',
+        borderWidth: '2px',
+        fontWeight: 'semibold',
+        '&[data-complete], &[data-current]': { borderColor: 'outline' },
+      },
+      title: { fontWeight: 'medium' },
+    },
+  }),
+  accordion: defineSlotRecipe({
+    slots: ['root', 'item', 'itemTrigger', 'itemContent', 'itemIndicator', 'itemBody'],
+    base: {
+      item: { borderBottomWidth: '2px', borderColor: 'border' },
+      itemTrigger: { fontWeight: 'semibold', ...ring, _hover: { bg: 'bg.subtle' } },
+    },
+  }),
+  tag: defineSlotRecipe({
+    slots: ['root', 'label', 'closeTrigger', 'startElement', 'endElement'],
+    base: { root: { borderRadius: 'l1', fontWeight: 'medium' } },
+  }),
+  avatar: defineSlotRecipe({
+    slots: ['root', 'image', 'fallback'],
+    base: { root: { borderRadius: 'l2', borderWidth: '2px', borderColor: 'outline' }, fallback: { borderRadius: 'l2' } },
+  }),
+  fileUpload: defineSlotRecipe({
+    slots: [
+      'root',
+      'dropzone',
+      'item',
+      'itemGroup',
+      'itemName',
+      'itemSizeText',
+      'itemDeleteTrigger',
+      'itemContent',
+      'trigger',
+      'label',
+      'fileText',
+    ],
+    base: {
+      dropzone: { borderWidth: '2px', borderColor: 'control-border', borderRadius: 'l2', bg: 'control-bg', _hover: { borderColor: 'fg' } },
+      item: { borderWidth: '2px', borderColor: 'border', borderRadius: 'l2' },
+    },
   }),
   progress: defineSlotRecipe({
     slots: ['root', 'label', 'track', 'range', 'valueText', 'view', 'circle', 'circleTrack', 'circleRange'],

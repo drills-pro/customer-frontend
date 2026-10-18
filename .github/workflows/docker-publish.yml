@@ -9,7 +9,28 @@ env:
   IMAGE: ghcr.io/drills-pro/customer-frontend/frontend
 
 jobs:
+  # Cheap gate before the image build. `pnpm build` itself runs inside the Dockerfile.
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm lint:i18n
+      - run: pnpm typecheck
+
   build:
+    needs: check
     runs-on: ubuntu-latest
     permissions:
       contents: read

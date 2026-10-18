@@ -1,0 +1,33 @@
+{
+  "name": "@drillspro/ui-theme",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p . && vite build",
+    "typecheck": "tsc -p .",
+    "tokens": "node scripts/gen-tokens.mjs",
+    "typegen": "chakra typegen src/theme/index.ts"
+  },
+  "dependencies": {
+    "@chakra-ui/react": "3.37.0",
+    "@emotion/react": "11.14.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "@fontsource/ibm-plex-sans": "5.3.0",
+    "@fontsource/ibm-plex-sans-thai": "5.3.0",
+    "@fontsource/pixelify-sans": "5.3.0",
+    "next-themes": "0.4.6",
+    "oidc-client-ts": "^3.5.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@chakra-ui/cli": "3.37.0",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "typescript": "6.0.3",
+    "vite": "8.3.2"
+  }
+}

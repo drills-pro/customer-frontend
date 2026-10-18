@@ -1,0 +1,56 @@
+{
+  "language": { "label": "Language" },
+  "auth": {
+    "notConfigured": {
+      "title": "Sign-in is not configured",
+      "description": "Set VITE_ZITADEL_CLIENT_ID (see .env.example) and restart."
+    },
+    "login": {
+      "title": "Welcome back",
+      "lead": "Sign in to keep teaching your models.",
+      "cta": "Continue to sign in",
+      "newHere": "New here?",
+      "createAccount": "Create an account"
+    },
+    "signup": {
+      "title": "Create your account",
+      "lead": "Start with a free workspace. You will finish on our secure sign-up page.",
+      "cta": "Continue to sign up",
+      "haveAccount": "Already have an account?",
+      "signIn": "Sign in"
+    },
+    "callback": {
+      "working": "Signing you in",
+      "wait": "One moment.",
+      "failed": "Sign-in failed",
+      "back": "Back to sign in"
+    }
+  },
+  "dashboard": {
+    "theme": "Theme",
+    "signOut": "Sign out",
+    "pagesLabel": "Pages"
+  },
+  "nav": {
+    "overview": "Overview",
+    "actions": "Actions",
+    "forms": "Forms",
+    "selection": "Selection",
+    "navigation": "Navigation",
+    "feedback": "Feedback",
+    "overlays": "Overlays",
+    "data": "Data display",
+    "charts": "Charts",
+    "brand": "Brand"
+  },
+  "profile": {
+    "title": "Your profile · GET /v1/me",
+    "loadFailed": "Could not load your profile",
+    "unnamed": "Unnamed user",
+    "noEmail": "No email on file",
+    "noWorkspace": "No workspace yet",
+    "noTenant": "You are signed in but belong to no tenant.",
+    "workspace": "Workspace",
+    "role": "Role"
+  }
+}

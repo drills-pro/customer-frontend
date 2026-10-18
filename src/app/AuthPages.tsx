@@ -1,16 +1,22 @@
 import { useEffect, useState } from 'react';
 import { Alert, Box, Button, Card, Center, Heading, HStack, Link, Stack, Text } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 import { Bit, Wordmark } from '../brand/Bit';
 import { ColorModeButton } from '../components/color-mode';
+import { LanguageSwitcher } from '../components/language-switcher';
 import { finishLogin, useAuth } from './auth';
 import { cfg } from './config';
 import { navigate } from './router';
 
 function Shell({ title, lead, children }: { title: string; lead: string; children: React.ReactNode }) {
+  const { t } = useTranslation();
   return (
     <Center minH="100vh" p="4">
       <Box position="absolute" top="4" right="4">
-        <ColorModeButton size="sm" />
+        <HStack gap="2">
+          <LanguageSwitcher />
+          <ColorModeButton size="sm" />
+        </HStack>
       </Box>
       <Card.Root w="full" maxW="md">
         <Card.Body gap="6">
@@ -28,8 +34,8 @@ function Shell({ title, lead, children }: { title: string; lead: string; childre
             <Alert.Root status="warning" colorPalette="warning">
               <Alert.Indicator />
               <Alert.Content>
-                <Alert.Title>Sign-in is not configured</Alert.Title>
-                <Alert.Description>Set VITE_ZITADEL_CLIENT_ID (see .env.example) and restart.</Alert.Description>
+                <Alert.Title>{t('auth.notConfigured.title')}</Alert.Title>
+                <Alert.Description>{t('auth.notConfigured.description')}</Alert.Description>
               </Alert.Content>
             </Alert.Root>
           )}
@@ -44,13 +50,14 @@ const returnTo = () => new URLSearchParams(location.search).get('return_to') ?? 
 
 export function LoginPage() {
   const { signIn } = useAuth();
+  const { t } = useTranslation();
   return (
-    <Shell title="Welcome back" lead="Sign in to keep teaching your models.">
+    <Shell title={t('auth.login.title')} lead={t('auth.login.lead')}>
       <Button variant="solid" disabled={!cfg.clientId} onClick={() => signIn(returnTo())}>
-        Continue to sign in
+        {t('auth.login.cta')}
       </Button>
       <Text textStyle="body-sm" color="fg.muted">
-        New here?{' '}
+        {t('auth.login.newHere')}{' '}
         <Link
           href="/signup"
           onClick={(e) => {
@@ -58,7 +65,7 @@ export function LoginPage() {
             navigate('/signup');
           }}
         >
-          Create an account
+          {t('auth.login.createAccount')}
         </Link>
       </Text>
     </Shell>
@@ -67,13 +74,14 @@ export function LoginPage() {
 
 export function SignupPage() {
   const { signUp } = useAuth();
+  const { t } = useTranslation();
   return (
-    <Shell title="Create your account" lead="Start with a free workspace. You will finish on our secure sign-up page.">
+    <Shell title={t('auth.signup.title')} lead={t('auth.signup.lead')}>
       <Button variant="solid" disabled={!cfg.clientId} onClick={() => signUp(returnTo())}>
-        Continue to sign up
+        {t('auth.signup.cta')}
       </Button>
       <Text textStyle="body-sm" color="fg.muted">
-        Already have an account?{' '}
+        {t('auth.signup.haveAccount')}{' '}
         <Link
           href="/login"
           onClick={(e) => {
@@ -81,7 +89,7 @@ export function SignupPage() {
             navigate('/login');
           }}
         >
-          Sign in
+          {t('auth.signup.signIn')}
         </Link>
       </Text>
     </Shell>
@@ -89,6 +97,7 @@ export function SignupPage() {
 }
 
 export function CallbackPage() {
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     finishLogin()
@@ -96,8 +105,8 @@ export function CallbackPage() {
       .catch((e) => setError(e instanceof Error ? e.message : String(e)));
   }, []);
   return (
-    <Shell title={error ? 'Sign-in failed' : 'Signing you in'} lead={error ?? 'One moment.'}>
-      {error && <Button onClick={() => navigate('/login')}>Back to sign in</Button>}
+    <Shell title={error ? t('auth.callback.failed') : t('auth.callback.working')} lead={error ?? t('auth.callback.wait')}>
+      {error && <Button onClick={() => navigate('/login')}>{t('auth.callback.back')}</Button>}
     </Shell>
   );
 }

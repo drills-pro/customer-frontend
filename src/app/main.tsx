@@ -1,5 +1,8 @@
 import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { useTranslation } from 'react-i18next';
+import { LocaleProvider } from '@chakra-ui/react';
+import { ready } from '../i18n';
 import { DrillsProvider } from '../provider';
 import { TENANTS } from '../demo/tenants';
 import { AuthProvider, useAuth } from './auth';
@@ -33,6 +36,7 @@ function Routes({ theme, onTheme }: { theme: string; onTheme: (n: string) => voi
 }
 
 function Root() {
+  const { i18n } = useTranslation();
   const [theme, setTheme] = useState(() => {
     const t = read();
     return t && t in TENANTS ? t : 'drills.pro';
@@ -47,15 +51,19 @@ function Root() {
   };
   return (
     <DrillsProvider tenant={TENANTS[theme] ?? null}>
-      <AuthProvider>
-        <Routes theme={theme} onTheme={onTheme} />
-      </AuthProvider>
+      <LocaleProvider locale={i18n.resolvedLanguage ?? 'en'}>
+        <AuthProvider>
+          <Routes theme={theme} onTheme={onTheme} />
+        </AuthProvider>
+      </LocaleProvider>
     </DrillsProvider>
   );
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <Root />
-  </StrictMode>,
+void ready.then(() =>
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <Root />
+    </StrictMode>,
+  ),
 );

@@ -14,6 +14,7 @@ pnpm lint:fix         # oxlint autofixes
 pnpm format           # prettier --write (print width 140, single quotes)
 pnpm tokens           # tokens/tokens.json -> src/theme/tokens.generated.ts (never edit the generated file)
 pnpm typegen          # after adding a token or recipe
+pnpm lint:i18n        # en.json and th.json must have the same keys and {{placeholders}}; runs in pnpm check
 ```
 
 There are no tests. Verify UI in a browser: signed-out `/` must land on `/login`, and a stored OIDC session must render
@@ -22,6 +23,7 @@ the dashboard. Check size, spacing and focus from computed styles, not from the 
 ## Layout
 
 - `src/app/`: the product. `auth.tsx` (OIDC), `api.ts` (`/v1/*` with Bearer), `router.ts`, `AuthPages.tsx`, `Dashboard.tsx`, `main.tsx`.
+- `src/i18n.ts`, `src/locales/{en,th}.json`, `src/components/language-switcher.tsx`: react-i18next. `en` is bundled; other languages load lazily.
 - `src/theme/`, `src/tenant/`, `src/brand/`, `src/components/`, `src/provider.tsx`: the design system. `DrillsProvider` wraps the app.
 - `src/demo/`: the component showcase embedded in the dashboard, plus the theme list (`tenants.ts`).
 
@@ -30,6 +32,8 @@ the dashboard. Check size, spacing and focus from computed styles, not from the 
 - Use Chakra tokens and recipe variants (`bg="surface-raised"`, `<Button variant="solid">`), never raw hex or blurred shadows.
   Status always has a glyph and a word. Display type (Pixelify Sans) is for `display` and `h1` only.
 - No native form controls or links: use Chakra (`SimpleSelect` for selects). `pnpm lint:project` (`scripts/check-project.sh`) enforces it, plus: no raw hex outside tokens, env only in `config.ts`, fetch only in `api.ts`, no `!important` or inline `style`, no secrets in `VITE_*`. It runs in `pnpm check`; `lint-ok` on a line marks an exception.
+- User-facing text in `src/app/` goes through `t()` with a nested key in both `src/locales/en.json` and `th.json` (`src/demo/` stays English). Language: saved `drills-lang`, then the browser; unsupported falls back to `en`. Add a language in `LANGS` and a JSON file.
+- Chakra UI work: use the `chakra-ui-builder` and `chakra-ui-refactor` skills (installed in `.agents/skills`, pinned by `skills-lock.json`).
 - Auth is Zitadel hosted login, code + PKCE. Do not build password or signup forms; signup is `prompt=create`.
 - `VITE_*` values are public and inlined at build time. Never put a secret in them.
 - Cross-repo: a new env var, port or route needs the matching change in `../k8s` and the workflow's build args

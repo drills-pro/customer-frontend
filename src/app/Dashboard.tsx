@@ -1,8 +1,10 @@
 import { Suspense, useEffect, useState, useSyncExternalStore } from 'react';
 import { Alert, Badge, Box, Button, Card, Container, Flex, Heading, HStack, Link, Skeleton, Stack, Table, Text } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 import { AppIcon, Wordmark } from '../brand/Bit';
 import { SimpleSelect } from '../components/simple-select';
 import { ColorModeButton } from '../components/color-mode';
+import { LanguageSwitcher } from '../components/language-switcher';
 import { PAGES } from '../demo/App';
 import { TENANTS } from '../demo/tenants';
 import { ApiError, getMe, type Me } from './api';
@@ -12,6 +14,7 @@ const themes = Object.keys(TENANTS).map((n) => ({ label: n, value: n }));
 
 function Profile() {
   const { user, expire } = useAuth();
+  const { t: tr } = useTranslation();
   const [me, setMe] = useState<Me | null>(null);
   const [error, setError] = useState<string | null>(null);
   const token = user?.access_token;
@@ -31,7 +34,7 @@ function Profile() {
       <Alert.Root status="error" colorPalette="danger">
         <Alert.Indicator />
         <Alert.Content>
-          <Alert.Title>Could not load your profile</Alert.Title>
+          <Alert.Title>{tr('profile.loadFailed')}</Alert.Title>
           <Alert.Description>{error}</Alert.Description>
         </Alert.Content>
       </Alert.Root>
@@ -40,7 +43,7 @@ function Profile() {
     <Card.Root>
       <Card.Header>
         <Text textStyle="label" color="fg.muted" textTransform="uppercase">
-          Your profile · GET /v1/me
+          {tr('profile.title')}
         </Text>
       </Card.Header>
       <Card.Body gap="5">
@@ -53,9 +56,9 @@ function Profile() {
           <>
             <Box>
               <Heading as="h2" textStyle="h2">
-                {me.name ?? me.email ?? 'Unnamed user'}
+                {me.name ?? me.email ?? tr('profile.unnamed')}
               </Heading>
-              <Text color="fg.muted">{me.email ?? 'No email on file'}</Text>
+              <Text color="fg.muted">{me.email ?? tr('profile.noEmail')}</Text>
               <Text textStyle="mono-sm" fontFamily="mono" color="fg.muted" mt="1" wordBreak="break-all">
                 sub {me.sub}
               </Text>
@@ -64,16 +67,16 @@ function Profile() {
               <Alert.Root status="info" colorPalette="info">
                 <Alert.Indicator />
                 <Alert.Content>
-                  <Alert.Title>No workspace yet</Alert.Title>
-                  <Alert.Description>You are signed in but belong to no tenant.</Alert.Description>
+                  <Alert.Title>{tr('profile.noWorkspace')}</Alert.Title>
+                  <Alert.Description>{tr('profile.noTenant')}</Alert.Description>
                 </Alert.Content>
               </Alert.Root>
             ) : (
               <Table.Root size="sm" variant="outline">
                 <Table.Header>
                   <Table.Row>
-                    <Table.ColumnHeader>Workspace</Table.ColumnHeader>
-                    <Table.ColumnHeader textAlign="end">Role</Table.ColumnHeader>
+                    <Table.ColumnHeader>{tr('profile.workspace')}</Table.ColumnHeader>
+                    <Table.ColumnHeader textAlign="end">{tr('profile.role')}</Table.ColumnHeader>
                   </Table.Row>
                 </Table.Header>
                 <Table.Body>
@@ -106,6 +109,7 @@ const useHash = () => useSyncExternalStore(subscribe, () => location.hash.slice(
 /** App shell: sticky header, a sidebar on md+ (a scrolling row on phones), and the selected page. The page id lives in the URL hash. */
 export function Dashboard({ theme, onTheme }: { theme: string; onTheme: (n: string) => void }) {
   const { signOut } = useAuth();
+  const { t } = useTranslation();
   const hash = useHash();
   const current = PAGES.find((p) => p.id === hash) ?? PAGES[0];
   return (
@@ -126,18 +130,19 @@ export function Dashboard({ theme, onTheme }: { theme: string; onTheme: (n: stri
           <AppIcon size={48} />
           <Wordmark scale={2} />
         </HStack>
-        <HStack gap="3">
-          <SimpleSelect label="Theme" hideLabel size="sm" width="44" items={themes} value={theme} onChange={onTheme} />
+        <HStack gap="3" wrap="wrap">
+          <SimpleSelect label={t('dashboard.theme')} hideLabel size="sm" width="44" items={themes} value={theme} onChange={onTheme} />
+          <LanguageSwitcher />
           <ColorModeButton size="sm" />
           <Button size="sm" onClick={signOut}>
-            Sign out
+            {t('dashboard.signOut')}
           </Button>
         </HStack>
       </Flex>
       <Flex flex="1" direction={{ base: 'column', md: 'row' }}>
         <Stack
           as="nav"
-          aria-label="Pages"
+          aria-label={t('dashboard.pagesLabel')}
           direction={{ base: 'row', md: 'column' }}
           gap="1"
           p="3"
@@ -166,7 +171,7 @@ export function Dashboard({ theme, onTheme }: { theme: string; onTheme: (n: stri
                 fontWeight={active ? 'semibold' : 'medium'}
                 _hover={{ bg: active ? 'selected-bg' : 'bg.subtle', color: 'fg' }}
               >
-                {p.label}
+                {t(`nav.${p.id}`)}
               </Link>
             );
           })}

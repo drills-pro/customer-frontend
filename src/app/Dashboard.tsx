@@ -130,7 +130,7 @@ export function Dashboard({ theme, onTheme }: { theme: string; onTheme: (n: stri
           <AppIcon size={48} />
           <Wordmark scale={2} />
         </HStack>
-        <HStack gap="3">
+        <HStack gap="3" wrap="wrap">
           <SimpleSelect label={t('dashboard.theme')} hideLabel size="sm" width="44" items={themes} value={theme} onChange={onTheme} />
           <LanguageSwitcher />
           <ColorModeButton size="sm" />

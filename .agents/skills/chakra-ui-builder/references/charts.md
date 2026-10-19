@@ -293,7 +293,8 @@ return (
 ### Pie / donut chart
 
 ```tsx
-import { Pie, PieChart, Tooltip } from "recharts"
+import { Chart, useChart } from "@chakra-ui/charts"
+import { Cell, Label, Pie, PieChart, Tooltip } from "recharts"
 
 const chart = useChart({
   data: [

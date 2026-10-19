@@ -98,14 +98,20 @@ export function SignupPage() {
 
 export function CallbackPage() {
   const { t } = useTranslation();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(false);
   useEffect(() => {
     finishLogin()
       .then((u) => navigate(typeof u?.state === 'string' && u.state.startsWith('/') ? u.state : '/'))
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
+      .catch((e) => {
+        console.error(e);
+        setError(true);
+      });
   }, []);
   return (
-    <Shell title={error ? t('auth.callback.failed') : t('auth.callback.working')} lead={error ?? t('auth.callback.wait')}>
+    <Shell
+      title={error ? t('auth.callback.failed') : t('auth.callback.working')}
+      lead={error ? t('auth.callback.error') : t('auth.callback.wait')}
+    >
       {error && <Button onClick={() => navigate('/login')}>{t('auth.callback.back')}</Button>}
     </Shell>
   );

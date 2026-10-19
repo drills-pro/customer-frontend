@@ -23,6 +23,7 @@
       "working": "Signing you in",
       "wait": "One moment.",
       "failed": "Sign-in failed",
+      "error": "Something went wrong. Please try again.",
       "back": "Back to sign in"
     }
   },

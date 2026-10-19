@@ -258,7 +258,7 @@ override it. The things you do need to provide:
 
 - **Icon-only buttons**: always add `aria-label`
   ```tsx
-  <IconButton aria-label="Close dialog" icon={<CloseIcon />} />
+  <IconButton aria-label="Close dialog"><CloseIcon /></IconButton>
   ```
 - **Images**: always pass meaningful `alt` text (or `alt=""` for decorative)
 - **Form labels**: use `Field.Label` or ensure `htmlFor` matches the input `id`

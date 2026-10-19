@@ -5,7 +5,8 @@ import { join } from 'node:path';
 
 const dir = process.argv[2] ?? new URL('../src/locales', import.meta.url).pathname;
 
-const flat = (o, p = '') => Object.entries(o).flatMap(([k, v]) => (v && typeof v === 'object' ? flat(v, `${p}${k}.`) : [[`${p}${k}`, v]]));
+const flat = (o, p = '') =>
+  Object.entries(o).flatMap(([k, v]) => (v && typeof v === 'object' && Object.keys(v).length ? flat(v, `${p}${k}.`) : [[`${p}${k}`, v]]));
 const load = (l) => new Map(flat(JSON.parse(readFileSync(join(dir, `${l}.json`), 'utf8'))));
 const vars = (s) =>
   [...new Set(String(s).match(/{{\s*[\w.]+\s*}}/g) ?? [])]

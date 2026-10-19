@@ -2,7 +2,7 @@ import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useTranslation } from 'react-i18next';
 import { LocaleProvider } from '@chakra-ui/react';
-import { ready } from '../i18n';
+import i18next, { ready } from '../i18n';
 import { DrillsProvider } from '../provider';
 import { TENANTS } from '../demo/tenants';
 import { AuthProvider, useAuth } from './auth';
@@ -60,10 +60,13 @@ function Root() {
   );
 }
 
-void ready.then(() =>
-  createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <Root />
-    </StrictMode>,
-  ),
-);
+// A failed locale chunk must not blank the app: fall back to bundled English.
+void ready
+  .catch(() => i18next.changeLanguage('en'))
+  .then(() =>
+    createRoot(document.getElementById('root')!).render(
+      <StrictMode>
+        <Root />
+      </StrictMode>,
+    ),
+  );

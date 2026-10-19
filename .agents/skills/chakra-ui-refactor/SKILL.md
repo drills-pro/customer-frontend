@@ -137,9 +137,9 @@ For each critical issue and significant improvement, show a minimal fix:
 The IconButton for closing the dialog has no accessible label.
 
 // Before
-<IconButton icon={<CloseIcon />} onClick={onClose} />
+<IconButton onClick={onClose}><CloseIcon /></IconButton>
 // After
-<IconButton aria-label="Close dialog" icon={<CloseIcon />} onClick={onClose} />
+<IconButton aria-label="Close dialog" onClick={onClose}><CloseIcon /></IconButton>
 ```
 
 Skip sections with nothing to report. Calibrate length to the code — a 20-line

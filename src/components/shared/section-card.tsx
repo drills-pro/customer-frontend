@@ -13,6 +13,7 @@ export function SectionCard({
   description,
   action,
   headingLevel = 'h2',
+  divided = true,
   children,
   ...props
 }: {
@@ -20,6 +21,8 @@ export function SectionCard({
   description?: React.ReactNode
   action?: React.ReactNode
   headingLevel?: 'h2' | 'h3'
+  /** Rule the header off from the body. */
+  divided?: boolean
   children?: React.ReactNode
 } & Omit<CardRootProps, 'title'>) {
   const titleId = React.useId()
@@ -37,7 +40,7 @@ export function SectionCard({
         gap="3"
         px="5"
         py="4"
-        borderBottomWidth="1px"
+        borderBottomWidth={divided ? '1px' : '0'}
         borderColor="border"
       >
         <Box minW="0">

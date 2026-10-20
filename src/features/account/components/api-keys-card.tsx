@@ -1,10 +1,27 @@
 import * as React from 'react'
+import {
+  Box,
+  Button,
+  Code,
+  Field,
+  Flex,
+  Input,
+  Stack,
+  Table,
+  Text,
+  VisuallyHidden,
+} from '@chakra-ui/react'
 import { KeyRound, Plus, TriangleAlert } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
 import { ApiError } from '@/api/client'
+import { AppDialog } from '@/components/shared/app-dialog'
 import { CopyButton } from '@/components/shared/copy-button'
+import { EmptyNotice } from '@/components/shared/empty-notice'
 import { CardError, CardLoading } from '@/components/shared/query-states'
+import { SectionCard } from '@/components/shared/section-card'
+import { SECTION_OFFSET } from '@/components/shared/settings-nav'
+import { SimpleSelect } from '@/components/simple-select'
 import type { ApiKey, ApiKeyScope } from '@/features/account/api'
 import {
   useApiKeys,
@@ -12,62 +29,6 @@ import {
   useRevokeApiKey,
 } from '@/features/account/queries'
 import { relativeTime } from '@/lib/format'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardAction,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 
 const scopes = [
   'inference:read',
@@ -105,18 +66,22 @@ export function ApiKeysCard({
   const [revoking, setRevoking] = React.useState<ApiKey>()
 
   return (
-    <Card id={id} size="flush" className="scroll-mt-22">
-      <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-        <CardTitle>API keys</CardTitle>
-        <CardDescription>{description}</CardDescription>
-        <CardAction>
-          <Button variant="outline" onClick={() => setGenerateOpen(true)}>
-            <Plus />
-            Generate key
-          </Button>
-        </CardAction>
-      </CardHeader>
-
+    <SectionCard
+      id={id}
+      scrollMarginTop={`${SECTION_OFFSET}px`}
+      title="API keys"
+      description={description}
+      action={
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setGenerateOpen(true)}
+        >
+          <Plus />
+          Generate key
+        </Button>
+      }
+    >
       {keysQuery.error ? (
         <CardError
           title="Could not load API keys"
@@ -126,71 +91,70 @@ export function ApiKeysCard({
       ) : keysQuery.isPending ? (
         <CardLoading rows={2} />
       ) : keys.length === 0 ? (
-        <Empty className="min-h-48">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <KeyRound />
-            </EmptyMedia>
-            <EmptyTitle>No API keys</EmptyTitle>
-            <EmptyDescription>
-              Generate a key to call endpoints or start runs from CI.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <EmptyNotice
+          minH="48"
+          icon={<KeyRound />}
+          title="No API keys"
+          description="Generate a key to call endpoints or start runs from CI."
+        />
       ) : (
-        <div className="overflow-x-auto">
-          <Table className="min-w-[620px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="pl-5">Name</TableHead>
-                <TableHead>Key</TableHead>
-                <TableHead>Scope</TableHead>
-                <TableHead>Last used</TableHead>
-                <TableHead className="pr-5">
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+        <Table.ScrollArea>
+          <Table.Root size="sm" minW="620px">
+            <Table.Header>
+              <Table.Row>
+                <Table.ColumnHeader ps="5">Name</Table.ColumnHeader>
+                <Table.ColumnHeader>Key</Table.ColumnHeader>
+                <Table.ColumnHeader>Scope</Table.ColumnHeader>
+                <Table.ColumnHeader>Last used</Table.ColumnHeader>
+                <Table.ColumnHeader pe="5">
+                  <VisuallyHidden>Actions</VisuallyHidden>
+                </Table.ColumnHeader>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
               {keys.map((key) => (
-                <TableRow key={key.id}>
-                  <TableCell className="pl-5">
-                    <p className="font-medium text-foreground">{key.name}</p>
-                    <p className="text-xs text-muted-foreground">
+                <Table.Row key={key.id}>
+                  <Table.Cell ps="5">
+                    <Text fontWeight="medium">{key.name}</Text>
+                    <Text fontSize="xs" color="fg.muted">
                       Created {createdLabel(key.created_at)}
-                    </p>
-                  </TableCell>
-                  <TableCell>
-                    <code className="font-mono text-xs text-muted-foreground">
+                    </Text>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Text
+                      as="code"
+                      fontFamily="mono"
+                      fontSize="xs"
+                      color="fg.muted"
+                    >
                       drl_sk_••••••{key.suffix}
-                    </code>
-                  </TableCell>
-                  <TableCell>
-                    <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-                      {key.scope}
-                    </code>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
+                    </Text>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Code size="sm">{key.scope}</Code>
+                  </Table.Cell>
+                  <Table.Cell color="fg.muted">
                     {key.last_used_at
                       ? relativeTime(key.last_used_at)
                       : 'Never'}
-                  </TableCell>
-                  <TableCell className="pr-5 text-right">
+                  </Table.Cell>
+                  <Table.Cell pe="5" textAlign="end">
                     <Button
                       variant="ghost"
-                      size="sm"
-                      className="text-destructive hover:bg-destructive-muted hover:text-destructive"
+                      size="xs"
+                      color="fg.error"
+                      _hover={{ bg: 'bg.error' }}
                       aria-label={`Revoke ${key.name}`}
                       onClick={() => setRevoking(key)}
                     >
                       Revoke
                     </Button>
-                  </TableCell>
-                </TableRow>
+                  </Table.Cell>
+                </Table.Row>
               ))}
-            </TableBody>
-          </Table>
-        </div>
+            </Table.Body>
+          </Table.Root>
+        </Table.ScrollArea>
       )}
 
       <GenerateKeyDialog
@@ -200,24 +164,28 @@ export function ApiKeysCard({
         projectId={projectId}
       />
 
-      <AlertDialog
+      <AppDialog
+        role="alertdialog"
         open={Boolean(revoking)}
         onOpenChange={(open) => !open && setRevoking(undefined)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Revoke {revoking?.name}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Requests using this key start failing immediately. This cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
+        title={`Revoke ${revoking?.name}?`}
+        description="Requests using this key start failing immediately. This cannot be undone."
+        footer={
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setRevoking(undefined)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="solid"
+              colorPalette="danger"
+              size="sm"
               onClick={() => {
                 if (!revoking) return
+                setRevoking(undefined)
                 revoke.mutate(revoking.id, {
                   onSuccess: () =>
                     toaster.create({
@@ -228,11 +196,11 @@ export function ApiKeysCard({
               }}
             >
               Revoke key
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </Card>
+            </Button>
+          </>
+        }
+      />
+    </SectionCard>
   )
 }
 
@@ -289,95 +257,103 @@ function GenerateKeyDialog({
     )
   }
 
+  if (secret) {
+    return (
+      <AppDialog
+        open={open}
+        onOpenChange={close}
+        title="Copy your new key"
+        description="Store it somewhere safe, like a secrets manager."
+        footer={
+          <Button variant="solid" size="sm" onClick={() => close(false)}>
+            Done
+          </Button>
+        }
+      >
+        <Stack gap="3">
+          <Flex align="center" gap="2" rounded="l2" bg="bg.muted" p="2" ps="3">
+            <Text
+              as="code"
+              data-testid="generated-api-key"
+              minW="0"
+              flex="1"
+              truncate
+              fontFamily="mono"
+              fontSize="xs"
+            >
+              {secret}
+            </Text>
+            <CopyButton value={secret} label="Copy API key" />
+          </Flex>
+          <Flex
+            align="flex-start"
+            gap="2"
+            rounded="l2"
+            bg="bg.warning"
+            p="3"
+            fontSize="xs"
+            color="fg.warning"
+          >
+            <Box mt="1px" flexShrink={0}>
+              <TriangleAlert size={14} />
+            </Box>
+            You won't be able to see this key again after closing this dialog.
+          </Flex>
+        </Stack>
+      </AppDialog>
+    )
+  }
+
   return (
-    <Dialog open={open} onOpenChange={close}>
-      <DialogContent>
-        {secret ? (
-          <>
-            <DialogHeader>
-              <DialogTitle>Copy your new key</DialogTitle>
-              <DialogDescription>
-                Store it somewhere safe, like a secrets manager.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-3">
-              <div className="flex items-center gap-2 rounded-lg bg-muted p-2 pl-3">
-                <code
-                  data-testid="generated-api-key"
-                  className="min-w-0 flex-1 truncate font-mono text-xs"
-                >
-                  {secret}
-                </code>
-                <CopyButton value={secret} label="Copy API key" />
-              </div>
-              <p className="flex items-start gap-2 rounded-lg bg-warning-muted p-3 text-xs text-warning">
-                <TriangleAlert className="mt-px size-3.5 shrink-0" />
-                You won't be able to see this key again after closing this
-                dialog.
-              </p>
-            </div>
-            <DialogFooter>
-              <Button onClick={() => close(false)}>Done</Button>
-            </DialogFooter>
-          </>
-        ) : (
-          <form onSubmit={submit} noValidate className="contents">
-            <DialogHeader>
-              <DialogTitle>Generate API key</DialogTitle>
-              <DialogDescription>
-                Give the key a name that says where it's used.
-              </DialogDescription>
-            </DialogHeader>
-            <FieldGroup className="gap-4 py-2">
-              <Field data-invalid={Boolean(error) || undefined}>
-                <FieldLabel htmlFor="api-key-name">Key name</FieldLabel>
-                <Input
-                  id="api-key-name"
-                  value={name}
-                  placeholder="staging-inference"
-                  aria-invalid={Boolean(error) || undefined}
-                  onChange={(event) => {
-                    setName(event.target.value)
-                    setError('')
-                  }}
-                />
-                <FieldError>{error}</FieldError>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="api-key-scope">Scope</FieldLabel>
-                <Select
-                  value={scope}
-                  onValueChange={(value) => setScope(value as Scope)}
-                >
-                  <SelectTrigger id="api-key-scope" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {scopes.map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {item}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FieldDescription>
-                  Grant the narrowest scope the caller needs.
-                </FieldDescription>
-              </Field>
-            </FieldGroup>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => close(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">Generate key</Button>
-            </DialogFooter>
-          </form>
-        )}
-      </DialogContent>
-    </Dialog>
+    <AppDialog
+      open={open}
+      onOpenChange={close}
+      onSubmit={submit}
+      title="Generate API key"
+      description="Give the key a name that says where it's used."
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => close(false)}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" variant="solid" size="sm">
+            Generate key
+          </Button>
+        </>
+      }
+    >
+      <Stack gap="4">
+        <Field.Root invalid={Boolean(error)}>
+          <Field.Label>Key name</Field.Label>
+          <Input
+            value={name}
+            placeholder="staging-inference"
+            onChange={(event) => {
+              setName(event.target.value)
+              setError('')
+            }}
+          />
+          <Field.ErrorText>{error}</Field.ErrorText>
+        </Field.Root>
+        <Stack gap="1.5">
+          <SimpleSelect
+            label="Scope"
+            width="full"
+            portalled={false}
+            value={scope}
+            onChange={(value) => setScope(value as Scope)}
+            items={scopes.map((item) => ({ label: item, value: item }))}
+          />
+          <Text textStyle="body-sm" color="fg.muted">
+            Grant the narrowest scope the caller needs.
+          </Text>
+        </Stack>
+      </Stack>
+    </AppDialog>
   )
 }

@@ -1,10 +1,23 @@
-import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
+import {
+  Badge,
+  Box,
+  Button,
+  Flex,
+  Heading,
+  HStack,
+  IconButton,
+  Link,
+  Text,
+} from '@chakra-ui/react'
+import {
+  createFileRoute,
+  Link as RouterLink,
+  Outlet,
+} from '@tanstack/react-router'
 import { EllipsisVertical, Plus } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
-import { Badge } from '@/components/ui/badge'
 import { RouteBreadcrumbs } from '@/components/breadcrumbs'
-import { Button } from '@/components/ui/button'
 import { useProjectDetail } from '@/features/dashboard/context'
 import { unavailable } from '@/lib/unavailable'
 import {
@@ -19,11 +32,6 @@ import {
 export const Route = createFileRoute('/_app/projects_/$projectId/_nav')({
   component: ProjectNavLayout,
 })
-
-// The line-tab treatment from `tabsListVariants`, applied to router links.
-// No `!important`: nothing else styles these elements.
-const sectionTabClass =
-  'shrink-0 rounded-none border-x-0 border-t-0 border-b-2 border-transparent bg-transparent px-1 py-3 text-sm font-medium text-muted-foreground shadow-none transition-colors outline-hidden hover:bg-transparent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-[active]:border-b-primary data-[active]:text-primary'
 
 function ProjectNavLayout() {
   const { project, details } = useProjectDetail()
@@ -44,79 +52,118 @@ function ProjectNavLayout() {
   }
 
   return (
-    <main
+    <Box
+      as="main"
       id="dashboard-main"
-      className="mx-auto w-full max-w-[1448px] flex-1 p-4 sm:p-6"
+      mx="auto"
+      w="full"
+      maxW="1448px"
+      flex="1"
+      p={{ base: '4', sm: '6' }}
     >
       <RouteBreadcrumbs mb="3" />
 
-      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
+      <Flex
+        mb="5"
+        direction={{ base: 'column', sm: 'row' }}
+        align={{ sm: 'center' }}
+        justify={{ sm: 'space-between' }}
+        gap="4"
+      >
+        <Flex minW="0" align="flex-start" gap="3">
           <ProjectMark project={project} boxSize="10" />
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1>{project.name}</h1>
-              <Badge
-                variant="secondary"
-                className="border-0 bg-muted font-medium text-muted-foreground"
+          <Box minW="0">
+            <HStack wrap="wrap" gap="2">
+              <Heading
+                as="h1"
+                fontSize="2xl"
+                fontWeight="semibold"
+                letterSpacing="-0.65px"
+                lineHeight="1.35"
               >
+                {project.name}
+              </Heading>
+              <Badge colorPalette="gray" variant="subtle">
                 {project.task}
               </Badge>
-            </div>
-            <p className="text-sm text-muted-foreground">
+            </HStack>
+            <Text textStyle="body-sm" color="fg.muted">
               {project.description}
-            </p>
-          </div>
-        </div>
+            </Text>
+          </Box>
+        </Flex>
 
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+        <HStack wrap="wrap" gap="2" justify={{ sm: 'flex-end' }}>
           <Collaborators team={details.team} overflow={0} me="2" />
-          <Button
-            size="lg"
-            variant="outline"
-            className="px-3.5"
-            onClick={shareProject}
-          >
+          <Button size="sm" variant="outline" px="3.5" onClick={shareProject}>
             Share
           </Button>
-          <Button asChild size="lg" className="px-3.5">
-            <Link
+          <Button asChild size="sm" variant="solid" px="3.5">
+            <RouterLink
               to="/projects/$projectId/training/new"
               params={{ projectId: project.id }}
             >
               <Plus />
               New Training
-            </Link>
+            </RouterLink>
           </Button>
-          <Button
+          <IconButton
             variant="ghost"
-            size="icon"
+            colorPalette="gray"
+            size="sm"
             aria-label="More project actions"
             onClick={() => unavailable('More project actions')}
           >
             <EllipsisVertical />
-          </Button>
-        </div>
-      </div>
+          </IconButton>
+        </HStack>
+      </Flex>
 
-      <nav
+      <Flex
+        as="nav"
         aria-label="Project sections"
-        className="flex items-center gap-6 overflow-x-auto whitespace-nowrap border-b border-border"
+        align="center"
+        gap="6"
+        overflowX="auto"
+        whiteSpace="nowrap"
+        borderBottomWidth="1px"
+        borderColor="border"
       >
         {projectSections.map((section) => (
+          // A line tab: the current section is underlined in the brand color.
           <Link
             key={section}
-            to={projectSectionLink(section)}
-            params={{ projectId: project.id }}
-            activeProps={{ 'data-active': 'true' }}
-            className={sectionTabClass}
+            asChild
+            flexShrink={0}
+            px="1"
+            py="3"
+            mb="-1px"
+            borderBottomWidth="2px"
+            borderColor="transparent"
+            textStyle="body-sm"
+            fontWeight="medium"
+            color="fg.muted"
+            textDecoration="none"
+            _hover={{ color: 'fg', textDecoration: 'none' }}
+            css={{
+              '&[data-active]': {
+                borderColor: 'brand-text',
+                color: 'brand-text',
+              },
+            }}
           >
-            {section}
+            <RouterLink
+              to={projectSectionLink(section)}
+              params={{ projectId: project.id }}
+              activeProps={{ 'data-active': 'true' }}
+            >
+              {section}
+            </RouterLink>
           </Link>
         ))}
-      </nav>
+      </Flex>
 
       <Outlet />
-    </main>
+    </Box>
   )
 }

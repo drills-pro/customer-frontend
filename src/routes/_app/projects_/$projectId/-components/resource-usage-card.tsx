@@ -1,25 +1,9 @@
 import * as React from 'react'
-import { Bar, BarChart, Cell, XAxis } from 'recharts'
+import { Box, Card, Flex, Heading, Stack, Text } from '@chakra-ui/react'
+import { Chart, useChart } from '@chakra-ui/charts'
+import { Bar, BarChart, Cell, Tooltip, XAxis } from 'recharts'
 
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from '@/components/ui/chart'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { SimpleSelect } from '@/components/simple-select'
 import { useProjectDetail } from '@/features/dashboard/context'
 import type { ResourceUsage, UsagePeriod } from '@/features/dashboard/data'
 import {
@@ -42,59 +26,81 @@ export function ResourceUsageCard({
   const [period, setPeriod] = React.useState<UsagePeriod>('day')
 
   return (
-    // min-w-0 all the way down so the scrolling chart clips instead of
+    // minW 0 all the way down so the scrolling chart clips instead of
     // stretching the card past its grid column.
-    <Card ref={ref} size="lg" className="min-w-0 gap-0">
-      <CardHeader className="pb-4">
-        <CardTitle>Resource usage</CardTitle>
-        <CardAction>
-          <Select
-            value={period}
-            onValueChange={(value) => setPeriod(value as UsagePeriod)}
-          >
-            <SelectTrigger
-              className="h-8 w-24 bg-card"
-              aria-label="Usage interval"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="day">Day</SelectItem>
-              <SelectItem value="week">Week</SelectItem>
-              <SelectItem value="month">Month</SelectItem>
-            </SelectContent>
-          </Select>
-        </CardAction>
-      </CardHeader>
-      <CardContent className="grid min-w-0">
+    <Card.Root
+      ref={ref}
+      as="section"
+      aria-labelledby="resource-usage-title"
+      variant="outline"
+      minW="0"
+    >
+      <Flex align="center" justify="space-between" gap="3" px="5" pt="5" pb="4">
+        <Card.Title
+          as="h2"
+          id="resource-usage-title"
+          textStyle="body"
+          fontWeight="semibold"
+        >
+          Resource usage
+        </Card.Title>
+        <SimpleSelect
+          label="Usage interval"
+          hideLabel
+          size="sm"
+          width="24"
+          value={period}
+          onChange={(value) => setPeriod(value as UsagePeriod)}
+          items={[
+            { label: 'Day', value: 'day' },
+            { label: 'Week', value: 'week' },
+            { label: 'Month', value: 'month' },
+          ]}
+        />
+      </Flex>
+      <Stack minW="0" gap="5" px="5" pb="5">
         {resources.map((resource, index) => (
-          <section
+          <Box
+            as="section"
             key={resource.id}
-            className={index === 0 ? 'min-w-0' : 'min-w-0 border-t pt-5'}
+            minW="0"
+            borderTopWidth={index === 0 ? '0' : '1px'}
+            borderColor="border"
+            pt={index === 0 ? '0' : '5'}
           >
-            <div className="flex items-start justify-between gap-4 text-xs">
-              <div>
-                <h3 className="font-medium text-foreground">
+            <Flex
+              align="flex-start"
+              justify="space-between"
+              gap="4"
+              fontSize="xs"
+            >
+              <Box>
+                <Heading as="h3" fontSize="xs" fontWeight="medium">
                   {resource.label}
-                </h3>
-                <p className="mt-1 text-muted-foreground">
+                </Heading>
+                <Text mt="1" color="fg.muted">
                   {resource.description}, {usageRangeLabel(resource, period)}
-                </p>
-              </div>
-              <strong className="whitespace-nowrap font-medium text-muted-foreground">
+                </Text>
+              </Box>
+              <Text
+                as="strong"
+                whiteSpace="nowrap"
+                fontWeight="medium"
+                color="fg.muted"
+              >
                 {formatUsageValue(getUsageSummary(resource, period))} /{' '}
                 {resource.limit} {resource.unit}
-              </strong>
-            </div>
+              </Text>
+            </Flex>
             <ResourceUsageChart
               resource={resource}
               period={period}
               inView={inView}
             />
-          </section>
+          </Box>
         ))}
-      </CardContent>
-    </Card>
+      </Stack>
+    </Card.Root>
   )
 }
 
@@ -141,65 +147,90 @@ function ResourceUsageChart({
     }
   }, [period, points.length])
 
+  const chart = useChart({
+    data: points,
+    // The resource's own color, from the API.
+    series: [{ name: 'value', color: resource.color, label: resource.label }],
+  })
+
   return (
-    <div
+    <Box
       ref={scrollerRef}
-      className="mt-3 overflow-x-auto overflow-y-hidden"
+      mt="3"
+      overflowX="auto"
+      overflowY="hidden"
       data-testid={`usage-scroller-${resource.id}`}
     >
-      <ChartContainer
-        config={{ value: { label: resource.label, color: resource.color } }}
-        className="h-28 w-full"
-        style={{ minWidth: points.length * BAR_SLOT }}
+      <Chart.Root
+        chart={chart}
+        h="28"
+        w="full"
+        minW={`${points.length * BAR_SLOT}px`}
         role="img"
         aria-label={`${resource.label} usage for the ${usageRangeLabel(resource, period)}`}
         data-testid={`usage-chart-${resource.id}`}
       >
         <BarChart
           key={inView ? 'visible' : 'pending'}
-          data={points}
+          responsive
+          data={chart.data}
           accessibilityLayer
           margin={{ top: 8, right: 0, bottom: 0, left: 0 }}
         >
           <XAxis
-            dataKey="label"
+            dataKey={chart.key('label')}
             tickLine={false}
             axisLine={false}
             tickMargin={8}
             interval={0}
+            tick={{ fill: chart.color('fg.muted'), fontSize: 12 }}
             tickFormatter={(label: string) =>
               points.find((point) => point.label === label)?.shortLabel ?? label
             }
           />
-          <ChartTooltip
+          <Tooltip
             cursor={false}
             content={
-              <ChartTooltipContent
+              <Chart.Tooltip
                 labelFormatter={(_, payload) => payload[0]?.payload.label}
                 formatter={(value) => (
-                  <div className="flex min-w-32 items-center justify-between gap-4">
-                    <span className="text-muted-foreground">
+                  <Flex
+                    minW="32"
+                    align="center"
+                    justify="space-between"
+                    gap="4"
+                  >
+                    <Text as="span" color="fg.muted">
                       {resource.label}
-                    </span>
-                    <span className="font-mono font-medium text-foreground tabular-nums">
+                    </Text>
+                    <Text
+                      as="span"
+                      fontFamily="mono"
+                      fontWeight="medium"
+                      fontVariantNumeric="tabular-nums"
+                    >
                       {formatUsageValue(Number(value))} {resource.unit}
-                    </span>
-                  </div>
+                    </Text>
+                  </Flex>
                 )}
               />
             }
           />
-          <Bar dataKey="value" radius={[4, 4, 1, 1]} isAnimationActive={inView}>
+          <Bar
+            dataKey={chart.key('value')}
+            radius={[4, 4, 1, 1]}
+            isAnimationActive={inView}
+          >
             {points.map((point, index) => (
               <Cell
                 key={point.label}
-                fill={resource.color}
+                fill={chart.color(resource.color)}
                 fillOpacity={index === points.length - 1 ? 1 : 0.18}
               />
             ))}
           </Bar>
         </BarChart>
-      </ChartContainer>
-    </div>
+      </Chart.Root>
+    </Box>
   )
 }

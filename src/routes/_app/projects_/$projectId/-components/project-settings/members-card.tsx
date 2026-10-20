@@ -1,40 +1,24 @@
 import * as React from 'react'
+import {
+  Avatar,
+  Box,
+  Button,
+  Field,
+  Flex,
+  HStack,
+  IconButton,
+  Input,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
 import { UserPlus, X } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { AppDialog } from '@/components/shared/app-dialog'
+import { SectionCard } from '@/components/shared/section-card'
+import { SECTION_OFFSET } from '@/components/shared/settings-nav'
+import { ToneBadge } from '@/components/shared/tone-badge'
+import { SimpleSelect } from '@/components/simple-select'
 import { useProjectDetail } from '@/features/dashboard/context'
 import type {
   ProjectMember,
@@ -91,96 +75,99 @@ export function MembersCard() {
   }
 
   return (
-    <Card id="members" size="flush" className="scroll-mt-22">
-      <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-        <CardTitle>
+    <SectionCard
+      id="members"
+      scrollMarginTop={`${SECTION_OFFSET}px`}
+      title={
+        <>
           Members{' '}
-          <span className="font-normal text-muted-foreground tabular-nums">
+          <Text
+            as="span"
+            fontWeight="normal"
+            color="fg.muted"
+            fontVariantNumeric="tabular-nums"
+          >
             {members.length}
-          </span>
-        </CardTitle>
-        <CardDescription>People who can work in this project.</CardDescription>
-        <CardAction>
-          <Button variant="outline" onClick={() => setInviteOpen(true)}>
-            <UserPlus />
-            Invite
-          </Button>
-        </CardAction>
-      </CardHeader>
-
-      <CardContent className="p-0">
-        <ul className="divide-y">
-          {members.map((member) => (
-            <li
-              key={member.email}
-              className="flex flex-wrap items-center gap-3 px-5 py-3"
+          </Text>
+        </>
+      }
+      description="People who can work in this project."
+      action={
+        <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
+          <UserPlus />
+          Invite
+        </Button>
+      }
+    >
+      <Stack as="ul" gap="0">
+        {members.map((member) => (
+          <Flex
+            as="li"
+            key={member.email}
+            wrap="wrap"
+            align="center"
+            gap="3"
+            px="5"
+            py="3"
+            borderTopWidth="1px"
+            borderColor="border"
+            _first={{ borderTopWidth: '0' }}
+          >
+            <Avatar.Root
+              boxSize="8"
+              borderWidth="0"
+              color="white"
+              // The member's own color, from the API.
+              bg={member.color}
             >
-              <Avatar className="size-8">
-                <AvatarFallback
-                  className="text-[11px] text-white"
-                  style={{ backgroundColor: member.color }}
-                >
-                  {member.initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="mr-auto min-w-0">
-                <p className="flex items-center gap-2 text-[13px] font-medium">
-                  <span className="truncate">{member.name}</span>
-                  {member.invited && (
-                    <Badge
-                      variant="secondary"
-                      className="border-0 bg-warning-muted text-warning"
-                    >
-                      Invited
-                    </Badge>
-                  )}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {member.email}
-                </p>
-              </div>
+              <Avatar.Fallback fontSize="11px">
+                {member.initials}
+              </Avatar.Fallback>
+            </Avatar.Root>
+            <Box me="auto" minW="0">
+              <HStack gap="2" fontSize="13px" fontWeight="medium">
+                <Text as="span" truncate>
+                  {member.name}
+                </Text>
+                {member.invited && (
+                  <ToneBadge tone="warning">Invited</ToneBadge>
+                )}
+              </HStack>
+              <Text truncate fontSize="xs" color="fg.muted">
+                {member.email}
+              </Text>
+            </Box>
 
-              {member.role === 'Owner' ? (
-                <Badge
-                  variant="secondary"
-                  className="border-0 bg-primary-muted text-primary"
+            {member.role === 'Owner' ? (
+              <ToneBadge tone="accent">Owner</ToneBadge>
+            ) : (
+              <>
+                <SimpleSelect
+                  label={`Role for ${member.name}`}
+                  hideLabel
+                  size="sm"
+                  width="110px"
+                  value={member.role}
+                  onChange={(value) => changeRole(member, value as Role)}
+                  items={assignableRoles.map((role) => ({
+                    label: role,
+                    value: role,
+                  }))}
+                />
+                <IconButton
+                  variant="ghost"
+                  colorPalette="gray"
+                  size="sm"
+                  aria-label={`Remove ${member.name}`}
+                  onClick={() => remove(member)}
                 >
-                  Owner
-                </Badge>
-              ) : (
-                <>
-                  <Select
-                    value={member.role}
-                    onValueChange={(value) => changeRole(member, value as Role)}
-                  >
-                    <SelectTrigger
-                      aria-label={`Role for ${member.name}`}
-                      className="w-[110px]"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent align="end">
-                      {assignableRoles.map((role) => (
-                        <SelectItem key={role} value={role}>
-                          {role}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Remove ${member.name}`}
-                    onClick={() => remove(member)}
-                  >
-                    <X />
-                  </Button>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      </CardContent>
+                  <X />
+                </IconButton>
+              </>
+            )}
+          </Flex>
+        ))}
+      </Stack>
 
       <InviteDialog
         open={inviteOpen}
@@ -199,7 +186,7 @@ export function MembersCard() {
           )
         }
       />
-    </Card>
+    </SectionCard>
   )
 }
 
@@ -243,65 +230,54 @@ function InviteDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={close}>
-      <DialogContent>
-        <form onSubmit={submit} noValidate className="contents">
-          <DialogHeader>
-            <DialogTitle>Invite a member</DialogTitle>
-            <DialogDescription>
-              They get an email with a link to join this project.
-            </DialogDescription>
-          </DialogHeader>
-          <FieldGroup className="gap-4 py-2">
-            <Field data-invalid={Boolean(error) || undefined}>
-              <FieldLabel htmlFor="invite-email">Email</FieldLabel>
-              <Input
-                id="invite-email"
-                type="email"
-                value={email}
-                placeholder="teammate@acme.ai"
-                aria-invalid={Boolean(error) || undefined}
-                onChange={(event) => {
-                  setEmail(event.target.value)
-                  setError('')
-                }}
-              />
-              <FieldError>{error}</FieldError>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="invite-role">Role</FieldLabel>
-              <Select
-                value={role}
-                onValueChange={(value) => setRole(value as Role)}
-              >
-                <SelectTrigger id="invite-role" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {assignableRoles.map((item) => (
-                    <SelectItem key={item} value={item}>
-                      {item}
-                      <span className="text-muted-foreground">
-                        — {roleDescriptions[item]}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-          </FieldGroup>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => close(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit">Send invite</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <AppDialog
+      open={open}
+      onOpenChange={close}
+      onSubmit={submit}
+      title="Invite a member"
+      description="They get an email with a link to join this project."
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => close(false)}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" variant="solid" size="sm">
+            Send invite
+          </Button>
+        </>
+      }
+    >
+      <Stack gap="4">
+        <Field.Root invalid={Boolean(error)}>
+          <Field.Label>Email</Field.Label>
+          <Input
+            type="email"
+            value={email}
+            placeholder="teammate@acme.ai"
+            onChange={(event) => {
+              setEmail(event.target.value)
+              setError('')
+            }}
+          />
+          <Field.ErrorText>{error}</Field.ErrorText>
+        </Field.Root>
+        <SimpleSelect
+          label="Role"
+          width="full"
+          portalled={false}
+          value={role}
+          onChange={(value) => setRole(value as Role)}
+          items={assignableRoles.map((item) => ({
+            label: `${item} — ${roleDescriptions[item]}`,
+            value: item,
+          }))}
+        />
+      </Stack>
+    </AppDialog>
   )
 }

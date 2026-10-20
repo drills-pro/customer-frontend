@@ -1,15 +1,11 @@
+import { Box, Center, Flex, SimpleGrid, Text } from '@chakra-ui/react'
 import { Bell, Database, GitBranch, Plug, Webhook } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Switch } from '@/components/ui/switch'
+import { SectionCard } from '@/components/shared/section-card'
+import { SECTION_OFFSET } from '@/components/shared/settings-nav'
+import { SwitchButton } from '@/components/shared/switch-button'
 import { useProjectDetail } from '@/features/dashboard/context'
 import {
   useProjectIntegrations,
@@ -17,13 +13,13 @@ import {
 } from '@/features/projects/queries'
 
 /** How each integration the API knows is drawn; an unknown one gets a default. */
-const appearance: Record<string, { icon: LucideIcon; tint: string }> = {
-  github: { icon: GitBranch, tint: 'bg-foreground text-background' },
-  slack: { icon: Bell, tint: 'bg-highlight-muted text-highlight' },
-  webhook: { icon: Webhook, tint: 'bg-info-muted text-info' },
-  s3: { icon: Database, tint: 'bg-warning-muted text-warning' },
+const appearance: Record<string, { icon: LucideIcon; palette: string }> = {
+  github: { icon: GitBranch, palette: 'night' },
+  slack: { icon: Bell, palette: 'brand' },
+  webhook: { icon: Webhook, palette: 'info' },
+  s3: { icon: Database, palette: 'warning' },
 }
-const fallbackAppearance = { icon: Plug, tint: 'bg-muted text-foreground' }
+const fallbackAppearance = { icon: Plug, palette: 'gray' }
 
 export function IntegrationsCard() {
   const { project } = useProjectDetail()
@@ -46,46 +42,59 @@ export function IntegrationsCard() {
   }
 
   return (
-    <Card id="integrations" size="flush" className="scroll-mt-22">
-      <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-        <CardTitle>Integrations</CardTitle>
-        <CardDescription>
-          Connect the tools your team already uses.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-px bg-border p-0 sm:grid-cols-2">
+    <SectionCard
+      id="integrations"
+      scrollMarginTop={`${SECTION_OFFSET}px`}
+      title="Integrations"
+      description="Connect the tools your team already uses."
+    >
+      <SimpleGrid columns={{ base: 1, sm: 2 }} gap="1px" bg="border">
         {integrations.map((item) => {
           const on = item.enabled
           return (
-            <div key={item.id} className="flex items-start gap-3 bg-card p-5">
-              <span
+            <Flex
+              key={item.id}
+              align="flex-start"
+              gap="3"
+              bg="surface-raised"
+              p="5"
+            >
+              <Center
                 aria-hidden="true"
-                className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${item.tint}`}
+                boxSize="9"
+                flexShrink={0}
+                rounded="l2"
+                colorPalette={item.palette}
+                bg="colorPalette.subtle"
+                color="colorPalette.fg"
               >
-                <item.icon className="size-4" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-medium">
+                <item.icon size={16} />
+              </Center>
+              <Box flex="1" minW="0">
+                <Text fontSize="13px" fontWeight="medium">
                   <label htmlFor={`integration-${item.id}`}>{item.name}</label>
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
+                </Text>
+                <Text mt="0.5" fontSize="xs" color="fg.muted">
                   {item.description}
-                </p>
-                <p
-                  className={`mt-2 text-xs font-medium ${on ? 'text-success' : 'text-muted-foreground'}`}
+                </Text>
+                <Text
+                  mt="2"
+                  fontSize="xs"
+                  fontWeight="medium"
+                  color={on ? 'fg.success' : 'fg.muted'}
                 >
                   {on ? 'Connected' : 'Not connected'}
-                </p>
-              </div>
-              <Switch
+                </Text>
+              </Box>
+              <SwitchButton
                 id={`integration-${item.id}`}
                 checked={on}
                 onCheckedChange={(checked) => toggle(item, checked)}
               />
-            </div>
+            </Flex>
           )
         })}
-      </CardContent>
-    </Card>
+      </SimpleGrid>
+    </SectionCard>
   )
 }

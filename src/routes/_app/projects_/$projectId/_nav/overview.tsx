@@ -1,24 +1,24 @@
 import * as React from 'react'
+import {
+  Avatar,
+  Box,
+  Button,
+  Card,
+  Center,
+  Flex,
+  Grid,
+  Heading,
+  HStack,
+  Icon,
+  SimpleGrid,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ArrowRight, Check } from 'lucide-react'
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Badge, BadgeDot } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from '@/components/ui/item'
+import { SectionCard } from '@/components/shared/section-card'
+import { ToneBadge } from '@/components/shared/tone-badge'
 import { useProjectDetail } from '@/features/dashboard/context'
 import { useUpdateProject } from '@/features/projects/queries'
 import { useInView } from '@/hooks/use-in-view'
@@ -63,90 +63,125 @@ function ProjectOverviewRoute() {
 
   return (
     <>
-      <Card size="flush" className="mt-6">
-        <CardHeader className="pt-5 pb-4">
-          <CardTitle>Pipeline</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3 pb-5 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center">
+      <SectionCard title="Pipeline" divided={false} mt="6">
+        <Grid
+          gap="3"
+          px="5"
+          pb="5"
+          alignItems={{ lg: 'center' }}
+          templateColumns={{
+            lg: 'minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr)',
+          }}
+        >
           {pipeline.map((stage, index) => {
             const completed = details.pipeline.completeThrough > index + 1
             return (
               <React.Fragment key={stage.title}>
-                <Item
-                  asChild
-                  className={`min-w-0 flex-nowrap p-3 ${
-                    completed
-                      ? 'border-success/30 bg-success-muted/50 hover:bg-success-muted/50'
-                      : 'border-border bg-card hover:bg-card'
-                  } hover:border-primary/40`}
+                <Button
+                  variant="outline"
+                  minW="0"
+                  h="auto"
+                  p="3"
+                  gap="3"
+                  justifyContent="flex-start"
+                  whiteSpace="normal"
+                  textAlign="start"
+                  fontWeight="normal"
+                  boxShadow="none"
+                  colorPalette="success"
+                  bg={completed ? 'colorPalette.subtle' : 'surface-raised'}
+                  borderColor={completed ? 'colorPalette.border' : 'border'}
+                  _hover={{ borderColor: 'brand-text' }}
+                  onClick={() => unavailable(stage.title)}
                 >
-                  <Button
-                    variant="outline"
-                    className="h-auto justify-start whitespace-normal"
-                    onClick={() => unavailable(stage.title)}
+                  <Center
+                    boxSize="8"
+                    flexShrink={0}
+                    rounded="full"
+                    fontSize="xs"
+                    fontWeight="semibold"
+                    bg={completed ? 'colorPalette.solid' : 'bg.muted'}
+                    color={completed ? 'colorPalette.contrast' : 'fg.muted'}
                   >
-                    <ItemMedia>
-                      <span
-                        className={`flex size-8 items-center justify-center rounded-full text-xs font-semibold ${
-                          completed
-                            ? 'bg-success text-background'
-                            : 'bg-muted text-muted-foreground'
-                        }`}
-                      >
-                        {completed ? <Check className="size-4" /> : index + 1}
-                      </span>
-                    </ItemMedia>
-                    <ItemContent className="min-w-0">
-                      <ItemTitle>{stage.title}</ItemTitle>
-                      <ItemDescription className="truncate">
-                        {stage.description}
-                      </ItemDescription>
-                    </ItemContent>
-                  </Button>
-                </Item>
+                    {completed ? (
+                      <Icon boxSize="4" asChild>
+                        <Check />
+                      </Icon>
+                    ) : (
+                      index + 1
+                    )}
+                  </Center>
+                  <Box minW="0">
+                    <Text textStyle="body-sm" fontWeight="medium">
+                      {stage.title}
+                    </Text>
+                    <Text truncate textStyle="body-sm" color="fg.muted">
+                      {stage.description}
+                    </Text>
+                  </Box>
+                </Button>
                 {index < pipeline.length - 1 && (
-                  <ArrowRight className="hidden size-4 text-muted-foreground/60 lg:block" />
+                  <Box
+                    display={{ base: 'none', lg: 'block' }}
+                    color="fg.subtle"
+                  >
+                    <ArrowRight size={16} />
+                  </Box>
                 )}
               </React.Fragment>
             )
           })}
-        </CardContent>
-      </Card>
+        </Grid>
+      </SectionCard>
 
-      <div className="mt-6 grid items-start gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
-        <div className="grid min-w-0 gap-6">
+      <Grid
+        mt="6"
+        alignItems="start"
+        gap="6"
+        templateColumns={{ xl: 'minmax(0, 2fr) minmax(300px, 1fr)' }}
+      >
+        <Grid minW="0" gap="6">
           {bestModel ? (
-            <Card size="flush">
-              <CardHeader className="border-b">
-                <CardTitle>Best model</CardTitle>
-                <CardAction>
-                  <Badge variant="success">
-                    <BadgeDot />
-                    Completed
-                  </Badge>
-                </CardAction>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-5 p-5 lg:flex-row lg:items-center">
-                <div className="min-w-44">
-                  <h2>{bestModel.name}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
+            <SectionCard
+              title="Best model"
+              action={
+                <ToneBadge tone="success" dot>
+                  Completed
+                </ToneBadge>
+              }
+            >
+              <Flex
+                direction={{ base: 'column', lg: 'row' }}
+                align={{ lg: 'center' }}
+                gap="5"
+                p="5"
+              >
+                <Box minW="44">
+                  <Heading as="h3" fontSize="md" fontWeight="semibold">
+                    {bestModel.name}
+                  </Heading>
+                  <Text mt="1" textStyle="body-sm" color="fg.muted">
                     From run {bestModel.run} · {bestModel.updated}
-                  </p>
-                </div>
-                <div className="grid flex-1 grid-cols-2 gap-4 sm:grid-cols-4">
+                  </Text>
+                </Box>
+                <SimpleGrid flex="1" columns={{ base: 2, sm: 4 }} gap="4">
                   {[
                     ['Accuracy', `${bestModel.accuracy.toFixed(1)}%`],
                     ['F1', bestModel.f1.toFixed(3)],
                     ['Latency', bestModel.latency],
                     ['Size', bestModel.size],
                   ].map(([label, value]) => (
-                    <div key={label}>
-                      <small className="block">{label}</small>
-                      <strong className="text-lg font-semibold">{value}</strong>
-                    </div>
+                    <Box key={label}>
+                      <Text fontSize="xs" color="fg.muted">
+                        {label}
+                      </Text>
+                      <Text as="strong" fontSize="lg" fontWeight="semibold">
+                        {value}
+                      </Text>
+                    </Box>
                   ))}
-                </div>
-                <Button asChild>
+                </SimpleGrid>
+                <Button asChild variant="solid" size="sm">
                   <Link
                     to="/projects/$projectId/models"
                     params={{ projectId: project.id }}
@@ -154,17 +189,25 @@ function ProjectOverviewRoute() {
                     Deploy →
                   </Link>
                 </Button>
-              </CardContent>
-            </Card>
+              </Flex>
+            </SectionCard>
           ) : (
-            <Card size="flush">
-              <CardContent className="flex min-h-40 flex-col items-center justify-center p-6 text-center">
-                <h2 className="font-semibold">No trained models yet</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
+            <Card.Root variant="outline">
+              <Card.Body
+                minH="40"
+                alignItems="center"
+                justifyContent="center"
+                p="6"
+                textAlign="center"
+              >
+                <Heading as="h2" fontSize="md" fontWeight="semibold">
+                  No trained models yet
+                </Heading>
+                <Text mt="1" textStyle="body-sm" color="fg.muted">
                   Add a ready dataset, then start this project's first training
                   run.
-                </p>
-                <Button asChild className="mt-4">
+                </Text>
+                <Button asChild variant="solid" size="sm" mt="4">
                   <Link
                     to="/projects/$projectId/training/new"
                     params={{ projectId: project.id }}
@@ -172,39 +215,39 @@ function ProjectOverviewRoute() {
                     New Training
                   </Link>
                 </Button>
-              </CardContent>
-            </Card>
+              </Card.Body>
+            </Card.Root>
           )}
 
           <ReadmeCard
             readme={
               details.readme && bestModel ? (
-                <div className="grid gap-5">
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="success" className="font-mono">
+                <Stack gap="5" w="full">
+                  <HStack wrap="wrap" gap="2">
+                    <ToneBadge tone="success" fontFamily="mono">
                       status: production
-                    </Badge>
-                    <Badge variant="accent" className="font-mono">
+                    </ToneBadge>
+                    <ToneBadge tone="accent" fontFamily="mono">
                       pytorch 2.4
-                    </Badge>
-                    <Badge variant="warning" className="font-mono">
+                    </ToneBadge>
+                    <ToneBadge tone="warning" fontFamily="mono">
                       acc {bestModel.accuracy.toFixed(1)}%
-                    </Badge>
-                    <Badge className="border-0 bg-info-muted font-mono text-info">
+                    </ToneBadge>
+                    <ToneBadge tone="info" fontFamily="mono">
                       {details.region}
-                    </Badge>
-                  </div>
+                    </ToneBadge>
+                  </HStack>
 
                   <section>
-                    <h3 className="border-b pb-2 font-semibold">About</h3>
-                    <p className="pt-2 text-muted-foreground">
+                    <ReadmeHeading>About</ReadmeHeading>
+                    <Text pt="2" color="fg.muted">
                       {details.readme.about}
-                    </p>
+                    </Text>
                   </section>
 
                   <section>
-                    <h3 className="border-b pb-2 font-semibold">Model</h3>
-                    <dl className="divide-y text-sm">
+                    <ReadmeHeading>Model</ReadmeHeading>
+                    <Box as="dl" textStyle="body-sm">
                       {[
                         ['Architecture', details.readme.architecture],
                         [
@@ -214,41 +257,60 @@ function ProjectOverviewRoute() {
                         ['Latency', `${bestModel.latency} (p50, GPU)`],
                         ['Size', bestModel.size],
                       ].map(([label, value]) => (
-                        <div
+                        <SimpleGrid
                           key={label}
-                          className="grid grid-cols-2 gap-4 py-2"
+                          columns={2}
+                          gap="4"
+                          py="2"
+                          borderTopWidth="1px"
+                          borderColor="border"
+                          _first={{ borderTopWidth: '0' }}
                         >
-                          <dt className="font-medium">{label}</dt>
-                          <dd className="text-muted-foreground">{value}</dd>
-                        </div>
+                          <Box as="dt" fontWeight="medium">
+                            {label}
+                          </Box>
+                          <Box as="dd" color="fg.muted">
+                            {value}
+                          </Box>
+                        </SimpleGrid>
                       ))}
-                    </dl>
+                    </Box>
                   </section>
 
                   <section>
-                    <h3 className="border-b pb-2 font-semibold">Quickstart</h3>
-                    <p className="py-2 text-muted-foreground">
+                    <ReadmeHeading>Quickstart</ReadmeHeading>
+                    <Text py="2" color="fg.muted">
                       Call the live endpoint with a base64-encoded shelf image:
-                    </p>
-                    <pre className="overflow-x-auto rounded-xl bg-terminal p-4 text-xs leading-5 text-terminal-foreground">
+                    </Text>
+                    <Box
+                      as="pre"
+                      overflowX="auto"
+                      rounded="l3"
+                      bg="night"
+                      color="on-night"
+                      p="4"
+                      fontFamily="mono"
+                      fontSize="xs"
+                      lineHeight="1.25rem"
+                    >
                       <code>{details.readme.quickstart}</code>
-                    </pre>
+                    </Box>
                   </section>
 
                   <section>
-                    <h3 className="border-b pb-2 font-semibold">Notes</h3>
-                    <ul className="grid gap-1 pt-2 text-muted-foreground">
+                    <ReadmeHeading>Notes</ReadmeHeading>
+                    <Stack as="ul" gap="1" pt="2" color="fg.muted">
                       {details.readme.notes.map((note) => (
                         <li key={note.label}>
-                          <strong className="font-semibold text-foreground">
+                          <Text as="strong" fontWeight="semibold" color="fg">
                             {note.label}:
-                          </strong>{' '}
+                          </Text>{' '}
                           {note.text}
                         </li>
                       ))}
-                    </ul>
+                    </Stack>
                   </section>
-                </div>
+                </Stack>
               ) : undefined
             }
             initialMarkdown={
@@ -261,14 +323,11 @@ function ProjectOverviewRoute() {
               updateProject.mutate({ readme_markdown: markdown })
             }
           />
-        </div>
+        </Grid>
 
-        <aside className="grid min-w-0 gap-6">
-          <Card size="lg">
-            <CardHeader>
-              <CardTitle>Project info</CardTitle>
-            </CardHeader>
-            <CardContent>
+        <Grid as="aside" minW="0" gap="6">
+          <SectionCard title="Project info" divided={false}>
+            <Box px="5" pb="5">
               <FactList
                 items={[
                   ['Created', details.created],
@@ -279,39 +338,56 @@ function ProjectOverviewRoute() {
                   ['Visibility', details.visibility],
                 ]}
               />
-            </CardContent>
-          </Card>
+            </Box>
+          </SectionCard>
 
           <ResourceUsageCard ref={usageCardRef} inView={usageChartsInView} />
 
-          <Card size="lg">
-            <CardHeader>
-              <CardTitle>Team</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4">
+          <SectionCard title="Team" divided={false}>
+            <Stack gap="4" px="5" pb="5">
               {details.team.map((member) => (
-                <Item key={member.name} className="flex-nowrap border-0 p-0">
-                  <ItemMedia>
-                    <Avatar className="size-9">
-                      <AvatarFallback
-                        className="text-xs text-white"
-                        style={{ backgroundColor: member.color }}
-                      >
-                        {member.initials}
-                      </AvatarFallback>
-                    </Avatar>
-                  </ItemMedia>
-
-                  <ItemContent className="min-w-0">
-                    <ItemTitle>{member.name}</ItemTitle>
-                    <ItemDescription>{member.role}</ItemDescription>
-                  </ItemContent>
-                </Item>
+                <HStack key={member.name} gap="3">
+                  <Avatar.Root
+                    boxSize="9"
+                    borderWidth="0"
+                    color="white"
+                    // The member's own color, from the API.
+                    bg={member.color}
+                  >
+                    <Avatar.Fallback fontSize="xs">
+                      {member.initials}
+                    </Avatar.Fallback>
+                  </Avatar.Root>
+                  <Box minW="0">
+                    <Text textStyle="body-sm" fontWeight="medium">
+                      {member.name}
+                    </Text>
+                    <Text textStyle="body-sm" color="fg.muted">
+                      {member.role}
+                    </Text>
+                  </Box>
+                </HStack>
               ))}
-            </CardContent>
-          </Card>
-        </aside>
-      </div>
+            </Stack>
+          </SectionCard>
+        </Grid>
+      </Grid>
     </>
+  )
+}
+
+/** A section heading in the generated README summary. */
+function ReadmeHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <Heading
+      as="h3"
+      pb="2"
+      borderBottomWidth="1px"
+      borderColor="border"
+      fontSize="sm"
+      fontWeight="semibold"
+    >
+      {children}
+    </Heading>
   )
 }

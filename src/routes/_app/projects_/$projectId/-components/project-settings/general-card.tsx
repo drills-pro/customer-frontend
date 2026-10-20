@@ -1,28 +1,29 @@
 import * as React from 'react'
+import {
+  Box,
+  Button,
+  Code,
+  Field,
+  Fieldset,
+  Flex,
+  HStack,
+  Input,
+  SimpleGrid,
+  Stack,
+  Text,
+  Textarea,
+} from '@chakra-ui/react'
 import { Building2, Lock } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
 import { CopyButton } from '@/components/shared/copy-button'
+import {
+  RadioButton,
+  RadioButtonGroup,
+} from '@/components/shared/radio-button-group'
+import { SectionCard } from '@/components/shared/section-card'
+import { SECTION_OFFSET } from '@/components/shared/settings-nav'
 import { ProjectMark } from '@/features/projects/components/project-ui'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-  FieldTitle,
-} from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Textarea } from '@/components/ui/textarea'
 import { ApiError } from '@/api/client'
 import { useProjectDetail } from '@/features/dashboard/context'
 import type { ProjectOverview } from '@/features/dashboard/data'
@@ -127,160 +128,197 @@ export function GeneralCard() {
   }
 
   return (
-    <Card id="general" size="flush" className="scroll-mt-22">
-      <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-        <CardTitle>General</CardTitle>
-        <CardDescription>
-          How this project is named and who can find it.
-        </CardDescription>
-      </CardHeader>
-
+    <SectionCard
+      id="general"
+      scrollMarginTop={`${SECTION_OFFSET}px`}
+      title="General"
+      description="How this project is named and who can find it."
+    >
       <form onSubmit={save} noValidate>
-        <CardContent className="grid gap-5 p-5">
-          <div className="flex flex-wrap items-center gap-4 rounded-lg bg-muted/50 p-3">
+        <Stack gap="5" p="5">
+          <Flex
+            wrap="wrap"
+            align="center"
+            gap="4"
+            rounded="l2"
+            bg="bg.muted"
+            p="3"
+          >
             <ProjectMark project={project} boxSize="11" />
-            <div className="mr-auto min-w-0">
-              <p className="truncate font-medium">{values.name || '—'}</p>
-              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Box me="auto" minW="0">
+              <Text truncate fontWeight="medium">
+                {values.name || '—'}
+              </Text>
+              <HStack gap="1.5" fontSize="xs" color="fg.muted">
                 Project ID
-                <code className="rounded bg-card px-1.5 py-0.5 font-mono ring-1 ring-border">
-                  {project.id}
-                </code>
-              </p>
-            </div>
+                <Code size="sm">{project.id}</Code>
+              </HStack>
+            </Box>
             <CopyButton value={project.id} label="Copy project ID">
               Copy ID
             </CopyButton>
-          </div>
+          </Flex>
 
-          <Field data-invalid={Boolean(error) || undefined}>
-            <FieldLabel htmlFor="project-name">Project name</FieldLabel>
+          <Field.Root invalid={Boolean(error)}>
+            <Field.Label>Project name</Field.Label>
             <Input
-              id="project-name"
-              size="lg"
               value={values.name}
-              aria-invalid={Boolean(error) || undefined}
               aria-describedby={error ? 'project-name-error' : undefined}
               onChange={(event) => update('name', event.target.value)}
             />
-            <FieldError id="project-name-error">{error}</FieldError>
-          </Field>
+            {error && (
+              <Text
+                id="project-name-error"
+                role="alert"
+                textStyle="body-sm"
+                color="fg.error"
+              >
+                {error}
+              </Text>
+            )}
+          </Field.Root>
 
-          <Field>
-            <div className="flex items-baseline justify-between gap-2">
-              <FieldLabel htmlFor="project-description">Description</FieldLabel>
-              <span
-                className={`text-xs tabular-nums ${values.description.length > DESCRIPTION_MAX * 0.9 ? 'text-warning' : 'text-muted-foreground'}`}
+          <Field.Root>
+            <Flex w="full" align="baseline" justify="space-between" gap="2">
+              <Field.Label>Description</Field.Label>
+              <Text
+                as="span"
+                fontSize="xs"
+                fontVariantNumeric="tabular-nums"
+                color={
+                  values.description.length > DESCRIPTION_MAX * 0.9
+                    ? 'fg.warning'
+                    : 'fg.muted'
+                }
               >
                 {values.description.length}/{DESCRIPTION_MAX}
-              </span>
-            </div>
+              </Text>
+            </Flex>
             <Textarea
-              id="project-description"
               rows={3}
               maxLength={DESCRIPTION_MAX}
               value={values.description}
               placeholder="What does this project predict, and for whom?"
               onChange={(event) => update('description', event.target.value)}
             />
-          </Field>
+          </Field.Root>
 
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Field>
-              <FieldLabel htmlFor="project-task">Task type</FieldLabel>
-              <Input
-                id="project-task"
-                size="lg"
-                value={project.task}
-                disabled
-                readOnly
-              />
-              <FieldDescription>
+          <SimpleGrid columns={{ base: 1, sm: 2 }} gap="5">
+            <Field.Root disabled>
+              <Field.Label>Task type</Field.Label>
+              <Input value={project.task} readOnly />
+              <Field.HelperText>
                 {taskLocked
                   ? 'Locked after the first training run.'
                   : 'Chosen when the project was created.'}
-              </FieldDescription>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="project-region">Region</FieldLabel>
-              <Input
-                id="project-region"
-                size="lg"
-                value={details.region}
-                disabled
-                readOnly
-              />
-              <FieldDescription>
+              </Field.HelperText>
+            </Field.Root>
+            <Field.Root disabled>
+              <Field.Label>Region</Field.Label>
+              <Input value={details.region} readOnly />
+              <Field.HelperText>
                 Datasets and endpoints stay in this region.
-              </FieldDescription>
-            </Field>
-          </div>
+              </Field.HelperText>
+            </Field.Root>
+          </SimpleGrid>
 
-          <fieldset className="grid gap-3">
-            <legend className="mb-3 text-sm font-medium">Visibility</legend>
-            <RadioGroup
+          <Fieldset.Root>
+            <Fieldset.Legend textStyle="body-sm" fontWeight="medium" mb="3">
+              Visibility
+            </Fieldset.Legend>
+            <RadioButtonGroup
+              aria-label="Visibility"
               value={values.visibility}
-              onValueChange={(value) =>
-                update('visibility', value as Visibility)
-              }
-              className="grid gap-3 sm:grid-cols-2"
+              onChange={(value) => update('visibility', value as Visibility)}
+              display="grid"
+              gridTemplateColumns={{ sm: 'repeat(2, minmax(0, 1fr))' }}
+              gap="3"
             >
               {visibilityOptions.map((option) => (
-                <FieldLabel
+                <RadioButton
                   key={option.value}
-                  htmlFor={`visibility-${option.value}`}
+                  value={option.value}
+                  variant="option"
+                  alignItems="flex-start"
+                  justifyContent="flex-start"
+                  gap="3"
                 >
-                  <Field orientation="horizontal">
-                    <option.icon
-                      aria-hidden="true"
-                      className="size-4 text-muted-foreground"
-                    />
-                    <FieldContent>
-                      <FieldTitle>{option.label}</FieldTitle>
-                      <FieldDescription>{option.description}</FieldDescription>
-                    </FieldContent>
-                    <RadioGroupItem
-                      id={`visibility-${option.value}`}
-                      value={option.value}
-                    />
-                  </Field>
-                </FieldLabel>
+                  <Box mt="0.5" color="fg.muted">
+                    <option.icon size={16} aria-hidden="true" />
+                  </Box>
+                  <Box flex="1" minW="0">
+                    <Text textStyle="body-sm" fontWeight="medium">
+                      {option.label}
+                    </Text>
+                    <Text textStyle="body-sm" color="fg.muted">
+                      {option.description}
+                    </Text>
+                  </Box>
+                </RadioButton>
               ))}
-            </RadioGroup>
-          </fieldset>
+            </RadioButtonGroup>
+          </Fieldset.Root>
 
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 border-t pt-5 text-[13px] sm:grid-cols-3">
+          <SimpleGrid
+            as="dl"
+            columns={{ base: 2, sm: 3 }}
+            columnGap="6"
+            rowGap="3"
+            borderTopWidth="1px"
+            borderColor="border"
+            pt="5"
+            fontSize="13px"
+          >
             {[
               ['Framework', details.framework],
               ['Created', details.created],
               ['Last updated', project.updated],
             ].map(([label, value]) => (
-              <div key={label} className="min-w-0">
-                <dt className="text-xs text-muted-foreground">{label}</dt>
-                <dd className="mt-0.5 truncate font-medium">{value}</dd>
-              </div>
+              <Box key={label} minW="0">
+                <Box as="dt" fontSize="xs" color="fg.muted">
+                  {label}
+                </Box>
+                <Box as="dd" mt="0.5" truncate fontWeight="medium">
+                  {value}
+                </Box>
+              </Box>
             ))}
-          </dl>
-        </CardContent>
+          </SimpleGrid>
+        </Stack>
 
-        <div className="flex flex-wrap items-center justify-end gap-2 border-t px-5 py-4">
+        <Flex
+          wrap="wrap"
+          align="center"
+          justify="flex-end"
+          gap="2"
+          borderTopWidth="1px"
+          borderColor="border"
+          px="5"
+          py="4"
+        >
           {dirty && (
-            <p
+            <HStack
               role="status"
-              className="mr-auto flex items-center gap-2 text-xs text-muted-foreground"
+              me="auto"
+              gap="2"
+              fontSize="xs"
+              color="fg.muted"
             >
-              <span
+              <Box
                 aria-hidden="true"
-                className="size-1.5 rounded-full bg-warning"
+                boxSize="1.5"
+                rounded="full"
+                bg="warning"
               />
               Unsaved changes
-            </p>
+            </HStack>
           )}
           <Button
             type="button"
             variant="ghost"
-            size="lg"
-            className="px-3.5"
+            colorPalette="gray"
+            size="sm"
+            px="3.5"
             disabled={!dirty}
             onClick={() => setValues(saved)}
           >
@@ -288,14 +326,15 @@ export function GeneralCard() {
           </Button>
           <Button
             type="submit"
-            size="lg"
-            className="px-3.5"
+            variant="solid"
+            size="sm"
+            px="3.5"
             disabled={!dirty || Boolean(error)}
           >
             Save changes
           </Button>
-        </div>
+        </Flex>
       </form>
-    </Card>
+    </SectionCard>
   )
 }

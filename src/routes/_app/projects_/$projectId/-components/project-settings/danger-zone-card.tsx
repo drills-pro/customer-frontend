@@ -1,31 +1,23 @@
 import * as React from 'react'
+import {
+  Box,
+  Button,
+  Card,
+  Center,
+  Field,
+  Flex,
+  Input,
+  SimpleGrid,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
+import { useNavigate } from '@tanstack/react-router'
 import { Archive, ArrowRightLeft, Trash2, TriangleAlert } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Field, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import { useNavigate } from '@tanstack/react-router'
-
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { AppDialog } from '@/components/shared/app-dialog'
+import { SECTION_OFFSET } from '@/components/shared/settings-nav'
+import { SimpleSelect } from '@/components/simple-select'
 import {
   useDashboardLayout,
   useProjectDetail,
@@ -41,24 +33,52 @@ function plural(count: number, noun: string) {
   return `${count} ${noun}${count === 1 ? '' : 's'}`
 }
 
+/** A destructive action that leaves the page: red text on an outline button. */
+const dangerOutline = {
+  variant: 'outline',
+  size: 'sm',
+  px: '3.5',
+  color: 'fg.error',
+  _hover: { bg: 'bg.error', color: 'fg.error' },
+} as const
+
 export function DangerZoneCard() {
   const { project } = useProjectDetail()
   const archive = useArchiveProject(project.id)
   const archived = project.status === 'Archived'
+  const [archiveOpen, setArchiveOpen] = React.useState(false)
 
   return (
-    <Card
+    <Card.Root
+      as="section"
+      aria-labelledby="danger-zone-title"
       id="danger-zone"
-      size="flush"
-      className="scroll-mt-22 ring-destructive/30"
+      scrollMarginTop={`${SECTION_OFFSET}px`}
+      variant="outline"
+      overflow="hidden"
+      borderColor="border.error"
     >
-      <CardHeader className="border-b border-destructive/20 bg-destructive-muted/50 [--card-section:--spacing(3.5)]">
-        <CardTitle className="flex items-center gap-2 text-destructive">
-          <TriangleAlert className="size-4" />
+      <Flex
+        align="center"
+        gap="2"
+        px="5"
+        py="3.5"
+        borderBottomWidth="1px"
+        borderColor="border.error"
+        bg="bg.error"
+        color="fg.error"
+      >
+        <TriangleAlert size={16} aria-hidden="true" />
+        <Card.Title
+          as="h2"
+          id="danger-zone-title"
+          textStyle="body"
+          fontWeight="semibold"
+        >
           Danger zone
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="divide-y p-0">
+        </Card.Title>
+      </Flex>
+      <Stack gap="0">
         <DangerRow
           icon={ArrowRightLeft}
           title="Transfer ownership"
@@ -76,32 +96,34 @@ export function DangerZoneCard() {
               : 'Make the project read-only. Live deployments will be stopped.'
           }
         >
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="lg"
-                className="px-3.5 text-destructive hover:bg-destructive-muted hover:text-destructive"
-              >
-                {archived ? 'Unarchive' : 'Archive'}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {archived ? 'Unarchive' : 'Archive'} {project.name}?
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  {archived
-                    ? 'Members can edit datasets and start training again.'
-                    : `${plural(project.deployed, 'live deployment')} will stop serving traffic. You can unarchive at any time.`}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  variant="destructive"
-                  onClick={() =>
+          <Button {...dangerOutline} onClick={() => setArchiveOpen(true)}>
+            {archived ? 'Unarchive' : 'Archive'}
+          </Button>
+          <AppDialog
+            role="alertdialog"
+            open={archiveOpen}
+            onOpenChange={setArchiveOpen}
+            title={`${archived ? 'Unarchive' : 'Archive'} ${project.name}?`}
+            description={
+              archived
+                ? 'Members can edit datasets and start training again.'
+                : `${plural(project.deployed, 'live deployment')} will stop serving traffic. You can unarchive at any time.`
+            }
+            footer={
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setArchiveOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="solid"
+                  colorPalette="danger"
+                  size="sm"
+                  onClick={() => {
+                    setArchiveOpen(false)
                     archive.mutate(!archived, {
                       onSuccess: () =>
                         toaster.create({
@@ -109,13 +131,13 @@ export function DangerZoneCard() {
                           title: `${project.name} ${archived ? 'unarchived' : 'archived'}.`,
                         }),
                     })
-                  }
+                  }}
                 >
                   {archived ? 'Unarchive project' : 'Archive project'}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                </Button>
+              </>
+            }
+          />
         </DangerRow>
 
         <DangerRow
@@ -125,8 +147,8 @@ export function DangerZoneCard() {
         >
           <DeleteProjectDialog project={project} />
         </DangerRow>
-      </CardContent>
-    </Card>
+      </Stack>
+    </Card.Root>
   )
 }
 
@@ -142,19 +164,35 @@ function DangerRow({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-4 p-5">
-      <span
+    <Flex
+      wrap="wrap"
+      align="center"
+      gap="4"
+      p="5"
+      borderTopWidth="1px"
+      borderColor="border"
+      _first={{ borderTopWidth: '0' }}
+    >
+      <Center
         aria-hidden="true"
-        className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-destructive-muted text-destructive"
+        boxSize="9"
+        flexShrink={0}
+        rounded="l2"
+        bg="bg.error"
+        color="fg.error"
       >
-        <Icon className="size-4" />
-      </span>
-      <div className="mr-auto min-w-0 basis-60 grow">
-        <p className="text-[13px] font-medium">{title}</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
-      </div>
+        <Icon size={16} />
+      </Center>
+      <Box me="auto" minW="0" flexBasis="60" flexGrow={1}>
+        <Text fontSize="13px" fontWeight="medium">
+          {title}
+        </Text>
+        <Text mt="0.5" fontSize="xs" color="fg.muted">
+          {description}
+        </Text>
+      </Box>
       {children}
-    </div>
+    </Flex>
   )
 }
 
@@ -165,88 +203,110 @@ function DeleteProjectDialog({ project }: { project: Project }) {
   const [confirmation, setConfirmation] = React.useState('')
   const confirmed = confirmation === project.name
 
+  function close(next: boolean) {
+    setOpen(next)
+    if (!next) setConfirmation('')
+  }
+
   return (
-    <AlertDialog
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next)
-        if (!next) setConfirmation('')
-      }}
-    >
-      <AlertDialogTrigger asChild>
-        <Button variant="destructive" size="lg" className="px-3.5">
-          <Trash2 />
-          Delete project
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete {project.name}?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This permanently deletes the project and everything in it. This
-            cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-
-        <ul className="grid grid-cols-3 gap-2 text-center">
-          {(
-            [
-              [project.datasets, 'Datasets'],
-              [project.models, 'Models'],
-              [project.deployed, 'Deployments'],
-            ] as const
-          ).map(([count, label]) => (
-            <li
-              key={label}
-              className="rounded-lg bg-destructive-muted px-2 py-2.5"
+    <>
+      <Button
+        variant="solid"
+        colorPalette="danger"
+        size="sm"
+        px="3.5"
+        onClick={() => setOpen(true)}
+      >
+        <Trash2 />
+        Delete project
+      </Button>
+      <AppDialog
+        role="alertdialog"
+        open={open}
+        onOpenChange={close}
+        title={`Delete ${project.name}?`}
+        description="This permanently deletes the project and everything in it. This cannot be undone."
+        footer={
+          <>
+            <Button variant="outline" size="sm" onClick={() => close(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="solid"
+              colorPalette="danger"
+              size="sm"
+              disabled={!confirmed || remove.isPending}
+              onClick={() =>
+                // Leave the project's pages before it disappears from under
+                // them. That unmounts this dialog, so the result is read from
+                // the promise; a failure is reported by the global handler.
+                void navigate({ to: '/projects' })
+                  .then(() => remove.mutateAsync())
+                  .then(() =>
+                    toaster.create({
+                      type: 'success',
+                      title: `${project.name} was deleted.`,
+                    }),
+                  )
+                  .catch(() => undefined)
+              }
             >
-              <p className="text-lg font-semibold text-destructive tabular-nums">
-                {count}
-              </p>
-              <p className="text-xs text-destructive/80">{label}</p>
-            </li>
-          ))}
-        </ul>
+              Delete this project
+            </Button>
+          </>
+        }
+      >
+        <Stack gap="4">
+          <SimpleGrid as="ul" columns={3} gap="2" textAlign="center">
+            {(
+              [
+                [project.datasets, 'Datasets'],
+                [project.models, 'Models'],
+                [project.deployed, 'Deployments'],
+              ] as const
+            ).map(([count, label]) => (
+              <Box
+                as="li"
+                key={label}
+                rounded="l2"
+                bg="bg.error"
+                px="2"
+                py="2.5"
+              >
+                <Text
+                  fontSize="lg"
+                  fontWeight="semibold"
+                  color="fg.error"
+                  fontVariantNumeric="tabular-nums"
+                >
+                  {count}
+                </Text>
+                <Text fontSize="xs" color="fg.error">
+                  {label}
+                </Text>
+              </Box>
+            ))}
+          </SimpleGrid>
 
-        <Field>
-          <FieldLabel htmlFor="delete-project-confirm" className="font-normal">
-            <span>
-              Type <b className="font-semibold">{project.name}</b> to confirm
-            </span>
-          </FieldLabel>
-          <Input
-            id="delete-project-confirm"
-            value={confirmation}
-            autoComplete="off"
-            onChange={(event) => setConfirmation(event.target.value)}
-          />
-        </Field>
-
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            disabled={!confirmed || remove.isPending}
-            onClick={() =>
-              // Leave the project's pages before it disappears from under
-              // them. That unmounts this dialog, so the result is read from
-              // the promise; a failure is reported by the global handler.
-              void navigate({ to: '/projects' })
-                .then(() => remove.mutateAsync())
-                .then(() =>
-                  toaster.create({
-                    type: 'success',
-                    title: `${project.name} was deleted.`,
-                  }),
-                )
-                .catch(() => undefined)
-            }
-          >
-            Delete this project
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          <Field.Root>
+            <Field.Label fontWeight="normal">
+              <span>
+                Type{' '}
+                <Text as="b" fontWeight="semibold">
+                  {project.name}
+                </Text>{' '}
+                to confirm
+              </span>
+            </Field.Label>
+            <Input
+              value={confirmation}
+              autoComplete="off"
+              onChange={(event) => setConfirmation(event.target.value)}
+            />
+          </Field.Root>
+        </Stack>
+      </AppDialog>
+    </>
   )
 }
 
@@ -254,79 +314,71 @@ function DeleteProjectDialog({ project }: { project: Project }) {
 function TransferProjectDialog({ project }: { project: Project }) {
   const { organizations, updatePreferences } = useDashboardLayout()
   const transfer = useTransferProject(project.id)
+  const [open, setOpen] = React.useState(false)
   const [orgId, setOrgId] = React.useState('')
   const targets = organizations.filter((item) => item.id !== project.orgId)
   const chosen = targets.find((item) => item.id === orgId)
 
+  function close(next: boolean) {
+    setOpen(next)
+    if (!next) setOrgId('')
+  }
+
   return (
-    <AlertDialog onOpenChange={(open) => !open && setOrgId('')}>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="lg"
-          className="px-3.5 text-destructive hover:bg-destructive-muted hover:text-destructive"
-        >
-          Transfer
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Transfer {project.name}?</AlertDialogTitle>
-          <AlertDialogDescription>
-            The project, its datasets, models and deployments move to the
-            organization you choose.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <Field>
-          <FieldLabel htmlFor="transfer-project-target">
-            New organization
-          </FieldLabel>
-          <Select value={orgId} onValueChange={setOrgId}>
-            <SelectTrigger
-              id="transfer-project-target"
-              size="lg"
-              className="w-full"
+    <>
+      <Button {...dangerOutline} onClick={() => setOpen(true)}>
+        Transfer
+      </Button>
+      <AppDialog
+        role="alertdialog"
+        open={open}
+        onOpenChange={close}
+        title={`Transfer ${project.name}?`}
+        description="The project, its datasets, models and deployments move to the organization you choose."
+        footer={
+          <>
+            <Button variant="outline" size="sm" onClick={() => close(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="solid"
+              colorPalette="danger"
+              size="sm"
+              disabled={!chosen || transfer.isPending}
+              onClick={() => {
+                if (!chosen) return
+                close(false)
+                transfer.mutate(chosen.id, {
+                  onSuccess: () => {
+                    // Follow the project, so its page stays the current one.
+                    updatePreferences({ organizationId: chosen.id })
+                    toaster.create({
+                      type: 'success',
+                      title: `${project.name} moved to ${chosen.name}.`,
+                    })
+                  },
+                })
+              }}
             >
-              <SelectValue
-                placeholder={
-                  targets.length
-                    ? 'Choose an organization'
-                    : 'You belong to no other organization'
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {targets.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            disabled={!chosen || transfer.isPending}
-            onClick={() =>
-              chosen &&
-              transfer.mutate(chosen.id, {
-                onSuccess: () => {
-                  // Follow the project, so its page stays the current one.
-                  updatePreferences({ organizationId: chosen.id })
-                  toaster.create({
-                    type: 'success',
-                    title: `${project.name} moved to ${chosen.name}.`,
-                  })
-                },
-              })
-            }
-          >
-            Transfer project
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+              Transfer project
+            </Button>
+          </>
+        }
+      >
+        <SimpleSelect
+          label="New organization"
+          width="full"
+          portalled={false}
+          value={orgId}
+          onChange={setOrgId}
+          placeholder={
+            targets.length
+              ? 'Choose an organization'
+              : 'You belong to no other organization'
+          }
+          items={targets.map((item) => ({ label: item.name, value: item.id }))}
+        />
+      </AppDialog>
+    </>
   )
 }

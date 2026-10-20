@@ -1,9 +1,17 @@
-import * as React from 'react'
+import type * as React from 'react'
+import {
+  Box,
+  Button,
+  Card,
+  Center,
+  Flex,
+  Heading,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
 import { Link } from '@tanstack/react-router'
 import { FolderKanban } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import type {
   ProjectOverview,
   ResourceUsage,
@@ -28,14 +36,18 @@ export function FactList({
   items: Array<[string, React.ReactNode]>
 }) {
   return (
-    <dl className="grid gap-4">
+    <Stack as="dl" gap="4">
       {items.map(([label, value]) => (
-        <div key={label} className="flex items-start justify-between gap-4">
-          <dt className="text-muted-foreground">{label}</dt>
-          <dd className="text-right font-medium text-foreground">{value}</dd>
-        </div>
+        <Flex key={label} align="flex-start" justify="space-between" gap="4">
+          <Box as="dt" color="fg.muted">
+            {label}
+          </Box>
+          <Box as="dd" textAlign="end" fontWeight="medium">
+            {value}
+          </Box>
+        </Flex>
       ))}
-    </dl>
+    </Stack>
   )
 }
 
@@ -86,24 +98,37 @@ export function getUsageSummary(resource: ResourceUsage, period: UsagePeriod) {
 
 export function ProjectNotFound({ projectId }: { projectId: string }) {
   return (
-    <main
+    <Center
+      as="main"
       id="dashboard-main"
-      className="mx-auto flex min-h-[60vh] w-full max-w-[1440px] flex-1 items-center justify-center p-4 sm:p-6 lg:p-8"
+      mx="auto"
+      minH="60vh"
+      w="full"
+      maxW="1440px"
+      flex="1"
+      p={{ base: '4', sm: '6', lg: '8' }}
     >
-      <Card className="w-full max-w-md text-center">
-        <CardContent className="flex flex-col items-center py-8">
-          <span className="flex size-12 items-center justify-center rounded-full bg-primary-muted text-primary">
+      <Card.Root variant="outline" w="full" maxW="md" textAlign="center">
+        <Card.Body alignItems="center" py="8">
+          <Center
+            boxSize="12"
+            rounded="full"
+            bg="brand.subtle"
+            color="brand.fg"
+          >
             <FolderKanban />
-          </span>
-          <h1 className="mt-4 text-xl">Project not found</h1>
-          <p className="mt-2 text-muted-foreground">
+          </Center>
+          <Heading as="h1" mt="4" fontSize="xl" fontWeight="semibold">
+            Project not found
+          </Heading>
+          <Text mt="2" color="fg.muted">
             We could not find a project with the ID “{projectId}”.
-          </p>
-          <Button asChild className="mt-5">
+          </Text>
+          <Button asChild variant="solid" size="sm" mt="5">
             <Link to="/projects">Return to Projects</Link>
           </Button>
-        </CardContent>
-      </Card>
-    </main>
+        </Card.Body>
+      </Card.Root>
+    </Center>
   )
 }

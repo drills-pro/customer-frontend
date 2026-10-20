@@ -1,3 +1,4 @@
+import { Grid } from '@chakra-ui/react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { SettingsNav } from '@/components/shared/settings-nav'
@@ -26,16 +27,21 @@ function ProjectSettingsRoute() {
   const { project } = useProjectDetail()
 
   return (
-    <div className="mt-6 grid min-w-0 gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
+    <Grid
+      mt="6"
+      minW="0"
+      gap="6"
+      templateColumns={{ lg: '200px minmax(0, 1fr)' }}
+    >
       <SettingsNav sections={sections} />
       {/* Keyed on the project so switching projects resets every form. */}
-      <div key={project.id} className="grid min-w-0 max-w-4xl gap-6">
+      <Grid key={project.id} minW="0" maxW="4xl" gap="6">
         <GeneralCard />
         <MembersCard />
         <ApiKeysCard projectId={project.id} />
         <IntegrationsCard />
         <DangerZoneCard />
-      </div>
-    </div>
+      </Grid>
+    </Grid>
   )
 }

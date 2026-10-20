@@ -19,10 +19,7 @@ test('matches the reference project shell spacing', async ({ page }) => {
   const projectNavigation = content.getByRole('navigation', {
     name: 'Project sections',
   })
-  const pipeline = content
-    .locator('[data-slot="card"]')
-    .filter({ hasText: 'Pipeline' })
-    .first()
+  const pipeline = content.getByRole('region', { name: 'Pipeline' })
 
   await expect(content).toHaveCSS('padding-left', '24px')
   await expect(breadcrumb).toHaveCSS('margin-bottom', '12px')

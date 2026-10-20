@@ -2,7 +2,6 @@ import * as React from 'react'
 import {
   Box,
   Button,
-  Card,
   Center,
   Field,
   Flex,
@@ -12,10 +11,11 @@ import {
   Text,
 } from '@chakra-ui/react'
 import { useNavigate } from '@tanstack/react-router'
-import { Archive, ArrowRightLeft, Trash2, TriangleAlert } from 'lucide-react'
+import { Archive, ArrowRightLeft, Trash2 } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
 import { AppDialog } from '@/components/shared/app-dialog'
+import { DangerCard } from '@/components/shared/danger-card'
 import { SECTION_OFFSET } from '@/components/shared/settings-nav'
 import { SimpleSelect } from '@/components/simple-select'
 import {
@@ -49,35 +49,11 @@ export function DangerZoneCard() {
   const [archiveOpen, setArchiveOpen] = React.useState(false)
 
   return (
-    <Card.Root
-      as="section"
-      aria-labelledby="danger-zone-title"
+    <DangerCard
       id="danger-zone"
       scrollMarginTop={`${SECTION_OFFSET}px`}
-      variant="outline"
-      overflow="hidden"
-      borderColor="border.error"
+      title="Danger zone"
     >
-      <Flex
-        align="center"
-        gap="2"
-        px="5"
-        py="3.5"
-        borderBottomWidth="1px"
-        borderColor="border.error"
-        bg="bg.error"
-        color="fg.error"
-      >
-        <TriangleAlert size={16} aria-hidden="true" />
-        <Card.Title
-          as="h2"
-          id="danger-zone-title"
-          textStyle="body"
-          fontWeight="semibold"
-        >
-          Danger zone
-        </Card.Title>
-      </Flex>
       <Stack gap="0">
         <DangerRow
           icon={ArrowRightLeft}
@@ -148,7 +124,7 @@ export function DangerZoneCard() {
           <DeleteProjectDialog project={project} />
         </DangerRow>
       </Stack>
-    </Card.Root>
+    </DangerCard>
   )
 }
 

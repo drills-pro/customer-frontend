@@ -1,25 +1,23 @@
 import * as React from 'react'
+import {
+  Avatar,
+  Box,
+  Button,
+  Card,
+  Field,
+  Flex,
+  HStack,
+  Input,
+  SimpleGrid,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
 import { createFileRoute } from '@tanstack/react-router'
 import { toaster } from '@/components/toaster'
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import { FormFooter } from '@/components/shared/form-footer'
+import { SimpleSelect } from '@/components/simple-select'
 import { useDashboardLayout } from '@/features/dashboard/context'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { PageError } from '@/components/shared/query-states'
 import type { CurrentUser } from '@/features/account/mappers'
 import { useCurrentUser, useUpdateUser } from '@/features/account/queries'
@@ -60,25 +58,31 @@ function ProfileRoute() {
 
 function ProfilePhotoCard({ user }: { user: CurrentUser }) {
   return (
-    <Card size="flush">
-      <CardContent className="flex flex-wrap items-center gap-4 p-5">
-        <Avatar className="size-16">
-          <AvatarFallback
-            className="text-xl font-semibold text-white"
-            style={{ backgroundColor: user.color }}
-          >
+    <Card.Root variant="outline">
+      <Flex wrap="wrap" align="center" gap="4" p="5">
+        <Avatar.Root
+          boxSize="16"
+          borderWidth="0"
+          color="white"
+          // The user's own color, from the API.
+          bg={user.color}
+        >
+          <Avatar.Fallback fontSize="xl" fontWeight="semibold">
             {user.initials}
-          </AvatarFallback>
-        </Avatar>
-        <div className="mr-auto min-w-0">
-          <p className="text-[13px] font-medium">Profile photo</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          </Avatar.Fallback>
+        </Avatar.Root>
+        <Box me="auto" minW="0">
+          <Text fontSize="13px" fontWeight="medium">
+            Profile photo
+          </Text>
+          <Text mt="0.5" fontSize="xs" color="fg.muted">
             PNG or JPG, at least 200×200px.
-          </p>
-        </div>
-        <div className="flex gap-2">
+          </Text>
+        </Box>
+        <HStack gap="2">
           <Button
             variant="outline"
+            size="sm"
             onClick={() =>
               toaster.create({
                 type: 'info',
@@ -90,6 +94,8 @@ function ProfilePhotoCard({ user }: { user: CurrentUser }) {
           </Button>
           <Button
             variant="ghost"
+            colorPalette="gray"
+            size="sm"
             onClick={() =>
               toaster.create({
                 type: 'info',
@@ -99,9 +105,9 @@ function ProfilePhotoCard({ user }: { user: CurrentUser }) {
           >
             Remove
           </Button>
-        </div>
-      </CardContent>
-    </Card>
+        </HStack>
+      </Flex>
+    </Card.Root>
   )
 }
 
@@ -173,10 +179,10 @@ function ProfileFormCard({ user }: { user: CurrentUser }) {
   }
 
   return (
-    <Card size="flush">
+    <Card.Root variant="outline">
       <form onSubmit={save} noValidate>
-        <CardContent className="grid gap-5 p-5">
-          <div className="grid gap-5 sm:grid-cols-2">
+        <Stack gap="5" p="5">
+          <SimpleGrid columns={{ base: 1, sm: 2 }} gap="5">
             <TextField
               id="profile-name"
               label="Full name"
@@ -203,51 +209,28 @@ function ProfileFormCard({ user }: { user: CurrentUser }) {
               autoComplete="email"
               onChange={(value) => update('email', value)}
             />
-            <Field>
-              <FieldLabel htmlFor="profile-role">Role at {orgName}</FieldLabel>
-              <Select
-                value={values.role}
-                onValueChange={(value) => update('role', value as AccountRole)}
-              >
-                <SelectTrigger id="profile-role" size="lg" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {accountRoles.map((role) => (
-                    <SelectItem key={role} value={role}>
-                      {role}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-          </div>
+            <SimpleSelect
+              label={`Role at ${orgName}`}
+              width="full"
+              value={values.role}
+              onChange={(value) => update('role', value as AccountRole)}
+              items={accountRoles.map((role) => ({ label: role, value: role }))}
+            />
+          </SimpleGrid>
           <TextField
             id="profile-bio"
             label="Bio"
             value={values.bio}
             onChange={(value) => update('bio', value)}
           />
-        </CardContent>
+        </Stack>
 
-        <div className="flex flex-wrap items-center justify-end gap-2 border-t px-5 py-4">
-          {dirty && (
-            <p
-              role="status"
-              className="mr-auto flex items-center gap-2 text-xs text-muted-foreground"
-            >
-              <span
-                aria-hidden="true"
-                className="size-1.5 rounded-full bg-warning"
-              />
-              Unsaved changes
-            </p>
-          )}
+        <FormFooter dirty={dirty}>
           <Button
             type="button"
             variant="outline"
-            size="lg"
-            className="px-3.5"
+            size="sm"
+            px="3.5"
             disabled={!dirty}
             onClick={() => {
               setValues(saved)
@@ -256,12 +239,18 @@ function ProfileFormCard({ user }: { user: CurrentUser }) {
           >
             Cancel
           </Button>
-          <Button type="submit" size="lg" className="px-3.5" disabled={!dirty}>
+          <Button
+            type="submit"
+            variant="solid"
+            size="sm"
+            px="3.5"
+            disabled={!dirty}
+          >
             Save changes
           </Button>
-        </div>
+        </FormFooter>
       </form>
-    </Card>
+    </Card.Root>
   )
 }
 
@@ -285,20 +274,26 @@ function TextField({
   onChange: (value: string) => void
 }) {
   return (
-    <Field data-invalid={Boolean(error) || undefined}>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+    <Field.Root invalid={Boolean(error)}>
+      <Field.Label>{label}</Field.Label>
       <Input
-        id={id}
-        size="lg"
         type={type}
         value={value}
         autoComplete={autoComplete}
-        aria-invalid={Boolean(error) || undefined}
         aria-describedby={error ? `${id}-error` : undefined}
         onChange={(event) => onChange(event.target.value)}
       />
-      {hint && !error && <FieldDescription>{hint}</FieldDescription>}
-      <FieldError id={`${id}-error`}>{error}</FieldError>
-    </Field>
+      {hint && !error && <Field.HelperText>{hint}</Field.HelperText>}
+      {error && (
+        <Text
+          id={`${id}-error`}
+          role="alert"
+          textStyle="body-sm"
+          color="fg.error"
+        >
+          {error}
+        </Text>
+      )}
+    </Field.Root>
   )
 }

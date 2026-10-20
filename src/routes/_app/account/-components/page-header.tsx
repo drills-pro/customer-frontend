@@ -1,3 +1,6 @@
+import type * as React from 'react'
+import { Box, Center, Flex, Heading, Text } from '@chakra-ui/react'
+
 export function PageHeader({
   title,
   description,
@@ -6,10 +9,14 @@ export function PageHeader({
   description: string
 }) {
   return (
-    <div>
-      <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-    </div>
+    <Box>
+      <Heading as="h1" fontSize="2xl" fontWeight="bold" letterSpacing="tight">
+        {title}
+      </Heading>
+      <Text mt="1" textStyle="body-sm" color="fg.muted">
+        {description}
+      </Text>
+    </Box>
   )
 }
 
@@ -20,30 +27,36 @@ export function SettingRow({
   description,
   children,
 }: {
-  icon?: React.ComponentType<{ className?: string }>
+  icon?: React.ComponentType<{ size?: number }>
   title: React.ReactNode
   description?: React.ReactNode
   children?: React.ReactNode
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-3 px-5 py-4">
+    <Flex wrap="wrap" align="center" columnGap="4" rowGap="3" px="5" py="4">
       {Icon && (
-        <span
+        <Center
           aria-hidden="true"
-          className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-muted text-primary"
+          boxSize="9"
+          flexShrink={0}
+          rounded="l2"
+          bg="brand.subtle"
+          color="brand.fg"
         >
-          <Icon className="size-4" />
-        </span>
+          <Icon size={16} />
+        </Center>
       )}
-      <div className="mr-auto min-w-0 basis-52 grow">
-        <p className="text-[13px] font-medium">{title}</p>
+      <Box me="auto" minW="0" flexBasis="52" flexGrow={1}>
+        <Text fontSize="13px" fontWeight="medium">
+          {title}
+        </Text>
         {description && (
-          <div className="mt-0.5 text-xs text-muted-foreground">
+          <Box mt="0.5" fontSize="xs" color="fg.muted">
             {description}
-          </div>
+          </Box>
         )}
-      </div>
+      </Box>
       {children}
-    </div>
+    </Flex>
   )
 }

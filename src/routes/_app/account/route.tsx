@@ -1,3 +1,4 @@
+import { Box, Grid, Text } from '@chakra-ui/react'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 import { AccountNav } from './-components'
@@ -8,17 +9,24 @@ export const Route = createFileRoute('/_app/account')({
 
 function AccountLayout() {
   return (
-    <main
+    <Box
+      as="main"
       id="dashboard-main"
-      className="mx-auto w-full max-w-[1448px] flex-1 p-4 sm:p-6"
+      mx="auto"
+      w="full"
+      maxW="1448px"
+      flex="1"
+      p={{ base: '4', sm: '6' }}
     >
-      <p className="mb-4 text-sm text-muted-foreground">Account settings</p>
-      <div className="grid min-w-0 gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
+      <Text mb="4" textStyle="body-sm" color="fg.muted">
+        Account settings
+      </Text>
+      <Grid minW="0" gap="6" templateColumns={{ lg: '200px minmax(0, 1fr)' }}>
         <AccountNav />
-        <div className="grid min-w-0 max-w-4xl content-start gap-5">
+        <Grid minW="0" maxW="4xl" alignContent="start" gap="5">
           <Outlet />
-        </div>
-      </div>
-    </main>
+        </Grid>
+      </Grid>
+    </Box>
   )
 }

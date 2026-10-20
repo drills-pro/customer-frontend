@@ -1,4 +1,14 @@
 import * as React from 'react'
+import {
+  Box,
+  Button,
+  Card,
+  Field,
+  Flex,
+  Input,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
 import { createFileRoute } from '@tanstack/react-router'
 import {
   CircleCheck,
@@ -7,47 +17,14 @@ import {
   Monitor,
   Smartphone,
   Trash2,
-  TriangleAlert,
 } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field'
+import { AppDialog } from '@/components/shared/app-dialog'
+import { DangerCard } from '@/components/shared/danger-card'
+import { SectionCard } from '@/components/shared/section-card'
+import { ToneBadge } from '@/components/shared/tone-badge'
 import { useDashboardLayout } from '@/features/dashboard/context'
-import { Input } from '@/components/ui/input'
 import {
   useChangePassword,
   useCurrentUser,
@@ -77,8 +54,16 @@ function SecurityRoute() {
   )
 }
 
-const onBadge = 'border-0 bg-success-muted text-success'
-const offBadge = 'border-0 bg-muted text-muted-foreground'
+/** Rows in a card, ruled off from each other. */
+function RowList({ children }: { children: React.ReactNode }) {
+  return (
+    <Box
+      css={{ '& > * + *': { borderTopWidth: '1px', borderColor: 'border' } }}
+    >
+      {children}
+    </Box>
+  )
+}
 
 function PasswordCard() {
   const [open, setOpen] = React.useState(false)
@@ -88,18 +73,16 @@ function PasswordCard() {
     : '…'
 
   return (
-    <Card size="flush">
-      <CardContent className="p-0">
-        <SettingRow
-          icon={KeyRound}
-          title="Password"
-          description={`Last changed ${lastChanged}.`}
-        >
-          <Button variant="outline" onClick={() => setOpen(true)}>
-            Change password
-          </Button>
-        </SettingRow>
-      </CardContent>
+    <Card.Root variant="outline">
+      <SettingRow
+        icon={KeyRound}
+        title="Password"
+        description={`Last changed ${lastChanged}.`}
+      >
+        <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+          Change password
+        </Button>
+      </SettingRow>
       <ChangePasswordDialog
         open={open}
         onOpenChange={setOpen}
@@ -107,7 +90,7 @@ function PasswordCard() {
           toaster.create({ type: 'success', title: 'Password changed.' })
         }
       />
-    </Card>
+    </Card.Root>
   )
 }
 
@@ -182,64 +165,59 @@ function ChangePasswordDialog({
   ]
 
   return (
-    <Dialog open={open} onOpenChange={close}>
-      <DialogContent>
-        <form onSubmit={submit} noValidate className="contents">
-          <DialogHeader>
-            <DialogTitle>Change password</DialogTitle>
-            <DialogDescription>
-              Other sessions stay signed in until you sign them out.
-            </DialogDescription>
-          </DialogHeader>
-          <FieldGroup className="gap-4 py-2">
-            {fields.map((field) => {
-              const id = `password-${field.key}`
-              const error = errors[field.key]
-              return (
-                <Field
-                  key={field.key}
-                  data-invalid={Boolean(error) || undefined}
-                >
-                  <FieldLabel htmlFor={id}>{field.label}</FieldLabel>
-                  <Input
-                    id={id}
-                    type="password"
-                    value={values[field.key]}
-                    autoComplete={field.autoComplete}
-                    aria-invalid={Boolean(error) || undefined}
-                    onChange={(event) => {
-                      const value = event.target.value
-                      setValues((current) => ({
-                        ...current,
-                        [field.key]: value,
-                      }))
-                      setErrors((current) => ({
-                        ...current,
-                        [field.key]: undefined,
-                      }))
-                    }}
-                  />
-                  {field.hint && !error && (
-                    <FieldDescription>{field.hint}</FieldDescription>
-                  )}
-                  <FieldError>{error}</FieldError>
-                </Field>
-              )
-            })}
-          </FieldGroup>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => close(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit">Update password</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <AppDialog
+      open={open}
+      onOpenChange={close}
+      onSubmit={submit}
+      title="Change password"
+      description="Other sessions stay signed in until you sign them out."
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => close(false)}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" variant="solid" size="sm">
+            Update password
+          </Button>
+        </>
+      }
+    >
+      <Stack gap="4">
+        {fields.map((field) => {
+          const error = errors[field.key]
+          return (
+            <Field.Root key={field.key} invalid={Boolean(error)}>
+              <Field.Label>{field.label}</Field.Label>
+              <Input
+                type="password"
+                value={values[field.key]}
+                autoComplete={field.autoComplete}
+                onChange={(event) => {
+                  const value = event.target.value
+                  setValues((current) => ({
+                    ...current,
+                    [field.key]: value,
+                  }))
+                  setErrors((current) => ({
+                    ...current,
+                    [field.key]: undefined,
+                  }))
+                }}
+              />
+              {field.hint && !error && (
+                <Field.HelperText>{field.hint}</Field.HelperText>
+              )}
+              <Field.ErrorText>{error}</Field.ErrorText>
+            </Field.Root>
+          )
+        })}
+      </Stack>
+    </AppDialog>
   )
 }
 
@@ -249,18 +227,19 @@ function SignInMethodsCard() {
   const twoFactor = security?.two_factor_enabled ?? false
   const google = security?.sso.find((item) => item.provider === 'Google')
   return (
-    <Card size="flush">
-      <CardContent className="divide-y p-0">
+    <Card.Root variant="outline">
+      <RowList>
         <SettingRow
           icon={Lock}
           title="Two-factor authentication"
           description="Require a code from your authenticator app at sign-in."
         >
-          <Badge variant="secondary" className={twoFactor ? onBadge : offBadge}>
+          <ToneBadge tone={twoFactor ? 'success' : 'neutral'}>
             {twoFactor ? 'On' : 'Off'}
-          </Badge>
+          </ToneBadge>
           <Button
             variant="outline"
+            size="sm"
             onClick={() =>
               toaster.create({
                 type: 'info',
@@ -277,15 +256,12 @@ function SignInMethodsCard() {
           title="Google SSO"
           description={`Sign in with your ${orgName} Google Workspace account.`}
         >
-          <Badge
-            variant="secondary"
-            className={google?.connected ? onBadge : offBadge}
-          >
+          <ToneBadge tone={google?.connected ? 'success' : 'neutral'}>
             {google?.connected ? 'Connected' : 'Not connected'}
-          </Badge>
+          </ToneBadge>
         </SettingRow>
-      </CardContent>
-    </Card>
+      </RowList>
+    </Card.Root>
   )
 }
 
@@ -294,14 +270,11 @@ function SessionsCard() {
   const endSession = useEndSession()
 
   return (
-    <Card size="flush">
-      <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-        <CardTitle>Active sessions</CardTitle>
-        <CardDescription>
-          Devices currently signed in to your account.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="divide-y p-0">
+    <SectionCard
+      title="Active sessions"
+      description="Devices currently signed in to your account."
+    >
+      <RowList>
         {sessions.map((session) => (
           <SettingRow
             key={session.id}
@@ -314,12 +287,12 @@ function SessionsCard() {
             }
           >
             {session.current ? (
-              <Badge variant="secondary" className={onBadge}>
-                This device
-              </Badge>
+              <ToneBadge tone="success">This device</ToneBadge>
             ) : (
               <Button
                 variant="ghost"
+                colorPalette="gray"
+                size="sm"
                 aria-label={`Sign out ${session.device}`}
                 disabled={endSession.isPending}
                 onClick={() =>
@@ -337,8 +310,8 @@ function SessionsCard() {
             )}
           </SettingRow>
         ))}
-      </CardContent>
-    </Card>
+      </RowList>
+    </SectionCard>
   )
 }
 
@@ -349,62 +322,53 @@ function DeleteAccountCard() {
   const confirmWord = useCurrentUser().data?.username ?? ''
   const confirmed = Boolean(confirmWord) && confirmation === confirmWord
 
+  function close(next: boolean) {
+    setOpen(next)
+    if (!next) setConfirmation('')
+  }
+
   return (
-    <Card size="flush" className="ring-destructive/30">
-      <CardHeader className="border-b border-destructive/20 bg-destructive-muted/50 [--card-section:--spacing(3.5)]">
-        <CardTitle className="flex items-center gap-2 text-destructive">
-          <TriangleAlert className="size-4" />
-          Delete account
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-wrap items-center gap-4 p-5">
-        <p className="mr-auto min-w-0 basis-60 grow text-xs text-muted-foreground">
+    <DangerCard title="Delete account">
+      <Flex wrap="wrap" align="center" gap="4" p="5">
+        <Text
+          me="auto"
+          minW="0"
+          flexBasis="60"
+          flexGrow={1}
+          fontSize="xs"
+          color="fg.muted"
+        >
           Permanently remove your account and all associated data. This can't be
           undone.
-        </p>
-        <AlertDialog
-          open={open}
-          onOpenChange={(next) => {
-            setOpen(next)
-            if (!next) setConfirmation('')
-          }}
+        </Text>
+        <Button
+          variant="solid"
+          colorPalette="danger"
+          size="sm"
+          px="3.5"
+          onClick={() => setOpen(true)}
         >
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="lg" className="px-3.5">
-              <Trash2 />
-              Delete account
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete your account?</AlertDialogTitle>
-              <AlertDialogDescription>
-                You lose access to every organization and project, and your API
-                keys stop working. This cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <Field>
-              <FieldLabel
-                htmlFor="delete-account-confirm"
-                className="font-normal"
-              >
-                <span>
-                  Type <b className="font-semibold">{confirmWord}</b> to confirm
-                </span>
-              </FieldLabel>
-              <Input
-                id="delete-account-confirm"
-                value={confirmation}
-                autoComplete="off"
-                onChange={(event) => setConfirmation(event.target.value)}
-              />
-            </Field>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                variant="destructive"
+          <Trash2 />
+          Delete account
+        </Button>
+        <AppDialog
+          role="alertdialog"
+          open={open}
+          onOpenChange={close}
+          title="Delete your account?"
+          description="You lose access to every organization and project, and your API keys stop working. This cannot be undone."
+          footer={
+            <>
+              <Button variant="outline" size="sm" onClick={() => close(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="solid"
+                colorPalette="danger"
+                size="sm"
                 disabled={!confirmed || deleteAccount.isPending}
-                onClick={() =>
+                onClick={() => {
+                  close(false)
                   // Refused while the user still owns an organization; the
                   // reason comes back from the API and is shown as a toast.
                   deleteAccount.mutate(undefined, {
@@ -414,14 +378,31 @@ function DeleteAccountCard() {
                         title: 'Your account was deleted.',
                       }),
                   })
-                }
+                }}
               >
                 Delete my account
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </CardContent>
-    </Card>
+              </Button>
+            </>
+          }
+        >
+          <Field.Root>
+            <Field.Label fontWeight="normal">
+              <span>
+                Type{' '}
+                <Text as="b" fontWeight="semibold">
+                  {confirmWord}
+                </Text>{' '}
+                to confirm
+              </span>
+            </Field.Label>
+            <Input
+              value={confirmation}
+              autoComplete="off"
+              onChange={(event) => setConfirmation(event.target.value)}
+            />
+          </Field.Root>
+        </AppDialog>
+      </Flex>
+    </DangerCard>
   )
 }

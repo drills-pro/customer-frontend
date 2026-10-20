@@ -2,7 +2,6 @@ import * as React from 'react'
 import {
   Box,
   Button,
-  Card,
   Field,
   Flex,
   Grid,
@@ -12,10 +11,11 @@ import {
   Text,
 } from '@chakra-ui/react'
 import { useNavigate } from '@tanstack/react-router'
-import { Trash2, TriangleAlert } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
 import { AppDialog } from '@/components/shared/app-dialog'
+import { DangerCard } from '@/components/shared/danger-card'
 import { SectionCard } from '@/components/shared/section-card'
 import { SimpleSelect } from '@/components/simple-select'
 import { useComputeOptions } from '@/features/catalog/queries'
@@ -162,33 +162,7 @@ export function SettingsTab() {
           </Flex>
         </SectionCard>
 
-        <Card.Root
-          as="section"
-          aria-labelledby="deployment-danger-title"
-          variant="outline"
-          overflow="hidden"
-          borderColor="border.error"
-        >
-          <Flex
-            align="center"
-            gap="2"
-            px="5"
-            py="3.5"
-            borderBottomWidth="1px"
-            borderColor="border.error"
-            bg="bg.error"
-            color="fg.error"
-          >
-            <TriangleAlert size={16} aria-hidden="true" />
-            <Card.Title
-              as="h2"
-              id="deployment-danger-title"
-              textStyle="body"
-              fontWeight="semibold"
-            >
-              Danger zone
-            </Card.Title>
-          </Flex>
+        <DangerCard title="Danger zone">
           <Flex wrap="wrap" align="center" gap="4" p="5">
             <Box me="auto" minW="0">
               <Text fontSize="13px" fontWeight="medium">
@@ -253,7 +227,7 @@ export function SettingsTab() {
               }
             />
           </Flex>
-        </Card.Root>
+        </DangerCard>
       </Grid>
 
       <SectionCard title="Deployment history">

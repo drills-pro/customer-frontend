@@ -1,16 +1,17 @@
+import type * as React from 'react'
+import {
+  Box,
+  Button,
+  Card,
+  Flex,
+  Progress,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
 import { createFileRoute } from '@tanstack/react-router'
 import { CreditCard, Download } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
+import { SectionCard } from '@/components/shared/section-card'
 import { CardError, CardLoading } from '@/components/shared/query-states'
 import { useDashboardLayout } from '@/features/dashboard/context'
 import { useBilling, useInvoices } from '@/features/organizations/queries'
@@ -47,65 +48,80 @@ function useCurrentBilling() {
   return useBilling(useDashboardLayout().org.id)
 }
 
+/** Rows in a card, ruled off from each other. */
+function RowList({ children }: { children: React.ReactNode }) {
+  return (
+    <Box
+      css={{ '& > * + *': { borderTopWidth: '1px', borderColor: 'border' } }}
+    >
+      {children}
+    </Box>
+  )
+}
+
 function PlanCard() {
   const { data: billing, error, refetch } = useCurrentBilling()
 
   if (error) {
     return (
-      <Card size="flush">
+      <Card.Root variant="outline">
         <CardError
           title="Could not load billing"
           error={error}
           onRetry={() => void refetch()}
         />
-      </Card>
+      </Card.Root>
     )
   }
   if (!billing) {
     return (
-      <Card size="flush">
+      <Card.Root variant="outline">
         <CardLoading rows={2} />
-      </Card>
+      </Card.Root>
     )
   }
 
   return (
-    <Card size="flush">
-      <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-        <CardTitle>{billing.plan_name}</CardTitle>
-        <CardDescription>
-          {formatCount(billing.credits_total)} credits / month · renews{' '}
-          {monthDay(billing.renews_at)}
-        </CardDescription>
-        <CardAction>
-          <Button
-            variant="outline"
-            onClick={() => unavailable('Changing plans')}
-          >
-            Change plan
-          </Button>
-        </CardAction>
-      </CardHeader>
-      <CardContent className="grid gap-2 p-5">
-        <div className="flex justify-between text-[13px]">
+    <SectionCard
+      title={billing.plan_name}
+      description={`${formatCount(billing.credits_total)} credits / month · renews ${monthDay(billing.renews_at)}`}
+      action={
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => unavailable('Changing plans')}
+        >
+          Change plan
+        </Button>
+      }
+    >
+      <Stack gap="2" p="5">
+        <Flex justify="space-between" fontSize="13px">
           <span>Credits used</span>
-          <span className="font-semibold tabular-nums">
+          <Text
+            as="span"
+            fontWeight="semibold"
+            fontVariantNumeric="tabular-nums"
+          >
             {formatCount(billing.credits_used)} /{' '}
             {formatCount(billing.credits_total)}
-          </span>
-        </div>
-        <Progress
+          </Text>
+        </Flex>
+        <Progress.Root
+          size="sm"
           value={Math.round(
             (billing.credits_used / billing.credits_total) * 100,
           )}
-          aria-label="Credits used"
-          className="h-2"
-        />
-        <p className="text-xs text-muted-foreground">
+        >
+          <Progress.Track aria-label="Credits used">
+            <Progress.Range />
+          </Progress.Track>
+        </Progress.Root>
+        <Text fontSize="xs" color="fg.muted">
           GPU hours are billed separately — see Resource usage on your project.
-        </p>
-      </CardContent>
-    </Card>
+        </Text>
+      </Stack>
+    </SectionCard>
   )
 }
 
@@ -113,33 +129,30 @@ function PaymentMethodCard() {
   const paymentMethod = useCurrentBilling().data?.payment_method
 
   return (
-    <Card size="flush">
-      <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-        <CardTitle>Payment method</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <SettingRow
-          icon={CreditCard}
-          title={
-            paymentMethod
-              ? `${paymentMethod.brand} ending in ${paymentMethod.last4}`
-              : 'No payment method'
-          }
-          description={
-            paymentMethod
-              ? `Expires ${paymentMethod.expires}`
-              : 'Add a card to move to a paid plan.'
-          }
+    <SectionCard title="Payment method">
+      <SettingRow
+        icon={CreditCard}
+        title={
+          paymentMethod
+            ? `${paymentMethod.brand} ending in ${paymentMethod.last4}`
+            : 'No payment method'
+        }
+        description={
+          paymentMethod
+            ? `Expires ${paymentMethod.expires}`
+            : 'Add a card to move to a paid plan.'
+        }
+      >
+        <Button
+          variant="ghost"
+          colorPalette="gray"
+          size="sm"
+          onClick={() => unavailable('Updating the payment method')}
         >
-          <Button
-            variant="ghost"
-            onClick={() => unavailable('Updating the payment method')}
-          >
-            Update
-          </Button>
-        </SettingRow>
-      </CardContent>
-    </Card>
+          Update
+        </Button>
+      </SettingRow>
+    </SectionCard>
   )
 }
 
@@ -147,11 +160,8 @@ function InvoicesCard() {
   const invoices = useInvoices(useDashboardLayout().org.id).data ?? []
 
   return (
-    <Card size="flush">
-      <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-        <CardTitle>Invoices</CardTitle>
-      </CardHeader>
-      <CardContent className="divide-y p-0">
+    <SectionCard title="Invoices">
+      <RowList>
         {invoices.map((invoice) => (
           <SettingRow
             key={invoice.id}
@@ -160,6 +170,8 @@ function InvoicesCard() {
           >
             <Button
               variant="ghost"
+              colorPalette="gray"
+              size="sm"
               aria-label={`Download ${monthYear(invoice.period_start)} invoice`}
               onClick={() => unavailable('Downloading invoices')}
             >
@@ -168,7 +180,7 @@ function InvoicesCard() {
             </Button>
           </SettingRow>
         ))}
-      </CardContent>
-    </Card>
+      </RowList>
+    </SectionCard>
   )
 }

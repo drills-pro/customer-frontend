@@ -17,6 +17,7 @@ import { Building2, Lock } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
 import { CopyButton } from '@/components/shared/copy-button'
+import { FormFooter } from '@/components/shared/form-footer'
 import {
   RadioButton,
   RadioButtonGroup,
@@ -286,33 +287,7 @@ export function GeneralCard() {
           </SimpleGrid>
         </Stack>
 
-        <Flex
-          wrap="wrap"
-          align="center"
-          justify="flex-end"
-          gap="2"
-          borderTopWidth="1px"
-          borderColor="border"
-          px="5"
-          py="4"
-        >
-          {dirty && (
-            <HStack
-              role="status"
-              me="auto"
-              gap="2"
-              fontSize="xs"
-              color="fg.muted"
-            >
-              <Box
-                aria-hidden="true"
-                boxSize="1.5"
-                rounded="full"
-                bg="warning"
-              />
-              Unsaved changes
-            </HStack>
-          )}
+        <FormFooter dirty={dirty}>
           <Button
             type="button"
             variant="ghost"
@@ -333,7 +308,7 @@ export function GeneralCard() {
           >
             Save changes
           </Button>
-        </Flex>
+        </FormFooter>
       </form>
     </SectionCard>
   )

@@ -1,5 +1,8 @@
 import * as React from 'react'
-import { Link, useLocation } from '@tanstack/react-router'
+import { Box, Link } from '@chakra-ui/react'
+import { Link as RouterLink, useLocation } from '@tanstack/react-router'
+
+import { SECTION_OFFSET } from '@/components/shared/settings-nav'
 
 export const accountSections = [
   { to: '/account/profile', label: 'Profile' },
@@ -26,21 +29,45 @@ export function AccountNav() {
   }, [pathname])
 
   return (
-    <nav
+    <Box
+      as="nav"
       ref={navRef}
       aria-label="Account settings"
-      className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:sticky lg:top-22 lg:mx-0 lg:flex-col lg:self-start lg:overflow-visible lg:px-0"
+      display="flex"
+      gap="1"
+      mx={{ base: '-1', lg: '0' }}
+      px={{ base: '1', lg: '0' }}
+      pb="1"
+      overflowX={{ base: 'auto', lg: 'visible' }}
+      flexDirection={{ lg: 'column' }}
+      position={{ lg: 'sticky' }}
+      top={{ lg: `${SECTION_OFFSET}px` }}
+      alignSelf={{ lg: 'flex-start' }}
     >
       {accountSections.map((section) => (
         <Link
           key={section.to}
-          to={section.to}
-          activeProps={{ 'aria-current': 'page' }}
-          className="shrink-0 rounded-md px-3 py-2 text-sm whitespace-nowrap text-muted-foreground transition-colors outline-hidden hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring aria-[current=page]:bg-primary-muted aria-[current=page]:font-medium aria-[current=page]:text-primary"
+          asChild
+          flexShrink={0}
+          rounded="l2"
+          px="3"
+          py="2"
+          textStyle="body-sm"
+          whiteSpace="nowrap"
+          color="fg.muted"
+          textDecoration="none"
+          _hover={{ bg: 'bg.muted', textDecoration: 'none' }}
+          _currentPage={{
+            bg: 'brand.subtle',
+            fontWeight: 'medium',
+            color: 'brand.fg',
+          }}
         >
-          {section.label}
+          <RouterLink to={section.to} activeProps={{ 'aria-current': 'page' }}>
+            {section.label}
+          </RouterLink>
         </Link>
       ))}
-    </nav>
+    </Box>
   )
 }

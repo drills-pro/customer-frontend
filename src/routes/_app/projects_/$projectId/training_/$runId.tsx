@@ -121,7 +121,7 @@ function TrainingRunRoute() {
       id="dashboard-main"
       className="mx-auto w-full max-w-[1448px] min-w-0 flex-1 p-4 sm:p-6"
     >
-      <RouteBreadcrumbs className="mb-3" />
+      <RouteBreadcrumbs mb="3" />
 
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>

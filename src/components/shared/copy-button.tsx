@@ -1,8 +1,7 @@
 import * as React from 'react'
+import { Button } from '@chakra-ui/react'
 import { Check, Copy } from 'lucide-react'
 import { toaster } from '@/components/toaster'
-
-import { Button } from '@/components/ui/button'
 
 /**
  * Copies a value and says so in place. Clipboard access throws in some
@@ -38,7 +37,13 @@ export function CopyButton({
   }
 
   return (
-    <Button variant="ghost" size="sm" aria-label={label} onClick={copy}>
+    <Button
+      variant="ghost"
+      colorPalette="gray"
+      size="xs"
+      aria-label={label}
+      onClick={copy}
+    >
       {copied ? <Check /> : <Copy />}
       {children ?? (copied ? 'Copied' : 'Copy')}
     </Button>

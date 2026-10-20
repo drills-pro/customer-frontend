@@ -1,15 +1,16 @@
+import * as React from 'react'
+import {
+  Dialog,
+  Icon,
+  Input,
+  InputGroup,
+  Listbox,
+  Portal,
+  createListCollection,
+} from '@chakra-ui/react'
 import { useNavigate } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
 
-import {
-  Command,
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command'
 import type { Organization } from '@/features/dashboard/domain/types'
 import type { ApiSearchHit } from '@/features/organizations/api'
 import { unavailable } from '@/lib/unavailable'
@@ -63,9 +64,32 @@ export function WorkspaceSearch({
   items: SearchItem[]
 }) {
   const navigate = useNavigate()
+  const [query, setQuery] = React.useState('')
+  const [highlighted, setHighlighted] = React.useState<string | null>(null)
+
+  const collection = React.useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    return createListCollection({
+      items: items.filter((item) => item.label.toLowerCase().includes(needle)),
+      itemToValue: (item) => `${item.group}:${item.id}`,
+      itemToString: (item) => item.label,
+      groupBy: (item) => item.group,
+      groupSort: groups,
+    })
+  }, [items, query])
+
+  // The first match is ready for Enter, as in any command palette.
+  React.useEffect(() => {
+    setHighlighted(collection.firstValue)
+  }, [collection])
+
+  function close(next: boolean) {
+    onOpenChange(next)
+    if (!next) setQuery('')
+  }
 
   function select(item: SearchItem) {
-    onOpenChange(false)
+    close(false)
     if (item.group === 'Organizations') {
       void navigate({
         to: '/organizations/$orgId/overview',
@@ -92,34 +116,81 @@ export function WorkspaceSearch({
   }
 
   return (
-    <CommandDialog
+    <Dialog.Root
       open={open}
-      onOpenChange={onOpenChange}
-      title="Search workspace"
-      description="Search projects, training runs, deployments, and organizations."
+      onOpenChange={(event) => close(event.open)}
+      placement="top"
+      size="md"
     >
-      <Command>
-        <CommandInput placeholder="Search projects, models, runs..." />
-        <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
-          {groups.map((group) => (
-            <CommandGroup heading={group} key={group}>
-              {items
-                .filter((item) => item.group === group)
-                .map((item) => (
-                  <CommandItem
-                    key={item.id}
-                    value={item.label}
-                    onSelect={() => select(item)}
-                  >
-                    <Search />
-                    {item.label}
-                  </CommandItem>
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content p="0" overflow="hidden">
+            <Dialog.Title srOnly>Search workspace</Dialog.Title>
+            <Dialog.Description srOnly>
+              Search projects, training runs, deployments, and organizations.
+            </Dialog.Description>
+            <Listbox.Root
+              collection={collection}
+              highlightedValue={highlighted}
+              onHighlightChange={(details) =>
+                setHighlighted(details.highlightedValue)
+              }
+              onSelect={(details) => {
+                const item = collection.find(details.value)
+                if (item) select(item)
+              }}
+              gap="0"
+            >
+              <InputGroup
+                startElement={<Search size={16} />}
+                borderBottomWidth="1px"
+                borderColor="border"
+              >
+                <Listbox.Input
+                  asChild
+                  value={query}
+                  onChange={(event) => setQuery(event.currentTarget.value)}
+                >
+                  <Input
+                    variant="flushed"
+                    h="12"
+                    placeholder="Search projects, models, runs..."
+                  />
+                </Listbox.Input>
+              </InputGroup>
+              <Listbox.Content
+                maxH="80"
+                overflowY="auto"
+                p="1.5"
+                borderWidth="0"
+                boxShadow="none"
+              >
+                {collection.group().map(([group, groupItems]) => (
+                  <Listbox.ItemGroup key={group}>
+                    <Listbox.ItemGroupLabel>{group}</Listbox.ItemGroupLabel>
+                    {groupItems.map((item) => (
+                      <Listbox.Item
+                        key={`${item.group}:${item.id}`}
+                        item={item}
+                        gap="2"
+                      >
+                        <Icon boxSize="4" color="fg.muted" asChild>
+                          <Search />
+                        </Icon>
+                        <Listbox.ItemText>{item.label}</Listbox.ItemText>
+                      </Listbox.Item>
+                    ))}
+                  </Listbox.ItemGroup>
                 ))}
-            </CommandGroup>
-          ))}
-        </CommandList>
-      </Command>
-    </CommandDialog>
+                <Listbox.Empty py="6" textAlign="center" textStyle="body-sm">
+                  No results found.
+                </Listbox.Empty>
+              </Listbox.Content>
+            </Listbox.Root>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </Dialog.Root>
   )
 }

@@ -355,7 +355,7 @@ test('New Project links to the project creation flow', async ({ page }) => {
 test('sidebar state is session-only and resets on refresh', async ({
   page,
 }) => {
-  const sidebar = page.locator('[data-slot=sidebar]').first()
+  const sidebar = page.getByTestId('app-sidebar')
   await expect(sidebar).toHaveAttribute('data-state', 'expanded')
 
   await page.getByRole('button', { name: 'Toggle navigation' }).click()
@@ -369,7 +369,7 @@ test('sidebar state is session-only and resets on refresh', async ({
     'data-hydrated',
     'true',
   )
-  await expect(page.locator('[data-slot=sidebar]').first()).toHaveAttribute(
+  await expect(page.getByTestId('app-sidebar')).toHaveAttribute(
     'data-state',
     'expanded',
   )

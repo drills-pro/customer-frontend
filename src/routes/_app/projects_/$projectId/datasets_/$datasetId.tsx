@@ -81,7 +81,7 @@ function DatasetDetailRoute() {
       id="dashboard-main"
       className="mx-auto w-full max-w-[1448px] min-w-0 flex-1 p-4 sm:p-6"
     >
-      <RouteBreadcrumbs className="mb-3" />
+      <RouteBreadcrumbs mb="3" />
 
       <DatasetHeader />
 

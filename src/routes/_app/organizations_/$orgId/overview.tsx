@@ -194,7 +194,7 @@ function OrgOverview() {
               <CardTitle>About</CardTitle>
             </CardHeader>
             <CardContent className="flex items-start gap-3 p-5">
-              <OrgMark org={org} className="size-9" />
+              <OrgMark org={org} boxSize="9" />
               <div className="min-w-0 text-sm">
                 <p>
                   {org.description || (
@@ -298,7 +298,7 @@ function OrgOverview() {
                     key={member.id}
                     className="flex items-center gap-3 px-5 py-2.5"
                   >
-                    <MemberAvatar member={member} className="size-7" />
+                    <MemberAvatar member={member} boxSize="7" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[13px] font-medium">
                         {member.name}

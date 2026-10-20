@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Center, Flex, Spinner } from '@chakra-ui/react'
 import {
   createFileRoute,
   Outlet,
@@ -10,9 +11,6 @@ import { toaster } from '@/components/toaster'
 
 import { setCurrentOrganizationId } from '@/api/session'
 import { PageError } from '@/components/shared/query-states'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
-import { Spinner } from '@/components/ui/spinner'
-import { TooltipProvider } from '@/components/ui/tooltip'
 import type {
   DashboardPreferences,
   Organization,
@@ -38,6 +36,11 @@ import {
   usePreferences,
   WorkspaceSearch,
 } from './-components/shell'
+import {
+  SidebarInset,
+  SidebarProvider,
+  SkipLink,
+} from './-components/shell/app-shell'
 import { CreateOrganizationDialog } from './organizations_/-components/create-organization-dialog'
 
 export { useDashboardLayout }
@@ -59,24 +62,25 @@ function AppLayout() {
 
   if (organizations.error) {
     return (
-      <div className="flex min-h-svh bg-background">
+      <Flex minH="100svh" bg="bg">
         <PageError
           title="Could not load your workspace"
           error={organizations.error}
           onRetry={() => void organizations.refetch()}
         />
-      </div>
+      </Flex>
     )
   }
   if (!preferencesState.hydrated || !organizations.data?.length) {
     return (
-      <div
-        className="flex min-h-svh items-center justify-center bg-background"
+      <Center
+        minH="100svh"
+        bg="bg"
         aria-busy="true"
         aria-label="Loading workspace"
       >
-        <Spinner />
-      </div>
+        <Spinner size="sm" color="brand-text" />
+      </Center>
     )
   }
   return <AppShell {...preferencesState} entries={organizations.data} />
@@ -170,50 +174,40 @@ function AppShell({
         openCreateOrganization: () => setCreateOrgOpen(true),
       }}
     >
-      <TooltipProvider>
-        <SidebarProvider
-          style={{ '--sidebar-width': '15rem' } as React.CSSProperties}
-        >
-          <a href="#dashboard-main" className="skip-link">
-            Skip to content
-          </a>
+      <SidebarProvider>
+        <SkipLink />
 
-          <AppSidebar org={org} currentProject={currentProject} />
+        <AppSidebar org={org} currentProject={currentProject} />
 
-          <SidebarInset
-            className="min-w-0 bg-background"
-            data-testid="dashboard-app"
-            data-hydrated={hydrated}
-          >
-            <AppHeader
-              org={org}
-              orgEntries={orgEntries}
-              theme={preferences.theme}
-              onSwitchOrganization={switchOrganization}
-              onCreateOrganization={() => setCreateOrgOpen(true)}
-              onOpenSearch={() => setSearchOpen(true)}
-              onOpenShortcuts={() => setShortcutsOpen(true)}
-            />
-            <Outlet />
-          </SidebarInset>
+        <SidebarInset data-testid="dashboard-app" data-hydrated={hydrated}>
+          <AppHeader
+            org={org}
+            orgEntries={orgEntries}
+            theme={preferences.theme}
+            onSwitchOrganization={switchOrganization}
+            onCreateOrganization={() => setCreateOrgOpen(true)}
+            onOpenSearch={() => setSearchOpen(true)}
+            onOpenShortcuts={() => setShortcutsOpen(true)}
+          />
+          <Outlet />
+        </SidebarInset>
 
-          <WorkspaceSearch
-            open={searchOpen}
-            onOpenChange={setSearchOpen}
-            items={buildSearchItems({ organizations, hits: searchHits ?? [] })}
-          />
-          <KeyboardShortcutsDialog
-            open={shortcutsOpen}
-            onOpenChange={setShortcutsOpen}
-          />
-          <CreateOrganizationDialog
-            open={createOrgOpen}
-            onOpenChange={setCreateOrgOpen}
-            organizations={organizations}
-            onCreated={organizationCreated}
-          />
-        </SidebarProvider>
-      </TooltipProvider>
+        <WorkspaceSearch
+          open={searchOpen}
+          onOpenChange={setSearchOpen}
+          items={buildSearchItems({ organizations, hits: searchHits ?? [] })}
+        />
+        <KeyboardShortcutsDialog
+          open={shortcutsOpen}
+          onOpenChange={setShortcutsOpen}
+        />
+        <CreateOrganizationDialog
+          open={createOrgOpen}
+          onOpenChange={setCreateOrgOpen}
+          organizations={organizations}
+          onCreated={organizationCreated}
+        />
+      </SidebarProvider>
     </DashboardLayoutContext.Provider>
   )
 }

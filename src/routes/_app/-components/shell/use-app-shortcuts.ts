@@ -13,6 +13,8 @@ const sequenceTargets = {
 function isTyping(target: EventTarget | null) {
   return (
     target instanceof HTMLElement &&
+    // Focus stays in a closing dialog's field until its exit animation ends.
+    !target.closest('[data-state="closed"]') &&
     (target.isContentEditable ||
       ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
   )
@@ -57,7 +59,10 @@ export function useAppShortcuts({
       if (
         event.altKey ||
         isTyping(event.target) ||
-        document.querySelector('[role="dialog"], [role="alertdialog"]')
+        // A dialog stays in the DOM while its exit animation plays.
+        document.querySelector(
+          ':is([role="dialog"], [role="alertdialog"]):not([data-state="closed"])',
+        )
       ) {
         sequenceStartedAt = 0
         return

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { cn } from 'cn'
+import { Box, Link } from '@chakra-ui/react'
 
 export type SettingsSection = { id: string; label: string }
 
@@ -8,10 +8,10 @@ const DANGER_ID = 'danger-zone'
 
 /**
  * Distance from the viewport top where a section counts as current: the 56px
- * sticky app header plus a gap. Matches `lg:top-22` on the nav and
- * `scroll-mt-22` on every card, so a clicked card lands exactly on this line.
+ * sticky app header plus a gap. The nav sticks at this offset and every card
+ * sets it as `scrollMarginTop`, so a clicked card lands exactly on this line.
  */
-const SECTION_OFFSET = 88
+export const SECTION_OFFSET = 88
 
 /** The last section whose top has reached the offset line. */
 function sectionAtScroll(sections: readonly SettingsSection[]) {
@@ -99,15 +99,26 @@ export function SettingsNav({
   const [active, scrollTo] = useActiveSection(sections)
 
   return (
-    <nav
+    <Box
+      as="nav"
       aria-label="Settings sections"
-      className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:sticky lg:top-22 lg:mx-0 lg:flex-col lg:self-start lg:overflow-visible lg:px-0"
+      display="flex"
+      gap="1"
+      mx={{ base: '-1', lg: '0' }}
+      px={{ base: '1', lg: '0' }}
+      pb="1"
+      overflowX={{ base: 'auto', lg: 'visible' }}
+      flexDirection={{ lg: 'column' }}
+      position={{ lg: 'sticky' }}
+      top={{ lg: `${SECTION_OFFSET}px` }}
+      alignSelf={{ lg: 'flex-start' }}
     >
       {sections.map((section) => {
         const current = active === section.id
         const danger = section.id === DANGER_ID
+        const palette = danger ? 'danger' : 'brand'
         return (
-          <a
+          <Link
             key={section.id}
             href={`#${section.id}`}
             aria-current={current ? 'location' : undefined}
@@ -115,21 +126,30 @@ export function SettingsNav({
               event.preventDefault()
               scrollTo(section.id)
             }}
-            className={cn(
-              'shrink-0 rounded-md px-3 py-2 text-sm whitespace-nowrap transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
-              danger
-                ? current
-                  ? 'bg-destructive-muted font-medium text-destructive'
-                  : 'text-destructive hover:bg-destructive-muted'
+            flexShrink={0}
+            rounded="l2"
+            px="3"
+            py="2"
+            textStyle="body-sm"
+            whiteSpace="nowrap"
+            textDecoration="none"
+            colorPalette={palette}
+            color={danger || current ? 'colorPalette.fg' : 'fg.muted'}
+            fontWeight={current ? 'medium' : 'normal'}
+            bg={current ? 'colorPalette.subtle' : undefined}
+            _hover={{
+              bg: danger
+                ? 'colorPalette.subtle'
                 : current
-                  ? 'bg-primary-muted font-medium text-primary'
-                  : 'text-muted-foreground hover:bg-muted',
-            )}
+                  ? undefined
+                  : 'bg.muted',
+              textDecoration: 'none',
+            }}
           >
             {section.label}
-          </a>
+          </Link>
         )
       })}
-    </nav>
+    </Box>
   )
 }

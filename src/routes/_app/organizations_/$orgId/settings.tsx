@@ -182,7 +182,9 @@ function GeneralCard({ org }: { org: Organization }) {
                   initial: initialOf(values.name),
                   color: values.color,
                 }}
-                className="size-11 rounded-xl text-base"
+                boxSize="11"
+                rounded="l3"
+                fontSize="md"
               />
               <div className="mr-auto min-w-0">
                 <p className="truncate font-medium">{values.name || '—'}</p>

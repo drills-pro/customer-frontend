@@ -217,7 +217,7 @@ function TrainingWizardForm({
       id="dashboard-main"
       className="mx-auto w-full max-w-[1180px] min-w-0 flex-1 p-4 sm:p-6 xl:py-10"
     >
-      <RouteBreadcrumbs className="mb-4" />
+      <RouteBreadcrumbs mb="4" />
 
       <div className="mb-7">
         <h1 className="text-2xl font-semibold tracking-tight">

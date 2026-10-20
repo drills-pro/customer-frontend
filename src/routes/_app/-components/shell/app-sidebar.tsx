@@ -1,3 +1,14 @@
+import * as React from 'react'
+import {
+  Box,
+  Button,
+  Center,
+  Flex,
+  HStack,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
+import type { ButtonProps } from '@chakra-ui/react'
 import { Link } from '@tanstack/react-router'
 import {
   Building2,
@@ -9,26 +20,12 @@ import {
 import type { LucideIcon } from 'lucide-react'
 
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-  SidebarRail,
-} from '@/components/ui/sidebar'
-import {
   projectSectionLink,
   projectSections,
 } from '@/features/dashboard/navigation'
 import type { Organization, Project } from '@/features/dashboard/data'
 import { unavailable } from '@/lib/unavailable'
+import { Sidebar, SidebarTooltip, useSidebar } from './app-shell'
 
 type MainNavigationItem = {
   label: string
@@ -49,6 +46,46 @@ const mainNavigation: MainNavigationItem[] = [
   { label: 'All Screens', icon: LayoutGrid, action: 'unavailable' },
 ]
 
+/** A sidebar row. Links mark themselves `data-active="true"` when current. */
+function NavButton(props: ButtonProps) {
+  const { collapsed, isMobile } = useSidebar()
+  const rail = collapsed && !isMobile
+  return (
+    <Button
+      variant="ghost"
+      colorPalette="gray"
+      size="sm"
+      h="8"
+      w={rail ? '8' : 'full'}
+      minW="0"
+      px="2"
+      gap="2"
+      justifyContent="flex-start"
+      fontWeight="normal"
+      color="fg"
+      overflow="hidden"
+      css={{
+        '& svg': { width: '4', height: '4', flexShrink: 0 },
+        '&[data-active=true]': { bg: 'selected-bg', fontWeight: 'medium' },
+      }}
+      {...props}
+    />
+  )
+}
+
+/**
+ * The label beside an icon. The collapsed rail hides it visually but keeps it
+ * as the link's accessible name.
+ */
+function NavLabel({ children }: { children: React.ReactNode }) {
+  const { collapsed, isMobile } = useSidebar()
+  return (
+    <Text as="span" truncate srOnly={collapsed && !isMobile}>
+      {children}
+    </Text>
+  )
+}
+
 export function AppSidebar({
   org,
   currentProject,
@@ -56,122 +93,178 @@ export function AppSidebar({
   org: Organization
   currentProject: Project | undefined
 }) {
-  return (
-    <Sidebar collapsible="icon">
-      {/* The collapsed rail is 3rem wide: `px-2` leaves exactly the 2rem the
-          logo mark needs, where `px-3` would clip it. */}
-      <SidebarHeader className="h-14 justify-center border-b px-3 group-data-[collapsible=icon]:px-2">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              tooltip="DRILLS home"
-              className="font-semibold"
-            >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary font-bold text-primary-foreground">
-                D
-              </span>
-              <span>DRILLS</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
+  const { collapsed, isMobile } = useSidebar()
+  const rail = collapsed && !isMobile
 
-      <SidebarContent aria-label="Main navigation">
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainNavigation.map((item) => {
-                const Icon = item.icon
-                return (
-                  <SidebarMenuItem key={item.label}>
-                    {'to' in item ? (
-                      <SidebarMenuButton asChild tooltip={item.label}>
-                        <Link
-                          to={item.to}
-                          params={{ orgId: org.id }}
-                          // `/organizations` must not light up on an org's
-                          // settings page, which the Settings item owns.
-                          activeOptions={{
-                            exact:
-                              item.to === '/' || item.to === '/organizations',
-                          }}
-                          activeProps={{ 'data-active': 'true' }}
-                        >
-                          <Icon />
-                          <span>{item.label}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    ) : (
-                      <SidebarMenuButton
-                        tooltip={item.label}
-                        onClick={() => unavailable(item.label)}
+  return (
+    <Sidebar label="Navigation">
+      {/* The collapsed rail is 3rem wide: 0.5rem of padding leaves exactly the
+          2rem the logo mark needs. */}
+      <Flex
+        h="14"
+        flexShrink={0}
+        align="center"
+        px={rail ? '2' : '3'}
+        borderBottomWidth="1px"
+        borderColor="border"
+      >
+        <SidebarTooltip label="DRILLS home">
+          <HStack gap="2" fontWeight="semibold" minW="0">
+            <Center
+              boxSize="8"
+              flexShrink={0}
+              rounded="l2"
+              bg="brand"
+              color="on-brand"
+              fontWeight="bold"
+            >
+              D
+            </Center>
+            {!rail && <Text as="span">DRILLS</Text>}
+          </HStack>
+        </SidebarTooltip>
+      </Flex>
+
+      <Box
+        as="nav"
+        aria-label="Main navigation"
+        flex="1"
+        overflowY="auto"
+        overflowX="hidden"
+        px="2"
+        py="2"
+      >
+        <Stack as="ul" gap="1" listStyleType="none">
+          {mainNavigation.map((item) => {
+            const Icon = item.icon
+            return (
+              <li key={item.label}>
+                <SidebarTooltip label={item.label}>
+                  {'to' in item ? (
+                    <NavButton asChild>
+                      <Link
+                        to={item.to}
+                        params={{ orgId: org.id }}
+                        // `/organizations` must not light up on an org's
+                        // settings page, which the Settings item owns.
+                        activeOptions={{
+                          exact:
+                            item.to === '/' || item.to === '/organizations',
+                        }}
+                        activeProps={{ 'data-active': 'true' }}
                       >
                         <Icon />
-                        <span>{item.label}</span>
-                      </SidebarMenuButton>
-                    )}
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                        <NavLabel>{item.label}</NavLabel>
+                      </Link>
+                    </NavButton>
+                  ) : (
+                    <NavButton onClick={() => unavailable(item.label)}>
+                      <Icon />
+                      <NavLabel>{item.label}</NavLabel>
+                    </NavButton>
+                  )}
+                </SidebarTooltip>
+              </li>
+            )
+          })}
+        </Stack>
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] font-semibold tracking-wider text-muted-foreground/80">
-            CURRENT PROJECT
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild={Boolean(currentProject)}
-                  tooltip={currentProject?.name ?? 'No project'}
-                >
-                  {currentProject ? (
+        <Box mt="4">
+          {!rail && (
+            <Text
+              px="2"
+              h="8"
+              display="flex"
+              alignItems="center"
+              fontSize="2xs"
+              fontWeight="semibold"
+              letterSpacing="wider"
+              color="fg.muted"
+            >
+              CURRENT PROJECT
+            </Text>
+          )}
+          <Stack as="ul" gap="1" listStyleType="none">
+            <li>
+              <SidebarTooltip label={currentProject?.name ?? 'No project'}>
+                {currentProject ? (
+                  <NavButton asChild>
                     <Link
                       to="/projects/$projectId/overview"
                       params={{ projectId: currentProject.id }}
                     >
                       {/* An icon-sized slot, like the lucide icons above, so
                           the collapsed button shows only the mark. */}
-                      <span
-                        aria-hidden="true"
-                        className="flex size-4 shrink-0 items-center justify-center"
-                      >
-                        <span className="size-2 rounded-full bg-primary" />
-                      </span>
-                      <span>{currentProject.name}</span>
+                      <Center aria-hidden="true" boxSize="4" flexShrink={0}>
+                        <Box boxSize="2" rounded="full" bg="brand" />
+                      </Center>
+                      <NavLabel>{currentProject.name}</NavLabel>
                     </Link>
-                  ) : (
-                    <span>No active project</span>
-                  )}
-                </SidebarMenuButton>
-
-                {currentProject && (
-                  <SidebarMenuSub>
-                    {projectSections.map((label) => (
-                      <SidebarMenuSubItem key={label}>
-                        <SidebarMenuSubButton asChild>
-                          <Link
-                            to={projectSectionLink(label)}
-                            params={{ projectId: currentProject.id }}
-                            activeProps={{ 'data-active': 'true' }}
-                          >
-                            {label}
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
+                  </NavButton>
+                ) : (
+                  <Text
+                    as="span"
+                    px="2"
+                    h="8"
+                    display="flex"
+                    alignItems="center"
+                    textStyle="body-sm"
+                  >
+                    {rail ? '' : 'No active project'}
+                  </Text>
                 )}
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-      <SidebarRail />
+              </SidebarTooltip>
+
+              {currentProject && !rail && (
+                <Stack
+                  as="ul"
+                  gap="1"
+                  listStyleType="none"
+                  ms="3.5"
+                  ps="2.5"
+                  py="0.5"
+                  borderStartWidth="1px"
+                  borderColor="border"
+                >
+                  {projectSections.map((label) => (
+                    <li key={label}>
+                      <Button
+                        asChild
+                        variant="ghost"
+                        colorPalette="gray"
+                        size="sm"
+                        h="8"
+                        w="full"
+                        px="3"
+                        justifyContent="flex-start"
+                        fontWeight="normal"
+                        color="fg.muted"
+                        css={{
+                          '&[data-active=true]': {
+                            bg: 'brand.subtle',
+                            color: 'brand.fg',
+                            fontWeight: 'medium',
+                          },
+                        }}
+                      >
+                        <Link
+                          to={projectSectionLink(label)}
+                          params={{ projectId: currentProject.id }}
+                          activeProps={{ 'data-active': 'true' }}
+                        >
+                          <Text as="span" truncate>
+                            {label}
+                          </Text>
+                        </Link>
+                      </Button>
+                    </li>
+                  ))}
+                </Stack>
+              )}
+            </li>
+          </Stack>
+        </Box>
+      </Box>
     </Sidebar>
   )
 }

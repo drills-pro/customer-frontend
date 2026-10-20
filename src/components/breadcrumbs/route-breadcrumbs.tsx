@@ -1,4 +1,5 @@
 import * as React from 'react'
+import type { BreadcrumbRootProps } from '@chakra-ui/react'
 import { useMatches, useParams } from '@tanstack/react-router'
 
 import { useDashboardLayout } from '@/features/dashboard/context'
@@ -17,7 +18,9 @@ import type { BreadcrumbData, Crumb } from './types'
  * The records the trail names are read with the same query hooks the page
  * uses, so they come out of the cache the page already filled.
  */
-export function RouteBreadcrumbs({ className }: { className?: string }) {
+export function RouteBreadcrumbs(
+  props: Omit<BreadcrumbRootProps, 'children' | 'size'>,
+) {
   const matches = useMatches()
   const { organizations, hydrated } = useDashboardLayout()
   const {
@@ -68,5 +71,5 @@ export function RouteBreadcrumbs({ className }: { className?: string }) {
 
   if (!hydrated) return null
 
-  return <CollapsibleBreadcrumb items={items} className={className} />
+  return <CollapsibleBreadcrumb items={items} {...props} />
 }

@@ -139,7 +139,8 @@ export function CreateOrganizationDialog({
             <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
               <OrgMark
                 org={{ initial: initialOf(name), color }}
-                className="size-10 text-base"
+                boxSize="10"
+                fontSize="md"
               />
               <div className="min-w-0">
                 <p className="truncate font-medium">

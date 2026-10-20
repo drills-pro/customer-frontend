@@ -1,6 +1,5 @@
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { cn } from 'cn'
+import { Avatar, Badge, Center } from '@chakra-ui/react'
+import type { AvatarRootProps, CenterProps } from '@chakra-ui/react'
 import type {
   OrgMember,
   OrgPlan,
@@ -8,64 +7,70 @@ import type {
   Organization,
 } from '@/features/dashboard/data'
 
-/** The organization's colored initial tile. Size it with `className`. */
+/** The organization's colored initial tile. Size it with `boxSize`. */
 export function OrgMark({
   org,
-  className,
+  ...props
 }: {
   org: Pick<Organization, 'initial' | 'color'>
-  className?: string
-}) {
+} & CenterProps) {
   return (
-    <span
+    <Center
       aria-hidden="true"
-      className={cn(
-        'flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-semibold text-white',
-        className,
-      )}
-      style={{ backgroundColor: org.color }}
+      boxSize="8"
+      flexShrink={0}
+      rounded="l2"
+      fontSize="sm"
+      fontWeight="semibold"
+      color="white"
+      // The organization's own color, from the API.
+      bg={org.color}
+      {...props}
     >
       {org.initial}
-    </span>
+    </Center>
   )
 }
 
-const planVariants = {
-  Free: 'neutral',
-  Team: 'info',
-  Enterprise: 'accent',
+const planPalettes = {
+  Free: { colorPalette: 'gray', variant: 'subtle' },
+  Team: { colorPalette: 'info', variant: 'subtle' },
+  Enterprise: { colorPalette: 'brand', variant: 'subtle' },
 } as const
 
 export function PlanBadge({ plan }: { plan: OrgPlan }) {
-  return <Badge variant={planVariants[plan]}>{plan}</Badge>
+  return <Badge {...planPalettes[plan]}>{plan}</Badge>
 }
 
-const roleVariants = {
-  Owner: 'accent',
-  Admin: 'success',
-  Member: 'neutral',
-  Viewer: 'outline',
+const rolePalettes = {
+  Owner: { colorPalette: 'brand', variant: 'subtle' },
+  Admin: { colorPalette: 'success', variant: 'subtle' },
+  Member: { colorPalette: 'gray', variant: 'subtle' },
+  Viewer: { colorPalette: 'gray', variant: 'outline' },
 } as const
 
 export function RoleBadge({ role }: { role: OrgRole }) {
-  return <Badge variant={roleVariants[role]}>{role}</Badge>
+  return <Badge {...rolePalettes[role]}>{role}</Badge>
 }
 
 export function MemberAvatar({
   member,
-  className,
+  ...props
 }: {
   member: Pick<OrgMember, 'initials' | 'color'>
-  className?: string
-}) {
+} & AvatarRootProps) {
   return (
-    <Avatar className={cn('size-8', className)}>
-      <AvatarFallback
-        className="text-[11px] font-medium text-white"
-        style={{ backgroundColor: member.color }}
-      >
+    <Avatar.Root
+      boxSize="8"
+      borderWidth="0"
+      color="white"
+      // The member's own color, from the API.
+      bg={member.color}
+      {...props}
+    >
+      <Avatar.Fallback fontSize="2xs" fontWeight="medium">
         {member.initials}
-      </AvatarFallback>
-    </Avatar>
+      </Avatar.Fallback>
+    </Avatar.Root>
   )
 }

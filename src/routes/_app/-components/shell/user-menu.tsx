@@ -1,3 +1,17 @@
+import {
+  Avatar,
+  Badge,
+  Box,
+  Flex,
+  HStack,
+  IconButton,
+  Menu,
+  Portal,
+  Progress,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
+import type { AvatarRootProps, MenuItemProps } from '@chakra-ui/react'
 import { Link } from '@tanstack/react-router'
 import {
   Bell,
@@ -13,18 +27,6 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Progress } from '@/components/ui/progress'
 import type { CurrentUser } from '@/features/account/mappers'
 import { useCurrentUser } from '@/features/account/queries'
 import type {
@@ -35,16 +37,6 @@ import { useBilling } from '@/features/organizations/queries'
 import { formatCount } from '@/lib/format'
 import { themeLabel } from '../../account/-components/account-data'
 import { unavailable } from '@/lib/unavailable'
-import {
-  Item,
-  ItemContent,
-  ItemFooter,
-  ItemHeader,
-  ItemTitle,
-  ItemMedia,
-  ItemDescription,
-} from '@/components/ui/item'
-import { Badge } from '@/components/ui/badge'
 
 type AccountLink = {
   label: string
@@ -78,122 +70,155 @@ export function UserMenu({
   const billing = useBilling(org.id).data
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
+    <Menu.Root positioning={{ placement: 'bottom-end' }}>
+      <Menu.Trigger asChild>
+        <IconButton
           variant="ghost"
-          size="icon"
+          colorPalette="gray"
+          size="xs"
           aria-label="User menu"
-          className="rounded-full data-[state=open]:ring-3 data-[state=open]:ring-primary/20"
+          rounded="full"
+          _expanded={{ outline: '3px solid', outlineColor: 'brand.subtle' }}
         >
           <UserAvatar user={user} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-74 p-0">
-        <Item size="sm" className="rounded-none border-0 p-4 pb-3">
-          <ItemMedia variant="image">
-            <UserAvatar user={user} className="size-9.5" />
-          </ItemMedia>
+        </IconButton>
+      </Menu.Trigger>
+      <Portal>
+        <Menu.Positioner>
+          <Menu.Content w="18.5rem" p="0">
+            <HStack gap="3" p="4" pb="3">
+              <UserAvatar user={user} boxSize="38px" />
+              <Box minW="0">
+                <Text fontWeight="medium" textStyle="body-sm">
+                  {user?.fullName}
+                </Text>
+                <Text truncate fontSize="xs" color="fg.muted">
+                  {user?.email}
+                </Text>
+              </Box>
+            </HStack>
 
-          <ItemContent className="min-w-0">
-            <ItemTitle>{user?.fullName}</ItemTitle>
-            <ItemDescription className="truncate text-xs">
-              {user?.email}
-            </ItemDescription>
-          </ItemContent>
-        </Item>
+            <Stack gap="2" mx="4" mb="3" p="3" rounded="l2" bg="bg.muted">
+              <Flex align="center" justify="space-between" gap="2">
+                <Text fontSize="xs" fontWeight="medium">
+                  {org.name}
+                </Text>
+                {billing && (
+                  <Badge colorPalette="brand" variant="subtle">
+                    {billing.plan_name.toUpperCase()}
+                  </Badge>
+                )}
+              </Flex>
+              <Flex
+                align="center"
+                justify="space-between"
+                fontSize="xs"
+                color="fg.muted"
+              >
+                <span>Credits used</span>
+                <Text
+                  as="span"
+                  fontWeight="semibold"
+                  color="fg"
+                  fontVariantNumeric="tabular-nums"
+                >
+                  {billing
+                    ? `${formatCount(billing.credits_used)} / ${formatCount(billing.credits_total)}`
+                    : ''}
+                </Text>
+              </Flex>
+              <Progress.Root
+                size="xs"
+                value={
+                  billing
+                    ? Math.round(
+                        (billing.credits_used / billing.credits_total) * 100,
+                      )
+                    : 0
+                }
+                aria-label="Credits used"
+              >
+                <Progress.Track>
+                  <Progress.Range />
+                </Progress.Track>
+              </Progress.Root>
+            </Stack>
 
-        <Item variant="muted" size="sm" className="mx-4 mb-3 w-auto">
-          <ItemHeader>
-            <ItemTitle className="text-xs">{org.name}</ItemTitle>
-            {billing && (
-              <Badge variant="accent">{billing.plan_name.toUpperCase()}</Badge>
-            )}
-          </ItemHeader>
+            <Menu.Separator my="0" />
+            <Menu.ItemGroup p="1.5">
+              {accountLinks.map((item) => (
+                <MenuLink key={item.to} item={item} />
+              ))}
+            </Menu.ItemGroup>
 
-          <ItemContent>
-            <ItemFooter className="text-xs text-muted-foreground">
-              <span>Credits used</span>
-              <span className="font-semibold text-foreground tabular-nums">
-                {billing
-                  ? `${formatCount(billing.credits_used)} / ${formatCount(billing.credits_total)}`
-                  : ''}
-              </span>
-            </ItemFooter>
+            <Menu.Separator my="0" />
+            <Menu.ItemGroup p="1.5">
+              <MenuLink
+                item={{
+                  label: 'Notifications',
+                  icon: Bell,
+                  to: '/account/notifications',
+                }}
+              />
+              <MenuLink
+                item={{
+                  label: 'Appearance',
+                  icon: SunMoon,
+                  to: '/account/appearance',
+                }}
+                shortcut={themeLabel(theme)}
+              />
+              <MenuItem value="keyboard-shortcuts" onSelect={onOpenShortcuts}>
+                <Keyboard />
+                Keyboard shortcuts
+                <Menu.ItemCommand>⌘/</Menu.ItemCommand>
+              </MenuItem>
+            </Menu.ItemGroup>
 
-            <Progress
-              value={
-                billing
-                  ? Math.round(
-                      (billing.credits_used / billing.credits_total) * 100,
-                    )
-                  : 0
-              }
-              aria-label="Credits used"
-            />
-          </ItemContent>
-        </Item>
-
-        <DropdownMenuSeparator className="mx-0 my-0" />
-        <DropdownMenuGroup className="p-1.5">
-          {accountLinks.map((item) => (
-            <MenuLink key={item.to} item={item} />
-          ))}
-        </DropdownMenuGroup>
-
-        <DropdownMenuSeparator className="mx-0 my-0" />
-        <DropdownMenuGroup className="p-1.5">
-          <MenuLink
-            item={{
-              label: 'Notifications',
-              icon: Bell,
-              to: '/account/notifications',
-            }}
-          />
-          <MenuLink
-            item={{
-              label: 'Appearance',
-              icon: SunMoon,
-              to: '/account/appearance',
-            }}
-            shortcut={themeLabel(theme)}
-          />
-          <DropdownMenuItem className={itemClass} onSelect={onOpenShortcuts}>
-            <Keyboard />
-            Keyboard shortcuts
-            <DropdownMenuShortcut>⌘/</DropdownMenuShortcut>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-
-        <DropdownMenuSeparator className="mx-0 my-0" />
-        <DropdownMenuGroup className="p-1.5">
-          <DropdownMenuItem
-            className={itemClass}
-            onSelect={() => unavailable('Help & documentation')}
-          >
-            <CircleHelp />
-            Help & documentation
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            variant="destructive"
-            className={itemClass}
-            onSelect={() =>
-              toaster.create({
-                type: 'info',
-                title: 'Logging out is not available in this demo.',
-              })
-            }
-          >
-            <LogOut />
-            Log out
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+            <Menu.Separator my="0" />
+            <Menu.ItemGroup p="1.5">
+              <MenuItem
+                value="help"
+                onSelect={() => unavailable('Help & documentation')}
+              >
+                <CircleHelp />
+                Help & documentation
+              </MenuItem>
+              <MenuItem
+                value="log-out"
+                color="fg.error"
+                _highlighted={{ bg: 'bg.error', color: 'fg.error' }}
+                css={{ '& svg': { boxSize: '4', color: 'fg.error' } }}
+                onSelect={() =>
+                  toaster.create({
+                    type: 'info',
+                    title: 'Logging out is not available in this demo.',
+                  })
+                }
+              >
+                <LogOut />
+                Log out
+              </MenuItem>
+            </Menu.ItemGroup>
+          </Menu.Content>
+        </Menu.Positioner>
+      </Portal>
+    </Menu.Root>
   )
 }
 
-const itemClass = 'gap-2.5 px-2.5 py-2 [&_svg]:text-muted-foreground'
+/** A menu row with a muted leading icon. */
+function MenuItem(props: MenuItemProps) {
+  return (
+    <Menu.Item
+      gap="2.5"
+      px="2.5"
+      py="2"
+      css={{ '& svg': { boxSize: '4', color: 'fg.muted' } }}
+      {...props}
+    />
+  )
+}
 
 function MenuLink({
   item,
@@ -204,35 +229,35 @@ function MenuLink({
 }) {
   const Icon = item.icon
   return (
-    <DropdownMenuItem asChild className={itemClass}>
+    <MenuItem value={item.to} asChild>
       <Link to={item.to}>
         <Icon />
         {item.label}
         {shortcut && (
-          <DropdownMenuShortcut className="tracking-normal">
-            {shortcut}
-          </DropdownMenuShortcut>
+          <Menu.ItemCommand letterSpacing="normal">{shortcut}</Menu.ItemCommand>
         )}
       </Link>
-    </DropdownMenuItem>
+    </MenuItem>
   )
 }
 
 function UserAvatar({
   user,
-  className,
-}: {
-  user: CurrentUser | undefined
-  className?: string
-}) {
+  ...props
+}: { user: CurrentUser | undefined } & AvatarRootProps) {
   return (
-    <Avatar className={className}>
-      <AvatarFallback
-        className="text-xs font-semibold text-white"
-        style={{ backgroundColor: user?.color }}
-      >
+    <Avatar.Root
+      boxSize="8"
+      rounded="full"
+      borderWidth="0"
+      color="white"
+      // The user's own color, from the API.
+      bg={user?.color}
+      {...props}
+    >
+      <Avatar.Fallback fontSize="xs" fontWeight="semibold">
         {user?.initials}
-      </AvatarFallback>
-    </Avatar>
+      </Avatar.Fallback>
+    </Avatar.Root>
   )
 }

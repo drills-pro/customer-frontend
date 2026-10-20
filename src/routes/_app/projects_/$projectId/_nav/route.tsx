@@ -48,7 +48,7 @@ function ProjectNavLayout() {
       id="dashboard-main"
       className="mx-auto w-full max-w-[1448px] flex-1 p-4 sm:p-6"
     >
-      <RouteBreadcrumbs className="mb-3" />
+      <RouteBreadcrumbs mb="3" />
 
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">

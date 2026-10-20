@@ -1,15 +1,19 @@
 import * as React from 'react'
-import { Search } from 'lucide-react'
-
 import {
+  Box,
+  CloseButton,
   Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Kbd } from '@/components/ui/kbd'
+  Flex,
+  Heading,
+  HStack,
+  Input,
+  InputGroup,
+  Kbd,
+  Portal,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
+import { Search } from 'lucide-react'
 
 type Shortcut = {
   label: string
@@ -71,81 +75,111 @@ export function KeyboardShortcutsDialog({
     .filter((group) => group.shortcuts.length > 0)
 
   return (
-    <Dialog
+    <Dialog.Root
       open={open}
-      onOpenChange={(next) => {
-        onOpenChange(next)
-        if (!next) setQuery('')
+      onOpenChange={(event) => {
+        onOpenChange(event.open)
+        if (!event.open) setQuery('')
       }}
+      size="lg"
+      scrollBehavior="inside"
     >
-      <DialogContent className="flex max-h-[78vh] flex-col gap-0 p-0 sm:max-w-xl">
-        <DialogHeader className="border-b px-5 py-4">
-          <DialogTitle>Keyboard shortcuts</DialogTitle>
-          <DialogDescription className="sr-only">
-            Shortcuts available anywhere in DRILLS.
-          </DialogDescription>
-        </DialogHeader>
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content maxH="78vh" gap="0">
+            <Dialog.Header borderBottomWidth="1px" borderColor="border" py="4">
+              <Dialog.Title>Keyboard shortcuts</Dialog.Title>
+              <Dialog.Description srOnly>
+                Shortcuts available anywhere in DRILLS.
+              </Dialog.Description>
+            </Dialog.Header>
 
-        <div className="relative mx-5 mt-4 mb-1">
-          <Search
-            aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            value={query}
-            placeholder="Search shortcuts..."
-            aria-label="Search shortcuts"
-            className="pl-8"
-            onChange={(event) => setQuery(event.target.value)}
-          />
-        </div>
+            <Box px="6" pt="4" pb="1">
+              <InputGroup startElement={<Search size={16} />}>
+                <Input
+                  value={query}
+                  placeholder="Search shortcuts..."
+                  aria-label="Search shortcuts"
+                  onChange={(event) => setQuery(event.target.value)}
+                />
+              </InputGroup>
+            </Box>
 
-        <div className="min-h-0 overflow-y-auto px-5 pb-5">
-          {groups.length === 0 ? (
-            <p className="py-6 text-sm text-muted-foreground">
-              No shortcuts match your search.
-            </p>
-          ) : (
-            groups.map((group) => (
-              <section key={group.title}>
-                <h3 className="mt-4 mb-1 text-xs font-medium text-muted-foreground">
-                  {group.title}
-                </h3>
-                <ul>
-                  {group.shortcuts.map((shortcut) => (
-                    <li
-                      key={shortcut.label}
-                      className="flex items-center justify-between gap-4 py-1.5"
+            <Dialog.Body pt="0" pb="5">
+              {groups.length === 0 ? (
+                <Text py="6" textStyle="body-sm" color="fg.muted">
+                  No shortcuts match your search.
+                </Text>
+              ) : (
+                groups.map((group) => (
+                  <section key={group.title}>
+                    <Heading
+                      as="h3"
+                      mt="4"
+                      mb="1"
+                      fontSize="xs"
+                      fontWeight="medium"
+                      color="fg.muted"
                     >
-                      <span>{shortcut.label}</span>
-                      <ShortcutKeys shortcut={shortcut} />
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ))
-          )}
-        </div>
+                      {group.title}
+                    </Heading>
+                    <Stack as="ul" gap="0" listStyleType="none">
+                      {group.shortcuts.map((shortcut) => (
+                        <Flex
+                          as="li"
+                          key={shortcut.label}
+                          align="center"
+                          justify="space-between"
+                          gap="4"
+                          py="1.5"
+                        >
+                          <span>{shortcut.label}</span>
+                          <ShortcutKeys shortcut={shortcut} />
+                        </Flex>
+                      ))}
+                    </Stack>
+                  </section>
+                ))
+              )}
+            </Dialog.Body>
 
-        <p className="flex items-center gap-1.5 border-t px-5 py-3 text-xs text-muted-foreground">
-          Press <Kbd>?</Kbd> anywhere to open this panel
-        </p>
-      </DialogContent>
-    </Dialog>
+            <HStack
+              gap="1.5"
+              borderTopWidth="1px"
+              borderColor="border"
+              px="6"
+              py="3"
+              fontSize="xs"
+              color="fg.muted"
+            >
+              Press <Kbd size="sm">?</Kbd> anywhere to open this panel
+            </HStack>
+            <Dialog.CloseTrigger asChild>
+              <CloseButton size="sm" />
+            </Dialog.CloseTrigger>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </Dialog.Root>
   )
 }
 
 function ShortcutKeys({ shortcut }: { shortcut: Shortcut }) {
   return (
-    <span className="flex shrink-0 items-center gap-1">
+    <HStack as="span" gap="1" flexShrink={0}>
       {shortcut.keys.map((key, index) => (
         <React.Fragment key={key}>
           {index > 0 && shortcut.sequence && (
-            <span className="text-xs text-muted-foreground">then</span>
+            <Text as="span" fontSize="xs" color="fg.muted">
+              then
+            </Text>
           )}
-          <Kbd className="min-w-6 border border-b-2 bg-muted/50">{key}</Kbd>
+          <Kbd minW="6" justifyContent="center">
+            {key}
+          </Kbd>
         </React.Fragment>
       ))}
-    </span>
+    </HStack>
   )
 }

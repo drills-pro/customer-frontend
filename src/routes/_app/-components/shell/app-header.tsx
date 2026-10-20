@@ -1,16 +1,16 @@
+import {
+  Badge,
+  Box,
+  Button,
+  Flex,
+  IconButton,
+  Kbd,
+  Menu,
+  Portal,
+  Text,
+} from '@chakra-ui/react'
 import { Bell, BellRing, Search } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Kbd } from '@/components/ui/kbd'
-import { SidebarTrigger } from '@/components/ui/sidebar'
 import {
   useMarkNotificationsRead,
   useNotifications,
@@ -21,6 +21,7 @@ import type {
 } from '@/features/dashboard/domain/types'
 import { useBilling } from '@/features/organizations/queries'
 import { formatCount } from '@/lib/format'
+import { SidebarTrigger } from './app-shell'
 import { OrgSwitcher } from './org-switcher'
 import type { OrgSwitcherEntry } from './org-switcher'
 import { UserMenu } from './user-menu'
@@ -48,7 +49,19 @@ export function AppHeader({
   const notificationsRead = notifications.every((item) => item.read)
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-card/95 px-3 backdrop-blur sm:px-5">
+    <Flex
+      as="header"
+      position="sticky"
+      top="0"
+      zIndex="sticky"
+      h="14"
+      align="center"
+      gap="3"
+      px={{ base: '3', sm: '5' }}
+      borderBottomWidth="1px"
+      borderColor="border"
+      bg="surface"
+    >
       <SidebarTrigger aria-label="Toggle navigation" />
 
       <OrgSwitcher
@@ -60,22 +73,32 @@ export function AppHeader({
 
       <Button
         type="button"
-        variant="ghost"
+        variant="subtle"
+        colorPalette="gray"
+        size="xs"
         onClick={onOpenSearch}
-        className="mx-auto hidden h-8 w-full max-w-md items-center gap-2 rounded-lg bg-muted px-3 text-sm text-muted-foreground/80 transition-colors hover:bg-border md:flex"
+        display={{ base: 'none', md: 'flex' }}
+        mx="auto"
+        w="full"
+        maxW="md"
+        gap="2"
+        px="3"
+        fontWeight="normal"
+        color="fg.muted"
         aria-label="Search projects, models, runs"
       >
-        <Search className="size-4" />
-        <span className="flex-1 text-left">
+        <Search />
+        <Text as="span" flex="1" textAlign="start">
           Search projects, models, runs...
-        </span>
-        <Kbd>⌘K</Kbd>
+        </Text>
+        <Kbd size="sm">⌘K</Kbd>
       </Button>
 
       {billing && (
         <Badge
-          variant="secondary"
-          className="hidden rounded-full bg-primary-muted font-medium text-primary sm:flex"
+          colorPalette="brand"
+          variant="subtle"
+          display={{ base: 'none', sm: 'flex' }}
         >
           {formatCount(
             Math.max(0, billing.credits_total - billing.credits_used),
@@ -84,52 +107,72 @@ export function AppHeader({
         </Badge>
       )}
 
-      <Button
+      <IconButton
         variant="ghost"
-        size="icon"
+        colorPalette="gray"
+        size="xs"
         aria-label="Open search"
-        className="md:hidden"
+        display={{ base: 'flex', md: 'none' }}
         onClick={onOpenSearch}
       >
         <Search />
-      </Button>
+      </IconButton>
 
-      <DropdownMenu
-        onOpenChange={(open) => {
-          if (open && !notificationsRead) markRead.mutate()
+      <Menu.Root
+        positioning={{ placement: 'bottom-end' }}
+        onOpenChange={(event) => {
+          if (event.open && !notificationsRead) markRead.mutate()
         }}
       >
-        <DropdownMenuTrigger asChild>
-          <Button
+        <Menu.Trigger asChild>
+          <IconButton
             variant="ghost"
-            size="icon"
+            colorPalette="gray"
+            size="xs"
             aria-label="Notifications"
-            className="relative"
+            position="relative"
           >
             {notificationsRead ? <Bell /> : <BellRing />}
             {!notificationsRead && (
-              <span className="absolute right-2 top-2 size-2 rounded-full bg-destructive ring-2 ring-card" />
+              <Box
+                position="absolute"
+                top="1.5"
+                insetEnd="1.5"
+                boxSize="2"
+                rounded="full"
+                bg="danger"
+                outline="2px solid"
+                outlineColor="surface"
+              />
             )}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-72">
-          <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {notifications.length === 0 && (
-            <p className="p-3 text-sm text-muted-foreground">
-              You're all caught up.
-            </p>
-          )}
-          {notifications.map((item) => (
-            <div className="p-3 text-sm" key={item.id}>
-              <strong>{item.title}</strong>
-              <p className="mt-1 text-muted-foreground">{item.body}</p>
-            </div>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </IconButton>
+        </Menu.Trigger>
+        <Portal>
+          <Menu.Positioner>
+            <Menu.Content w="72">
+              <Menu.ItemGroup>
+                <Menu.ItemGroupLabel>Notifications</Menu.ItemGroupLabel>
+              </Menu.ItemGroup>
+              <Menu.Separator />
+              {notifications.length === 0 && (
+                <Text p="3" textStyle="body-sm" color="fg.muted">
+                  You're all caught up.
+                </Text>
+              )}
+              {notifications.map((item) => (
+                <Box p="3" textStyle="body-sm" key={item.id}>
+                  <strong>{item.title}</strong>
+                  <Text mt="1" color="fg.muted">
+                    {item.body}
+                  </Text>
+                </Box>
+              ))}
+            </Menu.Content>
+          </Menu.Positioner>
+        </Portal>
+      </Menu.Root>
 
       <UserMenu org={org} theme={theme} onOpenShortcuts={onOpenShortcuts} />
-    </header>
+    </Flex>
   )
 }

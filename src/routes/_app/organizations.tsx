@@ -217,7 +217,7 @@ function OrgCard({
     >
       <CardContent className="grid gap-4 p-5">
         <div className="flex items-start gap-3">
-          <OrgMark org={org} className="size-11 rounded-xl text-base" />
+          <OrgMark org={org} boxSize="11" rounded="l3" fontSize="md" />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <Link

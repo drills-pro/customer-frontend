@@ -452,6 +452,28 @@ export const slotRecipes = {
   table: defineSlotRecipe({
     slots: ['root', 'header', 'body', 'row', 'columnHeader', 'cell', 'footer', 'caption'],
     base: { columnHeader: { fontWeight: 'semibold', color: 'fg.muted', textStyle: 'body-sm' }, row: { _selected: { bg: 'selected-bg' } } },
+    variants: {
+      variant: {
+        // Record lists in the product: a tinted caps header, roomy single-line cells, row hover.
+        data: {
+          // Contains absolutely positioned sr-only text (an "Actions" header) inside the scroll area.
+          root: { position: 'relative' },
+          columnHeader: {
+            bg: 'bg.muted',
+            fontSize: 'xs',
+            letterSpacing: '0.6px',
+            textTransform: 'uppercase',
+            whiteSpace: 'nowrap',
+            borderBottomWidth: '1px',
+            borderColor: 'border',
+          },
+          cell: { color: 'fg.muted', whiteSpace: 'nowrap', borderBottomWidth: '1px', borderColor: 'border.muted' },
+          row: { bg: 'transparent', _hover: { bg: 'bg.subtle' } },
+        },
+      },
+    },
+    // Padding as a compound variant: the default recipe's size variant comes after `variant` and would win.
+    compoundVariants: [{ variant: 'data', css: { columnHeader: { px: '4', py: '3' }, cell: { px: '4', py: '3' } } }],
   }),
   // Square pixel-style marks: no round thumbs or avatars, hard 2px edges.
   slider: defineSlotRecipe({

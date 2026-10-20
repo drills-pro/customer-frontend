@@ -1,34 +1,17 @@
 import * as React from 'react'
+import {
+  Badge,
+  Card,
+  Flex,
+  Input,
+  InputGroup,
+  Table,
+  Text,
+} from '@chakra-ui/react'
 import { Search } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from '@/components/ui/input-group'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { EmptyNotice } from '@/components/shared/empty-notice'
+import { SimpleSelect } from '@/components/simple-select'
 import type { DatasetSample } from '@/features/dashboard/data'
 import { useCurrentDataset } from './use-current-dataset'
 
@@ -50,102 +33,116 @@ export function TextPreview() {
   )
 
   return (
-    <Card size="flush">
-      <CardHeader className="border-b [--card-inset:--spacing(4)] [--card-section:--spacing(3)]">
-        <div className="flex flex-wrap items-center gap-2">
-          <Select value={label} onValueChange={setLabel}>
-            <SelectTrigger
-              size="lg"
-              className="w-36"
-              aria-label="Filter by label"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All labels</SelectItem>
-              {labels.map((item) => (
-                <SelectItem key={item} value={item}>
-                  {item}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={split} onValueChange={setSplit}>
-            <SelectTrigger
-              size="lg"
-              className="w-32"
-              aria-label="Filter by split"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All splits</SelectItem>
-              <SelectItem value="Train">Train</SelectItem>
-              <SelectItem value="Validation">Validation</SelectItem>
-              <SelectItem value="Test">Test</SelectItem>
-            </SelectContent>
-          </Select>
-          <InputGroup size="lg" className="min-w-48 flex-1 sm:max-w-60">
-            <InputGroupAddon>
-              <Search aria-hidden="true" />
-            </InputGroupAddon>
-            <InputGroupInput
+    <Card.Root variant="outline" overflow="hidden">
+      <Flex
+        wrap="wrap"
+        align="center"
+        justify="space-between"
+        gap="2"
+        px="4"
+        py="3"
+        borderBottomWidth="1px"
+        borderColor="border"
+      >
+        <Flex wrap="wrap" align="center" gap="2" flex="1">
+          <SimpleSelect
+            label="Filter by label"
+            hideLabel
+            size="sm"
+            width="36"
+            value={label}
+            onChange={setLabel}
+            items={[
+              { label: 'All labels', value: 'all' },
+              ...labels.map((item) => ({ label: item, value: item })),
+            ]}
+          />
+          <SimpleSelect
+            label="Filter by split"
+            hideLabel
+            size="sm"
+            width="32"
+            value={split}
+            onChange={setSplit}
+            items={[
+              { label: 'All splits', value: 'all' },
+              { label: 'Train', value: 'Train' },
+              { label: 'Validation', value: 'Validation' },
+              { label: 'Test', value: 'Test' },
+            ]}
+          />
+          <InputGroup
+            flex="1"
+            minW="48"
+            maxW={{ sm: '60' }}
+            startElement={<Search size={16} aria-hidden="true" />}
+          >
+            <Input
+              size="sm"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               aria-label="Search sample text"
               placeholder="Search text..."
             />
           </InputGroup>
-        </div>
-        <p className="text-xs text-muted-foreground sm:text-right">
+        </Flex>
+        <Text fontSize="xs" color="fg.muted" textAlign={{ sm: 'end' }}>
           Showing {visible.length} of {dataset.items.toLocaleString('en-US')}
-        </p>
-      </CardHeader>
-      <CardContent className="overflow-x-auto p-0">
-        {visible.length ? (
-          <Table className="min-w-[720px]">
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead>Text</TableHead>
-                <TableHead>Label</TableHead>
-                <TableHead>Words</TableHead>
-                <TableHead>Split</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+        </Text>
+      </Flex>
+      {visible.length ? (
+        <Table.ScrollArea>
+          <Table.Root variant="data" minW="720px">
+            <Table.Header>
+              <Table.Row>
+                <Table.ColumnHeader>Text</Table.ColumnHeader>
+                <Table.ColumnHeader>Label</Table.ColumnHeader>
+                <Table.ColumnHeader>Words</Table.ColumnHeader>
+                <Table.ColumnHeader>Split</Table.ColumnHeader>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
               {visible.map((sample) => (
-                <TableRow key={sample.id}>
-                  <TableCell className="max-w-xl px-4 font-medium">
+                <Table.Row key={sample.id}>
+                  <Table.Cell
+                    maxW="xl"
+                    whiteSpace="normal"
+                    color="fg"
+                    fontWeight="medium"
+                  >
                     {sample.text}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="font-normal">
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Badge
+                      colorPalette="gray"
+                      variant="subtle"
+                      fontWeight="normal"
+                    >
                       {sample.label}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {sample.words}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="font-normal">
+                  </Table.Cell>
+                  <Table.Cell>{sample.words}</Table.Cell>
+                  <Table.Cell>
+                    <Badge
+                      colorPalette="gray"
+                      variant="outline"
+                      fontWeight="normal"
+                    >
                       {sample.split === 'Validation' ? 'Val' : sample.split}
                     </Badge>
-                  </TableCell>
-                </TableRow>
+                  </Table.Cell>
+                </Table.Row>
               ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <Empty className="min-h-56">
-            <EmptyHeader>
-              <EmptyTitle>No matching samples</EmptyTitle>
-              <EmptyDescription>
-                Try a different label, split, or search.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        )}
-      </CardContent>
-    </Card>
+            </Table.Body>
+          </Table.Root>
+        </Table.ScrollArea>
+      ) : (
+        <EmptyNotice
+          minH="56"
+          title="No matching samples"
+          description="Try a different label, split, or search."
+        />
+      )}
+    </Card.Root>
   )
 }

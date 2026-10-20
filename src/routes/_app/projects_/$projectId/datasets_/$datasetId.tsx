@@ -1,17 +1,10 @@
 import * as React from 'react'
+import { Box, Button, Flex, Grid, Tabs, Text } from '@chakra-ui/react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 
 import { RouteBreadcrumbs } from '@/components/breadcrumbs'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { EmptyNotice } from '@/components/shared/empty-notice'
+import { SectionCard } from '@/components/shared/section-card'
 import { isNotFound } from '@/api/errors'
 import { PageError, PageLoading } from '@/components/shared/query-states'
 import { useProjectDetail } from '@/features/dashboard/context'
@@ -77,9 +70,15 @@ function DatasetDetailRoute() {
   const { dataset } = found
 
   return (
-    <main
+    <Box
+      as="main"
       id="dashboard-main"
-      className="mx-auto w-full max-w-[1448px] min-w-0 flex-1 p-4 sm:p-6"
+      mx="auto"
+      w="full"
+      maxW="1448px"
+      minW="0"
+      flex="1"
+      p={{ base: '4', sm: '6' }}
     >
       <RouteBreadcrumbs mb="3" />
 
@@ -88,70 +87,81 @@ function DatasetDetailRoute() {
       {dataset.status !== 'Ready' ? (
         <DatasetStatus />
       ) : (
-        <Tabs
+        <Tabs.Root
+          variant="subtle"
+          size="sm"
+          // Only the open tab is in the page, as before.
+          lazyMount
+          unmountOnExit
           value={tab}
-          onValueChange={(value) => setTab(value as DatasetTab)}
-          className="min-w-0 gap-0"
+          onValueChange={(event) => setTab(event.value as DatasetTab)}
+          minW="0"
         >
-          <TabsList
-            variant="chip"
+          <Tabs.List
             aria-label="Dataset sections"
-            className="mb-6"
+            mb="6"
+            flexWrap="wrap"
+            gap="2"
           >
             {tabs.map((item) => (
-              <TabsTrigger key={item} value={item}>
+              <Tabs.Trigger key={item} value={item}>
                 {item.charAt(0).toUpperCase() + item.slice(1)}
-              </TabsTrigger>
+              </Tabs.Trigger>
             ))}
-          </TabsList>
+          </Tabs.List>
 
-          <TabsContent value="preview">
-            <div className="grid min-w-0 items-start gap-6 lg:grid-cols-4">
-              <div className="min-w-0 lg:col-span-3">
+          <Tabs.Content value="preview" pt="0">
+            <Grid
+              minW="0"
+              alignItems="start"
+              gap="6"
+              templateColumns={{ lg: 'repeat(4, minmax(0, 1fr))' }}
+            >
+              <Box minW="0" gridColumn={{ lg: 'span 3' }}>
                 {dataset.modality === 'image' ? (
                   <ImagePreview />
                 ) : dataset.modality === 'text' ? (
                   <TextPreview />
                 ) : (
-                  <Empty className="min-h-64 border bg-card">
-                    <EmptyHeader>
-                      <EmptyTitle>No preview available</EmptyTitle>
-                      <EmptyDescription>
-                        This demo currently includes image and text previews.
-                      </EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
+                  <EmptyNotice
+                    minH="64"
+                    rounded="l3"
+                    borderWidth="1px"
+                    borderColor="border"
+                    bg="surface-raised"
+                    title="No preview available"
+                    description="This demo currently includes image and text previews."
+                  />
                 )}
-              </div>
+              </Box>
 
-              <aside className="grid gap-6 lg:col-span-1">
+              <Grid as="aside" gap="6">
                 <DistributionCard />
                 <HealthCard onReview={() => setTab('quality')} />
-                <Card size="lg">
-                  <CardHeader>
-                    <CardTitle>Dataset owner</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-sm">
-                    <p className="font-medium">{organization.name}</p>
-                    <p className="mt-1 text-muted-foreground">{project.name}</p>
-                  </CardContent>
-                </Card>
-              </aside>
-            </div>
-          </TabsContent>
+                <SectionCard title="Dataset owner" divided={false}>
+                  <Box px="5" pb="5" textStyle="body-sm">
+                    <Text fontWeight="medium">{organization.name}</Text>
+                    <Text mt="1" color="fg.muted">
+                      {project.name}
+                    </Text>
+                  </Box>
+                </SectionCard>
+              </Grid>
+            </Grid>
+          </Tabs.Content>
 
-          <TabsContent value="statistics">
+          <Tabs.Content value="statistics" pt="0">
             <StatisticsTab />
-          </TabsContent>
-          <TabsContent value="quality">
+          </Tabs.Content>
+          <Tabs.Content value="quality" pt="0">
             <QualityTab onNavigateTab={setTab} />
-          </TabsContent>
-          <TabsContent value="versions">
+          </Tabs.Content>
+          <Tabs.Content value="versions" pt="0">
             <VersionsTab />
-          </TabsContent>
-        </Tabs>
+          </Tabs.Content>
+        </Tabs.Root>
       )}
-    </main>
+    </Box>
   )
 }
 
@@ -162,25 +172,32 @@ function DatasetDetailNotFoundRoute() {
 
 function DatasetDetailNotFound({ projectId }: { projectId: string }) {
   return (
-    <main
+    <Flex
+      as="main"
       id="dashboard-main"
-      className="mx-auto flex min-h-[60vh] w-full max-w-xl flex-1 items-center p-6"
+      mx="auto"
+      minH="60vh"
+      w="full"
+      maxW="xl"
+      flex="1"
+      align="center"
+      p="6"
     >
-      <Empty className="w-full border bg-card">
-        <EmptyHeader>
-          <EmptyTitle>Dataset not found</EmptyTitle>
-          <EmptyDescription>
-            This dataset does not exist in the selected project.
-          </EmptyDescription>
-        </EmptyHeader>
-        <EmptyContent>
-          <Button asChild>
-            <Link to="/projects/$projectId/datasets" params={{ projectId }}>
-              Return to datasets
-            </Link>
-          </Button>
-        </EmptyContent>
-      </Empty>
-    </main>
+      <EmptyNotice
+        w="full"
+        rounded="l3"
+        borderWidth="1px"
+        borderColor="border"
+        bg="surface-raised"
+        title="Dataset not found"
+        description="This dataset does not exist in the selected project."
+      >
+        <Button asChild variant="solid" size="sm">
+          <Link to="/projects/$projectId/datasets" params={{ projectId }}>
+            Return to datasets
+          </Link>
+        </Button>
+      </EmptyNotice>
+    </Flex>
   )
 }

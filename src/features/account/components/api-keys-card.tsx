@@ -99,7 +99,7 @@ export function ApiKeysCard({
         />
       ) : (
         <Table.ScrollArea>
-          <Table.Root size="sm" minW="620px">
+          <Table.Root variant="data" minW="620px">
             <Table.Header>
               <Table.Row>
                 <Table.ColumnHeader ps="5">Name</Table.ColumnHeader>

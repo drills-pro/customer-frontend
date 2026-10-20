@@ -1,17 +1,17 @@
-import { Bar, BarChart, LabelList, XAxis } from 'recharts'
+import type * as React from 'react'
+import {
+  Box,
+  Center,
+  Flex,
+  Grid,
+  SimpleGrid,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
+import { Chart, useChart } from '@chakra-ui/charts'
+import { Bar, BarChart, LabelList, Tooltip, XAxis } from 'recharts'
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from '@/components/ui/chart'
+import { SectionCard } from '@/components/shared/section-card'
 import type { Dataset, DatasetDetail } from '@/features/dashboard/data'
 
 import { getClassHistogram, getClassStats, itemNoun } from './helpers'
@@ -19,9 +19,9 @@ import { useCurrentDataset } from './use-current-dataset'
 
 /** Each split keeps its color even when the others are absent. */
 const SPLIT_COLORS = {
-  Train: 'bg-primary',
-  Validation: 'bg-info',
-  Test: 'bg-warning',
+  Train: 'brand',
+  Validation: 'info',
+  Test: 'warning',
 } as const
 
 /** "train, validation, and test" — only the splits this dataset actually has. */
@@ -36,51 +36,41 @@ export function StatisticsTab() {
   const classNoun = dataset.modality === 'text' ? 'labels' : 'classes'
 
   return (
-    <div className="grid gap-6">
-      <Card size="lg">
-        <CardHeader>
-          <CardTitle>
-            {dataset.modality === 'text' ? 'Label' : 'Class'} distribution
-          </CardTitle>
-          <CardDescription>
-            How {itemNoun(dataset)} are spread across your {dataset.classes}{' '}
-            {classNoun}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+    <Grid gap="6">
+      <SectionCard
+        divided={false}
+        title={`${dataset.modality === 'text' ? 'Label' : 'Class'} distribution`}
+        description={`How ${itemNoun(dataset)} are spread across your ${dataset.classes} ${classNoun}`}
+      >
+        <Box px="5" pb="5">
           <ClassDistribution dataset={dataset} detail={detail} />
-        </CardContent>
-      </Card>
+        </Box>
+      </SectionCard>
 
-      <Card size="lg">
-        <CardHeader>
-          <CardTitle>Split distribution</CardTitle>
-          <CardDescription>
-            {dataset.items.toLocaleString('en-US')} {itemNoun(dataset)} across{' '}
-            {splitSentence(
-              detail.splitDistribution
-                .filter((split) => split.percent > 0)
-                .map((split) => split.label),
-            )}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <SectionCard
+        divided={false}
+        title="Split distribution"
+        description={`${dataset.items.toLocaleString('en-US')} ${itemNoun(dataset)} across ${splitSentence(
+          detail.splitDistribution
+            .filter((split) => split.percent > 0)
+            .map((split) => split.label),
+        )}`}
+      >
+        <Box px="5" pb="5">
           <SplitDistribution dataset={dataset} detail={detail} />
-        </CardContent>
-      </Card>
+        </Box>
+      </SectionCard>
 
-      <Card size="lg">
-        <CardHeader>
-          <CardTitle>Dataset composition</CardTitle>
-          <CardDescription>
-            Format and coverage details not shown above
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <SectionCard
+        divided={false}
+        title="Dataset composition"
+        description="Format and coverage details not shown above"
+      >
+        <Box px="5" pb="5">
           <Composition dataset={dataset} detail={detail} />
-        </CardContent>
-      </Card>
-    </div>
+        </Box>
+      </SectionCard>
+    </Grid>
   )
 }
 
@@ -100,101 +90,127 @@ function ClassDistribution({
   const classNoun = isText ? 'labels' : 'classes'
   const classNounSingular = isText ? 'label' : 'class'
 
+  const chart = useChart({
+    data: histogram,
+    series: [{ name: 'classes', color: 'brand', label: 'Classes' }],
+  })
+
   if (!stats) {
     return (
-      <p className="text-sm text-muted-foreground">
+      <Text textStyle="body-sm" color="fg.muted">
         Distribution will appear after samples are processed.
-      </p>
+      </Text>
     )
   }
 
   return (
     <>
-      <div className="flex flex-wrap gap-x-8 gap-y-4 border-b pb-5">
+      <Flex
+        wrap="wrap"
+        columnGap="8"
+        rowGap="4"
+        borderBottomWidth="1px"
+        borderColor="border"
+        pb="5"
+      >
         <Stat label={`Avg per ${classNounSingular}`}>
           {stats.avg.toLocaleString('en-US')}
         </Stat>
         <Stat label="Median">{stats.median.toLocaleString('en-US')}</Stat>
         <Stat label={`Largest ${classNounSingular}`}>
           {stats.largest.count.toLocaleString('en-US')}{' '}
-          <span className="text-xs font-medium text-muted-foreground">
+          <Text as="span" fontSize="xs" fontWeight="medium" color="fg.muted">
             {stats.largest.name}
-          </span>
+          </Text>
         </Stat>
         <Stat label={`Smallest ${classNounSingular}`}>
           {stats.smallest.count.toLocaleString('en-US')}{' '}
-          <span className="text-xs font-medium text-muted-foreground">
+          <Text as="span" fontSize="xs" fontWeight="medium" color="fg.muted">
             {stats.smallest.name}
-          </span>
+          </Text>
         </Stat>
         <Stat label="Imbalance ratio">
-          <span className="text-warning">{stats.ratio} : 1</span>
+          <Text as="span" color="fg.warning">
+            {stats.ratio} : 1
+          </Text>
         </Stat>
-      </div>
+      </Flex>
 
-      <ChartContainer
-        config={{ classes: { label: 'Classes', color: 'var(--primary)' } }}
-        className="mt-6 h-44 w-full"
+      <Chart.Root
+        chart={chart}
+        mt="6"
+        h="44"
+        w="full"
         role="img"
         aria-label={`${classNoun} grouped by ${nounSingular} count`}
         data-testid="class-histogram"
       >
         <BarChart
-          data={histogram}
+          responsive
+          data={chart.data}
           accessibilityLayer
           margin={{ top: 20, right: 0, bottom: 0, left: 0 }}
         >
           <XAxis
-            dataKey="label"
+            dataKey={chart.key('label')}
             tickLine={false}
             axisLine={false}
             tickMargin={8}
             interval={0}
+            tick={{ fill: chart.color('fg.muted'), fontSize: 12 }}
           />
-          <ChartTooltip
+          <Tooltip
             cursor={false}
             content={
-              <ChartTooltipContent
+              <Chart.Tooltip
                 labelFormatter={(label) => `${label} ${noun}`}
-                formatter={(value, _name, item) => {
+                render={(item) => {
                   const names: string[] = item.payload?.names ?? []
                   const shown = names.slice(0, 4)
                   return (
-                    <div className="grid gap-0.5">
-                      <span className="font-medium text-foreground">
-                        {Number(value)} {classNoun}
-                      </span>
+                    <Stack gap="0.5">
+                      <Text as="span" fontWeight="medium">
+                        {Number(item.value)} {classNoun}
+                      </Text>
                       {shown.map((name) => (
-                        <span key={name} className="text-muted-foreground">
+                        <Text as="span" key={name} color="fg.muted">
                           {name}
-                        </span>
+                        </Text>
                       ))}
                       {names.length > shown.length && (
-                        <span className="text-muted-foreground">
+                        <Text as="span" color="fg.muted">
                           and {names.length - shown.length} more
-                        </span>
+                        </Text>
                       )}
-                    </div>
+                    </Stack>
                   )
                 }}
               />
             }
           />
-          <Bar dataKey="classes" radius={[3, 3, 0, 0]} fill="var(--primary)">
+          <Bar
+            dataKey={chart.key('classes')}
+            radius={[3, 3, 0, 0]}
+            fill={chart.color('brand')}
+          >
             <LabelList
-              dataKey="classes"
+              dataKey={chart.key('classes')}
               position="top"
-              className="fill-foreground text-xs font-semibold"
+              fill={chart.color('fg')}
+              fontSize={12}
+              fontWeight={600}
             />
           </Bar>
         </BarChart>
-      </ChartContainer>
+      </Chart.Root>
 
-      <p className="mt-3 text-[13px] text-muted-foreground">
-        <span className="capitalize">{classNoun}</span> grouped by{' '}
-        {nounSingular} count · hover a bar to see which {classNoun} fall in that
-        range
-      </p>
+      <Text mt="3" fontSize="13px" color="fg.muted">
+        <Text as="span" textTransform="capitalize">
+          {classNoun}
+        </Text>{' '}
+        grouped by {nounSingular} count · hover a bar to see which {classNoun}{' '}
+        fall in that range
+      </Text>
     </>
   )
 }
@@ -210,32 +226,46 @@ function SplitDistribution({
 
   return (
     <>
-      <div className="flex h-7 overflow-hidden rounded-md">
+      <Flex h="7" overflow="hidden" rounded="l1">
         {splits.map((split) => (
-          <div
+          <Center
             key={split.label}
-            className={`flex items-center justify-center text-xs font-semibold text-background ${SPLIT_COLORS[split.label]}`}
-            style={{ width: `${split.percent}%` }}
+            w={`${split.percent}%`}
+            colorPalette={SPLIT_COLORS[split.label]}
+            bg="colorPalette.solid"
+            color="colorPalette.contrast"
+            fontSize="xs"
+            fontWeight="semibold"
           >
             {split.percent >= 8 && `${split.percent}%`}
-          </div>
+          </Center>
         ))}
-      </div>
-      <div className="mt-3.5 flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-muted-foreground">
+      </Flex>
+      <Flex
+        mt="3.5"
+        wrap="wrap"
+        columnGap="6"
+        rowGap="2"
+        fontSize="13px"
+        color="fg.muted"
+      >
         {splits.map((split) => (
-          <span key={split.label} className="flex items-center gap-2">
-            <span
-              className={`size-2.5 rounded-sm ${SPLIT_COLORS[split.label]}`}
+          <Flex as="span" key={split.label} align="center" gap="2">
+            <Box
+              boxSize="2.5"
+              rounded="sm"
+              colorPalette={SPLIT_COLORS[split.label]}
+              bg="colorPalette.solid"
             />
             {split.label} —{' '}
-            <b className="font-mono font-semibold text-foreground">
+            <Text as="b" fontFamily="mono" fontWeight="semibold" color="fg">
               {Math.round((dataset.items * split.percent) / 100).toLocaleString(
                 'en-US',
               )}
-            </b>
-          </span>
+            </Text>
+          </Flex>
         ))}
-      </div>
+      </Flex>
     </>
   )
 }
@@ -251,12 +281,14 @@ function Composition({
   const { avgDimensions, avgWords } = composition
 
   return (
-    <div className="grid gap-5 sm:grid-cols-2">
+    <SimpleGrid columns={{ base: 1, sm: 2 }} gap="5">
       <Stat label="Label coverage">
         {dataset.status === 'Ready' ? '100%' : 'Pending'}
       </Stat>
       <Stat label="Modality">
-        <span className="capitalize">{dataset.modality}</span>
+        <Text as="span" textTransform="capitalize">
+          {dataset.modality}
+        </Text>
       </Stat>
       {avgDimensions && (
         <Stat label="Avg image dimensions">
@@ -267,7 +299,7 @@ function Composition({
         <Stat label="Avg words per row">{avgWords}</Stat>
       )}
       <Stat label="File format">{composition.fileFormat}</Stat>
-    </div>
+    </SimpleGrid>
   )
 }
 
@@ -279,9 +311,13 @@ function Stat({
   children: React.ReactNode
 }) {
   return (
-    <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 font-mono text-[15px] font-semibold">{children}</p>
-    </div>
+    <Box>
+      <Text fontSize="xs" color="fg.muted">
+        {label}
+      </Text>
+      <Text mt="1" fontFamily="mono" fontSize="15px" fontWeight="semibold">
+        {children}
+      </Text>
+    </Box>
   )
 }

@@ -1,8 +1,7 @@
+import { Box, Flex, Stack, Text } from '@chakra-ui/react'
 import { CheckCircle2, Download } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { cn } from 'cn'
+import { SectionAction, SectionCard } from '@/components/shared/section-card'
 import type { QualitySeverity } from '@/features/dashboard/data'
 import { unavailable } from '@/lib/unavailable'
 
@@ -16,9 +15,9 @@ const SEVERITY_RANK: Record<QualitySeverity, number> = {
   pass: 2,
 }
 
-const SEVERITY_STYLES: Record<Exclude<QualitySeverity, 'pass'>, string> = {
-  error: 'border-destructive/60 bg-destructive-muted/60',
-  warning: 'border-warning/60 bg-warning-muted/60',
+const SEVERITY_PALETTE: Record<Exclude<QualitySeverity, 'pass'>, string> = {
+  error: 'danger',
+  warning: 'warning',
 }
 
 export function QualityTab({
@@ -37,51 +36,59 @@ export function QualityTab({
   const passed = findings.filter((finding) => finding.severity === 'pass')
 
   return (
-    <Card size="lg">
-      <CardHeader>
-        <CardTitle>Quality report</CardTitle>
-      </CardHeader>
-      <CardContent className="grid gap-6">
-        <div>
-          <p className="flex items-baseline gap-1.5">
-            <span className="text-4xl font-bold tracking-tight text-foreground">
+    <SectionCard title="Quality report" divided={false}>
+      <Stack gap="6" px="5" pb="5">
+        <Box>
+          <Flex align="baseline" gap="1.5">
+            <Text
+              as="span"
+              fontSize="4xl"
+              fontWeight="bold"
+              letterSpacing="tight"
+              lineHeight="1"
+            >
               {score}
-            </span>
-            <span className="text-lg text-muted-foreground">/ 100</span>
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
+            </Text>
+            <Text as="span" fontSize="lg" color="fg.muted">
+              / 100
+            </Text>
+          </Flex>
+          <Text mt="1" textStyle="body-sm" color="fg.muted">
             {status.label}
             {issues.length > 0 &&
               ` — lowered by ${issues.length} finding${issues.length === 1 ? '' : 's'} below`}
-          </p>
+          </Text>
           <QualityGauge score={score} />
-        </div>
+        </Box>
 
         {issues.length > 0 && (
-          <>
-            <p className="mb-3 text-xs text-muted-foreground">
+          <Box>
+            <Text mb="3" fontSize="xs" color="fg.muted">
               Findings, ranked by impact
-            </p>
-            <div className="grid gap-3">
+            </Text>
+            <Stack gap="3">
               {issues.map((finding) => (
-                <div
+                <Box
                   key={finding.title}
-                  className={cn(
-                    'border-l-4 rounded-r-lg border-y border-r border-y-transparent border-r-transparent p-3',
-                    SEVERITY_STYLES[finding.severity as 'error' | 'warning'],
-                  )}
+                  colorPalette={
+                    SEVERITY_PALETTE[finding.severity as 'error' | 'warning']
+                  }
+                  borderStartWidth="4px"
+                  borderColor="colorPalette.solid"
+                  roundedEnd="l2"
+                  bg="colorPalette.subtle"
+                  p="3"
                 >
-                  <p className="font-medium text-foreground">{finding.title}</p>
+                  <Text fontWeight="medium">{finding.title}</Text>
                   {finding.description && (
-                    <p className="mt-0.5 text-sm text-muted-foreground">
+                    <Text mt="0.5" textStyle="body-sm" color="fg.muted">
                       {finding.description}
-                    </p>
+                    </Text>
                   )}
                   {finding.action && (
-                    <Button
+                    <SectionAction
                       type="button"
-                      variant="link"
-                      className="mt-1"
+                      mt="1"
                       onClick={() =>
                         finding.action?.tab
                           ? onNavigateTab(finding.action.tab)
@@ -89,34 +96,47 @@ export function QualityTab({
                       }
                     >
                       {finding.action.label}
-                    </Button>
+                    </SectionAction>
                   )}
-                </div>
+                </Box>
               ))}
-            </div>
-          </>
+            </Stack>
+          </Box>
         )}
 
         {passed.length > 0 && (
-          <div className="grid gap-2">
+          <Stack gap="2">
             {passed.map((finding) => (
-              <div
+              <Flex
                 key={finding.title}
-                className="flex items-center gap-2 text-sm"
+                align="center"
+                gap="2"
+                textStyle="body-sm"
               >
-                <CheckCircle2 className="size-4 shrink-0 text-success" />
+                <Box flexShrink={0} color="fg.success">
+                  <CheckCircle2 size={16} aria-label="Passed" />
+                </Box>
                 <span>{finding.title}</span>
-              </div>
+              </Flex>
             ))}
-          </div>
+          </Stack>
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-4 text-sm">
-          <span className="text-muted-foreground">
+        <Flex
+          wrap="wrap"
+          align="center"
+          justify="space-between"
+          gap="2"
+          borderTopWidth="1px"
+          borderColor="border"
+          pt="4"
+          textStyle="body-sm"
+        >
+          <Text as="span" color="fg.muted">
             Last checked {lastChecked}
-          </span>
-          <Button
-            variant="link"
+          </Text>
+          <SectionAction
+            gap="1.5"
             onClick={() =>
               downloadJson(`${dataset.name}-quality.json`, {
                 dataset: dataset.id,
@@ -128,28 +148,42 @@ export function QualityTab({
           >
             <Download />
             Download full report
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          </SectionAction>
+        </Flex>
+      </Stack>
+    </SectionCard>
   )
 }
 
 function QualityGauge({ score }: { score: number }) {
   return (
-    <div className="mt-4">
-      <div className="relative pt-2.5">
-        <div
-          className="absolute top-0 h-2.5 w-0.5 -translate-x-1/2 rounded-full bg-foreground"
-          style={{ left: `${score}%` }}
+    <Box mt="4">
+      <Box position="relative" pt="2.5">
+        <Box
+          position="absolute"
+          top="0"
+          left={`${score}%`}
+          h="2.5"
+          w="0.5"
+          transform="translateX(-50%)"
+          rounded="full"
+          bg="fg"
         />
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-gradient-to-r from-destructive via-warning to-success" />
-      </div>
-      <div className="mt-1.5 flex justify-between text-xs text-muted-foreground">
+        <Box
+          h="1.5"
+          w="full"
+          rounded="full"
+          bgGradient="to-r"
+          gradientFrom="danger"
+          gradientVia="warning"
+          gradientTo="success"
+        />
+      </Box>
+      <Flex mt="1.5" justify="space-between" fontSize="xs" color="fg.muted">
         <span>Poor</span>
         <span>Needs attention</span>
         <span>Ready</span>
-      </div>
-    </div>
+      </Flex>
+    </Box>
   )
 }

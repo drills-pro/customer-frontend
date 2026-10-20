@@ -1,33 +1,42 @@
+import { Box, Button, Flex, Stack } from '@chakra-ui/react'
 import { AlertTriangle, CheckCircle2 } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { SectionCard } from '@/components/shared/section-card'
 import { useCurrentDataset } from './use-current-dataset'
 
 export function HealthCard({ onReview }: { onReview: () => void }) {
   const checks = useCurrentDataset().detail.healthChecks
   return (
-    <Card size="lg">
-      <CardHeader>
-        <CardTitle>Health check</CardTitle>
-      </CardHeader>
-      <CardContent className="grid gap-3">
-        <ul className="grid gap-3">
+    <SectionCard title="Health check" divided={false}>
+      <Stack gap="3" px="5" pb="5">
+        <Stack as="ul" gap="3">
           {checks.map((check) => (
-            <li key={check.label} className="flex items-start gap-2 text-sm">
-              {check.status === 'pass' ? (
-                <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success" />
-              ) : (
-                <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" />
-              )}
+            <Flex
+              as="li"
+              key={check.label}
+              align="flex-start"
+              gap="2"
+              textStyle="body-sm"
+            >
+              <Box
+                mt="0.5"
+                flexShrink={0}
+                color={check.status === 'pass' ? 'fg.success' : 'fg.warning'}
+              >
+                {check.status === 'pass' ? (
+                  <CheckCircle2 size={16} aria-label="Passed" />
+                ) : (
+                  <AlertTriangle size={16} aria-label="Warning" />
+                )}
+              </Box>
               <span>{check.label}</span>
-            </li>
+            </Flex>
           ))}
-        </ul>
-        <Button variant="outline" className="mt-1 w-full" onClick={onReview}>
+        </Stack>
+        <Button variant="outline" size="sm" mt="1" w="full" onClick={onReview}>
           Review issues
         </Button>
-      </CardContent>
-    </Card>
+      </Stack>
+    </SectionCard>
   )
 }

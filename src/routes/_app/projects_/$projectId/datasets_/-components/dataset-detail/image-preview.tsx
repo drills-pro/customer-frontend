@@ -1,20 +1,17 @@
 import * as React from 'react'
+import {
+  Badge,
+  Box,
+  Card,
+  Flex,
+  Image,
+  SimpleGrid,
+  Text,
+  VisuallyHidden,
+} from '@chakra-ui/react'
 
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { EmptyNotice } from '@/components/shared/empty-notice'
+import { SimpleSelect } from '@/components/simple-select'
 import type { DatasetSample } from '@/features/dashboard/data'
 import { useCurrentDataset } from './use-current-dataset'
 
@@ -34,80 +31,97 @@ export function ImagePreview() {
   )
 
   return (
-    <Card size="flush">
-      <CardHeader className="border-b [--card-inset:--spacing(4)] [--card-section:--spacing(3)]">
-        <div className="flex flex-wrap items-center gap-2">
-          <Select value={label} onValueChange={setLabel}>
-            <SelectTrigger
-              size="lg"
-              className="w-36"
-              aria-label="Filter by class"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All classes</SelectItem>
-              {labels.map((item) => (
-                <SelectItem key={item} value={item}>
-                  {item}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={split} onValueChange={setSplit}>
-            <SelectTrigger
-              size="lg"
-              className="w-32"
-              aria-label="Filter by split"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All splits</SelectItem>
-              <SelectItem value="Train">Train</SelectItem>
-              <SelectItem value="Validation">Validation</SelectItem>
-              <SelectItem value="Test">Test</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <p className="text-xs text-muted-foreground sm:text-right">
+    <Card.Root variant="outline" overflow="hidden">
+      <Flex
+        wrap="wrap"
+        align="center"
+        justify="space-between"
+        gap="2"
+        px="4"
+        py="3"
+        borderBottomWidth="1px"
+        borderColor="border"
+      >
+        <Flex wrap="wrap" align="center" gap="2">
+          <SimpleSelect
+            label="Filter by class"
+            hideLabel
+            size="sm"
+            width="36"
+            value={label}
+            onChange={setLabel}
+            items={[
+              { label: 'All classes', value: 'all' },
+              ...labels.map((item) => ({ label: item, value: item })),
+            ]}
+          />
+          <SimpleSelect
+            label="Filter by split"
+            hideLabel
+            size="sm"
+            width="32"
+            value={split}
+            onChange={setSplit}
+            items={[
+              { label: 'All splits', value: 'all' },
+              { label: 'Train', value: 'Train' },
+              { label: 'Validation', value: 'Validation' },
+              { label: 'Test', value: 'Test' },
+            ]}
+          />
+        </Flex>
+        <Text fontSize="xs" color="fg.muted" textAlign={{ sm: 'end' }}>
           Showing {visible.length} of {dataset.items.toLocaleString('en-US')}
-        </p>
-      </CardHeader>
-      <CardContent className="p-4">
+        </Text>
+      </Flex>
+      <Box p="4">
         {visible.length ? (
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+          <SimpleGrid columns={{ base: 3, sm: 4, lg: 6 }} gap="3">
             {visible.map((sample) => (
-              <figure
+              <Box
+                as="figure"
                 key={sample.id}
-                className="group relative aspect-square overflow-hidden rounded-lg bg-muted"
+                className="group"
+                position="relative"
+                aspectRatio="square"
+                overflow="hidden"
+                rounded="l2"
+                bg="bg.muted"
               >
-                <img
+                <Image
                   src={sample.image}
                   alt={`${sample.label} dataset sample`}
                   loading="lazy"
-                  className="size-full object-cover transition-transform group-hover:scale-105"
+                  boxSize="full"
+                  objectFit="cover"
+                  transition="transform 0.2s"
+                  _groupHover={{ transform: 'scale(1.05)' }}
                 />
-                <figcaption className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-2">
-                  <Badge className="border-0 bg-black/70 text-white">
+                <Flex
+                  as="figcaption"
+                  position="absolute"
+                  insetX="2"
+                  bottom="2"
+                  align="center"
+                  justify="space-between"
+                  gap="2"
+                >
+                  <Badge bg="night" color="on-night">
                     {sample.label}
                   </Badge>
-                  <span className="sr-only">{sample.split} split</span>
-                </figcaption>
-              </figure>
+                  <VisuallyHidden>{sample.split} split</VisuallyHidden>
+                </Flex>
+              </Box>
             ))}
-          </div>
+          </SimpleGrid>
         ) : (
-          <Empty className="min-h-56">
-            <EmptyHeader>
-              <EmptyTitle>No matching samples</EmptyTitle>
-              <EmptyDescription>
-                Try a different class or split.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
+          <EmptyNotice
+            minH="56"
+            title="No matching samples"
+            description="Try a different class or split."
+          />
         )}
-      </CardContent>
-    </Card>
+      </Box>
+    </Card.Root>
   )
 }

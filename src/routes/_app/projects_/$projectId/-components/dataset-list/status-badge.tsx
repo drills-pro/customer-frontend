@@ -1,4 +1,4 @@
-import { Badge, BadgeDot } from '@/components/ui/badge'
+import { ToneBadge } from '@/components/shared/tone-badge'
 import type { Dataset } from '@/features/dashboard/data'
 
 const tone = {
@@ -9,9 +9,8 @@ const tone = {
 
 export function StatusBadge({ status }: { status: Dataset['status'] }) {
   return (
-    <Badge variant={tone[status]}>
-      <BadgeDot />
+    <ToneBadge tone={tone[status]} dot>
       {status}
-    </Badge>
+    </ToneBadge>
   )
 }

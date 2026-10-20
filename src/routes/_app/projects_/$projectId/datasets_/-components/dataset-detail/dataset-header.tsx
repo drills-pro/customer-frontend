@@ -1,12 +1,11 @@
+import { Button, Text } from '@chakra-ui/react'
 import { Link } from '@tanstack/react-router'
 import { Download, FileText, Image as ImageIcon, Table2 } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { EntityHeader } from '@/components/shared/entity-header'
+import { ToneBadge } from '@/components/shared/tone-badge'
 import { projectDatasetsApi } from '@/features/datasets/api'
-import { cn } from 'cn'
 
 import { downloadJson, itemNoun } from './helpers'
 import { useCurrentDataset } from './use-current-dataset'
@@ -27,21 +26,21 @@ export function DatasetHeader() {
       name={dataset.name}
       badges={
         <>
-          <Badge className="border-0 bg-primary-muted font-semibold text-primary">
+          <ToneBadge tone="accent" fontWeight="semibold">
             v{dataset.version}
-          </Badge>
-          <Badge
-            className={cn(
-              'border-0 font-semibold',
+          </ToneBadge>
+          <ToneBadge
+            fontWeight="semibold"
+            tone={
               isReady
-                ? 'bg-success-muted text-success'
+                ? 'success'
                 : dataset.status === 'Error'
-                  ? 'bg-destructive-muted text-destructive'
-                  : 'bg-warning-muted text-warning',
-            )}
+                  ? 'error'
+                  : 'warning'
+            }
           >
             {isReady ? '✓ Ready' : dataset.status}
-          </Badge>
+          </ToneBadge>
         </>
       }
       meta={
@@ -55,8 +54,8 @@ export function DatasetHeader() {
         <>
           <Button
             variant="outline"
-            size="lg"
-            className="px-3.5 shadow-xs"
+            size="sm"
+            px="3.5"
             onClick={() =>
               void projectDatasetsApi
                 .getManifest(project.id, dataset.id)
@@ -68,11 +67,11 @@ export function DatasetHeader() {
                 )
             }
           >
-            <Download className="size-4" />
+            <Download />
             Download
           </Button>
           {isReady ? (
-            <Button asChild size="lg" className="px-3.5 shadow-xs">
+            <Button asChild variant="solid" size="sm" px="3.5">
               <Link
                 to="/projects/$projectId/training/new"
                 params={{ projectId: project.id }}
@@ -82,7 +81,7 @@ export function DatasetHeader() {
               </Link>
             </Button>
           ) : (
-            <Button disabled size="lg" className="px-3.5 shadow-xs">
+            <Button disabled variant="solid" size="sm" px="3.5">
               Create Training →
             </Button>
           )}
@@ -100,7 +99,11 @@ export function DatasetHeader() {
         { label: 'Storage', value: dataset.size },
         {
           label: 'Split',
-          value: <span className="capitalize">{dataset.split}</span>,
+          value: (
+            <Text as="span" textTransform="capitalize">
+              {dataset.split}
+            </Text>
+          ),
         },
       ]}
     />

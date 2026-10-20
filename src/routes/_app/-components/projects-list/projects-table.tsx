@@ -14,7 +14,7 @@ export function ProjectsTable({ projects }: { projects: Array<Project> }) {
       borderColor="border"
       bg="surface-raised"
     >
-      <Table.Root minW="780px" size="sm">
+      <Table.Root minW="780px" variant="data">
         <Table.Header>
           <Table.Row>
             <Table.ColumnHeader>Project</Table.ColumnHeader>

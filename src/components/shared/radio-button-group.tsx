@@ -29,7 +29,10 @@ export function RadioButtonGroup({
   'aria-label': label,
   children,
   ...props
-}: RadioButtonGroupState & { 'aria-label': string } & GroupProps) {
+}: RadioButtonGroupState & { 'aria-label': string } & Omit<
+    GroupProps,
+    'onChange'
+  >) {
   const state = React.useMemo(() => ({ value, onChange }), [value, onChange])
 
   function onKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {

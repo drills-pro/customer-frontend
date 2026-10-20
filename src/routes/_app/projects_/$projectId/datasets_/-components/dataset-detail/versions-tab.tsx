@@ -1,58 +1,47 @@
+import { Badge, IconButton, Table } from '@chakra-ui/react'
 import { Download } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-
+import { SectionCard } from '@/components/shared/section-card'
+import { ToneBadge } from '@/components/shared/tone-badge'
 import { downloadJson } from './helpers'
 import { useCurrentDataset } from './use-current-dataset'
 
 export function VersionsTab() {
   const { dataset, detail } = useCurrentDataset()
   return (
-    <Card size="flush">
-      <CardHeader className="border-b">
-        <CardTitle>Dataset versions</CardTitle>
-      </CardHeader>
-      <CardContent className="overflow-x-auto p-0">
-        <Table className="min-w-[560px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="px-5">Version</TableHead>
-              <TableHead>Items</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="text-right">Download</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+    <SectionCard title="Dataset versions">
+      <Table.ScrollArea>
+        <Table.Root variant="data" minW="560px">
+          <Table.Header>
+            <Table.Row>
+              <Table.ColumnHeader px="5">Version</Table.ColumnHeader>
+              <Table.ColumnHeader>Items</Table.ColumnHeader>
+              <Table.ColumnHeader>Status</Table.ColumnHeader>
+              <Table.ColumnHeader>Created</Table.ColumnHeader>
+              <Table.ColumnHeader textAlign="end">Download</Table.ColumnHeader>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
             {detail.versions.map((version) => (
-              <TableRow key={version.version}>
-                <TableCell className="px-5">
-                  <Badge variant="secondary">
+              <Table.Row key={version.version}>
+                <Table.Cell px="5">
+                  <Badge colorPalette="gray" variant="subtle">
                     v{version.version}
                     {version.version === dataset.version ? ' · current' : ''}
                   </Badge>
-                </TableCell>
-                <TableCell>{version.items.toLocaleString('en-US')}</TableCell>
-                <TableCell>
-                  <Badge variant="success">Ready</Badge>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {version.created}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button
+                </Table.Cell>
+                <Table.Cell color="fg">
+                  {version.items.toLocaleString('en-US')}
+                </Table.Cell>
+                <Table.Cell>
+                  <ToneBadge tone="success">Ready</ToneBadge>
+                </Table.Cell>
+                <Table.Cell>{version.created}</Table.Cell>
+                <Table.Cell textAlign="end">
+                  <IconButton
                     variant="ghost"
-                    size="icon-sm"
+                    colorPalette="gray"
+                    size="xs"
                     aria-label={`Download version ${version.version}`}
                     onClick={() =>
                       downloadJson(`${dataset.name}-v${version.version}.json`, {
@@ -62,13 +51,13 @@ export function VersionsTab() {
                     }
                   >
                     <Download />
-                  </Button>
-                </TableCell>
-              </TableRow>
+                  </IconButton>
+                </Table.Cell>
+              </Table.Row>
             ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+          </Table.Body>
+        </Table.Root>
+      </Table.ScrollArea>
+    </SectionCard>
   )
 }

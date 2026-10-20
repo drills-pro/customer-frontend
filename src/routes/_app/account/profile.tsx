@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -80,7 +80,10 @@ function ProfilePhotoCard({ user }: { user: CurrentUser }) {
           <Button
             variant="outline"
             onClick={() =>
-              toast.info('Uploading a photo is not available in this demo.')
+              toaster.create({
+                type: 'info',
+                title: 'Uploading a photo is not available in this demo.',
+              })
             }
           >
             Upload
@@ -88,7 +91,10 @@ function ProfilePhotoCard({ user }: { user: CurrentUser }) {
           <Button
             variant="ghost"
             onClick={() =>
-              toast.info('Removing a photo is not available in this demo.')
+              toaster.create({
+                type: 'info',
+                title: 'Removing a photo is not available in this demo.',
+              })
             }
           >
             Remove
@@ -160,7 +166,7 @@ function ProfileFormCard({ user }: { user: CurrentUser }) {
         onSuccess: () => {
           setValues(next)
           setSubmitted(false)
-          toast.success('Profile saved.')
+          toaster.create({ type: 'success', title: 'Profile saved.' })
         },
       },
     )

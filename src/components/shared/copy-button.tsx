@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Check, Copy } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Button } from '@/components/ui/button'
 
@@ -30,7 +30,10 @@ export function CopyButton({
       await navigator.clipboard.writeText(value)
       setCopied(true)
     } catch {
-      toast.info('Select the value to copy it manually.')
+      toaster.create({
+        type: 'info',
+        title: 'Select the value to copy it manually.',
+      })
     }
   }
 

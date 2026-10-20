@@ -1,6 +1,6 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Box, Download, Rocket } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -115,7 +115,10 @@ export function ModelHeader() {
             size="lg"
             className="px-3.5 shadow-xs"
             onClick={() =>
-              toast.info('Model downloads are not available in this demo.')
+              toaster.create({
+                type: 'info',
+                title: 'Model downloads are not available in this demo.',
+              })
             }
           >
             <Download className="size-4" />
@@ -144,7 +147,10 @@ export function ModelHeader() {
                   { model_id: model.id },
                   {
                     onSuccess: (created) => {
-                      toast.success(`Deploying ${created.name}.`)
+                      toaster.create({
+                        type: 'success',
+                        title: `Deploying ${created.name}.`,
+                      })
                       void navigate({
                         to: '/projects/$projectId/deployments/$deploymentId',
                         params: {

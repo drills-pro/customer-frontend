@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Building2, Lock } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { CopyButton } from '@/components/shared/copy-button'
 import { ProjectMark } from '@/features/projects/components/project-ui'
@@ -115,7 +115,7 @@ export function GeneralCard() {
       {
         onSuccess: () => {
           setValues(next)
-          toast.success('Project settings saved.')
+          toaster.create({ type: 'success', title: 'Project settings saved.' })
         },
         onError: (failure) => {
           if (failure instanceof ApiError && failure.status === 409) {

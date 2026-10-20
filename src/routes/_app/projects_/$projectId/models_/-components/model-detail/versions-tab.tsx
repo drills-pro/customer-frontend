@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -103,9 +103,10 @@ export function VersionsTab() {
                         },
                         {
                           onSuccess: () =>
-                            toast.success(
-                              `v${item.version} ${archiving ? 'archived' : 'promoted to production'}.`,
-                            ),
+                            toaster.create({
+                              type: 'success',
+                              title: `v${item.version} ${archiving ? 'archived' : 'promoted to production'}.`,
+                            }),
                         },
                       )
                     }}

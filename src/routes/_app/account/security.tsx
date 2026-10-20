@@ -9,7 +9,7 @@ import {
   Trash2,
   TriangleAlert,
 } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import {
   AlertDialog,
@@ -103,7 +103,9 @@ function PasswordCard() {
       <ChangePasswordDialog
         open={open}
         onOpenChange={setOpen}
-        onChanged={() => toast.success('Password changed.')}
+        onChanged={() =>
+          toaster.create({ type: 'success', title: 'Password changed.' })
+        }
       />
     </Card>
   )
@@ -260,9 +262,11 @@ function SignInMethodsCard() {
           <Button
             variant="outline"
             onClick={() =>
-              toast.info(
-                'Two-factor authentication is not available in this demo.',
-              )
+              toaster.create({
+                type: 'info',
+                title:
+                  'Two-factor authentication is not available in this demo.',
+              })
             }
           >
             Enable
@@ -321,7 +325,10 @@ function SessionsCard() {
                 onClick={() =>
                   endSession.mutate(session.id, {
                     onSuccess: () =>
-                      toast.success(`Signed out of ${session.device}.`),
+                      toaster.create({
+                        type: 'success',
+                        title: `Signed out of ${session.device}.`,
+                      }),
                   })
                 }
               >
@@ -401,7 +408,11 @@ function DeleteAccountCard() {
                   // Refused while the user still owns an organization; the
                   // reason comes back from the API and is shown as a toast.
                   deleteAccount.mutate(undefined, {
-                    onSuccess: () => toast.info('Your account was deleted.'),
+                    onSuccess: () =>
+                      toaster.create({
+                        type: 'info',
+                        title: 'Your account was deleted.',
+                      }),
                   })
                 }
               >

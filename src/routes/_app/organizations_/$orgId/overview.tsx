@@ -8,7 +8,7 @@ import {
   Users,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import {
   OrgMark,
@@ -256,9 +256,11 @@ function OrgOverview() {
                       size="sm"
                       className="mt-2"
                       onClick={() =>
-                        toast.info(
-                          'Plan upgrades are not available in this demo.',
-                        )
+                        toaster.create({
+                          type: 'info',
+                          title:
+                            'Plan upgrades are not available in this demo.',
+                        })
                       }
                     >
                       Upgrade plan

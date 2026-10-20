@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { ImageUp, Play } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -119,9 +119,10 @@ export function IntegrationTab() {
                 onClick={() =>
                   testCall.mutate(undefined, {
                     onSuccess: (result) =>
-                      toast.success(
-                        `${result.status} OK in ${result.latency_ms} ms.`,
-                      ),
+                      toaster.create({
+                        type: 'success',
+                        title: `${result.status} OK in ${result.latency_ms} ms.`,
+                      }),
                   })
                 }
               >
@@ -218,7 +219,10 @@ export function IntegrationTab() {
               onClick={() =>
                 rotate.mutate(undefined, {
                   onSuccess: () =>
-                    toast.success('Key rotated. The old key no longer works.'),
+                    toaster.create({
+                      type: 'success',
+                      title: 'Key rotated. The old key no longer works.',
+                    }),
                 })
               }
             >

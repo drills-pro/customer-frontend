@@ -13,7 +13,7 @@ import {
   UserPlus,
   X,
 } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import {
   MemberAvatar,
@@ -153,9 +153,10 @@ function OrgMembers() {
       { memberId: member.id, role },
       {
         onSuccess: () =>
-          toast.success(
-            `${member.name} is now ${role === 'Admin' ? 'an' : 'a'} ${role}.`,
-          ),
+          toaster.create({
+            type: 'success',
+            title: `${member.name} is now ${role === 'Admin' ? 'an' : 'a'} ${role}.`,
+          }),
       },
     )
   }
@@ -163,11 +164,13 @@ function OrgMembers() {
   function remove(member: OrgMember) {
     removeMember.mutate(member.id, {
       onSuccess: () =>
-        toast.success(
-          member.status === 'invited'
-            ? `Invitation to ${member.email} revoked.`
-            : `${member.name} was removed from ${org.name}.`,
-        ),
+        toaster.create({
+          type: 'success',
+          title:
+            member.status === 'invited'
+              ? `Invitation to ${member.email} revoked.`
+              : `${member.name} was removed from ${org.name}.`,
+        }),
     })
   }
 
@@ -178,11 +181,13 @@ function OrgMembers() {
         onSuccess: () => {
           setTab('invitations')
           setPage(0)
-          toast.success(
-            emails.length === 1
-              ? `Invitation sent to ${emails[0]}.`
-              : `${emails.length} invitations sent.`,
-          )
+          toaster.create({
+            type: 'success',
+            title:
+              emails.length === 1
+                ? `Invitation sent to ${emails[0]}.`
+                : `${emails.length} invitations sent.`,
+          })
         },
       },
     )
@@ -397,9 +402,10 @@ function OrgMembers() {
                                   onSelect={() =>
                                     resendInvitation.mutate(member.id, {
                                       onSuccess: () =>
-                                        toast.success(
-                                          `Invitation resent to ${member.email}.`,
-                                        ),
+                                        toaster.create({
+                                          type: 'success',
+                                          title: `Invitation resent to ${member.email}.`,
+                                        }),
                                     })
                                   }
                                 >
@@ -427,9 +433,10 @@ function OrgMembers() {
                                 )}
                                 <DropdownMenuItem
                                   onSelect={() =>
-                                    toast.info(
-                                      `Email ${member.email} directly in this demo.`,
-                                    )
+                                    toaster.create({
+                                      type: 'info',
+                                      title: `Email ${member.email} directly in this demo.`,
+                                    })
                                   }
                                 >
                                   <Send />

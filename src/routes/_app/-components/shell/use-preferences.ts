@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { defaultPreferences } from '@/features/dashboard/data'
 import type { DashboardPreferences } from '@/features/dashboard/data'
@@ -36,9 +36,11 @@ export function usePreferences() {
   React.useEffect(() => {
     if (!hydrated || persistenceAvailable || noticeShown.current) return
     noticeShown.current = true
-    toast.info(
-      'Browser storage is unavailable. This workspace stays usable, but changes will not persist.',
-    )
+    toaster.create({
+      type: 'info',
+      title:
+        'Browser storage is unavailable. This workspace stays usable, but changes will not persist.',
+    })
   }, [hydrated, persistenceAvailable])
 
   const updatePreferences = React.useCallback(

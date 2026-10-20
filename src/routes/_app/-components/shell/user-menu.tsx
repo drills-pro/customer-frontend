@@ -11,7 +11,7 @@ import {
   Users,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -178,7 +178,10 @@ export function UserMenu({
             variant="destructive"
             className={itemClass}
             onSelect={() =>
-              toast.info('Logging out is not available in this demo.')
+              toaster.create({
+                type: 'info',
+                title: 'Logging out is not available in this demo.',
+              })
             }
           >
             <LogOut />

@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { ApiError } from '@/api/client'
 import {
@@ -148,7 +148,7 @@ export function useNewProjectDraft() {
       },
       {
         onSuccess: (created) => {
-          toast.success(`${created.name} created.`)
+          toaster.create({ type: 'success', title: `${created.name} created.` })
           void (startMethod === 'upload'
             ? navigate({
                 to: '/projects/$projectId/datasets',

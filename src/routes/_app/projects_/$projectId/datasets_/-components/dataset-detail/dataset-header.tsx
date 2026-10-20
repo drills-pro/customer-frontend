@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Download, FileText, Image as ImageIcon, Table2 } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -63,7 +63,9 @@ export function DatasetHeader() {
                 .then((manifest) =>
                   downloadJson(`${dataset.name}-manifest.json`, manifest),
                 )
-                .catch((error: Error) => toast.error(error.message))
+                .catch((error: Error) =>
+                  toaster.create({ type: 'error', title: error.message }),
+                )
             }
           >
             <Download className="size-4" />

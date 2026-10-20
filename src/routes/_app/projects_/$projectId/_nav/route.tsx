@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import { EllipsisVertical, Plus } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Badge } from '@/components/ui/badge'
 import { RouteBreadcrumbs } from '@/components/breadcrumbs'
@@ -31,9 +31,15 @@ function ProjectNavLayout() {
   async function shareProject() {
     try {
       await navigator.clipboard.writeText(window.location.href)
-      toast.success('Project link copied to clipboard.')
+      toaster.create({
+        type: 'success',
+        title: 'Project link copied to clipboard.',
+      })
     } catch {
-      toast.info('Select the address bar to copy this project link.')
+      toaster.create({
+        type: 'info',
+        title: 'Select the address bar to copy this project link.',
+      })
     }
   }
 

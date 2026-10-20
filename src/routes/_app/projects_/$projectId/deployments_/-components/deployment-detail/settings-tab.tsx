@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Trash2, TriangleAlert } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import {
   AlertDialog,
@@ -67,7 +67,13 @@ export function SettingsTab() {
         max_replicas: Number(values.maxReplicas),
         instance_type: values.instanceType,
       },
-      { onSuccess: () => toast.success('Deployment settings saved.') },
+      {
+        onSuccess: () =>
+          toaster.create({
+            type: 'success',
+            title: 'Deployment settings saved.',
+          }),
+      },
     )
   }
 
@@ -224,7 +230,10 @@ export function SettingsTab() {
                       })
                         .then(() => remove.mutateAsync())
                         .then(() =>
-                          toast.success(`${deployment.name} was deleted.`),
+                          toaster.create({
+                            type: 'success',
+                            title: `${deployment.name} was deleted.`,
+                          }),
                         )
                         .catch(() => undefined)
                     }

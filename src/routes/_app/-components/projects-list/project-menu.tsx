@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { EllipsisVertical } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -50,9 +50,10 @@ export function ProjectMenu({ project }: { project: Project }) {
           onSelect={() =>
             archive.mutate(!archived, {
               onSuccess: () =>
-                toast.success(
-                  `${project.name} ${archived ? 'unarchived' : 'archived'}.`,
-                ),
+                toaster.create({
+                  type: 'success',
+                  title: `${project.name} ${archived ? 'unarchived' : 'archived'}.`,
+                }),
             })
           }
         >

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { ImageUp, Play } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -110,8 +110,16 @@ export function PlaygroundTab() {
               disabled={prediction.isFetching}
               onClick={() =>
                 void prediction.refetch().then((result) => {
-                  if (result.error) toast.error(result.error.message)
-                  else toast.success('Prediction complete.')
+                  if (result.error)
+                    toaster.create({
+                      type: 'error',
+                      title: result.error.message,
+                    })
+                  else
+                    toaster.create({
+                      type: 'success',
+                      title: 'Prediction complete.',
+                    })
                 })
               }
             >

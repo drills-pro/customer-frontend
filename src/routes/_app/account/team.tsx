@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { UserPlus } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -161,7 +161,13 @@ function TeamCard() {
         onInvite={(email, role) =>
           invite.mutate(
             { emails: [email], role },
-            { onSuccess: () => toast.success(`Invitation sent to ${email}.`) },
+            {
+              onSuccess: () =>
+                toaster.create({
+                  type: 'success',
+                  title: `Invitation sent to ${email}.`,
+                }),
+            },
           )
         }
       />

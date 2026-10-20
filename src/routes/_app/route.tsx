@@ -6,7 +6,7 @@ import {
   useParams,
 } from '@tanstack/react-router'
 
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { setCurrentOrganizationId } from '@/api/session'
 import { PageError } from '@/components/shared/query-states'
@@ -144,7 +144,10 @@ function AppShell({
       to: '/organizations/$orgId/overview',
       params: { orgId: created.id },
     })
-    toast.success(`${created.name} created. You're now working in it.`)
+    toaster.create({
+      type: 'success',
+      title: `${created.name} created. You're now working in it.`,
+    })
   }
 
   const orgEntries = entries.map(({ organization, summary }) => ({

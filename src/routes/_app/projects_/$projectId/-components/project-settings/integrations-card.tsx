@@ -1,6 +1,6 @@
 import { Bell, Database, GitBranch, Plug, Webhook } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import {
   Card,
@@ -37,7 +37,10 @@ export function IntegrationsCard() {
       { id: item.id, enabled: on },
       {
         onSuccess: () =>
-          toast.success(`${item.name} ${on ? 'connected' : 'disconnected'}.`),
+          toaster.create({
+            type: 'success',
+            title: `${item.name} ${on ? 'connected' : 'disconnected'}.`,
+          }),
       },
     )
   }

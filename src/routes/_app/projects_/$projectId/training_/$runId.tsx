@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Square, TriangleAlert } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { TrainingStatusBadge } from '@/features/training/components/training-status-badge'
 import {
@@ -109,7 +109,11 @@ function TrainingRunRoute() {
 
   const stopRun = () =>
     cancel.mutate(undefined, {
-      onSuccess: () => toast.info(`Training ${run.name} stopped.`),
+      onSuccess: () =>
+        toaster.create({
+          type: 'info',
+          title: `Training ${run.name} stopped.`,
+        }),
     })
 
   return (

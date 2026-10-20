@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ArrowRightLeft, Building2, Mail, Plus, Search } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import {
   OrgMark,
@@ -71,11 +71,16 @@ function OrganizationsPage() {
     const { name } = invite.organization
     if (accepted) {
       accept.mutate(invite.id, {
-        onSuccess: () => toast.success(`You joined ${name}.`),
+        onSuccess: () =>
+          toaster.create({ type: 'success', title: `You joined ${name}.` }),
       })
     } else {
       decline.mutate(invite.id, {
-        onSuccess: () => toast.info(`Declined the invitation to ${name}.`),
+        onSuccess: () =>
+          toaster.create({
+            type: 'info',
+            title: `Declined the invitation to ${name}.`,
+          }),
       })
     }
   }
@@ -175,7 +180,10 @@ function OrganizationsPage() {
                 current={org.id === currentOrg.id}
                 onSwitch={() => {
                   switchOrganization(org.id)
-                  toast.success(`Switched to ${org.name}.`)
+                  toaster.create({
+                    type: 'success',
+                    title: `Switched to ${org.name}.`,
+                  })
                 }}
               />
             </li>

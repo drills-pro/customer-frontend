@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { RouteBreadcrumbs } from '@/components/breadcrumbs'
 import { Button } from '@/components/ui/button'
@@ -199,7 +199,10 @@ function TrainingWizardForm({
       },
       {
         onSuccess: (run) => {
-          toast.success(`Training ${run.name} started.`)
+          toaster.create({
+            type: 'success',
+            title: `Training ${run.name} started.`,
+          })
           void navigate({
             to: '/projects/$projectId/training/$runId',
             params: { projectId: project.id, runId: run.id },

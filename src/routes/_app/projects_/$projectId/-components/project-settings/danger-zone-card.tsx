@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Archive, ArrowRightLeft, Trash2, TriangleAlert } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import {
   AlertDialog,
@@ -104,9 +104,10 @@ export function DangerZoneCard() {
                   onClick={() =>
                     archive.mutate(!archived, {
                       onSuccess: () =>
-                        toast.success(
-                          `${project.name} ${archived ? 'unarchived' : 'archived'}.`,
-                        ),
+                        toaster.create({
+                          type: 'success',
+                          title: `${project.name} ${archived ? 'unarchived' : 'archived'}.`,
+                        }),
                     })
                   }
                 >
@@ -232,7 +233,12 @@ function DeleteProjectDialog({ project }: { project: Project }) {
               // the promise; a failure is reported by the global handler.
               void navigate({ to: '/projects' })
                 .then(() => remove.mutateAsync())
-                .then(() => toast.success(`${project.name} was deleted.`))
+                .then(() =>
+                  toaster.create({
+                    type: 'success',
+                    title: `${project.name} was deleted.`,
+                  }),
+                )
                 .catch(() => undefined)
             }
           >
@@ -309,7 +315,10 @@ function TransferProjectDialog({ project }: { project: Project }) {
                 onSuccess: () => {
                   // Follow the project, so its page stays the current one.
                   updatePreferences({ organizationId: chosen.id })
-                  toast.success(`${project.name} moved to ${chosen.name}.`)
+                  toaster.create({
+                    type: 'success',
+                    title: `${project.name} moved to ${chosen.name}.`,
+                  })
                 },
               })
             }

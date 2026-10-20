@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { UserPlus, X } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -70,9 +70,10 @@ export function MembersCard() {
       { userId: member.id, role },
       {
         onSuccess: () =>
-          toast.success(
-            `${member.name} is now ${role === 'Editor' ? 'an' : 'a'} ${role}.`,
-          ),
+          toaster.create({
+            type: 'success',
+            title: `${member.name} is now ${role === 'Editor' ? 'an' : 'a'} ${role}.`,
+          }),
       },
     )
   }
@@ -80,11 +81,12 @@ export function MembersCard() {
   function remove(member: Member) {
     removeMember.mutate(member.id, {
       onSuccess: () =>
-        toast.success(
-          member.invited
+        toaster.create({
+          type: 'success',
+          title: member.invited
             ? `Invitation to ${member.email} cancelled.`
             : `${member.name} was removed from the project.`,
-        ),
+        }),
     })
   }
 
@@ -187,7 +189,13 @@ export function MembersCard() {
         onInvite={(email, role) =>
           inviteMember.mutate(
             { email, role },
-            { onSuccess: () => toast.success(`Invitation sent to ${email}.`) },
+            {
+              onSuccess: () =>
+                toaster.create({
+                  type: 'success',
+                  title: `Invitation sent to ${email}.`,
+                }),
+            },
           )
         }
       />

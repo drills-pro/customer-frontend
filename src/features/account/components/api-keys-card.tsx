@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { KeyRound, Plus, TriangleAlert } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { ApiError } from '@/api/client'
 import { CopyButton } from '@/components/shared/copy-button'
@@ -220,7 +220,10 @@ export function ApiKeysCard({
                 if (!revoking) return
                 revoke.mutate(revoking.id, {
                   onSuccess: () =>
-                    toast.success(`${revoking.name} was revoked.`),
+                    toaster.create({
+                      type: 'success',
+                      title: `${revoking.name} was revoked.`,
+                    }),
                 })
               }}
             >

@@ -1,5 +1,5 @@
 import { Download, FileText } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -55,9 +55,10 @@ export function FilesTab() {
                     variant="ghost"
                     size="sm"
                     onClick={() =>
-                      toast.info(
-                        `Downloading ${file.name} is not available in this demo.`,
-                      )
+                      toaster.create({
+                        type: 'info',
+                        title: `Downloading ${file.name} is not available in this demo.`,
+                      })
                     }
                   >
                     <Download />

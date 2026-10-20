@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Pause, Play, RefreshCw, Rocket } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Button } from '@/components/ui/button'
 import { CopyButton } from '@/components/shared/copy-button'
@@ -68,9 +68,10 @@ export function DeploymentHeader() {
             onClick={() =>
               act.mutate(idle ? 'resume' : 'pause', {
                 onSuccess: () =>
-                  toast.success(
-                    `${deployment.name} ${idle ? 'resumed' : 'paused'}.`,
-                  ),
+                  toaster.create({
+                    type: 'success',
+                    title: `${deployment.name} ${idle ? 'resumed' : 'paused'}.`,
+                  }),
               })
             }
           >
@@ -84,7 +85,10 @@ export function DeploymentHeader() {
             onClick={() =>
               act.mutate('redeploy', {
                 onSuccess: () =>
-                  toast.success(`Redeploying ${deployment.name}.`),
+                  toaster.create({
+                    type: 'success',
+                    title: `Redeploying ${deployment.name}.`,
+                  }),
               })
             }
           >

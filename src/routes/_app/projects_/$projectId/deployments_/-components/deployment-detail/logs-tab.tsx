@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Download } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Badge, BadgeDot } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -67,7 +67,10 @@ export function LogsTab() {
         <Button
           variant="outline"
           onClick={() =>
-            toast.info('Log export is not available in this demo.')
+            toaster.create({
+              type: 'info',
+              title: 'Log export is not available in this demo.',
+            })
           }
         >
           <Download />

@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Box, Grid2X2, List, Plus, Search } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -81,7 +81,10 @@ function ProjectDatasetsRoute() {
   function addDataset(dataset: NewDataset) {
     addDatasetMutation.mutate(dataset, {
       onSuccess: (created) =>
-        toast.success(`Dataset ${created.name} added for processing.`),
+        toaster.create({
+          type: 'success',
+          title: `Dataset ${created.name} added for processing.`,
+        }),
     })
   }
 

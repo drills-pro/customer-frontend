@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Upload } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -69,7 +69,10 @@ export function UploadDialog({
       { project, name: datasetName, file },
       {
         onSuccess: () => {
-          toast.success(`${datasetName} uploaded to ${project.name}.`)
+          toaster.create({
+            type: 'success',
+            title: `${datasetName} uploaded to ${project.name}.`,
+          })
           setName('')
           setFile(null)
           onOpenChange(false)

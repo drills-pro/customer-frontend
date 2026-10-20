@@ -1,4 +1,4 @@
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -33,7 +33,11 @@ export function DatasetStatus() {
             disabled={reprocess.isPending}
             onClick={() =>
               reprocess.mutate(undefined, {
-                onSuccess: () => toast.info('Reprocessing started.'),
+                onSuccess: () =>
+                  toaster.create({
+                    type: 'info',
+                    title: 'Reprocessing started.',
+                  }),
               })
             }
           >

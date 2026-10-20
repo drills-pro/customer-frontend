@@ -8,7 +8,7 @@ import {
   Trash2,
   TriangleAlert,
 } from 'lucide-react'
-import { toast } from 'sonner'
+import { toaster } from '@/components/toaster'
 
 import { CopyButton } from '@/components/shared/copy-button'
 import { SettingsNav } from '@/components/shared/settings-nav'
@@ -150,7 +150,11 @@ function GeneralCard({ org }: { org: Organization }) {
     saveOrg.mutate(
       { ...values, name: values.name.trim() },
       {
-        onSuccess: () => toast.success('Organization settings saved.'),
+        onSuccess: () =>
+          toaster.create({
+            type: 'success',
+            title: 'Organization settings saved.',
+          }),
         onError: (error) => {
           if (error instanceof ApiError && error.status === 409) {
             setTakenSlug(values.slug)
@@ -321,7 +325,10 @@ function DefaultsCard({
 
   /** Each control saves on its own; the card has no submit button. */
   function save(changes: Parameters<typeof update.mutate>[0], message: string) {
-    update.mutate(changes, { onSuccess: () => toast.success(`${message}.`) })
+    update.mutate(changes, {
+      onSuccess: () =>
+        toaster.create({ type: 'success', title: `${message}.` }),
+    })
   }
 
   return (
@@ -462,7 +469,7 @@ function DangerZoneCard({ org }: { org: Organization }) {
       .then(() => action.mutateAsync())
       .then(() => {
         if (fallback) updatePreferences({ organizationId: fallback })
-        toast.success(message)
+        toaster.create({ type: 'success', title: message })
       })
       // The failure is already reported by the global mutation handler.
       .catch(() => undefined)
@@ -706,7 +713,10 @@ function TransferOwnershipDialog({
               chosen &&
               transfer.mutate(chosen.id, {
                 onSuccess: () =>
-                  toast.success(`${chosen.name} now owns ${org.name}.`),
+                  toaster.create({
+                    type: 'success',
+                    title: `${chosen.name} now owns ${org.name}.`,
+                  }),
               })
             }
           >

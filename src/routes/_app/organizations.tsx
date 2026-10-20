@@ -1,5 +1,19 @@
 import * as React from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import {
+  Box,
+  Button,
+  Card,
+  Center,
+  Flex,
+  HStack,
+  Input,
+  InputGroup,
+  Link,
+  Progress,
+  SimpleGrid,
+  Text,
+} from '@chakra-ui/react'
+import { createFileRoute, Link as RouterLink } from '@tanstack/react-router'
 import { ArrowRightLeft, Building2, Mail, Plus, Search } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
@@ -9,22 +23,8 @@ import {
   RoleBadge,
 } from '@/features/organizations/components/org-ui'
 import { plural } from '@/features/organizations/utils'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardFooter } from '@/components/ui/card'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from '@/components/ui/input-group'
-import { Progress } from '@/components/ui/progress'
+import { EmptyNotice } from '@/components/shared/empty-notice'
+import { ToneBadge } from '@/components/shared/tone-badge'
 import { useDashboardLayout } from '@/features/dashboard/context'
 import type {
   OrgInvitation,
@@ -94,61 +94,97 @@ function OrganizationsPage() {
   )
 
   return (
-    <main
+    <Box
+      as="main"
       id="dashboard-main"
-      className="mx-auto w-full max-w-[1448px] flex-1 p-4 sm:p-6"
+      mx="auto"
+      w="full"
+      maxW="1448px"
+      flex="1"
+      p={{ base: '4', sm: '6' }}
     >
-      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <Flex
+        mb="5"
+        direction={{ base: 'column', sm: 'row' }}
+        align={{ sm: 'flex-end' }}
+        justify={{ sm: 'space-between' }}
+        gap="4"
+      >
         <PageHeader
           title="Organizations"
           description={`You belong to ${plural(organizations.length, 'organization')}. Switch between them or manage who has access.`}
         />
-        <Button size="lg" className="px-3.5" onClick={openCreateOrganization}>
+        <Button
+          variant="solid"
+          size="sm"
+          px="3.5"
+          onClick={openCreateOrganization}
+        >
           <Plus />
           Create organization
         </Button>
-      </div>
+      </Flex>
 
       {invitations.map((invite) => (
-        <Card key={invite.id} size="flush" className="mb-5 ring-primary/30">
-          <CardContent className="flex flex-wrap items-center gap-4 bg-primary-muted/50 p-4">
-            <span
+        <Card.Root
+          key={invite.id}
+          variant="outline"
+          mb="5"
+          overflow="hidden"
+          borderColor="brand.border"
+        >
+          <Flex wrap="wrap" align="center" gap="4" bg="brand.subtle" p="4">
+            <Center
               aria-hidden="true"
-              className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-muted text-primary"
+              boxSize="9"
+              flexShrink={0}
+              rounded="l2"
+              bg="surface-raised"
+              color="brand.fg"
             >
-              <Mail className="size-4" />
-            </span>
-            <div className="mr-auto min-w-0 basis-64 grow">
-              <p className="text-[13px] font-medium">
+              <Mail size={16} />
+            </Center>
+            <Box me="auto" minW="0" flexBasis="64" flexGrow={1}>
+              <Text fontSize="13px" fontWeight="medium">
                 {invite.invitedBy} invited you to join{' '}
                 {invite.organization.name}
-              </p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              </Text>
+              <Text mt="0.5" fontSize="xs" color="fg.muted">
                 {invite.organization.plan} plan · joining as{' '}
                 {invite.role.toLowerCase()} · {invite.organization.description}
-              </p>
-            </div>
-            <div className="flex gap-2">
+              </Text>
+            </Box>
+            <HStack gap="2">
               <Button
                 variant="ghost"
+                colorPalette="gray"
+                size="sm"
                 disabled={answering}
                 onClick={() => answer(invite, false)}
               >
                 Decline
               </Button>
-              <Button disabled={answering} onClick={() => answer(invite, true)}>
+              <Button
+                variant="solid"
+                size="sm"
+                disabled={answering}
+                onClick={() => answer(invite, true)}
+              >
                 Accept invitation
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </HStack>
+          </Flex>
+        </Card.Root>
       ))}
 
-      <InputGroup className="mb-5 h-9 max-w-sm bg-card">
-        <InputGroupAddon>
-          <Search />
-        </InputGroupAddon>
-        <InputGroupInput
+      <InputGroup
+        mb="5"
+        maxW="sm"
+        startElement={<Search size={16} aria-hidden="true" />}
+      >
+        <Input
+          size="sm"
+          bg="surface-raised"
           aria-label="Search organizations"
           placeholder="Search organizations"
           value={query}
@@ -157,23 +193,20 @@ function OrganizationsPage() {
       </InputGroup>
 
       {visible.length === 0 ? (
-        <Card>
-          <Empty className="py-12">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Building2 />
-              </EmptyMedia>
-              <EmptyTitle>No organizations match “{query.trim()}”</EmptyTitle>
-              <EmptyDescription>
-                Check the spelling, or create a new organization.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        </Card>
+        <EmptyNotice
+          py="12"
+          rounded="l3"
+          borderWidth="1px"
+          borderColor="border"
+          bg="surface-raised"
+          icon={<Building2 />}
+          title={`No organizations match “${query.trim()}”`}
+          description="Check the spelling, or create a new organization."
+        />
       ) : (
-        <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <SimpleGrid as="ul" columns={{ base: 1, md: 2, xl: 3 }} gap="4">
           {visible.map((org) => (
-            <li key={org.id} className="min-w-0">
+            <Box as="li" key={org.id} minW="0">
               <OrgCard
                 org={org}
                 summary={orgSummaries[org.id]}
@@ -186,11 +219,11 @@ function OrganizationsPage() {
                   })
                 }}
               />
-            </li>
+            </Box>
           ))}
-        </ul>
+        </SimpleGrid>
       )}
-    </main>
+    </Box>
   )
 }
 
@@ -211,74 +244,112 @@ function OrgCard({
   )
 
   return (
-    <Card
-      size="flush"
-      className={`h-full ${current ? 'ring-2 ring-primary' : ''}`}
+    <Card.Root
+      variant="outline"
+      h="full"
+      overflow="hidden"
+      borderWidth={current ? '2px' : '1px'}
+      borderColor={current ? 'brand' : 'border'}
     >
-      <CardContent className="grid gap-4 p-5">
-        <div className="flex items-start gap-3">
+      <Box display="grid" gap="4" p="5">
+        <Flex align="flex-start" gap="3">
           <OrgMark org={org} boxSize="11" rounded="l3" fontSize="md" />
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
+          <Box minW="0" flex="1">
+            <HStack gap="2">
               <Link
-                to="/organizations/$orgId/overview"
-                params={{ orgId: org.id }}
-                className="truncate font-semibold outline-hidden hover:text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                asChild
+                truncate
+                fontWeight="semibold"
+                color="fg"
+                _hover={{ color: 'brand-text', textDecoration: 'underline' }}
               >
-                {org.name}
+                <RouterLink
+                  to="/organizations/$orgId/overview"
+                  params={{ orgId: org.id }}
+                >
+                  {org.name}
+                </RouterLink>
               </Link>
-              {current && <Badge variant="success">Current</Badge>}
-            </div>
-            <p className="truncate text-xs text-muted-foreground">
+              {current && <ToneBadge tone="success">Current</ToneBadge>}
+            </HStack>
+            <Text truncate fontSize="xs" color="fg.muted">
               drills.ai/{org.slug}
-            </p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            </Text>
+            <HStack mt="2" wrap="wrap" gap="1.5">
               <PlanBadge plan={org.plan} />
               <RoleBadge role={org.yourRole} />
-            </div>
-          </div>
-        </div>
+            </HStack>
+          </Box>
+        </Flex>
 
-        <dl className="grid grid-cols-3 gap-2 rounded-lg bg-muted/50 p-3 text-center">
+        <SimpleGrid
+          as="dl"
+          columns={3}
+          gap="2"
+          rounded="l2"
+          bg="bg.muted"
+          p="3"
+          textAlign="center"
+        >
           {[
             ['Projects', summary.projects],
             ['Members', summary.members],
             ['Running', summary.runningTrainings],
           ].map(([label, value]) => (
-            <div key={label}>
-              <dd className="text-lg font-semibold tabular-nums">{value}</dd>
-              <dt className="text-[11px] text-muted-foreground">{label}</dt>
-            </div>
+            <Box key={label}>
+              <Box
+                as="dd"
+                fontSize="lg"
+                fontWeight="semibold"
+                fontVariantNumeric="tabular-nums"
+              >
+                {value}
+              </Box>
+              <Box as="dt" fontSize="11px" color="fg.muted">
+                {label}
+              </Box>
+            </Box>
           ))}
-        </dl>
+        </SimpleGrid>
 
-        <div>
-          <div className="mb-1.5 flex justify-between text-xs text-muted-foreground">
+        <Box>
+          <Flex mb="1.5" justify="space-between" fontSize="xs" color="fg.muted">
             <span>GPU credits</span>
-            <span className="text-foreground tabular-nums">
+            <Text as="span" color="fg" fontVariantNumeric="tabular-nums">
               {summary.creditsUsed.toLocaleString('en-US')} /{' '}
               {summary.limits.credits.toLocaleString('en-US')}
-            </span>
-          </div>
-          <Progress
-            value={creditsPercent}
-            aria-label={`${org.name} GPU credits used`}
-          />
-        </div>
-      </CardContent>
-      <CardFooter className="mt-auto flex gap-2 border-t px-5 py-3">
-        <Button asChild variant="outline" className="flex-1">
-          <Link to="/organizations/$orgId/overview" params={{ orgId: org.id }}>
+            </Text>
+          </Flex>
+          <Progress.Root size="xs" value={creditsPercent}>
+            <Progress.Track aria-label={`${org.name} GPU credits used`}>
+              <Progress.Range />
+            </Progress.Track>
+          </Progress.Root>
+        </Box>
+      </Box>
+      <Flex
+        mt="auto"
+        gap="2"
+        borderTopWidth="1px"
+        borderColor="border"
+        px="5"
+        py="3"
+      >
+        <Button asChild variant="outline" size="sm" flex="1">
+          <RouterLink
+            to="/organizations/$orgId/overview"
+            params={{ orgId: org.id }}
+          >
             Open
-          </Link>
+          </RouterLink>
         </Button>
         {!current && (
-          <Button variant="secondary" className="flex-1" onClick={onSwitch}>
+          <Button variant="subtle" size="sm" flex="1" onClick={onSwitch}>
             <ArrowRightLeft />
             Switch
           </Button>
         )}
-      </CardFooter>
-    </Card>
+      </Flex>
+    </Card.Root>
   )
 }

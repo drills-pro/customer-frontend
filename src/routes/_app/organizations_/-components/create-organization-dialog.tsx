@@ -1,32 +1,22 @@
 import * as React from 'react'
+import {
+  Box,
+  Button,
+  Field,
+  Fieldset,
+  Flex,
+  Input,
+  InputGroup,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
 
 import { OrgMark } from '@/features/organizations/components/org-ui'
-import { Button } from '@/components/ui/button'
+import { AppDialog } from '@/components/shared/app-dialog'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  FieldTitle,
-} from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-  InputGroupText,
-} from '@/components/ui/input-group'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+  RadioButton,
+  RadioButtonGroup,
+} from '@/components/shared/radio-button-group'
 import { ApiError } from '@/api/client'
 import { usePlans } from '@/features/catalog/queries'
 import { orgPlans } from '@/features/dashboard/domain/types'
@@ -125,127 +115,124 @@ export function CreateOrganizationDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={close}>
-      <DialogContent className="sm:max-w-lg">
-        <form onSubmit={submit} noValidate className="contents">
-          <DialogHeader>
-            <DialogTitle>Create organization</DialogTitle>
-            <DialogDescription>
-              A shared space for projects, datasets, members and billing.
-            </DialogDescription>
-          </DialogHeader>
+    <AppDialog
+      open={open}
+      onOpenChange={close}
+      onSubmit={submit}
+      size="lg"
+      title="Create organization"
+      description="A shared space for projects, datasets, members and billing."
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => close(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="solid"
+            size="sm"
+            disabled={create.isPending}
+          >
+            Create organization
+          </Button>
+        </>
+      }
+    >
+      <Stack gap="5">
+        <Flex align="center" gap="3" rounded="l2" bg="bg.muted" p="3">
+          <OrgMark
+            org={{ initial: initialOf(name), color }}
+            boxSize="10"
+            fontSize="md"
+          />
+          <Box minW="0">
+            <Text truncate fontWeight="medium">
+              {name.trim() || 'New organization'}
+            </Text>
+            <Text truncate fontSize="xs" color="fg.muted">
+              drills.ai/{effectiveSlug || 'your-org'}
+            </Text>
+          </Box>
+        </Flex>
 
-          <FieldGroup className="gap-5 py-2">
-            <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-              <OrgMark
-                org={{ initial: initialOf(name), color }}
-                boxSize="10"
-                fontSize="md"
-              />
-              <div className="min-w-0">
-                <p className="truncate font-medium">
-                  {name.trim() || 'New organization'}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  drills.ai/{effectiveSlug || 'your-org'}
-                </p>
-              </div>
-            </div>
+        <Field.Root invalid={Boolean(nameMessage)}>
+          <Field.Label>Organization name</Field.Label>
+          <Input
+            value={name}
+            placeholder="e.g. Contoso Vision"
+            autoFocus
+            onChange={(event) => setName(event.target.value)}
+          />
+          <Field.ErrorText>{nameMessage}</Field.ErrorText>
+        </Field.Root>
 
-            <Field data-invalid={Boolean(nameMessage) || undefined}>
-              <FieldLabel htmlFor="create-org-name">
-                Organization name
-              </FieldLabel>
-              <Input
-                id="create-org-name"
-                value={name}
-                placeholder="e.g. Contoso Vision"
-                autoFocus
-                aria-invalid={Boolean(nameMessage) || undefined}
-                onChange={(event) => setName(event.target.value)}
-              />
-              <FieldError>{nameMessage}</FieldError>
-            </Field>
+        <Field.Root invalid={Boolean(slugMessage)}>
+          <Field.Label>URL</Field.Label>
+          <InputGroup startAddon="drills.ai/">
+            <Input
+              value={effectiveSlug}
+              placeholder="your-org"
+              onChange={(event) => {
+                setSlugEdited(true)
+                setSlug(cleanSlugInput(event.target.value))
+              }}
+            />
+          </InputGroup>
+          <Field.ErrorText>{slugMessage}</Field.ErrorText>
+        </Field.Root>
 
-            <Field data-invalid={Boolean(slugMessage) || undefined}>
-              <FieldLabel htmlFor="create-org-slug">URL</FieldLabel>
-              <InputGroup>
-                <InputGroupAddon>
-                  <InputGroupText>drills.ai/</InputGroupText>
-                </InputGroupAddon>
-                <InputGroupInput
-                  id="create-org-slug"
-                  value={effectiveSlug}
-                  placeholder="your-org"
-                  aria-invalid={Boolean(slugMessage) || undefined}
-                  onChange={(event) => {
-                    setSlugEdited(true)
-                    setSlug(cleanSlugInput(event.target.value))
-                  }}
-                />
-              </InputGroup>
-              <FieldError>{slugMessage}</FieldError>
-            </Field>
+        <Stack gap="2">
+          <Text textStyle="body-sm" fontWeight="medium">
+            Color
+          </Text>
+          <ColorSwatches
+            label="Organization color"
+            value={color}
+            onChange={setColor}
+          />
+        </Stack>
 
-            <Field>
-              <span className="text-sm font-medium">Color</span>
-              <ColorSwatches
-                label="Organization color"
-                value={color}
-                onChange={setColor}
-              />
-            </Field>
-
-            <fieldset className="grid gap-3">
-              <legend className="mb-3 text-sm font-medium">Plan</legend>
-              <RadioGroup
-                value={plan}
-                onValueChange={(value) => setPlan(value as OrgPlan)}
-                className="grid gap-2"
+        <Fieldset.Root>
+          <Fieldset.Legend textStyle="body-sm" fontWeight="medium" mb="3">
+            Plan
+          </Fieldset.Legend>
+          <RadioButtonGroup
+            aria-label="Plan"
+            value={plan}
+            onChange={(value) => setPlan(value as OrgPlan)}
+            flexDirection="column"
+            alignItems="stretch"
+            gap="2"
+          >
+            {orgPlans.map((option) => (
+              <RadioButton
+                key={option}
+                value={option}
+                variant="option"
+                justifyContent="flex-start"
+                p="3"
               >
-                {orgPlans.map((option) => (
-                  <FieldLabel
-                    key={option}
-                    htmlFor={`create-org-plan-${option}`}
-                  >
-                    <Field orientation="horizontal">
-                      <FieldContent>
-                        <FieldTitle>
-                          {option}
-                          <span className="font-normal text-muted-foreground">
-                            · {limitsOf(option)?.price}
-                          </span>
-                        </FieldTitle>
-                        <FieldDescription>
-                          {planBlurbs[option]} Up to {limitsOf(option)?.seats}{' '}
-                          seats.
-                        </FieldDescription>
-                      </FieldContent>
-                      <RadioGroupItem
-                        id={`create-org-plan-${option}`}
-                        value={option}
-                      />
-                    </Field>
-                  </FieldLabel>
-                ))}
-              </RadioGroup>
-            </fieldset>
-          </FieldGroup>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => close(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={create.isPending}>
-              Create organization
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+                <Box>
+                  <Text textStyle="body-sm" fontWeight="medium">
+                    {option}{' '}
+                    <Text as="span" fontWeight="normal" color="fg.muted">
+                      · {limitsOf(option)?.price}
+                    </Text>
+                  </Text>
+                  <Text textStyle="body-sm" color="fg.muted">
+                    {planBlurbs[option]} Up to {limitsOf(option)?.seats} seats.
+                  </Text>
+                </Box>
+              </RadioButton>
+            ))}
+          </RadioButtonGroup>
+        </Fieldset.Root>
+      </Stack>
+    </AppDialog>
   )
 }

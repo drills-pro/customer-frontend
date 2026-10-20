@@ -1,4 +1,22 @@
 import * as React from 'react'
+import {
+  Box,
+  Button,
+  Card,
+  Flex,
+  HStack,
+  IconButton,
+  Input,
+  InputGroup,
+  Menu,
+  Portal,
+  Stack,
+  Table,
+  Tabs,
+  Text,
+  VisuallyHidden,
+} from '@chakra-ui/react'
+import type { MenuItemProps } from '@chakra-ui/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   ChevronLeft,
@@ -20,59 +38,10 @@ import {
   RoleBadge,
 } from '@/features/organizations/components/org-ui'
 import { formatDate, plural } from '@/features/organizations/utils'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from '@/components/ui/input-group'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AppDialog } from '@/components/shared/app-dialog'
+import { EmptyNotice } from '@/components/shared/empty-notice'
+import { SectionCard } from '@/components/shared/section-card'
+import { SimpleSelect } from '@/components/simple-select'
 import { orgRoles } from '@/features/dashboard/domain/types'
 import type { OrgMember, OrgRole } from '@/features/dashboard/domain/types'
 import { orgRoleDescriptions } from '@/features/organizations/constants'
@@ -97,6 +66,34 @@ export const Route = createFileRoute('/_app/organizations_/$orgId/members')({
 
 const PAGE_SIZE = 10
 const assignableRoles: OrgRole[] = ['Admin', 'Member', 'Viewer']
+
+/** A row action with a muted icon; `danger` for the destructive ones. */
+function ActionItem({
+  danger = false,
+  ...props
+}: { danger?: boolean } & MenuItemProps) {
+  return (
+    <Menu.Item
+      gap="2"
+      color={danger ? 'fg.error' : undefined}
+      _highlighted={danger ? { bg: 'bg.error', color: 'fg.error' } : undefined}
+      css={{
+        '& svg': { boxSize: '4', color: danger ? 'fg.error' : 'fg.muted' },
+      }}
+      {...props}
+    />
+  )
+}
+
+/** A status with its dot, so it never relies on color alone. */
+function StatusDot({ color, children }: { color: string; children: string }) {
+  return (
+    <HStack as="span" display="inline-flex" gap="1.5" color={color}>
+      <Box as="span" boxSize="1.5" rounded="full" bg="currentColor" />
+      {children}
+    </HStack>
+  )
+}
 
 function OrgMembers() {
   const search = Route.useSearch()
@@ -194,60 +191,90 @@ function OrgMembers() {
   }
 
   return (
-    <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
-      <Card size="flush" className="min-w-0">
-        <CardHeader className="gap-3 border-b [--card-section:--spacing(3.5)]">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <CardTitle>Manage members</CardTitle>
-              <CardDescription>
+    <Box
+      display="grid"
+      minW="0"
+      gap="5"
+      gridTemplateColumns={{ xl: 'minmax(0, 1fr) 300px' }}
+    >
+      <Card.Root variant="outline" minW="0" overflow="hidden">
+        <Stack
+          gap="3"
+          px="5"
+          py="3.5"
+          borderBottomWidth="1px"
+          borderColor="border"
+        >
+          <Flex wrap="wrap" align="flex-start" justify="space-between" gap="3">
+            <Box>
+              <Card.Title as="h2" textStyle="body" fontWeight="semibold">
+                Manage members
+              </Card.Title>
+              <Card.Description textStyle="body-sm">
                 {plural(summary.members, 'member')} ·{' '}
                 {summary.limits.seats - seatsLeft} of {summary.limits.seats}{' '}
                 seats used
-              </CardDescription>
-            </div>
+              </Card.Description>
+            </Box>
             {canManage ? (
-              <Button onClick={() => setInviteOpen(true)}>
+              <Button
+                variant="solid"
+                size="sm"
+                onClick={() => setInviteOpen(true)}
+              >
                 <UserPlus />
                 Invite members
               </Button>
             ) : (
-              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Lock className="size-3.5" />
+              <HStack gap="1.5" fontSize="xs" color="fg.muted">
+                <Lock size={14} />
                 Only owners and admins can manage members.
-              </p>
+              </HStack>
             )}
-          </div>
+          </Flex>
 
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <Tabs
+          <Flex wrap="wrap" align="center" justify="space-between" gap="3">
+            <Tabs.Root
+              variant="line"
+              size="sm"
               value={tab}
-              onValueChange={(value) => {
-                setTab(value as typeof tab)
+              onValueChange={(event) => {
+                setTab(event.value as typeof tab)
                 setPage(0)
               }}
             >
-              <TabsList variant="line" className="gap-5">
-                <TabsTrigger value="members">
+              <Tabs.List gap="5">
+                <Tabs.Trigger value="members" gap="1.5">
                   Members
-                  <span className="text-muted-foreground tabular-nums">
+                  <Text
+                    as="span"
+                    color="fg.muted"
+                    fontVariantNumeric="tabular-nums"
+                  >
                     {active.length}
-                  </span>
-                </TabsTrigger>
-                <TabsTrigger value="invitations">
+                  </Text>
+                </Tabs.Trigger>
+                <Tabs.Trigger value="invitations" gap="1.5">
                   Invitations
-                  <span className="text-muted-foreground tabular-nums">
+                  <Text
+                    as="span"
+                    color="fg.muted"
+                    fontVariantNumeric="tabular-nums"
+                  >
                     {invited.length}
-                  </span>
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-              <InputGroup className="min-w-0 flex-1 sm:w-56">
-                <InputGroupAddon>
-                  <Search />
-                </InputGroupAddon>
-                <InputGroupInput
+                  </Text>
+                </Tabs.Trigger>
+              </Tabs.List>
+            </Tabs.Root>
+            <Flex w={{ base: 'full', sm: 'auto' }} wrap="wrap" gap="2">
+              <InputGroup
+                flex="1"
+                minW="0"
+                w={{ sm: '56' }}
+                startElement={<Search size={16} aria-hidden="true" />}
+              >
+                <Input
+                  size="sm"
                   aria-label="Search members"
                   placeholder="Search members"
                   value={query}
@@ -257,269 +284,291 @@ function OrgMembers() {
                   }}
                 />
               </InputGroup>
-              <Select
+              <SimpleSelect
+                label="Filter by role"
+                hideLabel
+                size="sm"
+                width="32"
                 value={roleFilter}
-                onValueChange={(value) => {
+                onChange={(value) => {
                   setRoleFilter(value as typeof roleFilter)
                   setPage(0)
                 }}
-              >
-                <SelectTrigger aria-label="Filter by role" className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All roles</SelectItem>
-                  {orgRoles.map((role) => (
-                    <SelectItem key={role} value={role}>
-                      {role}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardHeader>
+                items={[
+                  { label: 'All roles', value: 'all' },
+                  ...orgRoles.map((role) => ({ label: role, value: role })),
+                ]}
+              />
+            </Flex>
+          </Flex>
+        </Stack>
 
-        <CardContent className="p-0">
-          {visible.length === 0 ? (
-            <Empty className="py-12">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  {tab === 'members' ? <Search /> : <MailPlus />}
-                </EmptyMedia>
-                <EmptyTitle>
-                  {source.length === 0 && tab === 'invitations'
-                    ? 'No pending invitations'
-                    : 'No matching members'}
-                </EmptyTitle>
-                <EmptyDescription>
-                  {source.length === 0 && tab === 'invitations'
-                    ? 'People you invite show up here until they accept.'
-                    : 'Try a different name, email or role.'}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <Table className="min-w-[680px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="px-5">
+        {visible.length === 0 ? (
+          <EmptyNotice
+            py="12"
+            icon={tab === 'members' ? <Search /> : <MailPlus />}
+            title={
+              source.length === 0 && tab === 'invitations'
+                ? 'No pending invitations'
+                : 'No matching members'
+            }
+            description={
+              source.length === 0 && tab === 'invitations'
+                ? 'People you invite show up here until they accept.'
+                : 'Try a different name, email or role.'
+            }
+          />
+        ) : (
+          <Table.ScrollArea>
+            <Table.Root variant="data" minW="680px">
+              <Table.Header>
+                <Table.Row>
+                  <Table.ColumnHeader px="5">
                     {tab === 'members' ? 'Member' : 'Invitee'}
-                  </TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>{tab === 'members' ? 'Joined' : 'Sent'}</TableHead>
-                  <TableHead>
+                  </Table.ColumnHeader>
+                  <Table.ColumnHeader>Role</Table.ColumnHeader>
+                  <Table.ColumnHeader>
+                    {tab === 'members' ? 'Joined' : 'Sent'}
+                  </Table.ColumnHeader>
+                  <Table.ColumnHeader>
                     {tab === 'members' ? 'Last active' : 'Status'}
-                  </TableHead>
-                  <TableHead className="w-12">
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+                  </Table.ColumnHeader>
+                  <Table.ColumnHeader w="12">
+                    <VisuallyHidden>Actions</VisuallyHidden>
+                  </Table.ColumnHeader>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
                 {visible.map((member) => (
-                  <TableRow key={member.id}>
-                    <TableCell className="px-5">
-                      <div className="flex min-w-0 items-center gap-3">
+                  <Table.Row key={member.id}>
+                    <Table.Cell px="5">
+                      <Flex minW="0" align="center" gap="3">
                         <MemberAvatar member={member} />
-                        <div className="min-w-0">
-                          <p className="truncate text-[13px] font-medium text-foreground">
+                        <Box minW="0">
+                          <Text
+                            truncate
+                            fontSize="13px"
+                            fontWeight="medium"
+                            color="fg"
+                          >
                             {member.name}
                             {member.you && (
-                              <span className="font-normal text-muted-foreground">
+                              <Text
+                                as="span"
+                                fontWeight="normal"
+                                color="fg.muted"
+                              >
                                 {' '}
                                 (you)
-                              </span>
+                              </Text>
                             )}
-                          </p>
-                          <p className="truncate text-xs text-muted-foreground">
+                          </Text>
+                          <Text truncate fontSize="xs" color="fg.muted">
                             {member.email}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
+                          </Text>
+                        </Box>
+                      </Flex>
+                    </Table.Cell>
+                    <Table.Cell>
                       {canEdit(member) ? (
-                        <Select
+                        <SimpleSelect
+                          label={`Role for ${member.name}`}
+                          hideLabel
+                          size="sm"
+                          width="28"
                           value={member.role}
-                          onValueChange={(value) =>
+                          onChange={(value) =>
                             changeRole(member, value as OrgRole)
                           }
-                        >
-                          <SelectTrigger
-                            size="sm"
-                            aria-label={`Role for ${member.name}`}
-                            className="w-28"
-                          >
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {assignableRoles.map((role) => (
-                              <SelectItem key={role} value={role}>
-                                {role}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          items={assignableRoles.map((role) => ({
+                            label: role,
+                            value: role,
+                          }))}
+                        />
                       ) : (
                         <RoleBadge role={member.role} />
                       )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatDate(member.joinedAt)}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    </Table.Cell>
+                    <Table.Cell>{formatDate(member.joinedAt)}</Table.Cell>
+                    <Table.Cell>
                       {member.status === 'invited' ? (
-                        <span className="inline-flex items-center gap-1.5 text-warning">
-                          <span className="size-1.5 rounded-full bg-warning" />
-                          Pending
-                        </span>
+                        <StatusDot color="fg.warning">Pending</StatusDot>
                       ) : member.lastActive === 'Active now' ? (
-                        <span className="inline-flex items-center gap-1.5 text-success">
-                          <span className="size-1.5 rounded-full bg-success" />
-                          Active now
-                        </span>
+                        <StatusDot color="fg.success">Active now</StatusDot>
                       ) : (
                         member.lastActive
                       )}
-                    </TableCell>
-                    <TableCell className="pr-3 text-right">
+                    </Table.Cell>
+                    <Table.Cell pe="3" textAlign="end">
                       {canEdit(member) && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
+                        <Menu.Root positioning={{ placement: 'bottom-end' }}>
+                          <Menu.Trigger asChild>
+                            <IconButton
                               variant="ghost"
-                              size="icon-sm"
+                              colorPalette="gray"
+                              size="xs"
                               aria-label={`Actions for ${member.name}`}
                             >
                               <MoreHorizontal />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {member.status === 'invited' ? (
-                              <>
-                                <DropdownMenuItem
-                                  onSelect={() =>
-                                    resendInvitation.mutate(member.id, {
-                                      onSuccess: () =>
+                            </IconButton>
+                          </Menu.Trigger>
+                          <Portal>
+                            <Menu.Positioner>
+                              <Menu.Content>
+                                {member.status === 'invited' ? (
+                                  <>
+                                    <ActionItem
+                                      value="resend"
+                                      onSelect={() =>
+                                        resendInvitation.mutate(member.id, {
+                                          onSuccess: () =>
+                                            toaster.create({
+                                              type: 'success',
+                                              title: `Invitation resent to ${member.email}.`,
+                                            }),
+                                        })
+                                      }
+                                    >
+                                      <Send />
+                                      Resend invitation
+                                    </ActionItem>
+                                    <Menu.Separator />
+                                    <ActionItem
+                                      value="revoke"
+                                      danger
+                                      onSelect={() => remove(member)}
+                                    >
+                                      <X />
+                                      Revoke invitation
+                                    </ActionItem>
+                                  </>
+                                ) : (
+                                  <>
+                                    {member.role !== 'Admin' && (
+                                      <ActionItem
+                                        value="make-admin"
+                                        onSelect={() =>
+                                          changeRole(member, 'Admin')
+                                        }
+                                      >
+                                        <ShieldCheck />
+                                        Make admin
+                                      </ActionItem>
+                                    )}
+                                    <ActionItem
+                                      value="message"
+                                      onSelect={() =>
                                         toaster.create({
-                                          type: 'success',
-                                          title: `Invitation resent to ${member.email}.`,
-                                        }),
-                                    })
-                                  }
-                                >
-                                  <Send />
-                                  Resend invitation
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  variant="destructive"
-                                  onSelect={() => remove(member)}
-                                >
-                                  <X />
-                                  Revoke invitation
-                                </DropdownMenuItem>
-                              </>
-                            ) : (
-                              <>
-                                {member.role !== 'Admin' && (
-                                  <DropdownMenuItem
-                                    onSelect={() => changeRole(member, 'Admin')}
-                                  >
-                                    <ShieldCheck />
-                                    Make admin
-                                  </DropdownMenuItem>
+                                          type: 'info',
+                                          title: `Email ${member.email} directly in this demo.`,
+                                        })
+                                      }
+                                    >
+                                      <Send />
+                                      Send message
+                                    </ActionItem>
+                                    <Menu.Separator />
+                                    <ActionItem
+                                      value="remove"
+                                      danger
+                                      onSelect={() => setRemoving(member)}
+                                    >
+                                      <UserMinus />
+                                      Remove from organization
+                                    </ActionItem>
+                                  </>
                                 )}
-                                <DropdownMenuItem
-                                  onSelect={() =>
-                                    toaster.create({
-                                      type: 'info',
-                                      title: `Email ${member.email} directly in this demo.`,
-                                    })
-                                  }
-                                >
-                                  <Send />
-                                  Send message
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  variant="destructive"
-                                  onSelect={() => setRemoving(member)}
-                                >
-                                  <UserMinus />
-                                  Remove from organization
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                              </Menu.Content>
+                            </Menu.Positioner>
+                          </Portal>
+                        </Menu.Root>
                       )}
-                    </TableCell>
-                  </TableRow>
+                    </Table.Cell>
+                  </Table.Row>
                 ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
+              </Table.Body>
+            </Table.Root>
+          </Table.ScrollArea>
+        )}
 
         {filtered.length > PAGE_SIZE && (
-          <div className="flex items-center justify-between gap-3 border-t px-5 py-3 text-xs text-muted-foreground">
-            <span className="tabular-nums">
+          <Flex
+            align="center"
+            justify="space-between"
+            gap="3"
+            borderTopWidth="1px"
+            borderColor="border"
+            px="5"
+            py="3"
+            fontSize="xs"
+            color="fg.muted"
+          >
+            <Text as="span" fontVariantNumeric="tabular-nums">
               Showing {currentPage * PAGE_SIZE + 1}–
               {Math.min(filtered.length, (currentPage + 1) * PAGE_SIZE)} of{' '}
               {filtered.length}
-            </span>
-            <div className="flex items-center gap-1">
-              <Button
+            </Text>
+            <HStack gap="1">
+              <IconButton
                 variant="outline"
-                size="icon-sm"
+                size="xs"
                 aria-label="Previous page"
                 disabled={currentPage === 0}
                 onClick={() => setPage(currentPage - 1)}
               >
                 <ChevronLeft />
-              </Button>
-              <span className="px-2 tabular-nums">
+              </IconButton>
+              <Text as="span" px="2" fontVariantNumeric="tabular-nums">
                 {currentPage + 1} / {pageCount}
-              </span>
-              <Button
+              </Text>
+              <IconButton
                 variant="outline"
-                size="icon-sm"
+                size="xs"
                 aria-label="Next page"
                 disabled={currentPage >= pageCount - 1}
                 onClick={() => setPage(currentPage + 1)}
               >
                 <ChevronRight />
-              </Button>
-            </div>
-          </div>
+              </IconButton>
+            </HStack>
+          </Flex>
         )}
-      </Card>
+      </Card.Root>
 
-      <Card size="flush" className="self-start">
-        <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-          <CardTitle>Roles</CardTitle>
-          <CardDescription>What each role can do.</CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <dl className="divide-y">
-            {orgRoles.map((role) => (
-              <div key={role} className="grid gap-1.5 px-5 py-3">
-                <dt className="flex items-center justify-between gap-2">
-                  <RoleBadge role={role} />
-                  <span className="text-xs text-muted-foreground tabular-nums">
-                    {active.filter((member) => member.role === role).length}
-                  </span>
-                </dt>
-                <dd className="text-xs text-muted-foreground">
-                  {orgRoleDescriptions[role]}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </CardContent>
-      </Card>
+      <SectionCard
+        title="Roles"
+        description="What each role can do."
+        alignSelf="start"
+      >
+        <Box as="dl">
+          {orgRoles.map((role) => (
+            <Stack
+              key={role}
+              gap="1.5"
+              px="5"
+              py="3"
+              borderTopWidth="1px"
+              borderColor="border"
+              _first={{ borderTopWidth: '0' }}
+            >
+              <Flex as="dt" align="center" justify="space-between" gap="2">
+                <RoleBadge role={role} />
+                <Text
+                  as="span"
+                  fontSize="xs"
+                  color="fg.muted"
+                  fontVariantNumeric="tabular-nums"
+                >
+                  {active.filter((member) => member.role === role).length}
+                </Text>
+              </Flex>
+              <Box as="dd" fontSize="xs" color="fg.muted">
+                {orgRoleDescriptions[role]}
+              </Box>
+            </Stack>
+          ))}
+        </Box>
+      </SectionCard>
 
       <InviteMembersDialog
         open={inviteOpen}
@@ -530,29 +579,35 @@ function OrgMembers() {
         onInvite={invite}
       />
 
-      <AlertDialog
+      <AppDialog
+        role="alertdialog"
         open={removing !== null}
         onOpenChange={(open) => !open && setRemoving(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove {removing?.name}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              They lose access to every project in {org.name} right away. Their
-              training runs and models stay in the organization.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={() => removing && remove(removing)}
+        title={`Remove ${removing?.name}?`}
+        description={`They lose access to every project in ${org.name} right away. Their training runs and models stay in the organization.`}
+        footer={
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setRemoving(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="solid"
+              colorPalette="danger"
+              size="sm"
+              onClick={() => {
+                if (removing) remove(removing)
+                setRemoving(null)
+              }}
             >
               Remove member
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+            </Button>
+          </>
+        }
+      />
+    </Box>
   )
 }

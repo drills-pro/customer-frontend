@@ -1,31 +1,16 @@
 import * as React from 'react'
-import { TriangleAlert } from 'lucide-react'
-
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
+  Alert,
+  Button,
   Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
+  Flex,
+  Stack,
+  Text,
+  Textarea,
+} from '@chakra-ui/react'
+
+import { AppDialog } from '@/components/shared/app-dialog'
+import { SimpleSelect } from '@/components/simple-select'
 import type { OrgRole, Organization } from '@/features/dashboard/domain/types'
 import { orgRoleDescriptions } from '@/features/organizations/constants'
 import { isEmail } from '@/lib/validation'
@@ -102,88 +87,82 @@ export function InviteMembersDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={close}>
-      <DialogContent>
-        <form onSubmit={submit} noValidate className="contents">
-          <DialogHeader>
-            <DialogTitle>Invite members</DialogTitle>
-            <DialogDescription>
-              They get an email with a link to join {org.name}.
-            </DialogDescription>
-          </DialogHeader>
-          <FieldGroup className="gap-4 py-2">
-            <Field data-invalid={Boolean(error) || undefined}>
-              <div className="flex items-baseline justify-between gap-2">
-                <FieldLabel htmlFor="org-invite-emails">
-                  Email addresses
-                </FieldLabel>
-                {emails.length > 0 && (
-                  <span className="text-xs text-muted-foreground tabular-nums">
-                    {emails.length} of {seatsLeft} seats
-                  </span>
-                )}
-              </div>
-              <Textarea
-                id="org-invite-emails"
-                rows={3}
-                value={value}
-                placeholder="priya@acme.ai, marcus@acme.ai"
-                aria-invalid={Boolean(error) || undefined}
-                onChange={(event) => {
-                  setValue(event.target.value)
-                  setError('')
-                }}
-              />
-              <FieldDescription>
-                Separate addresses with commas or new lines.
-              </FieldDescription>
-              <FieldError>{error}</FieldError>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="org-invite-role">Role</FieldLabel>
-              <Select
-                value={role}
-                onValueChange={(next) => setRole(next as OrgRole)}
+    <AppDialog
+      open={open}
+      onOpenChange={close}
+      onSubmit={submit}
+      title="Invite members"
+      description={`They get an email with a link to join ${org.name}.`}
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => close(false)}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" variant="solid" size="sm">
+            {emails.length > 1
+              ? `Send ${emails.length} invites`
+              : 'Send invite'}
+          </Button>
+        </>
+      }
+    >
+      <Stack gap="4">
+        <Field.Root invalid={Boolean(error)}>
+          <Flex w="full" align="baseline" justify="space-between" gap="2">
+            <Field.Label>Email addresses</Field.Label>
+            {emails.length > 0 && (
+              <Text
+                as="span"
+                fontSize="xs"
+                color="fg.muted"
+                fontVariantNumeric="tabular-nums"
               >
-                <SelectTrigger id="org-invite-role" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {invitableRoles.map((item) => (
-                    <SelectItem key={item} value={item}>
-                      {item}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FieldDescription>{orgRoleDescriptions[role]}</FieldDescription>
-            </Field>
-            {overLimit && !error && (
-              <Alert>
-                <TriangleAlert />
-                <AlertDescription>
-                  That's more than the {seatsLeft} seats left on your {org.plan}{' '}
-                  plan. Remove some addresses or upgrade.
-                </AlertDescription>
-              </Alert>
+                {emails.length} of {seatsLeft} seats
+              </Text>
             )}
-          </FieldGroup>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => close(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit">
-              {emails.length > 1
-                ? `Send ${emails.length} invites`
-                : 'Send invite'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </Flex>
+          <Textarea
+            rows={3}
+            value={value}
+            placeholder="priya@acme.ai, marcus@acme.ai"
+            onChange={(event) => {
+              setValue(event.target.value)
+              setError('')
+            }}
+          />
+          <Field.HelperText>
+            Separate addresses with commas or new lines.
+          </Field.HelperText>
+          <Field.ErrorText>{error}</Field.ErrorText>
+        </Field.Root>
+        <Stack gap="1.5">
+          <SimpleSelect
+            label="Role"
+            width="full"
+            portalled={false}
+            value={role}
+            onChange={(next) => setRole(next as OrgRole)}
+            items={invitableRoles.map((item) => ({ label: item, value: item }))}
+          />
+          <Text textStyle="body-sm" color="fg.muted">
+            {orgRoleDescriptions[role]}
+          </Text>
+        </Stack>
+        {overLimit && !error && (
+          <Alert.Root status="warning" colorPalette="warning">
+            <Alert.Indicator />
+            <Alert.Description>
+              That's more than the {seatsLeft} seats left on your {org.plan}{' '}
+              plan. Remove some addresses or upgrade.
+            </Alert.Description>
+          </Alert.Root>
+        )}
+      </Stack>
+    </AppDialog>
   )
 }

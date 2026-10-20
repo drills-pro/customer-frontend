@@ -6,7 +6,6 @@ import {
   Heading,
   HStack,
   IconButton,
-  Link,
   Text,
 } from '@chakra-ui/react'
 import {
@@ -18,6 +17,7 @@ import { EllipsisVertical, Plus } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
 import { RouteBreadcrumbs } from '@/components/breadcrumbs'
+import { SectionTab, SectionTabs } from '@/components/shared/section-tabs'
 import { useProjectDetail } from '@/features/dashboard/context'
 import { unavailable } from '@/lib/unavailable'
 import {
@@ -119,39 +119,9 @@ function ProjectNavLayout() {
         </HStack>
       </Flex>
 
-      <Flex
-        as="nav"
-        aria-label="Project sections"
-        align="center"
-        gap="6"
-        overflowX="auto"
-        whiteSpace="nowrap"
-        borderBottomWidth="1px"
-        borderColor="border"
-      >
+      <SectionTabs aria-label="Project sections">
         {projectSections.map((section) => (
-          // A line tab: the current section is underlined in the brand color.
-          <Link
-            key={section}
-            asChild
-            flexShrink={0}
-            px="1"
-            py="3"
-            mb="-1px"
-            borderBottomWidth="2px"
-            borderColor="transparent"
-            textStyle="body-sm"
-            fontWeight="medium"
-            color="fg.muted"
-            textDecoration="none"
-            _hover={{ color: 'fg', textDecoration: 'none' }}
-            css={{
-              '&[data-active]': {
-                borderColor: 'brand-text',
-                color: 'brand-text',
-              },
-            }}
-          >
+          <SectionTab key={section}>
             <RouterLink
               to={projectSectionLink(section)}
               params={{ projectId: project.id }}
@@ -159,9 +129,9 @@ function ProjectNavLayout() {
             >
               {section}
             </RouterLink>
-          </Link>
+          </SectionTab>
         ))}
-      </Flex>
+      </SectionTabs>
 
       <Outlet />
     </Box>

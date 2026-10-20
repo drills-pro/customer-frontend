@@ -1,4 +1,17 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import {
+  Box,
+  Button,
+  Card,
+  Center,
+  Flex,
+  Grid,
+  Link,
+  Progress,
+  SimpleGrid,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
+import { createFileRoute, Link as RouterLink } from '@tanstack/react-router'
 import {
   Activity,
   ArrowRight,
@@ -17,24 +30,9 @@ import {
 } from '@/features/organizations/components/org-ui'
 import { plural } from '@/features/organizations/utils'
 import { ProjectMark } from '@/features/projects/components/project-ui'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import { Progress } from '@/components/ui/progress'
+import { EmptyNotice } from '@/components/shared/empty-notice'
+import { SectionAction, SectionCard } from '@/components/shared/section-card'
+import { ToneBadge } from '@/components/shared/tone-badge'
 import { CardLoading } from '@/components/shared/query-states'
 import { useProjects } from '@/features/projects/queries'
 import { useOrgDetail } from '../-components/org-context'
@@ -88,87 +86,115 @@ function OrgOverview() {
   ]
 
   return (
-    <div className="grid gap-5">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <Grid gap="5">
+      <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} gap="4">
         {stats.map((stat) => (
-          <Card key={stat.label} size="lg">
-            <CardContent className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-                <p className="mt-1 text-3xl font-semibold tracking-tight tabular-nums">
+          <Card.Root key={stat.label} variant="outline">
+            <Flex align="flex-start" justify="space-between" gap="3" p="5">
+              <Box minW="0">
+                <Text textStyle="body-sm" color="fg.muted">
+                  {stat.label}
+                </Text>
+                <Text
+                  mt="1"
+                  fontSize="3xl"
+                  fontWeight="semibold"
+                  letterSpacing="tight"
+                  fontVariantNumeric="tabular-nums"
+                  lineHeight="short"
+                >
                   {stat.value}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
+                </Text>
+                <Text mt="1" fontSize="xs" color="fg.muted">
                   {stat.hint}
-                </p>
-              </div>
-              <span
+                </Text>
+              </Box>
+              <Center
                 aria-hidden="true"
-                className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-muted text-primary"
+                boxSize="9"
+                flexShrink={0}
+                rounded="l2"
+                bg="brand.subtle"
+                color="brand.fg"
               >
-                <stat.icon className="size-4" />
-              </span>
-            </CardContent>
-          </Card>
+                <stat.icon size={16} />
+              </Center>
+            </Flex>
+          </Card.Root>
         ))}
-      </div>
+      </SimpleGrid>
 
-      <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="grid min-w-0 content-start gap-5">
-          <Card size="flush">
-            <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-              <CardTitle>
-                Projects{' '}
-                <span className="font-normal text-muted-foreground tabular-nums">
-                  {projects.length}
-                </span>
-              </CardTitle>
-              <CardDescription>Most recently updated first.</CardDescription>
-              <CardAction>
-                <Button asChild variant="ghost" size="sm">
-                  <Link to="/projects">
-                    All projects
-                    <ArrowRight />
-                  </Link>
-                </Button>
-              </CardAction>
-            </CardHeader>
-            <CardContent className="p-0">
-              {projectsQuery.isPending ? (
-                <CardLoading />
-              ) : projects.length === 0 ? (
-                <Empty className="py-10">
-                  <EmptyHeader>
-                    <EmptyMedia variant="icon">
-                      <FolderKanban />
-                    </EmptyMedia>
-                    <EmptyTitle>No projects yet</EmptyTitle>
-                    <EmptyDescription>
-                      Switch to {org.name} and create a project to start
-                      training models.
-                    </EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
-              ) : (
-                <ul className="divide-y">
-                  {projects.slice(0, 6).map((project) => (
-                    <li key={project.id}>
-                      <Link
+      <Grid minW="0" gap="5" templateColumns={{ lg: 'minmax(0, 1fr) 360px' }}>
+        <Grid minW="0" alignContent="start" gap="5">
+          <SectionCard
+            title={<Counted label="Projects" count={projects.length} />}
+            description="Most recently updated first."
+            action={
+              <SectionAction asChild gap="1">
+                <RouterLink to="/projects">
+                  All projects
+                  <ArrowRight />
+                </RouterLink>
+              </SectionAction>
+            }
+          >
+            {projectsQuery.isPending ? (
+              <CardLoading />
+            ) : projects.length === 0 ? (
+              <EmptyNotice
+                py="10"
+                icon={<FolderKanban />}
+                title="No projects yet"
+                description={`Switch to ${org.name} and create a project to start training models.`}
+              />
+            ) : (
+              <Stack as="ul" gap="0">
+                {projects.slice(0, 6).map((project) => (
+                  <Box
+                    as="li"
+                    key={project.id}
+                    borderTopWidth="1px"
+                    borderColor="border"
+                    _first={{ borderTopWidth: '0' }}
+                  >
+                    <Link
+                      asChild
+                      display="flex"
+                      alignItems="center"
+                      gap="3"
+                      px="5"
+                      py="3"
+                      color="fg"
+                      textDecoration="none"
+                      _hover={{ bg: 'bg.subtle', textDecoration: 'none' }}
+                    >
+                      <RouterLink
                         to="/projects/$projectId/overview"
                         params={{ projectId: project.id }}
-                        className="flex items-center gap-3 px-5 py-3 transition-colors outline-hidden hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                       >
                         <ProjectMark project={project} boxSize="8" />
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[13px] font-medium">
+                        <Box as="span" minW="0" flex="1">
+                          <Text
+                            as="span"
+                            display="block"
+                            truncate
+                            fontSize="13px"
+                            fontWeight="medium"
+                          >
                             {project.name}
-                          </span>
-                          <span className="block truncate text-xs text-muted-foreground">
+                          </Text>
+                          <Text
+                            as="span"
+                            display="block"
+                            truncate
+                            fontSize="xs"
+                            color="fg.muted"
+                          >
                             {project.task} · {plural(project.models, 'model')}
-                          </span>
-                        </span>
-                        <Badge
-                          variant={
+                          </Text>
+                        </Box>
+                        <ToneBadge
+                          tone={
                             project.status === 'Active'
                               ? 'success'
                               : project.status === 'Draft'
@@ -177,56 +203,57 @@ function OrgOverview() {
                           }
                         >
                           {project.status}
-                        </Badge>
-                        <span className="hidden w-16 text-right text-xs text-muted-foreground sm:block">
+                        </ToneBadge>
+                        <Text
+                          as="span"
+                          display={{ base: 'none', sm: 'block' }}
+                          w="16"
+                          textAlign="end"
+                          fontSize="xs"
+                          color="fg.muted"
+                        >
                           {project.updated}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+                        </Text>
+                      </RouterLink>
+                    </Link>
+                  </Box>
+                ))}
+              </Stack>
+            )}
+          </SectionCard>
 
-          <Card size="flush">
-            <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-              <CardTitle>About</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-start gap-3 p-5">
+          <SectionCard title="About">
+            <Flex align="flex-start" gap="3" p="5">
               <OrgMark org={org} boxSize="9" />
-              <div className="min-w-0 text-sm">
-                <p>
+              <Box minW="0" textStyle="body-sm">
+                <Text>
                   {org.description || (
-                    <span className="text-muted-foreground">
+                    <Text as="span" color="fg.muted">
                       No description yet.
-                    </span>
+                    </Text>
                   )}
-                </p>
+                </Text>
                 {canManage && (
-                  <Button asChild variant="link" size="sm" className="mt-2">
-                    <Link
+                  <SectionAction asChild mt="2">
+                    <RouterLink
                       to="/organizations/$orgId/settings"
                       params={{ orgId: org.id }}
                     >
                       Edit organization details
-                    </Link>
-                  </Button>
+                    </RouterLink>
+                  </SectionAction>
                 )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </Box>
+            </Flex>
+          </SectionCard>
+        </Grid>
 
-        <div className="grid min-w-0 content-start gap-5">
-          <Card size="flush">
-            <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-              <CardTitle>Plan & usage</CardTitle>
-              <CardDescription>
-                {org.plan} plan · {limits.price}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 p-5">
+        <Grid minW="0" alignContent="start" gap="5">
+          <SectionCard
+            title="Plan & usage"
+            description={`${org.plan} plan · ${limits.price}`}
+          >
+            <Stack gap="4" p="5">
               <UsageMeter
                 label="GPU credits"
                 used={summary.creditsUsed}
@@ -243,18 +270,29 @@ function OrgOverview() {
                 limit={limits.projects}
               />
               {org.plan !== 'Enterprise' && (
-                <div className="flex items-start gap-3 rounded-lg bg-primary-muted/70 p-3">
-                  <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
-                  <div className="min-w-0 text-xs">
-                    <p className="font-medium text-primary">Need more room?</p>
-                    <p className="mt-0.5 text-primary/80">
+                <Flex
+                  align="flex-start"
+                  gap="3"
+                  rounded="l2"
+                  bg="brand.subtle"
+                  p="3"
+                >
+                  <Box mt="0.5" flexShrink={0} color="brand.fg">
+                    <Sparkles size={16} />
+                  </Box>
+                  <Box minW="0" fontSize="xs">
+                    <Text fontWeight="medium" color="brand.fg">
+                      Need more room?
+                    </Text>
+                    <Text mt="0.5" color="fg.muted">
                       {org.plan === 'Free'
                         ? 'Team adds 30 seats and 2,000 GPU credits a month.'
                         : 'Enterprise adds SSO, audit logs and dedicated GPUs.'}
-                    </p>
+                    </Text>
                     <Button
-                      size="sm"
-                      className="mt-2"
+                      variant="solid"
+                      size="xs"
+                      mt="2"
                       onClick={() =>
                         toaster.create({
                           type: 'info',
@@ -265,68 +303,103 @@ function OrgOverview() {
                     >
                       Upgrade plan
                     </Button>
-                  </div>
-                </div>
+                  </Box>
+                </Flex>
               )}
-            </CardContent>
-          </Card>
+            </Stack>
+          </SectionCard>
 
-          <Card size="flush">
-            <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-              <CardTitle>
-                Members{' '}
-                <span className="font-normal text-muted-foreground tabular-nums">
-                  {activeMembers.length}
-                </span>
-              </CardTitle>
-              <CardAction>
-                <Button asChild variant="ghost" size="sm">
-                  <Link
-                    to="/organizations/$orgId/members"
-                    params={{ orgId: org.id }}
-                  >
-                    Manage
-                    <ArrowRight />
-                  </Link>
-                </Button>
-              </CardAction>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ul className="divide-y">
-                {activeMembers.slice(0, 5).map((member) => (
-                  <li
-                    key={member.id}
-                    className="flex items-center gap-3 px-5 py-2.5"
-                  >
-                    <MemberAvatar member={member} boxSize="7" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] font-medium">
-                        {member.name}
-                        {member.you && (
-                          <span className="font-normal text-muted-foreground">
-                            {' '}
-                            (you)
-                          </span>
-                        )}
-                      </span>
-                      <span className="block truncate text-xs text-muted-foreground">
-                        {member.lastActive}
-                      </span>
-                    </span>
-                    <RoleBadge role={member.role} />
-                  </li>
-                ))}
-              </ul>
-              {activeMembers.length > 5 && (
-                <p className="border-t px-5 py-2.5 text-xs text-muted-foreground">
-                  and {plural(activeMembers.length - 5, 'more member')}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
+          <SectionCard
+            title={<Counted label="Members" count={activeMembers.length} />}
+            action={
+              <SectionAction asChild gap="1">
+                <RouterLink
+                  to="/organizations/$orgId/members"
+                  params={{ orgId: org.id }}
+                >
+                  Manage
+                  <ArrowRight />
+                </RouterLink>
+              </SectionAction>
+            }
+          >
+            <Stack as="ul" gap="0">
+              {activeMembers.slice(0, 5).map((member) => (
+                <Flex
+                  as="li"
+                  key={member.id}
+                  align="center"
+                  gap="3"
+                  px="5"
+                  py="2.5"
+                  borderTopWidth="1px"
+                  borderColor="border"
+                  _first={{ borderTopWidth: '0' }}
+                >
+                  <MemberAvatar member={member} boxSize="7" />
+                  <Box as="span" minW="0" flex="1">
+                    <Text
+                      as="span"
+                      display="block"
+                      truncate
+                      fontSize="13px"
+                      fontWeight="medium"
+                    >
+                      {member.name}
+                      {member.you && (
+                        <Text as="span" fontWeight="normal" color="fg.muted">
+                          {' '}
+                          (you)
+                        </Text>
+                      )}
+                    </Text>
+                    <Text
+                      as="span"
+                      display="block"
+                      truncate
+                      fontSize="xs"
+                      color="fg.muted"
+                    >
+                      {member.lastActive}
+                    </Text>
+                  </Box>
+                  <RoleBadge role={member.role} />
+                </Flex>
+              ))}
+            </Stack>
+            {activeMembers.length > 5 && (
+              <Text
+                borderTopWidth="1px"
+                borderColor="border"
+                px="5"
+                py="2.5"
+                fontSize="xs"
+                color="fg.muted"
+              >
+                and {plural(activeMembers.length - 5, 'more member')}
+              </Text>
+            )}
+          </SectionCard>
+        </Grid>
+      </Grid>
+    </Grid>
+  )
+}
+
+/** A section title with its count in muted digits beside it. */
+function Counted({ label, count }: { label: string; count: number }) {
+  return (
+    <>
+      {label}{' '}
+      <Text
+        as="span"
+        fontWeight="normal"
+        color="fg.muted"
+        fontVariantNumeric="tabular-nums"
+      >
+        {count}
+      </Text>
+    </>
   )
 }
 
@@ -341,21 +414,33 @@ function UsageMeter({
 }) {
   const percent = Math.min(100, Math.round((used / limit) * 100))
   return (
-    <div>
-      <div className="mb-1.5 flex items-baseline justify-between gap-2 text-xs">
-        <span className="font-medium">{label}</span>
-        <span className="text-muted-foreground tabular-nums">
-          <span
-            className={
-              percent >= 90 ? 'font-semibold text-warning' : 'text-foreground'
-            }
+    <Box>
+      <Flex
+        mb="1.5"
+        align="baseline"
+        justify="space-between"
+        gap="2"
+        fontSize="xs"
+      >
+        <Text as="span" fontWeight="medium">
+          {label}
+        </Text>
+        <Text as="span" color="fg.muted" fontVariantNumeric="tabular-nums">
+          <Text
+            as="span"
+            fontWeight={percent >= 90 ? 'semibold' : undefined}
+            color={percent >= 90 ? 'fg.warning' : 'fg'}
           >
             {used.toLocaleString('en-US')}
-          </span>{' '}
+          </Text>{' '}
           / {limit.toLocaleString('en-US')}
-        </span>
-      </div>
-      <Progress value={percent} aria-label={`${label} used`} />
-    </div>
+        </Text>
+      </Flex>
+      <Progress.Root size="xs" value={percent}>
+        <Progress.Track aria-label={`${label} used`}>
+          <Progress.Range />
+        </Progress.Track>
+      </Progress.Root>
+    </Box>
   )
 }

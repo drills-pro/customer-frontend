@@ -1,16 +1,25 @@
+import {
+  Box,
+  Button,
+  Card,
+  Center,
+  Flex,
+  Heading,
+  HStack,
+  Text,
+} from '@chakra-ui/react'
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import { ArrowRightLeft, Building2 } from 'lucide-react'
 
 import { RouteBreadcrumbs } from '@/components/breadcrumbs'
+import { SectionTab, SectionTabs } from '@/components/shared/section-tabs'
+import { ToneBadge } from '@/components/shared/tone-badge'
 import {
   OrgMark,
   PlanBadge,
   RoleBadge,
 } from '@/features/organizations/components/org-ui'
 import { formatDate } from '@/features/organizations/utils'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { PageError, PageLoading } from '@/components/shared/query-states'
 import { useDashboardLayout } from '@/features/dashboard/context'
 import { useOrgMembers } from '@/features/organizations/queries'
@@ -52,10 +61,6 @@ const sections = [
   { label: 'Settings', to: '/organizations/$orgId/settings' },
 ] as const
 
-// The same line-tab treatment the project sections use.
-const sectionTabClass =
-  'shrink-0 rounded-none border-x-0 border-t-0 border-b-2 border-transparent bg-transparent px-1 py-3 text-sm font-medium text-muted-foreground shadow-none transition-colors outline-hidden hover:bg-transparent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-[active]:border-b-primary data-[active]:text-primary'
-
 function OrgDetailLayout() {
   const { orgId } = Route.useParams()
   const {
@@ -94,97 +99,133 @@ function OrgDetailLayout() {
         canManage,
       }}
     >
-      <main
+      <Box
+        as="main"
         id="dashboard-main"
-        className="mx-auto w-full max-w-[1448px] flex-1 p-4 sm:p-6"
+        mx="auto"
+        w="full"
+        maxW="1448px"
+        flex="1"
+        p={{ base: '4', sm: '6' }}
       >
         <RouteBreadcrumbs mb="3" />
 
-        <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3.5">
+        <Flex
+          mb="5"
+          direction={{ base: 'column', sm: 'row' }}
+          align={{ sm: 'center' }}
+          justify={{ sm: 'space-between' }}
+          gap="4"
+        >
+          <Flex minW="0" align="center" gap="3.5">
             <OrgMark org={org} boxSize="12" rounded="l3" fontSize="lg" />
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="truncate">{org.name}</h1>
+            <Box minW="0">
+              <HStack wrap="wrap" gap="2">
+                <Heading
+                  as="h1"
+                  truncate
+                  fontSize="2xl"
+                  fontWeight="semibold"
+                  letterSpacing="-0.65px"
+                  lineHeight="1.35"
+                >
+                  {org.name}
+                </Heading>
                 <PlanBadge plan={org.plan} />
                 {isCurrent && (
-                  <Badge variant="success">
-                    <span className="size-1.5 rounded-full bg-current" />
+                  <ToneBadge tone="success" dot>
                     Current
-                  </Badge>
+                  </ToneBadge>
                 )}
-              </div>
-              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+              </HStack>
+              <Flex
+                mt="0.5"
+                wrap="wrap"
+                align="center"
+                columnGap="2"
+                textStyle="body-sm"
+                color="fg.muted"
+              >
                 <span>drills.ai/{org.slug}</span>
                 <span aria-hidden="true">·</span>
                 <span>Created {formatDate(org.createdAt)}</span>
                 <span aria-hidden="true">·</span>
-                <span className="inline-flex items-center gap-1.5">
+                <HStack as="span" gap="1.5">
                   You're <RoleBadge role={org.yourRole} />
-                </span>
-              </p>
-            </div>
-          </div>
+                </HStack>
+              </Flex>
+            </Box>
+          </Flex>
 
-          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+          <HStack wrap="wrap" gap="2" justify={{ sm: 'flex-end' }}>
             {!isCurrent && (
               <Button
-                size="lg"
+                size="sm"
                 variant="outline"
-                className="px-3.5"
+                px="3.5"
                 onClick={() => switchOrganization(org.id)}
               >
                 <ArrowRightLeft />
                 Switch to this organization
               </Button>
             )}
-          </div>
-        </div>
+          </HStack>
+        </Flex>
 
-        <nav
-          aria-label="Organization sections"
-          className="mb-5 flex items-center gap-6 overflow-x-auto border-b border-border whitespace-nowrap"
-        >
+        <SectionTabs aria-label="Organization sections" mb="5">
           {sections.map((section) => (
-            <Link
-              key={section.label}
-              to={section.to}
-              params={{ orgId: org.id }}
-              activeProps={{ 'data-active': 'true' }}
-              className={sectionTabClass}
-            >
-              {section.label}
-            </Link>
+            <SectionTab key={section.label}>
+              <Link
+                to={section.to}
+                params={{ orgId: org.id }}
+                activeProps={{ 'data-active': 'true' }}
+              >
+                {section.label}
+              </Link>
+            </SectionTab>
           ))}
-        </nav>
+        </SectionTabs>
 
         <Outlet />
-      </main>
+      </Box>
     </OrgDetailContext.Provider>
   )
 }
 
 function OrgNotFound({ orgId }: { orgId: string }) {
   return (
-    <main
+    <Center
+      as="main"
       id="dashboard-main"
-      className="mx-auto flex min-h-[60vh] w-full max-w-[1440px] flex-1 items-center justify-center p-4 sm:p-6 lg:p-8"
+      mx="auto"
+      minH="60vh"
+      w="full"
+      maxW="1440px"
+      flex="1"
+      p={{ base: '4', sm: '6', lg: '8' }}
     >
-      <Card className="w-full max-w-md text-center">
-        <CardContent className="flex flex-col items-center py-8">
-          <span className="flex size-12 items-center justify-center rounded-full bg-primary-muted text-primary">
+      <Card.Root variant="outline" w="full" maxW="md" textAlign="center">
+        <Card.Body alignItems="center" py="8">
+          <Center
+            boxSize="12"
+            rounded="full"
+            bg="brand.subtle"
+            color="brand.fg"
+          >
             <Building2 />
-          </span>
-          <h1 className="mt-4 text-xl">Organization not found</h1>
-          <p className="mt-2 text-muted-foreground">
+          </Center>
+          <Heading as="h1" mt="4" fontSize="xl" fontWeight="semibold">
+            Organization not found
+          </Heading>
+          <Text mt="2" color="fg.muted">
             We could not find an organization with the ID “{orgId}”, or you are
             no longer a member.
-          </p>
-          <Button asChild className="mt-5">
+          </Text>
+          <Button asChild variant="solid" size="sm" mt="5">
             <Link to="/organizations">View all organizations</Link>
           </Button>
-        </CardContent>
-      </Card>
-    </main>
+        </Card.Body>
+      </Card.Root>
+    </Center>
   )
 }

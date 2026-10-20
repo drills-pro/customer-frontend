@@ -1,6 +1,9 @@
 import { Check } from 'lucide-react'
 
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import {
+  RadioButton,
+  RadioButtonGroup,
+} from '@/components/shared/radio-button-group'
 import type { Organization } from '@/features/dashboard/domain/types'
 import { orgColors } from '@/features/organizations/constants'
 
@@ -48,24 +51,38 @@ export function ColorSwatches({
   label: string
 }) {
   return (
-    <ToggleGroup
-      type="single"
+    <RadioButtonGroup
       aria-label={label}
       value={value}
-      onValueChange={(next) => next && onChange(next)}
-      className="flex-wrap"
+      onChange={onChange}
+      flexWrap="wrap"
+      gap="2"
     >
       {orgColors.map((color) => (
-        <ToggleGroupItem
+        <RadioButton
           key={color}
           value={color}
           aria-label={`Color ${color}`}
-          className="size-8 min-w-8 rounded-full p-0 text-white ring-offset-2 ring-offset-card hover:opacity-90 data-[state=on]:ring-2 data-[state=on]:ring-foreground"
-          style={{ backgroundColor: color }}
+          boxSize="8"
+          minW="8"
+          p="0"
+          rounded="full"
+          borderWidth="0"
+          boxShadow="none"
+          color="white"
+          // The organization palette's own colors.
+          bg={color}
+          _hover={{ opacity: 0.9 }}
+          _checked={{
+            bg: color,
+            outline: '2px solid',
+            outlineColor: 'fg',
+            outlineOffset: '2px',
+          }}
         >
-          {value === color && <Check className="size-4" />}
-        </ToggleGroupItem>
+          {value === color && <Check size={16} />}
+        </RadioButton>
       ))}
-    </ToggleGroup>
+    </RadioButtonGroup>
   )
 }

@@ -1,64 +1,42 @@
 import * as React from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
-  ArrowRightLeft,
-  Building2,
-  Lock,
-  LogOut,
-  Trash2,
-  TriangleAlert,
-} from 'lucide-react'
+  Box,
+  Button,
+  Code,
+  Field,
+  Fieldset,
+  Flex,
+  HStack,
+  Input,
+  InputGroup,
+  SimpleGrid,
+  Stack,
+  Text,
+  Textarea,
+} from '@chakra-ui/react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { ArrowRightLeft, Building2, Lock, LogOut, Trash2 } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
+import { AppDialog } from '@/components/shared/app-dialog'
 import { CopyButton } from '@/components/shared/copy-button'
-import { SettingsNav } from '@/components/shared/settings-nav'
+import {
+  DangerCard,
+  DangerRow,
+  dangerOutlineProps,
+} from '@/components/shared/danger-card'
+import { FormFooter } from '@/components/shared/form-footer'
+import {
+  RadioButton,
+  RadioButtonGroup,
+} from '@/components/shared/radio-button-group'
+import { SectionCard } from '@/components/shared/section-card'
+import { SECTION_OFFSET, SettingsNav } from '@/components/shared/settings-nav'
+import { SwitchButton } from '@/components/shared/switch-button'
+import { SimpleSelect } from '@/components/simple-select'
 import { OrgMark } from '@/features/organizations/components/org-ui'
 import { plural } from '@/features/organizations/utils'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-  FieldTitle,
-} from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-  InputGroupText,
-} from '@/components/ui/input-group'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Switch } from '@/components/ui/switch'
-import { Textarea } from '@/components/ui/textarea'
 import { ApiError } from '@/api/client'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { useDashboardLayout } from '@/features/dashboard/context'
 import type {
   Organization,
@@ -94,9 +72,14 @@ function OrgSettings() {
   const { org, canManage } = useOrgDetail()
 
   return (
-    <div className="grid min-w-0 gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
+    <Box
+      display="grid"
+      minW="0"
+      gap="6"
+      gridTemplateColumns={{ lg: '200px minmax(0, 1fr)' }}
+    >
       <SettingsNav sections={sections} />
-      <div className="grid max-w-4xl min-w-0 gap-6">
+      <Box display="grid" maxW="4xl" minW="0" gap="6">
         {/* Keyed so a different org, or a saved rename, resets the form. */}
         <GeneralCard key={`${org.id}-${org.name}-${org.slug}`} org={org} />
         <DefaultsCard
@@ -105,8 +88,8 @@ function OrgSettings() {
           canManage={canManage}
         />
         <DangerZoneCard org={org} />
-      </div>
-    </div>
+      </Box>
+    </Box>
   )
 }
 
@@ -165,18 +148,23 @@ function GeneralCard({ org }: { org: Organization }) {
   }
 
   return (
-    <Card id="general" size="flush" className="scroll-mt-22">
-      <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-        <CardTitle>General</CardTitle>
-        <CardDescription>
-          How your organization appears across DRILLS.
-        </CardDescription>
-      </CardHeader>
-
+    <SectionCard
+      id="general"
+      scrollMarginTop={`${SECTION_OFFSET}px`}
+      title="General"
+      description="How your organization appears across DRILLS."
+    >
       <form onSubmit={save} noValidate>
-        <fieldset disabled={!canManage} className="contents">
-          <CardContent className="grid gap-5 p-5">
-            <div className="flex flex-wrap items-center gap-4 rounded-lg bg-muted/50 p-3">
+        <Fieldset.Root disabled={!canManage} display="contents">
+          <Stack gap="5" p="5">
+            <Flex
+              wrap="wrap"
+              align="center"
+              gap="4"
+              rounded="l2"
+              bg="bg.muted"
+              p="3"
+            >
               <OrgMark
                 org={{
                   initial: initialOf(values.name),
@@ -186,108 +174,95 @@ function GeneralCard({ org }: { org: Organization }) {
                 rounded="l3"
                 fontSize="md"
               />
-              <div className="mr-auto min-w-0">
-                <p className="truncate font-medium">{values.name || '—'}</p>
-                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Box me="auto" minW="0">
+                <Text truncate fontWeight="medium">
+                  {values.name || '—'}
+                </Text>
+                <HStack gap="1.5" fontSize="xs" color="fg.muted">
                   Organization ID
-                  <code className="rounded bg-card px-1.5 py-0.5 font-mono ring-1 ring-border">
-                    {org.id}
-                  </code>
-                </p>
-              </div>
+                  <Code size="sm">{org.id}</Code>
+                </HStack>
+              </Box>
               <CopyButton value={org.id} label="Copy organization ID">
                 Copy ID
               </CopyButton>
-            </div>
+            </Flex>
 
             {!canManage && (
-              <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Lock className="size-3.5" />
+              <HStack gap="2" fontSize="xs" color="fg.muted">
+                <Lock size={14} />
                 You're a {org.yourRole.toLowerCase()} here. Ask an owner or
                 admin to change these settings.
-              </p>
+              </HStack>
             )}
 
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field data-invalid={Boolean(nameMessage) || undefined}>
-                <FieldLabel htmlFor="org-name">Organization name</FieldLabel>
+            <SimpleGrid columns={{ base: 1, sm: 2 }} gap="5">
+              <Field.Root invalid={Boolean(nameMessage)}>
+                <Field.Label>Organization name</Field.Label>
                 <Input
-                  id="org-name"
-                  size="lg"
                   value={values.name}
-                  aria-invalid={Boolean(nameMessage) || undefined}
                   onChange={(event) => update('name', event.target.value)}
                 />
-                <FieldError>{nameMessage}</FieldError>
-              </Field>
-              <Field data-invalid={Boolean(slugMessage) || undefined}>
-                <FieldLabel htmlFor="org-slug">URL</FieldLabel>
-                <InputGroup className="h-9">
-                  <InputGroupAddon>
-                    <InputGroupText>drills.ai/</InputGroupText>
-                  </InputGroupAddon>
-                  <InputGroupInput
-                    id="org-slug"
+                <Field.ErrorText>{nameMessage}</Field.ErrorText>
+              </Field.Root>
+              <Field.Root invalid={Boolean(slugMessage)}>
+                <Field.Label>URL</Field.Label>
+                <InputGroup startAddon="drills.ai/">
+                  <Input
                     value={values.slug}
-                    aria-invalid={Boolean(slugMessage) || undefined}
                     onChange={(event) =>
                       update('slug', cleanSlugInput(event.target.value))
                     }
                   />
                 </InputGroup>
-                <FieldError>{slugMessage}</FieldError>
-              </Field>
-            </div>
+                <Field.ErrorText>{slugMessage}</Field.ErrorText>
+              </Field.Root>
+            </SimpleGrid>
 
-            <Field>
-              <div className="flex items-baseline justify-between gap-2">
-                <FieldLabel htmlFor="org-description">Description</FieldLabel>
-                <span className="text-xs text-muted-foreground tabular-nums">
+            <Field.Root>
+              <Flex w="full" align="baseline" justify="space-between" gap="2">
+                <Field.Label>Description</Field.Label>
+                <Text
+                  as="span"
+                  fontSize="xs"
+                  color="fg.muted"
+                  fontVariantNumeric="tabular-nums"
+                >
                   {values.description.length}/{ORG_DESCRIPTION_MAX}
-                </span>
-              </div>
+                </Text>
+              </Flex>
               <Textarea
-                id="org-description"
                 rows={3}
                 maxLength={ORG_DESCRIPTION_MAX}
                 value={values.description}
                 placeholder="What does this organization work on?"
                 onChange={(event) => update('description', event.target.value)}
               />
-            </Field>
+            </Field.Root>
 
-            <Field>
-              <span className="text-sm font-medium">Brand color</span>
+            <Stack gap="2">
+              <Text textStyle="body-sm" fontWeight="medium">
+                Brand color
+              </Text>
               <ColorSwatches
                 label="Brand color"
                 value={values.color}
                 onChange={(color) => canManage && update('color', color)}
               />
-              <FieldDescription>
+              <Text textStyle="body-sm" color="fg.muted">
                 Used for the organization mark in the switcher and sidebar.
-              </FieldDescription>
-            </Field>
-          </CardContent>
+              </Text>
+            </Stack>
+          </Stack>
 
           {canManage && (
-            <div className="flex flex-wrap items-center justify-end gap-2 border-t px-5 py-4">
-              {dirty && (
-                <p
-                  role="status"
-                  className="mr-auto flex items-center gap-2 text-xs text-muted-foreground"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="size-1.5 rounded-full bg-warning"
-                  />
-                  Unsaved changes
-                </p>
-              )}
+            <FormFooter dirty={dirty}>
               <Button
                 type="button"
                 variant="ghost"
-                size="lg"
-                className="px-3.5"
+                colorPalette="gray"
+                size="sm"
+                px="3.5"
                 disabled={!dirty}
                 onClick={() => setValues(saved)}
               >
@@ -295,8 +270,9 @@ function GeneralCard({ org }: { org: Organization }) {
               </Button>
               <Button
                 type="submit"
-                size="lg"
-                className="px-3.5"
+                variant="solid"
+                size="sm"
+                px="3.5"
                 disabled={
                   !dirty ||
                   Boolean(nameMessage || slugMessage) ||
@@ -305,11 +281,11 @@ function GeneralCard({ org }: { org: Organization }) {
               >
                 Save changes
               </Button>
-            </div>
+            </FormFooter>
           )}
-        </fieldset>
+        </Fieldset.Root>
       </form>
-    </Card>
+    </SectionCard>
   )
 }
 
@@ -333,22 +309,48 @@ function DefaultsCard({
     })
   }
 
+  const toggles = [
+    {
+      id: 'org-require-2fa',
+      title: 'Require two-factor authentication',
+      description:
+        'Members without 2FA are asked to set it up on their next sign-in.',
+      checked: require2fa,
+      onChange: (checked: boolean) =>
+        save(
+          { require_two_factor: checked },
+          checked ? '2FA is now required' : '2FA is optional',
+        ),
+    },
+    {
+      id: 'org-domain-join',
+      title: 'Allow joining by email domain',
+      description: 'Anyone with a verified company email can request to join.',
+      checked: domainJoin,
+      onChange: (checked: boolean) =>
+        save(
+          { allow_domain_join: checked },
+          checked ? 'Domain joining enabled' : 'Domain joining disabled',
+        ),
+    },
+  ]
+
   return (
-    <Card id="defaults" size="flush" className="scroll-mt-22">
-      <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-        <CardTitle>Defaults & security</CardTitle>
-        <CardDescription>
-          Applied to new projects and everyone who joins.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-5 p-5">
-        <fieldset disabled={!canManage} className="grid gap-3">
-          <legend className="mb-3 text-sm font-medium">
+    <SectionCard
+      id="defaults"
+      scrollMarginTop={`${SECTION_OFFSET}px`}
+      title="Defaults & security"
+      description="Applied to new projects and everyone who joins."
+    >
+      <Stack gap="5" p="5">
+        <Fieldset.Root disabled={!canManage}>
+          <Fieldset.Legend textStyle="body-sm" fontWeight="medium" mb="3">
             Default project visibility
-          </legend>
-          <RadioGroup
+          </Fieldset.Legend>
+          <RadioButtonGroup
+            aria-label="Default project visibility"
             value={visibility}
-            onValueChange={(value) =>
+            onChange={(value) =>
               save(
                 {
                   default_project_visibility: toApiVisibility(
@@ -358,7 +360,9 @@ function DefaultsCard({
                 `New projects default to ${value.toLowerCase()}`,
               )
             }
-            className="grid gap-3 sm:grid-cols-2"
+            display="grid"
+            gridTemplateColumns={{ sm: 'repeat(2, minmax(0, 1fr))' }}
+            gap="3"
           >
             {[
               {
@@ -372,78 +376,62 @@ function DefaultsCard({
                 description: 'Only invited members see new projects.',
               },
             ].map((option) => (
-              <FieldLabel
+              <RadioButton
                 key={option.value}
-                htmlFor={`org-visibility-${option.value}`}
+                value={option.value}
+                variant="option"
+                disabled={!canManage}
+                alignItems="flex-start"
+                justifyContent="flex-start"
+                gap="3"
               >
-                <Field orientation="horizontal">
-                  <option.icon
-                    aria-hidden="true"
-                    className="size-4 text-muted-foreground"
-                  />
-                  <FieldContent>
-                    <FieldTitle>{option.value}</FieldTitle>
-                    <FieldDescription>{option.description}</FieldDescription>
-                  </FieldContent>
-                  <RadioGroupItem
-                    id={`org-visibility-${option.value}`}
-                    value={option.value}
-                  />
-                </Field>
-              </FieldLabel>
+                <Box mt="0.5" color="fg.muted">
+                  <option.icon size={16} aria-hidden="true" />
+                </Box>
+                <Box flex="1" minW="0">
+                  <Text textStyle="body-sm" fontWeight="medium">
+                    {option.value}
+                  </Text>
+                  <Text textStyle="body-sm" color="fg.muted">
+                    {option.description}
+                  </Text>
+                </Box>
+              </RadioButton>
             ))}
-          </RadioGroup>
-        </fieldset>
+          </RadioButtonGroup>
+        </Fieldset.Root>
 
-        <div className="divide-y rounded-lg border">
-          <Field orientation="horizontal" className="p-4">
-            <FieldContent>
-              <FieldLabel htmlFor="org-require-2fa">
-                Require two-factor authentication
-              </FieldLabel>
-              <FieldDescription>
-                Members without 2FA are asked to set it up on their next
-                sign-in.
-              </FieldDescription>
-            </FieldContent>
-            <Switch
-              id="org-require-2fa"
-              checked={require2fa}
-              disabled={!canManage}
-              onCheckedChange={(checked) =>
-                save(
-                  { require_two_factor: checked },
-                  checked ? '2FA is now required' : '2FA is optional',
-                )
-              }
-            />
-          </Field>
-          <Field orientation="horizontal" className="p-4">
-            <FieldContent>
-              <FieldLabel htmlFor="org-domain-join">
-                Allow joining by email domain
-              </FieldLabel>
-              <FieldDescription>
-                Anyone with a verified company email can request to join.
-              </FieldDescription>
-            </FieldContent>
-            <Switch
-              id="org-domain-join"
-              checked={domainJoin}
-              disabled={!canManage}
-              onCheckedChange={(checked) =>
-                save(
-                  { allow_domain_join: checked },
-                  checked
-                    ? 'Domain joining enabled'
-                    : 'Domain joining disabled',
-                )
-              }
-            />
-          </Field>
-        </div>
-      </CardContent>
-    </Card>
+        <Box rounded="l2" borderWidth="1px" borderColor="border">
+          {toggles.map((toggle) => (
+            <Flex
+              key={toggle.id}
+              align="center"
+              justify="space-between"
+              gap="4"
+              p="4"
+              borderTopWidth="1px"
+              borderColor="border"
+              _first={{ borderTopWidth: '0' }}
+            >
+              <Box minW="0">
+                <Text asChild textStyle="body-sm" fontWeight="medium">
+                  <label htmlFor={toggle.id}>{toggle.title}</label>
+                </Text>
+                <Text textStyle="body-sm" color="fg.muted">
+                  {toggle.description}
+                </Text>
+              </Box>
+              <SwitchButton
+                id={toggle.id}
+                checked={toggle.checked}
+                disabled={!canManage}
+                onCheckedChange={toggle.onChange}
+              />
+            </Flex>
+          ))}
+        </Box>
+      </Stack>
+    </SectionCard>
   )
 }
 
@@ -454,6 +442,7 @@ function DangerZoneCard({ org }: { org: Organization }) {
   const leave = useLeaveOrganization(org.id)
   const remove = useDeleteOrganization(org.id)
   const isOwner = org.yourRole === 'Owner'
+  const [leaveOpen, setLeaveOpen] = React.useState(false)
 
   /** Leaves or deletes the organization, then moves on to another one. */
   function removeOrganization(
@@ -478,87 +467,84 @@ function DangerZoneCard({ org }: { org: Organization }) {
   }
 
   return (
-    <Card
+    <DangerCard
       id="danger-zone"
-      size="flush"
-      className="scroll-mt-22 ring-destructive/30"
+      scrollMarginTop={`${SECTION_OFFSET}px`}
+      title="Danger zone"
     >
-      <CardHeader className="border-b border-destructive/20 bg-destructive-muted/50 [--card-section:--spacing(3.5)]">
-        <CardTitle className="flex items-center gap-2 text-destructive">
-          <TriangleAlert className="size-4" />
-          Danger zone
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="divide-y p-0">
-        <DangerRow
-          icon={LogOut}
-          title="Leave organization"
-          description={
-            isOwner
-              ? 'Owners must transfer ownership before they can leave.'
-              : `You lose access to ${plural(summary.projects, 'project')} in ${org.name}.`
-          }
+      <DangerRow
+        icon={LogOut}
+        title="Leave organization"
+        description={
+          isOwner
+            ? 'Owners must transfer ownership before they can leave.'
+            : `You lose access to ${plural(summary.projects, 'project')} in ${org.name}.`
+        }
+      >
+        <Button
+          {...dangerOutlineProps}
+          disabled={isOwner}
+          onClick={() => setLeaveOpen(true)}
         >
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
+          Leave
+        </Button>
+        <AppDialog
+          role="alertdialog"
+          open={leaveOpen}
+          onOpenChange={setLeaveOpen}
+          title={`Leave ${org.name}?`}
+          description="You'll need a new invitation to rejoin."
+          footer={
+            <>
               <Button
                 variant="outline"
-                size="lg"
-                className="px-3.5 text-destructive hover:bg-destructive-muted hover:text-destructive"
-                disabled={isOwner}
+                size="sm"
+                onClick={() => setLeaveOpen(false)}
               >
-                Leave
+                Cancel
               </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Leave {org.name}?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  You'll need a new invitation to rejoin.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  variant="destructive"
-                  onClick={() =>
-                    removeOrganization(leave, `You left ${org.name}.`)
-                  }
-                >
-                  Leave organization
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </DangerRow>
-
-        <DangerRow
-          icon={ArrowRightLeft}
-          title="Transfer ownership"
-          description="Hand full control and billing to another admin."
-        >
-          <TransferOwnershipDialog org={org} disabled={!isOwner} />
-        </DangerRow>
-
-        <DangerRow
-          icon={Trash2}
-          title="Delete organization"
-          description={
-            isOwner
-              ? 'Permanently delete every project, dataset, model and deployment.'
-              : 'Only the owner can delete this organization.'
+              <Button
+                variant="solid"
+                colorPalette="danger"
+                size="sm"
+                onClick={() => {
+                  setLeaveOpen(false)
+                  removeOrganization(leave, `You left ${org.name}.`)
+                }}
+              >
+                Leave organization
+              </Button>
+            </>
           }
-        >
-          <DeleteOrganizationDialog
-            org={org}
-            disabled={!isOwner}
-            onDelete={() =>
-              removeOrganization(remove, `${org.name} was deleted.`)
-            }
-          />
-        </DangerRow>
-      </CardContent>
-    </Card>
+        />
+      </DangerRow>
+
+      <DangerRow
+        icon={ArrowRightLeft}
+        title="Transfer ownership"
+        description="Hand full control and billing to another admin."
+      >
+        <TransferOwnershipDialog org={org} disabled={!isOwner} />
+      </DangerRow>
+
+      <DangerRow
+        icon={Trash2}
+        title="Delete organization"
+        description={
+          isOwner
+            ? 'Permanently delete every project, dataset, model and deployment.'
+            : 'Only the owner can delete this organization.'
+        }
+      >
+        <DeleteOrganizationDialog
+          org={org}
+          disabled={!isOwner}
+          onDelete={() =>
+            removeOrganization(remove, `${org.name} was deleted.`)
+          }
+        />
+      </DangerRow>
+    </DangerCard>
   )
 }
 
@@ -571,81 +557,71 @@ function DeleteOrganizationDialog({
   disabled: boolean
   onDelete: () => void
 }) {
+  const [open, setOpen] = React.useState(false)
   const [confirmation, setConfirmation] = React.useState('')
   const confirmed = confirmation.trim() === org.name
 
+  function close(next: boolean) {
+    setOpen(next)
+    if (!next) setConfirmation('')
+  }
+
   return (
-    <AlertDialog onOpenChange={(open) => !open && setConfirmation('')}>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="destructive"
-          size="lg"
-          className="px-3.5"
-          disabled={disabled}
-        >
-          Delete
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete {org.name}?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This removes the organization, its members' access and everything
-            inside it. It cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <Field>
-          <FieldLabel htmlFor="delete-org-confirm">
-            Type <strong className="font-semibold">{org.name}</strong> to
-            confirm
-          </FieldLabel>
+    <>
+      <Button
+        variant="solid"
+        colorPalette="danger"
+        size="sm"
+        px="3.5"
+        disabled={disabled}
+        onClick={() => setOpen(true)}
+      >
+        Delete
+      </Button>
+      <AppDialog
+        role="alertdialog"
+        open={open}
+        onOpenChange={close}
+        title={`Delete ${org.name}?`}
+        description="This removes the organization, its members' access and everything inside it. It cannot be undone."
+        footer={
+          <>
+            <Button variant="outline" size="sm" onClick={() => close(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="solid"
+              colorPalette="danger"
+              size="sm"
+              disabled={!confirmed}
+              onClick={() => {
+                close(false)
+                onDelete()
+              }}
+            >
+              Delete organization
+            </Button>
+          </>
+        }
+      >
+        <Field.Root>
+          <Field.Label>
+            <span>
+              Type{' '}
+              <Text as="strong" fontWeight="semibold">
+                {org.name}
+              </Text>{' '}
+              to confirm
+            </span>
+          </Field.Label>
           <Input
-            id="delete-org-confirm"
             value={confirmation}
             autoComplete="off"
             onChange={(event) => setConfirmation(event.target.value)}
           />
-        </Field>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            disabled={!confirmed}
-            onClick={onDelete}
-          >
-            Delete organization
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  )
-}
-
-function DangerRow({
-  icon: Icon,
-  title,
-  description,
-  children,
-}: {
-  icon: typeof Trash2
-  title: string
-  description: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-4 p-5">
-      <span
-        aria-hidden="true"
-        className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-destructive-muted text-destructive"
-      >
-        <Icon className="size-4" />
-      </span>
-      <div className="mr-auto min-w-0 basis-60 grow">
-        <p className="text-[13px] font-medium">{title}</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
-      </div>
-      {children}
-    </div>
+        </Field.Root>
+      </AppDialog>
+    </>
   )
 }
 
@@ -659,73 +635,75 @@ function TransferOwnershipDialog({
 }) {
   const { members } = useOrgDetail()
   const transfer = useTransferOwnership(org.id)
+  const [open, setOpen] = React.useState(false)
   const [memberId, setMemberId] = React.useState('')
   const candidates = members.filter(
     (member) => member.status === 'active' && !member.you,
   )
   const chosen = candidates.find((member) => member.id === memberId)
 
+  function close(next: boolean) {
+    setOpen(next)
+    if (!next) setMemberId('')
+  }
+
   return (
-    <AlertDialog onOpenChange={(open) => !open && setMemberId('')}>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="lg"
-          className="px-3.5 text-destructive hover:bg-destructive-muted hover:text-destructive"
-          disabled={disabled}
-        >
-          Transfer
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Transfer {org.name}?</AlertDialogTitle>
-          <AlertDialogDescription>
-            The new owner gets full control and billing. You stay on as an
-            admin.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <Field>
-          <FieldLabel htmlFor="transfer-owner">New owner</FieldLabel>
-          <Select value={memberId} onValueChange={setMemberId}>
-            <SelectTrigger id="transfer-owner" size="lg" className="w-full">
-              <SelectValue
-                placeholder={
-                  candidates.length
-                    ? 'Choose a member'
-                    : 'No other active members'
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {candidates.map((member) => (
-                <SelectItem key={member.id} value={member.id}>
-                  {member.name} · {member.email}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            disabled={!chosen || transfer.isPending}
-            onClick={() =>
-              chosen &&
-              transfer.mutate(chosen.id, {
-                onSuccess: () =>
-                  toaster.create({
-                    type: 'success',
-                    title: `${chosen.name} now owns ${org.name}.`,
-                  }),
-              })
-            }
-          >
-            Transfer ownership
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <>
+      <Button
+        {...dangerOutlineProps}
+        disabled={disabled}
+        onClick={() => setOpen(true)}
+      >
+        Transfer
+      </Button>
+      <AppDialog
+        role="alertdialog"
+        open={open}
+        onOpenChange={close}
+        title={`Transfer ${org.name}?`}
+        description="The new owner gets full control and billing. You stay on as an admin."
+        footer={
+          <>
+            <Button variant="outline" size="sm" onClick={() => close(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="solid"
+              colorPalette="danger"
+              size="sm"
+              disabled={!chosen || transfer.isPending}
+              onClick={() => {
+                if (!chosen) return
+                close(false)
+                transfer.mutate(chosen.id, {
+                  onSuccess: () =>
+                    toaster.create({
+                      type: 'success',
+                      title: `${chosen.name} now owns ${org.name}.`,
+                    }),
+                })
+              }}
+            >
+              Transfer ownership
+            </Button>
+          </>
+        }
+      >
+        <SimpleSelect
+          label="New owner"
+          width="full"
+          portalled={false}
+          value={memberId}
+          onChange={setMemberId}
+          placeholder={
+            candidates.length ? 'Choose a member' : 'No other active members'
+          }
+          items={candidates.map((member) => ({
+            label: `${member.name} · ${member.email}`,
+            value: member.id,
+          }))}
+        />
+      </AppDialog>
+    </>
   )
 }

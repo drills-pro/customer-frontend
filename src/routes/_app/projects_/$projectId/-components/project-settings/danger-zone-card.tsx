@@ -2,9 +2,7 @@ import * as React from 'react'
 import {
   Box,
   Button,
-  Center,
   Field,
-  Flex,
   Input,
   SimpleGrid,
   Stack,
@@ -15,7 +13,11 @@ import { Archive, ArrowRightLeft, Trash2 } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
 import { AppDialog } from '@/components/shared/app-dialog'
-import { DangerCard } from '@/components/shared/danger-card'
+import {
+  DangerCard,
+  DangerRow,
+  dangerOutlineProps,
+} from '@/components/shared/danger-card'
 import { SECTION_OFFSET } from '@/components/shared/settings-nav'
 import { SimpleSelect } from '@/components/simple-select'
 import {
@@ -32,15 +34,6 @@ import {
 function plural(count: number, noun: string) {
   return `${count} ${noun}${count === 1 ? '' : 's'}`
 }
-
-/** A destructive action that leaves the page: red text on an outline button. */
-const dangerOutline = {
-  variant: 'outline',
-  size: 'sm',
-  px: '3.5',
-  color: 'fg.error',
-  _hover: { bg: 'bg.error', color: 'fg.error' },
-} as const
 
 export function DangerZoneCard() {
   const { project } = useProjectDetail()
@@ -72,7 +65,7 @@ export function DangerZoneCard() {
               : 'Make the project read-only. Live deployments will be stopped.'
           }
         >
-          <Button {...dangerOutline} onClick={() => setArchiveOpen(true)}>
+          <Button {...dangerOutlineProps} onClick={() => setArchiveOpen(true)}>
             {archived ? 'Unarchive' : 'Archive'}
           </Button>
           <AppDialog
@@ -125,50 +118,6 @@ export function DangerZoneCard() {
         </DangerRow>
       </Stack>
     </DangerCard>
-  )
-}
-
-function DangerRow({
-  icon: Icon,
-  title,
-  description,
-  children,
-}: {
-  icon: typeof Trash2
-  title: string
-  description: string
-  children: React.ReactNode
-}) {
-  return (
-    <Flex
-      wrap="wrap"
-      align="center"
-      gap="4"
-      p="5"
-      borderTopWidth="1px"
-      borderColor="border"
-      _first={{ borderTopWidth: '0' }}
-    >
-      <Center
-        aria-hidden="true"
-        boxSize="9"
-        flexShrink={0}
-        rounded="l2"
-        bg="bg.error"
-        color="fg.error"
-      >
-        <Icon size={16} />
-      </Center>
-      <Box me="auto" minW="0" flexBasis="60" flexGrow={1}>
-        <Text fontSize="13px" fontWeight="medium">
-          {title}
-        </Text>
-        <Text mt="0.5" fontSize="xs" color="fg.muted">
-          {description}
-        </Text>
-      </Box>
-      {children}
-    </Flex>
   )
 }
 
@@ -302,7 +251,7 @@ function TransferProjectDialog({ project }: { project: Project }) {
 
   return (
     <>
-      <Button {...dangerOutline} onClick={() => setOpen(true)}>
+      <Button {...dangerOutlineProps} onClick={() => setOpen(true)}>
         Transfer
       </Button>
       <AppDialog

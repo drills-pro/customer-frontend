@@ -25,8 +25,9 @@ export const config = defineConfig({
       bg: 'bg',
       color: 'fg',
       fontFamily: 'body',
-      textStyle: 'body',
     },
+    // On body, not html: a font-size on html would make 1rem = 15px and shrink every rem-based token.
+    body: { textStyle: 'body' },
     '*::selection': { bg: 'brand-soft', color: 'ink' },
     '*::placeholder, *[data-placeholder]': { color: 'fg.muted', opacity: 1 },
     // Pixel art: never smoothed.

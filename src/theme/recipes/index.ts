@@ -79,6 +79,20 @@ export const recipes = {
           },
         },
         plain: { color: 'colorPalette.fg', borderColor: 'transparent', _active: { transform: 'none', boxShadow: 'none' } },
+        // A choice card in a picker: multi-line, start-aligned, selected via aria-pressed.
+        option: {
+          bg: 'control-bg',
+          color: 'fg',
+          borderColor: 'control-border',
+          boxShadow: 'raised',
+          h: 'auto',
+          p: '4',
+          textAlign: 'start',
+          whiteSpace: 'normal',
+          fontWeight: 'normal',
+          _hover: { borderColor: 'fg' },
+          _pressed: { bg: 'selected-bg', borderColor: 'selected-edge' },
+        },
       },
     },
     // One primary per screen: the default is the secondary (outline) button; ask for variant="solid" explicitly.

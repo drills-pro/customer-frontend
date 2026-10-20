@@ -29,7 +29,7 @@ export const bounceFn = (pts: number[]) => (t: number) => {
 /** Spread onto every recharts series (Line, Bar, Area, Pie, ...): marks grow on the gentle bounce, since a chart is a large surface. */
 export const chartMotion = {
   isAnimationActive: true,
-  animationDuration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 200 : 550,
+  animationDuration: typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches ? 200 : 550,
   animationEasing: bounceFn(bounceGentle.out),
 } as const;
 

@@ -9,29 +9,15 @@ import {
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query'
-import {
-  ChakraProvider,
-  createSystem,
-  defaultConfig,
-  defineConfig,
-} from '@chakra-ui/react'
+import { ChakraProvider } from '@chakra-ui/react'
 import * as React from 'react'
 import type { ReactNode } from 'react'
 import { Toaster, toaster } from '@/components/toaster'
-import { config } from '@/theme'
+import { system } from '@/theme'
 import '@/fonts'
 import { themeBootScript } from '@/features/dashboard/theme'
 import { ApiError } from '@/api/client'
 import appCss from '../styles.css?url'
-
-// While Tailwind pages remain, Tailwind's preflight is the reset. Chakra's own
-// lands in a later cascade layer and would zero every Tailwind margin and
-// padding. Switch back to `system` from '@/theme' once Tailwind is gone.
-const system = createSystem(
-  defaultConfig,
-  config,
-  defineConfig({ preflight: false }),
-)
 
 export const Route = createRootRoute({
   head: () => ({

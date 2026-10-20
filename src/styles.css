@@ -1,3 +1,12 @@
+/*
+ * Cascade order while Chakra and Tailwind share the app: Chakra's layers
+ * (reset, base, tokens, recipes) first, then Tailwind's. Without this, Chakra's
+ * layers are declared after Tailwind's and its reset zeroes every Tailwind
+ * margin and padding. Chakra's style props are unlayered and still win.
+ * Goes away with this file once the last Tailwind page is converted.
+ */
+@layer reset, base, tokens, recipes, theme, components, utilities;
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';

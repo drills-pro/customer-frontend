@@ -1,30 +1,23 @@
 import * as React from 'react'
+import {
+  Box,
+  Button,
+  Card,
+  Field,
+  Flex,
+  Grid,
+  Input,
+  SimpleGrid,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
 import { useNavigate } from '@tanstack/react-router'
 import { Trash2, TriangleAlert } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { AppDialog } from '@/components/shared/app-dialog'
+import { SectionCard } from '@/components/shared/section-card'
+import { SimpleSelect } from '@/components/simple-select'
 import { useComputeOptions } from '@/features/catalog/queries'
 import {
   useDeleteDeployment,
@@ -51,6 +44,7 @@ export function SettingsTab() {
     maxReplicas: String(deployment.maxReplicas),
     instanceType: deployment.instanceName,
   })
+  const [deleteOpen, setDeleteOpen] = React.useState(false)
   const set = (changes: Partial<typeof values>) =>
     setValues((current) => ({ ...current, ...changes }))
 
@@ -78,147 +72,162 @@ export function SettingsTab() {
   }
 
   return (
-    <div className="grid min-w-0 items-start gap-6 lg:grid-cols-3">
-      <div className="grid min-w-0 gap-6 lg:col-span-2">
-        <Card size="flush">
-          <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-            <CardTitle>Deployment settings</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-5 p-5">
-            <Field>
-              <FieldLabel htmlFor="deployment-name">Deployment name</FieldLabel>
+    <Grid
+      minW="0"
+      alignItems="start"
+      gap="6"
+      templateColumns={{ lg: 'repeat(3, minmax(0, 1fr))' }}
+    >
+      <Grid minW="0" gap="6" gridColumn={{ lg: 'span 2' }}>
+        <SectionCard title="Deployment settings">
+          <Stack gap="5" p="5">
+            <Field.Root>
+              <Field.Label>Deployment name</Field.Label>
               <Input
-                id="deployment-name"
-                size="lg"
                 value={values.name}
                 onChange={(event) => set({ name: event.target.value })}
               />
-            </Field>
+            </Field.Root>
 
-            <Field>
-              <FieldLabel htmlFor="deployment-model">Serving model</FieldLabel>
-              <Select
+            <Stack gap="1.5">
+              <SimpleSelect
+                label="Serving model"
+                width="full"
                 value={values.serving}
-                onValueChange={(value) =>
+                onChange={(value) =>
                   set({ serving: value as typeof values.serving })
                 }
-              >
-                <SelectTrigger
-                  id="deployment-model"
-                  size="lg"
-                  className="w-full"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pinned">{modelLabel} (pinned)</SelectItem>
-                  <SelectItem value="latest">
-                    {model?.name ?? deployment.modelId} (always latest)
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <FieldDescription>
+                items={[
+                  { label: `${modelLabel} (pinned)`, value: 'pinned' },
+                  {
+                    label: `${model?.name ?? deployment.modelId} (always latest)`,
+                    value: 'latest',
+                  },
+                ]}
+              />
+              <Text textStyle="body-sm" color="fg.muted">
                 Pinning a version means promoting a new model will not change
                 what this endpoint serves.
-              </FieldDescription>
-            </Field>
+              </Text>
+            </Stack>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor="deployment-min">Min replicas</FieldLabel>
+            <SimpleGrid columns={{ base: 1, sm: 2 }} gap="4">
+              <Field.Root>
+                <Field.Label>Min replicas</Field.Label>
                 <Input
-                  id="deployment-min"
                   type="number"
-                  size="lg"
                   min={0}
                   value={values.minReplicas}
                   onChange={(event) => set({ minReplicas: event.target.value })}
                 />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="deployment-max">Max replicas</FieldLabel>
+              </Field.Root>
+              <Field.Root>
+                <Field.Label>Max replicas</Field.Label>
                 <Input
-                  id="deployment-max"
                   type="number"
-                  size="lg"
                   min={1}
                   value={values.maxReplicas}
                   onChange={(event) => set({ maxReplicas: event.target.value })}
                 />
-              </Field>
-            </div>
+              </Field.Root>
+            </SimpleGrid>
 
-            <Field>
-              <FieldLabel htmlFor="deployment-instance">
-                Instance type
-              </FieldLabel>
-              <Select
-                value={values.instanceType}
-                onValueChange={(value) => set({ instanceType: value })}
-              >
-                <SelectTrigger
-                  id="deployment-instance"
-                  size="lg"
-                  className="w-full"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {instanceTypes.map((item) => (
-                    <SelectItem key={item} value={item}>
-                      {item}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-          </CardContent>
-          <div className="flex justify-end border-t px-5 py-4">
+            <SimpleSelect
+              label="Instance type"
+              width="full"
+              value={values.instanceType}
+              onChange={(value) => set({ instanceType: value })}
+              items={instanceTypes.map((item) => ({
+                label: item,
+                value: item,
+              }))}
+            />
+          </Stack>
+          <Flex
+            justify="flex-end"
+            borderTopWidth="1px"
+            borderColor="border"
+            px="5"
+            py="4"
+          >
             <Button
-              size="lg"
-              className="px-3.5"
+              variant="solid"
+              size="sm"
+              px="3.5"
               disabled={update.isPending}
               onClick={save}
             >
               Save settings
             </Button>
-          </div>
-        </Card>
+          </Flex>
+        </SectionCard>
 
-        <Card size="flush">
-          <CardHeader className="border-b border-destructive/20 bg-destructive-muted/50 [--card-section:--spacing(3.5)]">
-            <CardTitle className="flex items-center gap-2 text-destructive">
-              <TriangleAlert className="size-4" />
+        <Card.Root
+          as="section"
+          aria-labelledby="deployment-danger-title"
+          variant="outline"
+          overflow="hidden"
+          borderColor="border.error"
+        >
+          <Flex
+            align="center"
+            gap="2"
+            px="5"
+            py="3.5"
+            borderBottomWidth="1px"
+            borderColor="border.error"
+            bg="bg.error"
+            color="fg.error"
+          >
+            <TriangleAlert size={16} aria-hidden="true" />
+            <Card.Title
+              as="h2"
+              id="deployment-danger-title"
+              textStyle="body"
+              fontWeight="semibold"
+            >
               Danger zone
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap items-center gap-4 p-5">
-            <div className="mr-auto min-w-0">
-              <p className="text-[13px] font-medium">Delete this deployment</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+            </Card.Title>
+          </Flex>
+          <Flex wrap="wrap" align="center" gap="4" p="5">
+            <Box me="auto" minW="0">
+              <Text fontSize="13px" fontWeight="medium">
+                Delete this deployment
+              </Text>
+              <Text mt="0.5" fontSize="xs" color="fg.muted">
                 The endpoint stops answering immediately. The model itself is
                 not deleted.
-              </p>
-            </div>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="lg" className="px-3.5">
-                  <Trash2 />
-                  Delete deployment
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete {deployment.name}?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    The endpoint stops answering immediately. This cannot be
-                    undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    variant="destructive"
+              </Text>
+            </Box>
+            <Button
+              variant="solid"
+              colorPalette="danger"
+              size="sm"
+              px="3.5"
+              onClick={() => setDeleteOpen(true)}
+            >
+              <Trash2 />
+              Delete deployment
+            </Button>
+            <AppDialog
+              role="alertdialog"
+              open={deleteOpen}
+              onOpenChange={setDeleteOpen}
+              title={`Delete ${deployment.name}?`}
+              description="The endpoint stops answering immediately. This cannot be undone."
+              footer={
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDeleteOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="solid"
+                    colorPalette="danger"
+                    size="sm"
                     disabled={remove.isPending}
                     onClick={() =>
                       // Leave the page before its deployment disappears.
@@ -239,19 +248,16 @@ export function SettingsTab() {
                     }
                   >
                     Delete deployment
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </CardContent>
-        </Card>
-      </div>
+                  </Button>
+                </>
+              }
+            />
+          </Flex>
+        </Card.Root>
+      </Grid>
 
-      <Card size="flush">
-        <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-          <CardTitle>Deployment history</CardTitle>
-        </CardHeader>
-        <CardContent className="p-3">
+      <SectionCard title="Deployment history">
+        <Box p="3">
           {(
             [
               [`${modelLabel} promoted`, deployment.deployed, true],
@@ -263,19 +269,25 @@ export function SettingsTab() {
               ['Created', '5 weeks ago', false],
             ] as const
           ).map(([label, when, current]) => (
-            <div key={label} className="flex gap-3 rounded-lg px-2 py-2.5">
-              <span
+            <Flex key={label} gap="3" rounded="l2" px="2" py="2.5">
+              <Box
                 aria-hidden="true"
-                className={`mt-1.5 size-1.5 shrink-0 rounded-full ${current ? 'bg-success' : 'bg-border'}`}
+                mt="1.5"
+                boxSize="1.5"
+                flexShrink={0}
+                rounded="full"
+                bg={current ? 'success' : 'border'}
               />
-              <div className="min-w-0">
-                <p className="text-[13px]">{label}</p>
-                <p className="text-xs text-muted-foreground">{when}</p>
-              </div>
-            </div>
+              <Box minW="0">
+                <Text fontSize="13px">{label}</Text>
+                <Text fontSize="xs" color="fg.muted">
+                  {when}
+                </Text>
+              </Box>
+            </Flex>
           ))}
-        </CardContent>
-      </Card>
-    </div>
+        </Box>
+      </SectionCard>
+    </Grid>
   )
 }

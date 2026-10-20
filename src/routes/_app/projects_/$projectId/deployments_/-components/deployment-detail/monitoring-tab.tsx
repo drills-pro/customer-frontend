@@ -1,20 +1,9 @@
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+import { Box, Button, Flex, Grid, Progress, Text } from '@chakra-ui/react'
+import { Chart, useChart } from '@chakra-ui/charts'
+import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from 'recharts'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from '@/components/ui/chart'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import { Progress } from '@/components/ui/progress'
-import { cn } from 'cn'
+import { EmptyNotice } from '@/components/shared/empty-notice'
+import { SectionCard } from '@/components/shared/section-card'
 import { useDeploymentMetrics } from '@/features/deployments/queries'
 import { useCurrentDeployment } from './use-current-deployment'
 
@@ -46,150 +35,132 @@ export function MonitoringTab({
     ['p95', deployment.latencyP95, 'the number to quote in an SLA'],
     ['p99', deployment.latencyP99, 'the slowest 1 in 100'],
   ] as const
-  const percentileTone = [
-    '[&_[data-slot=progress-indicator]]:bg-success',
-    '[&_[data-slot=progress-indicator]]:bg-warning',
-    '[&_[data-slot=progress-indicator]]:bg-destructive',
-  ]
+  const percentilePalette = ['success', 'warning', 'danger']
 
   return (
-    <div className="grid min-w-0 items-start gap-6 lg:grid-cols-3">
-      <div className="grid min-w-0 gap-6 lg:col-span-2">
-        <Card size="flush">
-          <CardHeader className="flex-row items-center border-b [--card-section:--spacing(3.5)]">
-            <CardTitle className="mr-auto">Request volume</CardTitle>
-            <span className="text-xs text-muted-foreground">
+    <Grid
+      minW="0"
+      alignItems="start"
+      gap="6"
+      templateColumns={{ lg: 'repeat(3, minmax(0, 1fr))' }}
+    >
+      <Grid minW="0" gap="6" gridColumn={{ lg: 'span 2' }}>
+        <SectionCard
+          title="Request volume"
+          action={
+            <Text fontSize="xs" color="fg.muted">
               hourly · last 24h
-            </span>
-          </CardHeader>
-          <CardContent className="p-5">
+            </Text>
+          }
+        >
+          <Box p="5">
             {live ? (
-              <ChartContainer
-                config={{
-                  requests: { label: 'Requests', color: 'var(--primary)' },
-                }}
-                className="aspect-auto h-56 w-full"
-              >
-                <AreaChart data={volumeData} accessibilityLayer>
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="hour"
-                    tickLine={false}
-                    axisLine={false}
-                    // Both ends must be labelled: "now" is the point people read.
-                    interval="preserveStartEnd"
-                    minTickGap={48}
-                  />
-                  <YAxis
-                    tickLine={false}
-                    axisLine={false}
-                    width={44}
-                    tickFormatter={(value: number) =>
-                      value >= 1000
-                        ? `${(value / 1000).toFixed(1)}k`
-                        : `${value}`
-                    }
-                  />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Area
-                    dataKey="requests"
-                    type="monotone"
-                    stroke="var(--color-requests)"
-                    strokeWidth={2.5}
-                    fill="var(--color-requests)"
-                    fillOpacity={0.14}
-                  />
-                </AreaChart>
-              </ChartContainer>
+              <RequestVolumeChart data={volumeData} />
             ) : (
-              <Empty className="min-h-56 border-0">
-                <EmptyHeader>
-                  <EmptyTitle>No traffic</EmptyTitle>
-                  <EmptyDescription>
-                    This deployment is {deployment.status.toLowerCase()}, so it
-                    is not receiving requests.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
+              <EmptyNotice
+                minH="56"
+                title="No traffic"
+                description={`This deployment is ${deployment.status.toLowerCase()}, so it is not receiving requests.`}
+              />
             )}
-          </CardContent>
-        </Card>
+          </Box>
+        </SectionCard>
 
-        <Card size="flush">
-          <CardHeader className="flex-row items-center border-b [--card-section:--spacing(3.5)]">
-            <CardTitle className="mr-auto">Latency distribution</CardTitle>
-            <span className="text-xs text-muted-foreground">
+        <SectionCard
+          title="Latency distribution"
+          action={
+            <Text fontSize="xs" color="fg.muted">
               scale 0 – {deployment.latencyP99}
-            </span>
-          </CardHeader>
-          <CardContent className="p-5">
+            </Text>
+          }
+        >
+          <Box p="5">
             {percentiles.map(([label, value, note], index) => (
-              <div key={label} className="mt-4 first:mt-0">
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="font-mono text-[13px] font-medium">
+              <Box key={label} mt="4" _first={{ mt: '0' }}>
+                <Flex align="baseline" justify="space-between" gap="3">
+                  <Text
+                    as="span"
+                    fontFamily="mono"
+                    fontSize="13px"
+                    fontWeight="medium"
+                  >
                     {label}
-                  </span>
-                  <span className="text-[15px] font-semibold tabular-nums">
-                    {value}
-                  </span>
-                </div>
-                <Progress
-                  value={live ? (ms(value) / scale) * 100 : 0}
-                  aria-label={`${label} latency`}
-                  className={cn('mt-1.5 h-2', percentileTone[index])}
-                />
-                <p className="mt-1 text-[11px] text-muted-foreground">{note}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-6">
-        <Card size="flush">
-          <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-            <CardTitle>Live metrics</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <dl className="divide-y">
-              {(
-                [
-                  ['Requests (24h)', deployment.requests24h],
-                  ['p50 latency', deployment.latencyP50],
-                  ['p95 latency', deployment.latencyP95],
-                  ['p99 latency', deployment.latencyP99],
-                  ['Error rate', deployment.errorRate],
-                  [
-                    'Replicas',
-                    `${deployment.activeReplicas} / ${deployment.maxReplicas}`,
-                  ],
-                  ['Cost today', deployment.costPerDay],
-                ] as const
-              ).map(([label, value]) => (
-                <div
-                  key={label}
-                  className="flex items-center justify-between gap-3 px-5 py-2.5 text-[13px]"
-                >
-                  <dt className="text-muted-foreground">{label}</dt>
-                  <dd
-                    className={cn(
-                      'font-medium tabular-nums',
-                      value === '—' && 'text-muted-foreground',
-                    )}
+                  </Text>
+                  <Text
+                    as="span"
+                    fontSize="15px"
+                    fontWeight="semibold"
+                    fontVariantNumeric="tabular-nums"
                   >
                     {value}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </CardContent>
-        </Card>
+                  </Text>
+                </Flex>
+                <Progress.Root
+                  mt="1.5"
+                  size="sm"
+                  value={live ? (ms(value) / scale) * 100 : 0}
+                  colorPalette={percentilePalette[index]}
+                >
+                  <Progress.Track aria-label={`${label} latency`}>
+                    <Progress.Range />
+                  </Progress.Track>
+                </Progress.Root>
+                <Text mt="1" fontSize="11px" color="fg.muted">
+                  {note}
+                </Text>
+              </Box>
+            ))}
+          </Box>
+        </SectionCard>
+      </Grid>
 
-        <Card size="flush">
-          <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-            <CardTitle>Autoscaling</CardTitle>
-          </CardHeader>
-          <CardContent className="p-5">
+      <Grid gap="6">
+        <SectionCard title="Live metrics">
+          <Box as="dl">
+            {(
+              [
+                ['Requests (24h)', deployment.requests24h],
+                ['p50 latency', deployment.latencyP50],
+                ['p95 latency', deployment.latencyP95],
+                ['p99 latency', deployment.latencyP99],
+                ['Error rate', deployment.errorRate],
+                [
+                  'Replicas',
+                  `${deployment.activeReplicas} / ${deployment.maxReplicas}`,
+                ],
+                ['Cost today', deployment.costPerDay],
+              ] as const
+            ).map(([label, value]) => (
+              <Flex
+                key={label}
+                align="center"
+                justify="space-between"
+                gap="3"
+                px="5"
+                py="2.5"
+                fontSize="13px"
+                borderTopWidth="1px"
+                borderColor="border"
+                _first={{ borderTopWidth: '0' }}
+              >
+                <Box as="dt" color="fg.muted">
+                  {label}
+                </Box>
+                <Box
+                  as="dd"
+                  fontWeight="medium"
+                  fontVariantNumeric="tabular-nums"
+                  color={value === '—' ? 'fg.muted' : undefined}
+                >
+                  {value}
+                </Box>
+              </Flex>
+            ))}
+          </Box>
+        </SectionCard>
+
+        <SectionCard title="Autoscaling">
+          <Box p="5">
             {(
               [
                 ['Min replicas', String(deployment.minReplicas)],
@@ -201,25 +172,83 @@ export function MonitoringTab({
                 ],
               ] as const
             ).map(([label, value]) => (
-              <div
+              <Flex
                 key={label}
-                className="flex items-center justify-between py-1.5 text-[13px]"
+                align="center"
+                justify="space-between"
+                py="1.5"
+                fontSize="13px"
               >
-                <span className="text-muted-foreground">{label}</span>
-                <b className="font-semibold tabular-nums">{value}</b>
-              </div>
+                <Text as="span" color="fg.muted">
+                  {label}
+                </Text>
+                <Text
+                  as="b"
+                  fontWeight="semibold"
+                  fontVariantNumeric="tabular-nums"
+                >
+                  {value}
+                </Text>
+              </Flex>
             ))}
             <Button
               variant="outline"
-              size="lg"
-              className="mt-4 w-full"
+              size="sm"
+              mt="4"
+              w="full"
               onClick={onEditScaling}
             >
               Edit scaling
             </Button>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+          </Box>
+        </SectionCard>
+      </Grid>
+    </Grid>
+  )
+}
+
+function RequestVolumeChart({
+  data,
+}: {
+  data: { hour: string; requests: number }[]
+}) {
+  const chart = useChart({
+    data,
+    series: [{ name: 'requests', color: 'brand', label: 'Requests' }],
+  })
+  return (
+    <Chart.Root chart={chart} h="56" w="full">
+      <AreaChart responsive data={chart.data} accessibilityLayer>
+        <CartesianGrid stroke={chart.color('border')} vertical={false} />
+        <XAxis
+          dataKey={chart.key('hour')}
+          tickLine={false}
+          axisLine={false}
+          // Both ends must be labelled: "now" is the point people read.
+          interval="preserveStartEnd"
+          minTickGap={48}
+          tick={{ fill: chart.color('fg.muted'), fontSize: 12 }}
+        />
+        <YAxis
+          tickLine={false}
+          axisLine={false}
+          width={44}
+          tick={{ fill: chart.color('fg.muted'), fontSize: 12 }}
+          tickFormatter={(value: number) =>
+            value >= 1000 ? `${(value / 1000).toFixed(1)}k` : `${value}`
+          }
+        />
+        <Tooltip content={<Chart.Tooltip />} />
+        <Area
+          dataKey={chart.key('requests')}
+          type="monotone"
+          stroke={chart.color('brand')}
+          strokeWidth={2.5}
+          fill={chart.color('brand')}
+          fillOpacity={0.14}
+          isAnimationActive={false}
+        />
+      </AreaChart>
+    </Chart.Root>
   )
 }

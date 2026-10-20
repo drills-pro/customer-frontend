@@ -1,31 +1,11 @@
 import * as React from 'react'
+import { Button, Card, Flex, Table } from '@chakra-ui/react'
 import { Download } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
-import { Badge, BadgeDot } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { EmptyNotice } from '@/components/shared/empty-notice'
+import { ToneBadge } from '@/components/shared/tone-badge'
+import { SimpleSelect } from '@/components/simple-select'
 import { useDeploymentLogs } from '@/features/deployments/queries'
 import { useCurrentDeployment } from './use-current-deployment'
 
@@ -46,26 +26,47 @@ export function LogsTab() {
   )
 
   return (
-    <Card size="flush">
-      <CardHeader className="flex-row flex-wrap items-center gap-2 border-b [--card-section:--spacing(3)]">
-        <CardTitle className="mr-auto">Request log</CardTitle>
-        <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger
-            size="lg"
-            aria-label="Filter by status"
-            className="w-[136px]"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="2xx">2xx</SelectItem>
-            <SelectItem value="4xx">4xx</SelectItem>
-            <SelectItem value="5xx">5xx</SelectItem>
-          </SelectContent>
-        </Select>
+    <Card.Root
+      as="section"
+      aria-labelledby="request-log-title"
+      variant="outline"
+      overflow="hidden"
+    >
+      <Flex
+        wrap="wrap"
+        align="center"
+        gap="2"
+        px="5"
+        py="3"
+        borderBottomWidth="1px"
+        borderColor="border"
+      >
+        <Card.Title
+          as="h2"
+          id="request-log-title"
+          me="auto"
+          textStyle="body"
+          fontWeight="semibold"
+        >
+          Request log
+        </Card.Title>
+        <SimpleSelect
+          label="Filter by status"
+          hideLabel
+          size="sm"
+          width="136px"
+          value={filter}
+          onChange={setFilter}
+          items={[
+            { label: 'All statuses', value: 'all' },
+            { label: '2xx', value: '2xx' },
+            { label: '4xx', value: '4xx' },
+            { label: '5xx', value: '5xx' },
+          ]}
+        />
         <Button
           variant="outline"
+          size="sm"
           onClick={() =>
             toaster.create({
               type: 'info',
@@ -76,61 +77,69 @@ export function LogsTab() {
           <Download />
           Download
         </Button>
-      </CardHeader>
-      <CardContent className="overflow-x-auto p-0">
-        {visible.length === 0 ? (
-          <Empty className="min-h-48 border-0">
-            <EmptyHeader>
-              <EmptyTitle>No requests</EmptyTitle>
-              <EmptyDescription>
-                {logs.length === 0
-                  ? `This deployment is ${deployment.status.toLowerCase()}, so nothing is reaching it.`
-                  : 'No requests match this status filter.'}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ) : (
-          <Table className="min-w-[720px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="px-5">Time</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Latency</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Request ID</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+      </Flex>
+      {visible.length === 0 ? (
+        <EmptyNotice
+          minH="48"
+          title="No requests"
+          description={
+            logs.length === 0
+              ? `This deployment is ${deployment.status.toLowerCase()}, so nothing is reaching it.`
+              : 'No requests match this status filter.'
+          }
+        />
+      ) : (
+        <Table.ScrollArea>
+          <Table.Root variant="data" minW="720px">
+            <Table.Header>
+              <Table.Row>
+                <Table.ColumnHeader px="5">Time</Table.ColumnHeader>
+                <Table.ColumnHeader>Method</Table.ColumnHeader>
+                <Table.ColumnHeader>Status</Table.ColumnHeader>
+                <Table.ColumnHeader textAlign="end">Latency</Table.ColumnHeader>
+                <Table.ColumnHeader>Client</Table.ColumnHeader>
+                <Table.ColumnHeader>Request ID</Table.ColumnHeader>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
               {visible.map((entry) => (
-                <TableRow key={entry.requestId}>
-                  <TableCell className="px-5 font-mono text-xs tabular-nums">
+                <Table.Row key={entry.requestId}>
+                  <Table.Cell
+                    px="5"
+                    fontFamily="mono"
+                    fontSize="xs"
+                    fontVariantNumeric="tabular-nums"
+                  >
                     {entry.time}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs font-medium text-foreground">
+                  </Table.Cell>
+                  <Table.Cell
+                    fontFamily="mono"
+                    fontSize="xs"
+                    fontWeight="medium"
+                    color="fg"
+                  >
                     {entry.method}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusTone(entry.status)}>
-                      <BadgeDot />
+                  </Table.Cell>
+                  <Table.Cell>
+                    <ToneBadge tone={statusTone(entry.status)} dot>
                       {entry.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                    </ToneBadge>
+                  </Table.Cell>
+                  <Table.Cell textAlign="end" fontVariantNumeric="tabular-nums">
                     {entry.latency}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">
+                  </Table.Cell>
+                  <Table.Cell fontFamily="mono" fontSize="xs">
                     {entry.client}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">
+                  </Table.Cell>
+                  <Table.Cell fontFamily="mono" fontSize="xs">
                     {entry.requestId}
-                  </TableCell>
-                </TableRow>
+                  </Table.Cell>
+                </Table.Row>
               ))}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+            </Table.Body>
+          </Table.Root>
+        </Table.ScrollArea>
+      )}
+    </Card.Root>
   )
 }

@@ -1,4 +1,4 @@
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@chakra-ui/react'
 import type {
   DeploymentEnvironment,
   DeploymentStatus,
@@ -22,7 +22,7 @@ export function EnvironmentBadge({
   environment: DeploymentEnvironment
 }) {
   return (
-    <Badge variant="outline" className="font-normal">
+    <Badge colorPalette="gray" variant="outline" fontWeight="normal">
       {environment}
     </Badge>
   )

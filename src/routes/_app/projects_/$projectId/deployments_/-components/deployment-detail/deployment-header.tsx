@@ -1,8 +1,8 @@
-import { Link } from '@tanstack/react-router'
+import { Box, Button, Code, Flex, Link, Text } from '@chakra-ui/react'
+import { Link as RouterLink } from '@tanstack/react-router'
 import { Pause, Play, RefreshCw, Rocket } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
-import { Button } from '@/components/ui/button'
 import { CopyButton } from '@/components/shared/copy-button'
 import { EntityHeader } from '@/components/shared/entity-header'
 import { DeploymentStatusBadge } from '@/features/deployments/components/deployment-status-badge'
@@ -31,39 +31,40 @@ export function DeploymentHeader() {
       meta={
         <>
           {/* For a deployment the endpoint URL is the identity, so it leads. */}
-          <span className="flex flex-wrap items-center gap-2">
-            <code className="max-w-full truncate rounded bg-muted px-2 py-1 text-xs">
+          <Flex as="span" wrap="wrap" align="center" gap="2">
+            <Code size="sm" maxW="full" truncate>
               {deployment.endpoint}
-            </code>
+            </Code>
             <CopyButton value={deployment.endpoint} label="Copy endpoint URL" />
-          </span>
-          <span className="mt-1.5 block">
+          </Flex>
+          <Box as="span" display="block" mt="1.5">
             Serving{' '}
             {model ? (
-              <Link
-                to="/projects/$projectId/models/$modelId"
-                params={{
-                  projectId: deployment.projectId,
-                  modelId: model.id,
-                }}
-                className="h-auto border-none p-0 font-mono font-medium"
-              >
-                {model.name} v{model.version}
+              <Link asChild fontFamily="mono" fontWeight="medium" color="fg">
+                <RouterLink
+                  to="/projects/$projectId/models/$modelId"
+                  params={{
+                    projectId: deployment.projectId,
+                    modelId: model.id,
+                  }}
+                >
+                  {model.name} v{model.version}
+                </RouterLink>
               </Link>
             ) : (
               deployment.modelId
             )}{' '}
             · {deployment.instanceName} · {deployment.region} · deployed{' '}
             {deployment.deployed}
-          </span>
+          </Box>
         </>
       }
       actions={
         <>
           <Button
             variant="outline"
-            size="lg"
-            className="px-3.5 shadow-xs"
+            size="sm"
+            px="3.5"
             disabled={rollingOut || act.isPending}
             onClick={() =>
               act.mutate(idle ? 'resume' : 'pause', {
@@ -75,12 +76,13 @@ export function DeploymentHeader() {
               })
             }
           >
-            {idle ? <Play className="size-4" /> : <Pause className="size-4" />}
+            {idle ? <Play /> : <Pause />}
             {idle ? 'Resume' : 'Pause'}
           </Button>
           <Button
-            size="lg"
-            className="px-3.5 shadow-xs"
+            variant="solid"
+            size="sm"
+            px="3.5"
             disabled={rollingOut || act.isPending}
             onClick={() =>
               act.mutate('redeploy', {
@@ -92,7 +94,7 @@ export function DeploymentHeader() {
               })
             }
           >
-            <RefreshCw className="size-4" />
+            <RefreshCw />
             Redeploy
           </Button>
         </>
@@ -102,35 +104,41 @@ export function DeploymentHeader() {
           label: 'Requests 24h',
           value: deployment.requests24h,
           delta: idle ? (
-            <span className="text-muted-foreground">
+            <Text as="span" color="fg.muted">
               no traffic while {deployment.status.toLowerCase()}
-            </span>
+            </Text>
           ) : (
-            <span className="text-success">▲ 6.2% vs yesterday</span>
+            <Text as="span" color="fg.success">
+              ▲ 6.2% vs yesterday
+            </Text>
           ),
         },
         {
           label: 'p95 latency',
           value: deployment.latencyP95,
           delta: idle ? undefined : (
-            <span className="text-success">▼ 8 ms vs yesterday</span>
+            <Text as="span" color="fg.success">
+              ▼ 8 ms vs yesterday
+            </Text>
           ),
         },
         {
           label: 'Error rate',
           value: deployment.errorRate,
           delta: idle ? undefined : (
-            <span className="text-muted-foreground">within 0.5% budget</span>
+            <Text as="span" color="fg.muted">
+              within 0.5% budget
+            </Text>
           ),
         },
         {
           label: 'Cost today',
           value: deployment.costPerDay,
           delta: (
-            <span className="text-muted-foreground">
+            <Text as="span" color="fg.muted">
               {deployment.activeReplicas} / {deployment.maxReplicas} replicas
               active
-            </span>
+            </Text>
           ),
         },
       ]}

@@ -1,4 +1,4 @@
-import { Badge, BadgeDot } from '@/components/ui/badge'
+import { ToneBadge } from '@/components/shared/tone-badge'
 import type { DeploymentStatus } from '@/features/dashboard/data'
 
 const deploymentTone = {
@@ -13,9 +13,8 @@ export function DeploymentStatusBadge({
   status: DeploymentStatus
 }) {
   return (
-    <Badge variant={deploymentTone[status]}>
-      <BadgeDot className={status === 'Live' ? 'animate-pulse' : undefined} />
+    <ToneBadge tone={deploymentTone[status]} dot pulse={status === 'Live'}>
       {status}
-    </Badge>
+    </ToneBadge>
   )
 }

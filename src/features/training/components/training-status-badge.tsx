@@ -1,14 +1,13 @@
-import { Badge, BadgeDot } from '@/components/ui/badge'
+import { ToneBadge } from '@/components/shared/tone-badge'
 import type { TrainingRunStatus } from '@/features/dashboard/data'
 
 export function TrainingStatusBadge({ status }: { status: TrainingRunStatus }) {
   const running = status === 'Running'
-  const variant = running ? 'info' : status === 'Failed' ? 'error' : 'neutral'
+  const tone = running ? 'info' : status === 'Failed' ? 'error' : 'neutral'
 
   return (
-    <Badge variant={variant}>
-      <BadgeDot className={running ? 'animate-pulse' : undefined} />
+    <ToneBadge tone={tone} dot pulse={running}>
       {status}
-    </Badge>
+    </ToneBadge>
   )
 }

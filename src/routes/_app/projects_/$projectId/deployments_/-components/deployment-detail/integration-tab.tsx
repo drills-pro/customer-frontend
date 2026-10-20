@@ -1,12 +1,22 @@
 import * as React from 'react'
+import {
+  Box,
+  Button,
+  Card,
+  Center,
+  Code,
+  Flex,
+  Grid,
+  SimpleGrid,
+  Tabs,
+  Text,
+} from '@chakra-ui/react'
 import { ImageUp, Play } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CopyButton } from '@/components/shared/copy-button'
+import { SectionCard } from '@/components/shared/section-card'
+import { ToneBadge } from '@/components/shared/tone-badge'
 import {
   useDeploymentKey,
   useRotateDeploymentKey,
@@ -70,51 +80,94 @@ export function IntegrationTab() {
     : deployment.modelId
 
   return (
-    <div className="grid min-w-0 items-start gap-6 lg:grid-cols-3">
-      <div className="grid min-w-0 gap-6 lg:col-span-2">
-        <Card size="flush">
-          <CardHeader className="flex-row items-center border-b [--card-section:--spacing(2.5)]">
-            <Tabs
+    <Grid
+      minW="0"
+      alignItems="start"
+      gap="6"
+      templateColumns={{ lg: 'repeat(3, minmax(0, 1fr))' }}
+    >
+      <Grid minW="0" gap="6" gridColumn={{ lg: 'span 2' }}>
+        <Card.Root variant="outline" overflow="hidden">
+          <Flex
+            align="center"
+            gap="2"
+            px="5"
+            py="2.5"
+            borderBottomWidth="1px"
+            borderColor="border"
+          >
+            <Tabs.Root
+              variant="subtle"
+              size="sm"
+              me="auto"
               value={language}
-              onValueChange={(value) => setLanguage(value as Language)}
-              className="mr-auto"
+              onValueChange={(event) => setLanguage(event.value as Language)}
             >
-              <TabsList aria-label="Code language">
+              <Tabs.List aria-label="Code language">
                 {languages.map((item) => (
-                  <TabsTrigger key={item} value={item}>
+                  <Tabs.Trigger key={item} value={item}>
                     {item}
-                  </TabsTrigger>
+                  </Tabs.Trigger>
                 ))}
-              </TabsList>
-            </Tabs>
+              </Tabs.List>
+            </Tabs.Root>
             <CopyButton value={code} label={`Copy ${language} snippet`} />
-          </CardHeader>
-          <CardContent className="p-0">
-            <pre className="overflow-x-auto bg-terminal p-5 text-xs leading-relaxed text-terminal-foreground">
-              {code}
-            </pre>
-          </CardContent>
-        </Card>
+          </Flex>
+          <Box
+            as="pre"
+            overflowX="auto"
+            bg="night"
+            color="on-night"
+            p="5"
+            fontFamily="mono"
+            fontSize="xs"
+            lineHeight="relaxed"
+          >
+            {code}
+          </Box>
+        </Card.Root>
 
-        <Card size="flush">
-          <CardHeader className="flex-row items-center border-b [--card-section:--spacing(3.5)]">
-            <CardTitle className="mr-auto">Send a test request</CardTitle>
-            <Badge variant="neutral">Example result</Badge>
-          </CardHeader>
-          <CardContent className="grid gap-5 p-5 sm:grid-cols-2">
-            <div>
-              <div className="flex min-h-[140px] flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-5 text-center">
-                <div className="flex size-9 items-center justify-center rounded-lg bg-card text-muted-foreground ring-1 ring-border">
-                  <ImageUp className="size-4" />
-                </div>
-                <p className="text-[13px] font-medium">Drop an image here</p>
-                <p className="text-xs text-muted-foreground">
+        <SectionCard
+          title="Send a test request"
+          action={<ToneBadge tone="neutral">Example result</ToneBadge>}
+        >
+          <SimpleGrid columns={{ base: 1, sm: 2 }} gap="5" p="5">
+            <Box>
+              <Flex
+                minH="140px"
+                direction="column"
+                align="center"
+                justify="center"
+                gap="2"
+                rounded="l2"
+                borderWidth="2px"
+                borderStyle="dashed"
+                borderColor="border.emphasized"
+                px="5"
+                textAlign="center"
+              >
+                <Center
+                  boxSize="9"
+                  rounded="l2"
+                  bg="surface-raised"
+                  color="fg.muted"
+                  borderWidth="1px"
+                  borderColor="border"
+                >
+                  <ImageUp size={16} />
+                </Center>
+                <Text fontSize="13px" fontWeight="medium">
+                  Drop an image here
+                </Text>
+                <Text fontSize="xs" color="fg.muted">
                   JPG, PNG up to 10 MB
-                </p>
-              </div>
+                </Text>
+              </Flex>
               <Button
-                size="lg"
-                className="mt-3 w-full"
+                variant="solid"
+                size="sm"
+                mt="3"
+                w="full"
                 disabled={testCall.isPending}
                 onClick={() =>
                   testCall.mutate(undefined, {
@@ -129,53 +182,85 @@ export function IntegrationTab() {
                 <Play />
                 Send request
               </Button>
-            </div>
-            <div>
-              <div className="flex items-center justify-between gap-3 rounded-lg bg-success-muted px-4 py-3">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-medium tracking-widest text-success uppercase">
+            </Box>
+            <Box>
+              <Flex
+                align="center"
+                justify="space-between"
+                gap="3"
+                rounded="l2"
+                bg="bg.success"
+                color="fg.success"
+                px="4"
+                py="3"
+              >
+                <Box minW="0">
+                  <Text
+                    fontSize="11px"
+                    fontWeight="medium"
+                    letterSpacing="widest"
+                    textTransform="uppercase"
+                  >
                     200 OK
-                  </p>
-                  <p className="truncate font-mono text-[15px] font-semibold text-success">
+                  </Text>
+                  <Text
+                    truncate
+                    fontFamily="mono"
+                    fontSize="15px"
+                    fontWeight="semibold"
+                  >
                     beverages_cola_330ml
-                  </p>
-                </div>
-                <p className="shrink-0 text-2xl font-semibold tabular-nums text-success">
+                  </Text>
+                </Box>
+                <Text
+                  flexShrink={0}
+                  fontSize="2xl"
+                  fontWeight="semibold"
+                  fontVariantNumeric="tabular-nums"
+                >
                   96.4%
-                </p>
-              </div>
-              <pre className="mt-3 overflow-x-auto rounded-lg bg-terminal p-3.5 text-[11px] leading-relaxed text-terminal-foreground">
+                </Text>
+              </Flex>
+              <Box
+                as="pre"
+                mt="3"
+                overflowX="auto"
+                rounded="l2"
+                bg="night"
+                color="on-night"
+                p="3.5"
+                fontFamily="mono"
+                fontSize="11px"
+                lineHeight="relaxed"
+              >
                 {`{
   "label": "beverages_cola_330ml",
   "confidence": 0.964,
   "latency_ms": ${Number.parseFloat(deployment.latencyP95) || 140},
   "model": "${modelLabel}"
 }`}
-              </pre>
-              <p className="mt-2 text-xs text-muted-foreground">
+              </Box>
+              <Text mt="2" fontSize="xs" color="fg.muted">
                 Billed as one prediction against this deployment.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </Text>
+            </Box>
+          </SimpleGrid>
+        </SectionCard>
+      </Grid>
 
-      <div className="grid gap-6">
-        <Card size="flush">
-          <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-            <CardTitle>Endpoint</CardTitle>
-          </CardHeader>
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2">
-              <code className="min-w-0 flex-1 truncate rounded bg-muted px-2 py-1.5 text-xs">
+      <Grid gap="6">
+        <SectionCard title="Endpoint">
+          <Box p="5">
+            <Flex align="center" gap="2">
+              <Code size="sm" minW="0" flex="1" truncate>
                 {deployment.endpoint}
-              </code>
+              </Code>
               <CopyButton
                 value={deployment.endpoint}
                 label="Copy endpoint URL"
               />
-            </div>
-            <dl className="mt-4 divide-y text-[13px]">
+            </Flex>
+            <Box as="dl" mt="4" fontSize="13px">
               {(
                 [
                   ['Method', 'POST'],
@@ -185,24 +270,33 @@ export function IntegrationTab() {
                   ['Region', deployment.region],
                 ] as const
               ).map(([label, value]) => (
-                <div key={label} className="flex justify-between gap-3 py-2">
-                  <dt className="text-muted-foreground">{label}</dt>
-                  <dd className="font-mono font-medium">{value}</dd>
-                </div>
+                <Flex
+                  key={label}
+                  justify="space-between"
+                  gap="3"
+                  py="2"
+                  borderTopWidth="1px"
+                  borderColor="border"
+                  _first={{ borderTopWidth: '0' }}
+                >
+                  <Box as="dt" color="fg.muted">
+                    {label}
+                  </Box>
+                  <Box as="dd" fontFamily="mono" fontWeight="medium">
+                    {value}
+                  </Box>
+                </Flex>
               ))}
-            </dl>
-          </CardContent>
-        </Card>
+            </Box>
+          </Box>
+        </SectionCard>
 
-        <Card size="flush">
-          <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-            <CardTitle>API key</CardTitle>
-          </CardHeader>
-          <CardContent className="p-5">
-            <code className="block truncate rounded bg-muted px-2 py-1.5 text-xs">
+        <SectionCard title="API key">
+          <Box p="5">
+            <Code size="sm" display="block" truncate>
               {freshKey ?? key?.masked_key}
-            </code>
-            <p className="mt-2.5 text-xs text-muted-foreground">
+            </Code>
+            <Text mt="2.5" fontSize="xs" color="fg.muted">
               {freshKey
                 ? 'Copy this key now. It will not be shown again.'
                 : key &&
@@ -211,10 +305,12 @@ export function IntegrationTab() {
                       ? `last used ${relativeTimeLong(key.last_used_at)}`
                       : 'never used'
                   }.`}
-            </p>
+            </Text>
             <Button
               variant="outline"
-              className="mt-3 w-full"
+              size="sm"
+              mt="3"
+              w="full"
               disabled={rotate.isPending}
               onClick={() =>
                 rotate.mutate(undefined, {
@@ -228,9 +324,9 @@ export function IntegrationTab() {
             >
               Rotate key
             </Button>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+          </Box>
+        </SectionCard>
+      </Grid>
+    </Grid>
   )
 }

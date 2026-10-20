@@ -1,31 +1,19 @@
 import * as React from 'react'
+import {
+  Button,
+  CloseButton,
+  Dialog,
+  Field,
+  Input,
+  Portal,
+  Spinner,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
 import { Upload } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Spinner } from '@/components/ui/spinner'
+import { SimpleSelect } from '@/components/simple-select'
 import { taskLabel } from '@/features/dashboard/format'
 import { useUploadDataset } from '@/features/dashboard/queries'
 import { acceptedUploads, uploadKind } from '@/features/datasets/upload-rules'
@@ -83,80 +71,98 @@ export function UploadDialog({
   }
 
   return (
-    <Dialog
+    <Dialog.Root
       open={open}
-      onOpenChange={(next) => {
-        onOpenChange(next)
-        if (!next) setError('')
+      onOpenChange={(event) => {
+        onOpenChange(event.open)
+        if (!event.open) setError('')
       }}
     >
-      <DialogContent>
-        <form onSubmit={submit} className="contents">
-          <DialogHeader>
-            <DialogTitle>Upload dataset</DialogTitle>
-            <DialogDescription>
-              Add a ZIP of labelled image folders or a CSV to one of your
-              projects.
-            </DialogDescription>
-          </DialogHeader>
-          <FieldGroup className="gap-4 py-2">
-            <Field>
-              <FieldLabel htmlFor="dataset-project">Project</FieldLabel>
-              <Select value={projectId} onValueChange={setProjectId}>
-                <SelectTrigger id="dataset-project" className="w-full">
-                  <SelectValue
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content asChild>
+            <form onSubmit={submit}>
+              <Dialog.Header
+                flexDirection="column"
+                alignItems="stretch"
+                gap="1"
+              >
+                <Dialog.Title>Upload dataset</Dialog.Title>
+                <Dialog.Description textStyle="body-sm" color="fg.muted">
+                  Add a ZIP of labelled image folders or a CSV to one of your
+                  projects.
+                </Dialog.Description>
+              </Dialog.Header>
+              <Dialog.Body>
+                <Stack gap="4">
+                  <SimpleSelect
+                    label="Project"
+                    items={projects.map((project) => ({
+                      label: project.name,
+                      value: project.id,
+                    }))}
+                    value={projectId}
+                    onChange={setProjectId}
                     placeholder={
                       projects.length ? 'Choose a project' : 'No projects yet'
                     }
+                    width="full"
+                    portalled={false}
                   />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
 
-            <Field>
-              <FieldLabel htmlFor="dataset-name">Dataset name</FieldLabel>
-              <Input
-                id="dataset-name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="retail-products-v3"
-              />
-            </Field>
+                  <Field.Root>
+                    <Field.Label>Dataset name</Field.Label>
+                    <Input
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      placeholder="retail-products-v3"
+                    />
+                  </Field.Root>
 
-            <Field>
-              <FieldLabel htmlFor="dataset-files">Dataset files</FieldLabel>
-              <Input
-                id="dataset-files"
-                type="file"
-                accept=".csv,.zip"
-                onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-              />
-            </Field>
+                  <Field.Root>
+                    <Field.Label>Dataset files</Field.Label>
+                    <Input
+                      type="file"
+                      accept=".csv,.zip"
+                      pt="1.5"
+                      onChange={(event) =>
+                        setFile(event.target.files?.[0] ?? null)
+                      }
+                    />
+                  </Field.Root>
 
-            <FieldError>{error}</FieldError>
-          </FieldGroup>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={upload.isPending}>
-              {upload.isPending ? <Spinner /> : <Upload />}
-              Upload dataset
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+                  {error && (
+                    <Text role="alert" textStyle="body-sm" color="fg.error">
+                      {error}
+                    </Text>
+                  )}
+                </Stack>
+              </Dialog.Body>
+              <Dialog.Footer>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="solid"
+                  disabled={upload.isPending}
+                >
+                  {upload.isPending ? <Spinner size="sm" /> : <Upload />}
+                  Upload dataset
+                </Button>
+              </Dialog.Footer>
+              <Dialog.CloseTrigger asChild>
+                <CloseButton size="sm" />
+              </Dialog.CloseTrigger>
+            </form>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </Dialog.Root>
   )
 }

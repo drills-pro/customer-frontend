@@ -1,22 +1,9 @@
+import { Box, Flex, Stack, Text } from '@chakra-ui/react'
 import { Rocket } from 'lucide-react'
 
-import { Badge, BadgeDot } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-} from '@/components/ui/item'
+import { EmptyNotice } from '@/components/shared/empty-notice'
+import { SectionAction, SectionCard } from '@/components/shared/section-card'
+import { ToneBadge } from '@/components/shared/tone-badge'
 import { deploymentPlaceholders } from '@/features/dashboard/placeholders'
 import { useDashboardSummary } from '@/features/dashboard/queries'
 import type { ApiDeployment } from '@/features/dashboard/api'
@@ -34,73 +21,66 @@ export function DeploymentHealthCard() {
   const deployments = data?.deployments ?? []
 
   return (
-    <Card size="flush">
-      <CardHeader className="border-b">
-        <CardTitle>Deployment health</CardTitle>
-      </CardHeader>
-      <CardContent className="px-0">
-        {isPending ? (
-          <CardLoading />
-        ) : error ? (
-          <CardError
-            title="Could not load deployments"
-            error={error}
-            onRetry={() => void refetch()}
-          />
-        ) : deployments.length ? (
-          <ItemGroup className="gap-0">
-            {deployments.slice(0, 3).map((deployment) => {
-              const status = deploymentStatus[deployment.status]
-              return (
-                <Item
-                  key={deployment.id}
-                  role="listitem"
-                  className="flex-nowrap rounded-none border-x-0 border-t-0 border-b border-border px-5 py-3 last:border-b-0"
+    <SectionCard title="Deployment health">
+      {isPending ? (
+        <CardLoading />
+      ) : error ? (
+        <CardError
+          title="Could not load deployments"
+          error={error}
+          onRetry={() => void refetch()}
+        />
+      ) : deployments.length ? (
+        <Stack role="list" gap="0">
+          {deployments.slice(0, 3).map((deployment) => {
+            const status = deploymentStatus[deployment.status]
+            return (
+              <Flex
+                key={deployment.id}
+                role="listitem"
+                align="center"
+                justify="space-between"
+                gap="3"
+                px="5"
+                py="3"
+                borderBottomWidth="1px"
+                borderColor="border"
+                _last={{ borderBottomWidth: '0' }}
+              >
+                <Box minW="0">
+                  {/* The deployment page still reads mock data, so no link yet. */}
+                  <SectionAction
+                    fontWeight="semibold"
+                    color="fg"
+                    _hover={{ color: 'brand-text' }}
+                    onClick={() => unavailable(deployment.route_prefix)}
+                  >
+                    {deployment.route_prefix}
+                  </SectionAction>
+                  <Text fontSize="xs" color="fg.muted">
+                    p95 {deploymentPlaceholders.latencyP95} · err{' '}
+                    {deploymentPlaceholders.errorRate}
+                  </Text>
+                </Box>
+                <ToneBadge
+                  tone={status.tone}
+                  dot
+                  pulse={deployment.status === 'active'}
                 >
-                  <ItemContent>
-                    {/* The deployment page still reads mock data, so no link yet. */}
-                    <Button
-                      variant="link"
-                      className="self-start font-semibold text-foreground hover:text-primary"
-                      onClick={() => unavailable(deployment.route_prefix)}
-                    >
-                      {deployment.route_prefix}
-                    </Button>
-                    <ItemDescription className="text-xs">
-                      p95 {deploymentPlaceholders.latencyP95} · err{' '}
-                      {deploymentPlaceholders.errorRate}
-                    </ItemDescription>
-                  </ItemContent>
-                  <ItemActions>
-                    <Badge variant={status.tone}>
-                      <BadgeDot
-                        className={
-                          deployment.status === 'active'
-                            ? 'animate-pulse'
-                            : undefined
-                        }
-                      />
-                      {status.label}
-                    </Badge>
-                  </ItemActions>
-                </Item>
-              )
-            })}
-          </ItemGroup>
-        ) : (
-          <Empty className="min-h-36 gap-3 py-8">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Rocket />
-              </EmptyMedia>
-              <EmptyTitle>No deployments</EmptyTitle>
-              <EmptyDescription>
-                Deployed models will appear here.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        )}
-      </CardContent>
-    </Card>
+                  {status.label}
+                </ToneBadge>
+              </Flex>
+            )
+          })}
+        </Stack>
+      ) : (
+        <EmptyNotice
+          icon={<Rocket />}
+          title="No deployments"
+          description="Deployed models will appear here."
+          minH="36"
+        />
+      )}
+    </SectionCard>
   )
 }

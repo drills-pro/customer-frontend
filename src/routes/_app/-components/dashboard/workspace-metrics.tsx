@@ -1,7 +1,5 @@
-import { cn } from 'cn'
+import { Box, Card, Flex, SimpleGrid, Skeleton, Text } from '@chakra-ui/react'
 
-import { Card, CardContent } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 import type { ApiMetricKey } from '@/features/dashboard/api'
 import {
   compactCount,
@@ -15,10 +13,10 @@ import {
 
 const HISTORY_DAYS = 30
 
-const changeTone = {
-  up: 'text-success',
-  down: 'text-destructive',
-  flat: 'text-muted-foreground',
+const changeColor = {
+  up: 'fg.success',
+  down: 'fg.error',
+  flat: 'fg.muted',
 } as const
 
 const changeArrow = { up: '▲', down: '▼', flat: '■' } as const
@@ -63,9 +61,11 @@ export function WorkspaceMetrics() {
   ]
 
   return (
-    <section
+    <SimpleGrid
+      as="section"
       aria-label="Workspace metrics"
-      className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      columns={{ base: 1, sm: 2, xl: 4 }}
+      gap="4"
     >
       {cards.map(({ key, title, value, format }) => {
         const series = history.data?.metrics[key]
@@ -73,63 +73,71 @@ export function WorkspaceMetrics() {
         const change = series && metricChange(series)
 
         return (
-          <Card key={key} className="py-0">
-            <CardContent className="flex items-end justify-between p-5">
-              <div className="flex flex-col ">
-                <p className="text-sm text-muted-foreground">{title}</p>
+          <Card.Root key={key} variant="outline">
+            <Flex align="flex-end" justify="space-between" p="5">
+              <Flex direction="column">
+                <Text textStyle="body-sm" color="fg.muted">
+                  {title}
+                </Text>
                 {isPending ? (
-                  <Skeleton className="mt-2 h-9 w-16" />
+                  <Skeleton mt="2" h="9" w="16" />
                 ) : (
-                  <p className="mt-2 text-3xl font-semibold tracking-tight">
+                  <Text
+                    mt="2"
+                    fontSize="3xl"
+                    fontWeight="semibold"
+                    letterSpacing="tight"
+                    lineHeight="short"
+                  >
                     {/* A dash when the request failed; the cards below say why. */}
                     {value ?? '—'}
-                  </p>
+                  </Text>
                 )}
                 {history.isPending ? (
-                  <Skeleton className="mt-2 h-4 w-24" />
+                  <Skeleton mt="2" h="4" w="24" />
                 ) : (
                   change && (
-                    <p className="mt-2 text-xs">
-                      <span
-                        className={cn(
-                          'font-medium',
-                          changeTone[change.direction],
-                        )}
+                    <Text mt="2" fontSize="xs">
+                      <Text
+                        as="span"
+                        fontWeight="medium"
+                        color={changeColor[change.direction]}
                       >
                         {changeArrow[change.direction]} {change.label}
-                      </span>{' '}
-                      <span className="text-muted-foreground/80">
+                      </Text>{' '}
+                      <Text as="span" color="fg.muted">
                         vs last {HISTORY_DAYS}d
-                      </span>
-                    </p>
+                      </Text>
+                    </Text>
                   )
                 )}
-              </div>
+              </Flex>
               {history.isPending ? (
-                <Skeleton className="h-8 w-24" />
+                <Skeleton h="8" w="24" />
               ) : (
                 values.length > 0 && (
-                  <svg
-                    viewBox="0 0 100 34"
-                    className="h-8 w-24 text-primary"
-                    role="img"
-                    aria-label={`${title}, last ${HISTORY_DAYS} days: ${format(values[0])} to ${format(values[values.length - 1])}`}
-                  >
-                    <polyline
-                      points={sparklinePoints(values)}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <Box asChild h="8" w="24" color="brand-text">
+                    <svg
+                      viewBox="0 0 100 34"
+                      role="img"
+                      aria-label={`${title}, last ${HISTORY_DAYS} days: ${format(values[0])} to ${format(values[values.length - 1])}`}
+                    >
+                      <polyline
+                        points={sparklinePoints(values)}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </Box>
                 )
               )}
-            </CardContent>
-          </Card>
+            </Flex>
+          </Card.Root>
         )
       })}
-    </section>
+    </SimpleGrid>
   )
 }

@@ -106,13 +106,10 @@ test('each metric charts its own history', async ({ page }) => {
 test('the checklist reflects what the workspace already has', async ({
   page,
 }) => {
-  const card = page.getByText('Getting started').locator('../..')
   // Projects, a dataset and runs exist in the fixture; no deployment counted.
-  // 3 of 4 steps: the bar's indicator is offset by the remaining quarter.
-  await expect(card.locator('[data-slot=progress-indicator]')).toHaveAttribute(
-    'style',
-    /translateX\(-25%\)/,
-  )
+  await expect(
+    page.getByRole('progressbar', { name: 'Getting started progress' }),
+  ).toHaveAttribute('aria-valuenow', '75')
 })
 
 test('cards do not link into pages that still read mock data', async ({
@@ -199,7 +196,7 @@ test('dataset upload validates, uploads and refreshes the dashboard', async ({
   await expect(dialog.getByRole('alert')).toContainText('Choose a project')
 
   // An image project does not take a CSV; nothing is sent.
-  await page.getByLabel('Project', { exact: true }).click()
+  await page.getByRole('combobox', { name: 'Project' }).click()
   await page.getByRole('option', { name: 'Retail Vision' }).click()
   await page.getByLabel('Dataset files').setInputFiles(csv)
   await submit.click()
@@ -208,7 +205,7 @@ test('dataset upload validates, uploads and refreshes the dashboard', async ({
   )
   expect(uploads).toEqual([])
 
-  await page.getByLabel('Project', { exact: true }).click()
+  await page.getByRole('combobox', { name: 'Project' }).click()
   await page.getByRole('option', { name: 'Churn Model' }).click()
   await submit.click()
 
@@ -232,7 +229,7 @@ test('a rejected upload shows the reason from the API', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Upload Dataset' }).click()
   await page.getByLabel('Dataset name').fill('catalog-v3')
-  await page.getByLabel('Project', { exact: true }).click()
+  await page.getByRole('combobox', { name: 'Project' }).click()
   await page.getByRole('option', { name: 'Churn Model' }).click()
   await page.getByLabel('Dataset files').setInputFiles({
     name: 'catalog.csv',
@@ -251,8 +248,7 @@ test('a rejected upload shows the reason from the API', async ({ page }) => {
 test('activity expansion and onboarding dismissal work', async ({ page }) => {
   await expect(page.getByText('Project Retail Vision')).toBeHidden()
   await page
-    .getByText('Recent activity')
-    .locator('..')
+    .getByRole('region', { name: 'Recent activity' })
     .getByRole('button', { name: 'View all', exact: true })
     .click()
   await expect(page.getByText('Project Retail Vision')).toBeVisible()

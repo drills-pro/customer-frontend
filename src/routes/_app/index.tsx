@@ -1,16 +1,21 @@
 import * as React from 'react'
+import {
+  Box,
+  Button,
+  Center,
+  Flex,
+  Grid,
+  Heading,
+  HStack,
+  Icon,
+  Progress,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Check, Plus, Upload } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
+import { SectionAction, SectionCard } from '@/components/shared/section-card'
 import { useDashboardSummary } from '@/features/dashboard/queries'
 import { useDashboardLayout } from '@/features/dashboard/context'
 import { getSession } from '@/api/session'
@@ -45,89 +50,121 @@ function DashboardPage() {
 
   return (
     <>
-      <main
+      <Box
+        as="main"
         id="dashboard-main"
-        className="mx-auto w-full max-w-[1448px] flex-1 p-4 sm:p-6"
+        mx="auto"
+        w="full"
+        maxW="1448px"
+        flex="1"
+        p={{ base: '4', sm: '6' }}
       >
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
+        <Flex
+          direction={{ base: 'column', sm: 'row' }}
+          align={{ sm: 'flex-start' }}
+          justify={{ sm: 'space-between' }}
+          gap="4"
+          mb="6"
+        >
+          <Box>
+            <Heading
+              as="h1"
+              fontSize="2xl"
+              fontWeight="bold"
+              letterSpacing="tight"
+            >
               Good morning, {getSession().displayName}{' '}
               <span aria-hidden="true">👋</span>
-            </h1>
-            <p className="mt-1 text-muted-foreground">
+            </Heading>
+            <Text mt="1" color="fg.muted">
               Here is what happened across your workspace.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
+            </Text>
+          </Box>
+          <HStack wrap="wrap" gap="2">
             <Button
-              size="lg"
+              size="sm"
               variant="outline"
-              className="px-3.5"
+              px="3.5"
               onClick={() => setUploadOpen(true)}
             >
               <Upload />
               Upload Dataset
             </Button>
-            <Button asChild size="lg" className="px-3.5">
+            <Button asChild size="sm" variant="solid" px="3.5">
               <Link to="/projects/new">
                 <Plus />
                 New Project
               </Link>
             </Button>
-          </div>
-        </div>
+          </HStack>
+        </Flex>
 
         <WorkspaceMetrics />
 
-        <div className="mt-6 grid items-start gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
-          <div className="grid gap-6">
+        <Grid
+          mt="6"
+          alignItems="start"
+          gap="6"
+          templateColumns={{ xl: 'minmax(0, 2fr) minmax(320px, 1fr)' }}
+        >
+          <Grid gap="6">
             <RecentActivityCard />
             <YourProjectsCard />
-          </div>
-          <div className="grid gap-6">
+          </Grid>
+          <Grid gap="6">
             <LiveTrainingsCard />
             <DeploymentHealthCard />
             {!preferences.onboardingDismissed && (
-              <Card size="flush">
-                <CardHeader className="border-b">
-                  <CardTitle>Getting started</CardTitle>
-                  <CardAction>
-                    <Button
-                      variant="link"
-                      className="text-muted-foreground"
-                      onClick={() =>
-                        updatePreferences({ onboardingDismissed: true })
-                      }
-                    >
-                      Dismiss
-                    </Button>
-                  </CardAction>
-                </CardHeader>
-                <CardContent className="space-y-3 p-5">
+              <SectionCard
+                title="Getting started"
+                action={
+                  <SectionAction
+                    color="fg.muted"
+                    onClick={() =>
+                      updatePreferences({ onboardingDismissed: true })
+                    }
+                  >
+                    Dismiss
+                  </SectionAction>
+                }
+              >
+                <Stack gap="3" p="5">
                   {onboarding.map(({ label, done }, index) => (
-                    <div
-                      className="flex items-center gap-3 text-sm"
-                      key={label}
-                    >
-                      <span
-                        className={`flex size-5 items-center justify-center rounded-full ${done ? 'bg-success-muted text-success' : 'bg-muted text-muted-foreground'}`}
+                    <HStack gap="3" textStyle="body-sm" key={label}>
+                      <Center
+                        boxSize="5"
+                        rounded="full"
+                        fontSize="xs"
+                        colorPalette={done ? 'success' : 'gray'}
+                        bg="colorPalette.subtle"
+                        color={done ? 'colorPalette.fg' : 'fg.muted'}
                       >
-                        {done ? <Check className="size-3.5" /> : index + 1}
-                      </span>
+                        {done ? (
+                          <Icon boxSize="3.5" asChild>
+                            <Check />
+                          </Icon>
+                        ) : (
+                          index + 1
+                        )}
+                      </Center>
                       {label}
-                    </div>
+                    </HStack>
                   ))}
-                  <Progress
+                  <Progress.Root
+                    mt="4"
+                    size="xs"
                     value={(onboardingDone / onboarding.length) * 100}
-                    className="mt-4 h-1.5"
-                  />
-                </CardContent>
-              </Card>
+                  >
+                    <Progress.Track aria-label="Getting started progress">
+                      <Progress.Range />
+                    </Progress.Track>
+                  </Progress.Root>
+                </Stack>
+              </SectionCard>
             )}
-          </div>
-        </div>
-      </main>
+          </Grid>
+        </Grid>
+      </Box>
 
       <UploadDialog
         open={uploadOpen}

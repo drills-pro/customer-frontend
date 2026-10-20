@@ -136,9 +136,8 @@ export function UserMenu({
                       )
                     : 0
                 }
-                aria-label="Credits used"
               >
-                <Progress.Track>
+                <Progress.Track aria-label="Credits used">
                   <Progress.Range />
                 </Progress.Track>
               </Progress.Root>

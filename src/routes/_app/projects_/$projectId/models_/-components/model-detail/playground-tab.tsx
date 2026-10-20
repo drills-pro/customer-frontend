@@ -1,14 +1,23 @@
 import { useQuery } from '@tanstack/react-query'
+import {
+  Box,
+  Button,
+  Center,
+  Flex,
+  Grid,
+  Heading,
+  Image,
+  Progress,
+  Text,
+} from '@chakra-ui/react'
+import type { BoxProps } from '@chakra-ui/react'
 import { ImageUp, Play } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
+import { SectionCard } from '@/components/shared/section-card'
+import { ToneBadge } from '@/components/shared/tone-badge'
 import { modelsApi } from '@/features/models/api'
 import { modelKeys } from '@/features/models/queries'
-import { cn } from 'cn'
 import { useCurrentModel } from './use-current-model'
 
 /**
@@ -22,48 +31,57 @@ function Bar({
   label,
   value,
   mono = true,
-  tone,
+  palette = 'brand',
 }: {
   label: string
   value: number
   mono?: boolean
-  tone?: string
+  palette?: string
 }) {
   return (
-    <div className="mt-3 first:mt-0">
-      <div className="flex items-baseline justify-between gap-3 text-[13px]">
-        <span className={cn('truncate', mono && 'font-mono')}>{label}</span>
-        <span className="shrink-0 font-semibold tabular-nums">
+    <Box mt="3" _first={{ mt: '0' }}>
+      <Flex align="baseline" justify="space-between" gap="3" fontSize="13px">
+        <Text as="span" truncate fontFamily={mono ? 'mono' : undefined}>
+          {label}
+        </Text>
+        <Text
+          as="span"
+          flexShrink={0}
+          fontWeight="semibold"
+          fontVariantNumeric="tabular-nums"
+        >
           {value.toFixed(1)}%
-        </span>
-      </div>
-      <Progress
-        value={value}
-        aria-label={label}
-        className={cn('mt-1.5 h-1.5', tone)}
-      />
-    </div>
+        </Text>
+      </Flex>
+      <Progress.Root mt="1.5" size="xs" value={value} colorPalette={palette}>
+        <Progress.Track aria-label={label}>
+          <Progress.Range />
+        </Progress.Track>
+      </Progress.Root>
+    </Box>
   )
 }
 
 /** The sample image with a saliency overlay painted over it. */
-function Saliency({ className }: { className?: string }) {
+function Saliency(props: BoxProps) {
   return (
-    <div className={cn('relative overflow-hidden rounded-lg', className)}>
-      <img
+    <Box position="relative" overflow="hidden" rounded="l2" {...props}>
+      <Image
         src={SAMPLE_IMAGE}
         alt="Sample shelf photo with the model's saliency overlay"
-        className="block w-full"
+        display="block"
+        w="full"
       />
-      <div
+      <Box
         aria-hidden="true"
-        className="absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(circle at 30% 55%, rgb(239 68 68 / 0.55), transparent 45%), radial-gradient(circle at 62% 62%, rgb(245 158 11 / 0.4), transparent 38%)',
+        position="absolute"
+        inset="0"
+        css={{
+          backgroundImage:
+            'radial-gradient(circle at 30% 55%, color-mix(in srgb, var(--chakra-colors-danger) 55%, transparent), transparent 45%), radial-gradient(circle at 62% 62%, color-mix(in srgb, var(--chakra-colors-warning) 40%, transparent), transparent 38%)',
         }}
       />
-    </div>
+    </Box>
   )
 }
 
@@ -81,32 +99,65 @@ export function PlaygroundTab() {
   const top = predictions.at(0)
 
   return (
-    <div className="grid min-w-0 items-start gap-6 lg:grid-cols-2">
-      <Card size="flush">
-        <CardHeader className="border-b [--card-section:--spacing(3.5)]">
-          <CardTitle>Test this model</CardTitle>
-        </CardHeader>
-        <CardContent className="p-5">
-          <div className="flex min-h-[210px] flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-6 text-center">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-card text-muted-foreground ring-1 ring-border">
-              <ImageUp className="size-5" />
-            </div>
-            <p className="mt-1 text-[13px] font-medium">Drop an image here</p>
-            <p className="text-xs text-muted-foreground">
+    <Grid
+      minW="0"
+      alignItems="start"
+      gap="6"
+      templateColumns={{ lg: 'repeat(2, minmax(0, 1fr))' }}
+    >
+      <SectionCard title="Test this model">
+        <Box p="5">
+          <Flex
+            minH="210px"
+            direction="column"
+            align="center"
+            justify="center"
+            gap="2"
+            rounded="l2"
+            borderWidth="2px"
+            borderStyle="dashed"
+            borderColor="border.emphasized"
+            px="6"
+            textAlign="center"
+          >
+            <Center
+              boxSize="10"
+              rounded="l2"
+              bg="surface-raised"
+              color="fg.muted"
+              borderWidth="1px"
+              borderColor="border"
+            >
+              <ImageUp size={20} />
+            </Center>
+            <Text mt="1" fontSize="13px" fontWeight="medium">
+              Drop an image here
+            </Text>
+            <Text fontSize="xs" color="fg.muted">
               or click to browse · JPG, PNG up to 10 MB
-            </p>
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg bg-muted p-3">
-            <Saliency className="size-10 shrink-0" />
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-mono text-[13px]">
+            </Text>
+          </Flex>
+          <Flex
+            mt="4"
+            wrap="wrap"
+            align="center"
+            gap="3"
+            rounded="l2"
+            bg="bg.muted"
+            p="3"
+          >
+            <Saliency boxSize="10" flexShrink={0} />
+            <Box minW="0" flex="1">
+              <Text truncate fontFamily="mono" fontSize="13px">
                 shelf-sample-0142.jpg
-              </p>
-              <p className="text-[11px] text-muted-foreground">
+              </Text>
+              <Text fontSize="11px" color="fg.muted">
                 Example image · 1.2 MB · 1440 × 1080
-              </p>
-            </div>
+              </Text>
+            </Box>
             <Button
+              variant="solid"
+              size="sm"
               disabled={prediction.isFetching}
               onClick={() =>
                 void prediction.refetch().then((result) => {
@@ -126,31 +177,54 @@ export function PlaygroundTab() {
               <Play />
               Run prediction
             </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </Flex>
+        </Box>
+      </SectionCard>
 
-      <Card size="flush">
-        <CardHeader className="flex-row items-center border-b [--card-section:--spacing(3.5)]">
-          <CardTitle className="mr-auto">Prediction</CardTitle>
-          <Badge variant="neutral">Example result</Badge>
-        </CardHeader>
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between gap-4 rounded-lg bg-success-muted px-4 py-3">
-            <div className="min-w-0">
-              <p className="text-[11px] font-medium tracking-widest text-success uppercase">
+      <SectionCard
+        title="Prediction"
+        action={<ToneBadge tone="neutral">Example result</ToneBadge>}
+      >
+        <Box p="5">
+          <Flex
+            align="center"
+            justify="space-between"
+            gap="4"
+            rounded="l2"
+            bg="bg.success"
+            color="fg.success"
+            px="4"
+            py="3"
+          >
+            <Box minW="0">
+              <Text
+                fontSize="11px"
+                fontWeight="medium"
+                letterSpacing="widest"
+                textTransform="uppercase"
+              >
                 Top prediction
-              </p>
-              <p className="truncate font-mono text-[15px] font-semibold text-success">
+              </Text>
+              <Text
+                truncate
+                fontFamily="mono"
+                fontSize="15px"
+                fontWeight="semibold"
+              >
                 {top?.label}
-              </p>
-            </div>
-            <p className="shrink-0 text-2xl font-semibold tabular-nums text-success">
+              </Text>
+            </Box>
+            <Text
+              flexShrink={0}
+              fontSize="2xl"
+              fontWeight="semibold"
+              fontVariantNumeric="tabular-nums"
+            >
               {top ? `${top.confidence}%` : ''}
-            </p>
-          </div>
+            </Text>
+          </Flex>
 
-          <div className="mt-4">
+          <Box mt="4">
             {predictions.map((entry) => (
               <Bar
                 key={entry.label}
@@ -158,40 +232,42 @@ export function PlaygroundTab() {
                 value={entry.confidence}
               />
             ))}
-          </div>
+          </Box>
 
-          <div className="mt-5 border-t pt-4">
-            <h3>Why this prediction</h3>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+          <Box mt="5" borderTopWidth="1px" borderColor="border" pt="4">
+            <Heading as="h3" fontSize="sm" fontWeight="semibold">
+              Why this prediction
+            </Heading>
+            <Text mt="0.5" fontSize="xs" color="fg.muted">
               The regions and features that moved the model toward this label.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-4">
-              <div className="w-[132px] shrink-0">
+            </Text>
+            <Flex mt="3" wrap="wrap" gap="4">
+              <Box w="132px" flexShrink={0}>
                 <Saliency />
-                <p className="mt-1.5 text-[11px] text-muted-foreground">
+                <Text mt="1.5" fontSize="11px" color="fg.muted">
                   Saliency overlay
-                </p>
-              </div>
-              <div className="min-w-[200px] flex-1">
+                </Text>
+              </Box>
+              <Box minW="200px" flex="1">
                 {contributions.map((entry) => (
                   <Bar
                     key={entry.label}
                     label={entry.label}
                     value={entry.weight}
                     mono={false}
-                    tone="[&_[data-slot=progress-indicator]]:bg-highlight"
+                    palette="lens"
                   />
                 ))}
-              </div>
-            </div>
-          </div>
+              </Box>
+            </Flex>
+          </Box>
 
-          <p className="mt-4 text-xs text-muted-foreground">
+          <Text mt="4" fontSize="xs" color="fg.muted">
             Inference {model.latencyP95} · {model.name} v{model.version} ·
             temporary endpoint, not billed
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+          </Text>
+        </Box>
+      </SectionCard>
+    </Grid>
   )
 }

@@ -1,19 +1,11 @@
-import { Link, useNavigate } from '@tanstack/react-router'
-import { Box, Download, Rocket } from 'lucide-react'
+import { Badge, Box, Button, Link, Text } from '@chakra-ui/react'
+import { Link as RouterLink, useNavigate } from '@tanstack/react-router'
+import { Box as BoxIcon, Download, Rocket } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { EntityHeader } from '@/components/shared/entity-header'
+import { SimpleSelect } from '@/components/simple-select'
 import { useCreateDeployment } from '@/features/deployments/queries'
-import { cn } from 'cn'
 import {
   formatAccuracy,
   formatF1,
@@ -28,15 +20,20 @@ function DeltaLine({ delta, lower }: { delta: Delta; lower?: boolean }) {
   const improved = lower ? delta.tone === 'down' : delta.tone === 'up'
   const regressed = lower ? delta.tone === 'up' : delta.tone === 'down'
   return (
-    <span
-      className={cn(
-        improved && 'text-success',
-        regressed && 'text-destructive',
-        delta.tone === 'flat' && 'text-muted-foreground',
-      )}
+    <Text
+      as="span"
+      color={
+        improved
+          ? 'fg.success'
+          : regressed
+            ? 'fg.error'
+            : delta.tone === 'flat'
+              ? 'fg.muted'
+              : undefined
+      }
     >
       {delta.text}
-    </span>
+    </Text>
   )
 }
 
@@ -53,12 +50,12 @@ export function ModelHeader() {
 
   return (
     <EntityHeader
-      icon={Box}
+      icon={BoxIcon}
       name={model.name}
       mono
       badges={
         <>
-          <Badge variant="secondary" className="font-mono font-medium">
+          <Badge colorPalette="gray" variant="subtle" fontFamily="mono">
             v{model.version}
           </Badge>
           <StageBadge stage={model.stage} />
@@ -67,12 +64,13 @@ export function ModelHeader() {
       meta={
         <>
           {model.architecture} · {model.framework} · from{' '}
-          <Link
-            to="/projects/$projectId/training/$runId"
-            params={{ projectId: model.projectId, runId: model.runId }}
-            className="h-auto border-none p-0 font-medium"
-          >
-            run {model.runId}
+          <Link asChild fontWeight="medium" color="fg">
+            <RouterLink
+              to="/projects/$projectId/training/$runId"
+              params={{ projectId: model.projectId, runId: model.runId }}
+            >
+              run {model.runId}
+            </RouterLink>
           </Link>{' '}
           · {model.size} · created {model.created} by {model.author}
         </>
@@ -80,40 +78,30 @@ export function ModelHeader() {
       actions={
         <>
           {versions.length > 1 ? (
-            <Select
-              value={model.id}
-              onValueChange={(value) =>
-                navigate({
-                  to: '/projects/$projectId/models/$modelId',
-                  params: { projectId: model.projectId, modelId: value },
-                })
-              }
-            >
-              <SelectTrigger
-                size="lg"
-                aria-label="Model version"
-                className="w-[136px] font-mono"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[...versions].reverse().map((item) => (
-                  <SelectItem
-                    key={item.id}
-                    value={item.id}
-                    className="font-mono"
-                  >
-                    v{item.version}
-                    {item.id === latest?.id ? ' (latest)' : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Box fontFamily="mono">
+              <SimpleSelect
+                label="Model version"
+                hideLabel
+                size="sm"
+                width="136px"
+                value={model.id}
+                onChange={(value) =>
+                  navigate({
+                    to: '/projects/$projectId/models/$modelId',
+                    params: { projectId: model.projectId, modelId: value },
+                  })
+                }
+                items={[...versions].reverse().map((item) => ({
+                  label: `v${item.version}${item.id === latest?.id ? ' (latest)' : ''}`,
+                  value: item.id,
+                }))}
+              />
+            </Box>
           ) : null}
           <Button
             variant="outline"
-            size="lg"
-            className="px-3.5 shadow-xs"
+            size="sm"
+            px="3.5"
             onClick={() =>
               toaster.create({
                 type: 'info',
@@ -121,26 +109,27 @@ export function ModelHeader() {
               })
             }
           >
-            <Download className="size-4" />
+            <Download />
             Download
           </Button>
           {deployment ? (
-            <Button asChild size="lg" className="px-3.5 shadow-xs">
-              <Link
+            <Button asChild variant="solid" size="sm" px="3.5">
+              <RouterLink
                 to="/projects/$projectId/deployments/$deploymentId"
                 params={{
                   projectId: deployment.projectId,
                   deploymentId: deployment.id,
                 }}
               >
-                <Rocket className="size-4" />
+                <Rocket />
                 View deployment
-              </Link>
+              </RouterLink>
             </Button>
           ) : (
             <Button
-              size="lg"
-              className="px-3.5 shadow-xs"
+              variant="solid"
+              size="sm"
+              px="3.5"
               disabled={deploy.isPending}
               onClick={() =>
                 deploy.mutate(
@@ -163,7 +152,7 @@ export function ModelHeader() {
                 )
               }
             >
-              <Rocket className="size-4" />
+              <Rocket />
               Deploy
             </Button>
           )}

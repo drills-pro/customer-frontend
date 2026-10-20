@@ -1,8 +1,8 @@
 import * as React from 'react'
+import { Box, Tabs } from '@chakra-ui/react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { RouteBreadcrumbs } from '@/components/breadcrumbs'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { isNotFound } from '@/api/errors'
 import { PageError, PageLoading } from '@/components/shared/query-states'
 import { useProjectDetail } from '@/features/dashboard/context'
@@ -65,41 +65,52 @@ function ModelDetailRoute() {
   if (!found) return <PageLoading />
 
   return (
-    <main
+    <Box
+      as="main"
       id="dashboard-main"
-      className="mx-auto w-full max-w-[1448px] min-w-0 flex-1 p-4 sm:p-6"
+      mx="auto"
+      w="full"
+      maxW="1448px"
+      minW="0"
+      flex="1"
+      p={{ base: '4', sm: '6' }}
     >
       <RouteBreadcrumbs mb="3" />
 
       <ModelHeader />
 
-      <Tabs
+      <Tabs.Root
+        variant="subtle"
+        size="sm"
+        // Only the open tab is in the page, as before.
+        lazyMount
+        unmountOnExit
         value={tab}
-        onValueChange={(value) => setTab(value as ModelTab)}
-        className="min-w-0 gap-0"
+        onValueChange={(event) => setTab(event.value as ModelTab)}
+        minW="0"
       >
-        <TabsList variant="chip" aria-label="Model sections" className="mb-6">
+        <Tabs.List aria-label="Model sections" mb="6" flexWrap="wrap" gap="2">
           {tabs.map((item) => (
-            <TabsTrigger key={item} value={item}>
+            <Tabs.Trigger key={item} value={item}>
               {item.charAt(0).toUpperCase() + item.slice(1)}
-            </TabsTrigger>
+            </Tabs.Trigger>
           ))}
-        </TabsList>
+        </Tabs.List>
 
-        <TabsContent value="overview">
+        <Tabs.Content value="overview" pt="0">
           <OverviewTab />
-        </TabsContent>
-        <TabsContent value="playground">
+        </Tabs.Content>
+        <Tabs.Content value="playground" pt="0">
           <PlaygroundTab />
-        </TabsContent>
-        <TabsContent value="files">
+        </Tabs.Content>
+        <Tabs.Content value="files" pt="0">
           <FilesTab />
-        </TabsContent>
-        <TabsContent value="versions">
+        </Tabs.Content>
+        <Tabs.Content value="versions" pt="0">
           <VersionsTab />
-        </TabsContent>
-      </Tabs>
-    </main>
+        </Tabs.Content>
+      </Tabs.Root>
+    </Box>
   )
 }
 

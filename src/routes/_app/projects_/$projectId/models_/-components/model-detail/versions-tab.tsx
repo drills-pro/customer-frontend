@@ -1,16 +1,8 @@
-import { Link } from '@tanstack/react-router'
+import { Button, Link, Table, Text, VisuallyHidden } from '@chakra-ui/react'
+import { Link as RouterLink } from '@tanstack/react-router'
 import { toaster } from '@/components/toaster'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { SectionCard } from '@/components/shared/section-card'
 import {
   formatAccuracy,
   formatF1,
@@ -23,76 +15,101 @@ export function VersionsTab() {
   const { project, model, versions } = useCurrentModel()
   const setStage = useSetModelStage(project.id)
   return (
-    <Card size="flush">
-      <CardHeader className="flex-row items-center border-b [--card-section:--spacing(3.5)]">
-        <CardTitle className="mr-auto">Versions</CardTitle>
-        <span className="text-xs text-muted-foreground">
+    <SectionCard
+      title="Versions"
+      action={
+        <Text fontSize="xs" color="fg.muted">
           Promoting a version repoints every deployment tracking “latest”.
-        </span>
-      </CardHeader>
-      <CardContent className="overflow-x-auto p-0">
-        <Table className="min-w-[820px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="px-5">Version</TableHead>
-              <TableHead>Source run</TableHead>
-              <TableHead className="text-right">Accuracy</TableHead>
-              <TableHead className="text-right">Macro F1</TableHead>
-              <TableHead className="text-right">Size</TableHead>
-              <TableHead>Stage</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>
-                <span className="sr-only">Actions</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        </Text>
+      }
+    >
+      <Table.ScrollArea>
+        <Table.Root variant="data" minW="820px">
+          <Table.Header>
+            <Table.Row>
+              <Table.ColumnHeader px="5">Version</Table.ColumnHeader>
+              <Table.ColumnHeader>Source run</Table.ColumnHeader>
+              <Table.ColumnHeader textAlign="end">Accuracy</Table.ColumnHeader>
+              <Table.ColumnHeader textAlign="end">Macro F1</Table.ColumnHeader>
+              <Table.ColumnHeader textAlign="end">Size</Table.ColumnHeader>
+              <Table.ColumnHeader>Stage</Table.ColumnHeader>
+              <Table.ColumnHeader>Created</Table.ColumnHeader>
+              <Table.ColumnHeader>
+                <VisuallyHidden>Actions</VisuallyHidden>
+              </Table.ColumnHeader>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
             {[...versions].reverse().map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="px-5">
+              <Table.Row key={item.id}>
+                <Table.Cell px="5">
                   {item.id === model.id ? (
-                    <span className="font-mono font-semibold text-foreground">
-                      v{item.version}
-                      <span className="ml-2 text-[11px] font-medium text-primary">
-                        viewing
-                      </span>
-                    </span>
-                  ) : (
-                    <Link
-                      to="/projects/$projectId/models/$modelId"
-                      params={{ projectId: item.projectId, modelId: item.id }}
-                      className="h-auto border-none p-0 font-mono font-medium text-primary"
+                    <Text
+                      as="span"
+                      fontFamily="mono"
+                      fontWeight="semibold"
+                      color="fg"
                     >
                       v{item.version}
+                      <Text
+                        as="span"
+                        ms="2"
+                        fontSize="11px"
+                        fontWeight="medium"
+                        color="brand-text"
+                      >
+                        viewing
+                      </Text>
+                    </Text>
+                  ) : (
+                    <Link
+                      asChild
+                      fontFamily="mono"
+                      fontWeight="medium"
+                      color="brand-text"
+                    >
+                      <RouterLink
+                        to="/projects/$projectId/models/$modelId"
+                        params={{ projectId: item.projectId, modelId: item.id }}
+                      >
+                        v{item.version}
+                      </RouterLink>
                     </Link>
                   )}
-                </TableCell>
-                <TableCell>
-                  <Link
-                    to="/projects/$projectId/training/$runId"
-                    params={{ projectId: item.projectId, runId: item.runId }}
-                    className="h-auto border-none p-0 font-medium"
-                  >
-                    {item.runId}
+                </Table.Cell>
+                <Table.Cell>
+                  <Link asChild fontWeight="medium" color="fg">
+                    <RouterLink
+                      to="/projects/$projectId/training/$runId"
+                      params={{ projectId: item.projectId, runId: item.runId }}
+                    >
+                      {item.runId}
+                    </RouterLink>
                   </Link>
-                </TableCell>
-                <TableCell className="text-right font-semibold tabular-nums text-foreground">
+                </Table.Cell>
+                <Table.Cell
+                  textAlign="end"
+                  fontWeight="semibold"
+                  fontVariantNumeric="tabular-nums"
+                  color="fg"
+                >
                   {formatAccuracy(item.accuracy)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
+                </Table.Cell>
+                <Table.Cell textAlign="end" fontVariantNumeric="tabular-nums">
                   {formatF1(item.f1)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
+                </Table.Cell>
+                <Table.Cell textAlign="end" fontVariantNumeric="tabular-nums">
                   {item.size}
-                </TableCell>
-                <TableCell>
+                </Table.Cell>
+                <Table.Cell>
                   <StageBadge stage={item.stage} />
-                </TableCell>
-                <TableCell>{item.created}</TableCell>
-                <TableCell className="text-right">
+                </Table.Cell>
+                <Table.Cell>{item.created}</Table.Cell>
+                <Table.Cell textAlign="end">
                   <Button
                     variant="ghost"
-                    size="sm"
+                    colorPalette="gray"
+                    size="xs"
                     disabled={setStage.isPending}
                     onClick={() => {
                       const archiving = item.stage === 'Production'
@@ -113,12 +130,12 @@ export function VersionsTab() {
                   >
                     {item.stage === 'Production' ? 'Archive' : 'Promote'}
                   </Button>
-                </TableCell>
-              </TableRow>
+                </Table.Cell>
+              </Table.Row>
             ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+          </Table.Body>
+        </Table.Root>
+      </Table.ScrollArea>
+    </SectionCard>
   )
 }

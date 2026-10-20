@@ -1,59 +1,56 @@
+import { Button, Code, Flex, Table, VisuallyHidden } from '@chakra-ui/react'
 import { Download, FileText } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { SectionCard } from '@/components/shared/section-card'
 import { useCurrentModel } from './use-current-model'
 
 export function FilesTab() {
   const { model, detail } = useCurrentModel()
   return (
-    <Card size="flush">
-      <CardHeader className="flex-row items-center border-b [--card-section:--spacing(3.5)]">
-        <CardTitle className="mr-auto">Artifacts</CardTitle>
-        <code className="rounded bg-muted px-2 py-1 text-xs">
-          drills://models/{model.id}
-        </code>
-      </CardHeader>
-      <CardContent className="overflow-x-auto p-0">
-        <Table className="min-w-[560px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="px-5">Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead className="text-right">Size</TableHead>
-              <TableHead>Modified</TableHead>
-              <TableHead>
-                <span className="sr-only">Actions</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+    <SectionCard
+      title="Artifacts"
+      action={<Code size="sm">drills://models/{model.id}</Code>}
+    >
+      <Table.ScrollArea>
+        <Table.Root variant="data" minW="560px">
+          <Table.Header>
+            <Table.Row>
+              <Table.ColumnHeader px="5">Name</Table.ColumnHeader>
+              <Table.ColumnHeader>Type</Table.ColumnHeader>
+              <Table.ColumnHeader textAlign="end">Size</Table.ColumnHeader>
+              <Table.ColumnHeader>Modified</Table.ColumnHeader>
+              <Table.ColumnHeader>
+                <VisuallyHidden>Actions</VisuallyHidden>
+              </Table.ColumnHeader>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
             {detail.files.map((file) => (
-              <TableRow key={file.name}>
-                <TableCell className="px-5">
-                  <span className="flex items-center gap-2 font-mono text-[13px] text-foreground">
-                    <FileText className="size-4 text-muted-foreground" />
+              <Table.Row key={file.name}>
+                <Table.Cell px="5">
+                  <Flex
+                    as="span"
+                    align="center"
+                    gap="2"
+                    fontFamily="mono"
+                    fontSize="13px"
+                    color="fg"
+                  >
+                    <FileText size={16} aria-hidden="true" />
                     {file.name}
-                  </span>
-                </TableCell>
-                <TableCell>{file.type}</TableCell>
-                <TableCell className="text-right tabular-nums">
+                  </Flex>
+                </Table.Cell>
+                <Table.Cell>{file.type}</Table.Cell>
+                <Table.Cell textAlign="end" fontVariantNumeric="tabular-nums">
                   {file.size}
-                </TableCell>
-                <TableCell>{model.created}</TableCell>
-                <TableCell className="text-right">
+                </Table.Cell>
+                <Table.Cell>{model.created}</Table.Cell>
+                <Table.Cell textAlign="end">
                   <Button
                     variant="ghost"
-                    size="sm"
+                    colorPalette="gray"
+                    size="xs"
                     onClick={() =>
                       toaster.create({
                         type: 'info',
@@ -64,12 +61,12 @@ export function FilesTab() {
                     <Download />
                     Download
                   </Button>
-                </TableCell>
-              </TableRow>
+                </Table.Cell>
+              </Table.Row>
             ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+          </Table.Body>
+        </Table.Root>
+      </Table.ScrollArea>
+    </SectionCard>
   )
 }

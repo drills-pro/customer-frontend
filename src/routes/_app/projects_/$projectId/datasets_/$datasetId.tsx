@@ -1,9 +1,10 @@
 import * as React from 'react'
-import { Box, Button, Flex, Grid, Tabs, Text } from '@chakra-ui/react'
+import { Box, Button, Grid, Tabs, Text } from '@chakra-ui/react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 
 import { RouteBreadcrumbs } from '@/components/breadcrumbs'
 import { EmptyNotice } from '@/components/shared/empty-notice'
+import { RecordNotFound } from '@/components/shared/record-not-found'
 import { SectionCard } from '@/components/shared/section-card'
 import { isNotFound } from '@/api/errors'
 import { PageError, PageLoading } from '@/components/shared/query-states'
@@ -172,32 +173,15 @@ function DatasetDetailNotFoundRoute() {
 
 function DatasetDetailNotFound({ projectId }: { projectId: string }) {
   return (
-    <Flex
-      as="main"
-      id="dashboard-main"
-      mx="auto"
-      minH="60vh"
-      w="full"
-      maxW="xl"
-      flex="1"
-      align="center"
-      p="6"
+    <RecordNotFound
+      title="Dataset not found"
+      description="This dataset does not exist in the selected project."
     >
-      <EmptyNotice
-        w="full"
-        rounded="l3"
-        borderWidth="1px"
-        borderColor="border"
-        bg="surface-raised"
-        title="Dataset not found"
-        description="This dataset does not exist in the selected project."
-      >
-        <Button asChild variant="solid" size="sm">
-          <Link to="/projects/$projectId/datasets" params={{ projectId }}>
-            Return to datasets
-          </Link>
-        </Button>
-      </EmptyNotice>
-    </Flex>
+      <Button asChild variant="solid" size="sm">
+        <Link to="/projects/$projectId/datasets" params={{ projectId }}>
+          Return to datasets
+        </Link>
+      </Button>
+    </RecordNotFound>
   )
 }

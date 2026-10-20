@@ -1,4 +1,4 @@
-import { Badge, BadgeDot } from '@/components/ui/badge'
+import { ToneBadge } from '@/components/shared/tone-badge'
 import type { ModelStage } from '@/features/dashboard/data'
 
 const tone = {
@@ -11,9 +11,8 @@ export const stageOptions: ModelStage[] = ['Production', 'Staging', 'Archived']
 
 export function StageBadge({ stage }: { stage: ModelStage }) {
   return (
-    <Badge variant={tone[stage]}>
-      <BadgeDot />
+    <ToneBadge tone={tone[stage]} dot>
       {stage}
-    </Badge>
+    </ToneBadge>
   )
 }

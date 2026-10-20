@@ -158,7 +158,7 @@ function OrgOverview() {
                         params={{ projectId: project.id }}
                         className="flex items-center gap-3 px-5 py-3 transition-colors outline-hidden hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                       >
-                        <ProjectMark project={project} className="size-8" />
+                        <ProjectMark project={project} boxSize="8" />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[13px] font-medium">
                             {project.name}

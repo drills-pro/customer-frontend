@@ -1,143 +1,100 @@
-import { Input } from '@/components/ui/input'
-import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
+  Box,
+  Field,
+  Heading,
+  Input,
+  SimpleGrid,
+  Stack,
+  Text,
+  Textarea,
+} from '@chakra-ui/react'
+
+import { SimpleSelect } from '@/components/simple-select'
 import { useDashboardLayout } from '@/features/dashboard/context'
 import type { NewProjectDraft } from './use-new-project-draft'
 
 export function BasicsStep({ draft }: { draft: NewProjectDraft }) {
   const orgName = useDashboardLayout().org.name
   return (
-    <section className="grid gap-5">
-      <div>
-        <h2 className="text-lg font-semibold">Basics</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+    <Stack as="section" gap="5">
+      <Box>
+        <Heading as="h2" fontSize="lg" fontWeight="semibold">
+          Basics
+        </Heading>
+        <Text mt="1" textStyle="body-sm" color="fg.muted">
           Name your project and choose where it lives.
-        </p>
-      </div>
-      <Field className="gap-0">
-        <FieldLabel
-          htmlFor="new-project-name"
-          className="min-h-[1.5em] leading-normal font-normal"
-        >
-          <span className="text-sm font-medium">Project name</span>
-        </FieldLabel>
+        </Text>
+      </Box>
+      <Field.Root invalid={Boolean(draft.nameError)}>
+        <Field.Label>Project name</Field.Label>
         <Input
-          id="new-project-name"
-          className="mt-1.5"
           value={draft.name}
           onChange={(event) => draft.setName(event.target.value)}
           placeholder="e.g. Retail Vision"
-          aria-invalid={Boolean(draft.nameError)}
           aria-describedby={
             draft.nameError ? 'new-project-name-error' : undefined
           }
           autoFocus
         />
         {draft.nameError && (
-          <FieldError id="new-project-name-error" className="mt-1.5 text-xs">
+          <Text
+            id="new-project-name-error"
+            role="alert"
+            fontSize="xs"
+            color="fg.error"
+          >
             {draft.nameError}
-          </FieldError>
+          </Text>
         )}
-      </Field>
-      <Field className="gap-0">
-        <FieldLabel
-          htmlFor="new-project-description"
-          className="min-h-[1.5em] leading-normal font-normal"
-        >
-          <span className="text-sm font-medium">
-            Description{' '}
-            <span className="font-normal text-muted-foreground/80">
-              (optional)
-            </span>
-          </span>
-        </FieldLabel>
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>
+          Description{' '}
+          <Text as="span" fontWeight="normal" color="fg.muted">
+            (optional)
+          </Text>
+        </Field.Label>
         <Textarea
-          id="new-project-description"
-          className="mt-1.5"
           value={draft.description}
           onChange={(event) => draft.setDescription(event.target.value)}
           placeholder="What is this project for?"
           rows={3}
         />
-      </Field>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field className="gap-0">
-          <FieldLabel
-            htmlFor="new-project-organization"
-            className="min-h-[1.5em] leading-normal font-normal"
-          >
-            <span className="text-sm font-medium">Organization</span>
-          </FieldLabel>
-          <Input
-            id="new-project-organization"
-            className="mt-1.5"
-            value={orgName}
-            disabled
-            readOnly
-          />
-        </Field>
-        <Field className="gap-0">
-          <FieldLabel
-            htmlFor="new-project-region"
-            className="min-h-[1.5em] leading-normal font-normal"
-          >
-            <span className="text-sm font-medium">Region</span>
-          </FieldLabel>
-          <Select value={draft.region} onValueChange={draft.setRegion}>
-            <SelectTrigger
-              id="new-project-region"
-              className="mt-1.5 w-full"
-              aria-label="Region"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {draft.regions.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-      </div>
-      <Field className="gap-0">
-        <FieldLabel
-          htmlFor="new-project-visibility"
-          className="min-h-[1.5em] leading-normal font-normal"
-        >
-          <span className="text-sm font-medium">Visibility</span>
-        </FieldLabel>
-        <Select
-          value={draft.visibility}
-          onValueChange={(value) =>
-            draft.setVisibility(value as 'Organization' | 'Private')
-          }
-        >
-          <SelectTrigger
-            id="new-project-visibility"
-            className="mt-1.5 w-full"
-            aria-label="Visibility"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Organization">
-              Organization — visible to everyone in {orgName}
-            </SelectItem>
-            <SelectItem value="Private">
-              Private — visible only to invited collaborators
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
-    </section>
+      </Field.Root>
+      <SimpleGrid columns={{ base: 1, sm: 2 }} gap="4">
+        <Field.Root disabled>
+          <Field.Label>Organization</Field.Label>
+          <Input value={orgName} readOnly />
+        </Field.Root>
+        <SimpleSelect
+          label="Region"
+          width="full"
+          value={draft.region}
+          onChange={draft.setRegion}
+          items={draft.regions.map((item) => ({
+            label: item.label,
+            value: item.id,
+          }))}
+        />
+      </SimpleGrid>
+      <SimpleSelect
+        label="Visibility"
+        width="full"
+        value={draft.visibility}
+        onChange={(value) =>
+          draft.setVisibility(value as 'Organization' | 'Private')
+        }
+        items={[
+          {
+            label: `Organization — visible to everyone in ${orgName}`,
+            value: 'Organization',
+          },
+          {
+            label: 'Private — visible only to invited collaborators',
+            value: 'Private',
+          },
+        ]}
+      />
+    </Stack>
   )
 }

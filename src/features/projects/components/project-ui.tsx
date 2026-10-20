@@ -1,64 +1,86 @@
-import { cn } from 'cn'
+import { Avatar, Box, Center, Flex } from '@chakra-ui/react'
+import type { CenterProps, FlexProps } from '@chakra-ui/react'
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import type { Project, ProjectOverview } from '@/features/dashboard/data'
 
+/** The project's colored tile. Size it with `boxSize`. */
 export function ProjectMark({
   project,
-  className,
-}: {
-  project: Project
-  className?: string
-}) {
+  ...props
+}: { project: Project } & CenterProps) {
   return (
-    <span
-      className={cn(
-        'flex size-9 shrink-0 items-center justify-center rounded-lg text-white',
-        className,
-      )}
-      style={{ backgroundColor: project.color }}
+    <Center
+      boxSize="9"
+      flexShrink={0}
+      rounded="l2"
+      // The project's own color, from the API.
+      bg={project.color}
       aria-hidden="true"
+      {...props}
     >
-      <span className="size-2 rotate-45 rounded-[1px] bg-card" />
-    </span>
+      <Box boxSize="2" rotate="45deg" rounded="1px" bg="surface-raised" />
+    </Center>
   )
 }
+
+type Person = Pick<
+  ProjectOverview['team'][number],
+  'name' | 'initials' | 'color'
+>
+
+// Placeholder collaborators until the API returns a project's team.
+const demoTeam: Person[] = [
+  { name: 'Alex Rivera', initials: 'AR', color: '#8b5cf6' }, // lint-ok
+  { name: 'Priya Nair', initials: 'PN', color: '#d946ef' }, // lint-ok
+  { name: 'Sam Cole', initials: 'SC', color: '#6366f1' }, // lint-ok
+]
 
 export function Collaborators({
   team,
   overflow = 2,
-  className,
+  ...props
 }: {
-  team?: ProjectOverview['team']
+  team?: Person[]
   overflow?: number
-  className?: string
-}) {
-  const people = team ?? [
-    { name: 'Alex Rivera', initials: 'AR', color: '#8b5cf6' },
-    { name: 'Priya Nair', initials: 'PN', color: '#d946ef' },
-    { name: 'Sam Cole', initials: 'SC', color: '#6366f1' },
-  ]
+} & FlexProps) {
+  const people = team ?? demoTeam
 
   return (
-    <div
-      className={cn('flex items-center -space-x-2', className)}
+    <Flex
+      align="center"
+      css={{ '& > * + *': { marginInlineStart: '-2' } }}
       aria-label={`${people.length + overflow} collaborators`}
+      {...props}
     >
       {people.slice(0, 3).map((person) => (
-        <Avatar key={person.name} className="size-7 border-2 border-card">
-          <AvatarFallback
-            className="text-[9px] text-white"
-            style={{ backgroundColor: person.color }}
-          >
-            {person.initials}
-          </AvatarFallback>
-        </Avatar>
+        <Avatar.Root
+          key={person.name}
+          boxSize="7"
+          rounded="full"
+          borderWidth="2px"
+          borderColor="surface-raised"
+          color="white"
+          // The person's own color, from the API.
+          bg={person.color}
+        >
+          <Avatar.Fallback fontSize="9px">{person.initials}</Avatar.Fallback>
+        </Avatar.Root>
       ))}
       {overflow > 0 && (
-        <span className="relative flex size-7 items-center justify-center rounded-full border-2 border-card bg-muted text-[10px] font-medium text-muted-foreground">
+        <Center
+          position="relative"
+          boxSize="7"
+          rounded="full"
+          borderWidth="2px"
+          borderColor="surface-raised"
+          bg="bg.muted"
+          fontSize="10px"
+          fontWeight="medium"
+          color="fg.muted"
+        >
           +{overflow}
-        </span>
+        </Center>
       )}
-    </div>
+    </Flex>
   )
 }

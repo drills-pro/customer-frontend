@@ -1,18 +1,20 @@
+import { Box, Button, Flex, Heading, SimpleGrid, Text } from '@chakra-ui/react'
 import { FolderKanban } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
 import type { NewProjectDraft } from './use-new-project-draft'
 
 export function TaskStep({ draft }: { draft: NewProjectDraft }) {
   return (
     <section>
-      <div>
-        <h2 className="text-lg font-semibold">Task type</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <Box>
+        <Heading as="h2" fontSize="lg" fontWeight="semibold">
+          Task type
+        </Heading>
+        <Text mt="1" textStyle="body-sm" color="fg.muted">
           Choose what this project is trained to do.
-        </p>
-      </div>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        </Text>
+      </Box>
+      <SimpleGrid mt="5" columns={{ base: 1, sm: 2 }} gap="3">
         {draft.taskTypes.map((item) => (
           <Button
             key={item.id}
@@ -20,18 +22,27 @@ export function TaskStep({ draft }: { draft: NewProjectDraft }) {
             variant="option"
             onClick={() => draft.selectTask(item.id)}
             aria-pressed={draft.task === item.id}
-            className="flex-col items-stretch justify-start"
+            flexDirection="column"
+            alignItems="stretch"
+            justifyContent="flex-start"
+            gap="0"
           >
-            <div className="flex items-start justify-between">
-              <FolderKanban className="size-5 text-primary" />
+            <Flex align="flex-start" justify="space-between">
+              <Box color="brand-text">
+                <FolderKanban size={20} />
+              </Box>
               {draft.task === item.id && (
-                <span className="text-primary">●</span>
+                <Text as="span" color="brand-text" aria-hidden="true">
+                  ●
+                </Text>
               )}
-            </div>
-            <p className="mt-2 text-sm font-medium">{item.label}</p>
+            </Flex>
+            <Text mt="2" textStyle="body-sm" fontWeight="medium">
+              {item.label}
+            </Text>
           </Button>
         ))}
-      </div>
+      </SimpleGrid>
     </section>
   )
 }

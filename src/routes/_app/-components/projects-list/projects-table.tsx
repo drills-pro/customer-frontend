@@ -1,21 +1,6 @@
-import { Link } from '@tanstack/react-router'
+import { Box, HStack, Link, Table, Text } from '@chakra-ui/react'
+import { Link as RouterLink } from '@tanstack/react-router'
 
-import { Button } from '@/components/ui/button'
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from '@/components/ui/item'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import type { Project } from '@/features/dashboard/data'
 import { ProjectMark } from '@/features/projects/components/project-ui'
 
@@ -23,60 +8,62 @@ import { ProjectMenu } from './project-menu'
 
 export function ProjectsTable({ projects }: { projects: Array<Project> }) {
   return (
-    <Table className="min-w-[780px] overflow-hidden rounded-xl border border-bordermedium bg-card">
-      <TableHeader>
-        <TableRow>
-          <TableHead>Project</TableHead>
-          <TableHead>Task type</TableHead>
-          <TableHead>Datasets</TableHead>
-          <TableHead>Models</TableHead>
-          <TableHead>Deployed</TableHead>
-          <TableHead>Updated</TableHead>
-          <TableHead className="w-12" />
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {projects.map((project) => (
-          <TableRow key={project.id}>
-            <TableCell>
-              <Item className="flex-nowrap border-0 p-0">
-                <ItemMedia className="group-has-data-[slot=item-description]/item:translate-y-0 group-has-data-[slot=item-description]/item:self-center">
+    <Table.ScrollArea
+      rounded="l3"
+      borderWidth="1px"
+      borderColor="border"
+      bg="surface-raised"
+    >
+      <Table.Root minW="780px" size="sm">
+        <Table.Header>
+          <Table.Row>
+            <Table.ColumnHeader>Project</Table.ColumnHeader>
+            <Table.ColumnHeader>Task type</Table.ColumnHeader>
+            <Table.ColumnHeader>Datasets</Table.ColumnHeader>
+            <Table.ColumnHeader>Models</Table.ColumnHeader>
+            <Table.ColumnHeader>Deployed</Table.ColumnHeader>
+            <Table.ColumnHeader>Updated</Table.ColumnHeader>
+            <Table.ColumnHeader w="12" />
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {projects.map((project) => (
+            <Table.Row key={project.id}>
+              <Table.Cell>
+                <HStack gap="3">
                   <ProjectMark project={project} />
-                </ItemMedia>
-                <ItemContent className="min-w-0">
-                  <ItemTitle>
-                    <Button
+                  <Box minW="0">
+                    <Link
                       asChild
-                      variant="link"
-                      className="font-semibold text-foreground"
+                      color="fg"
+                      fontWeight="semibold"
+                      _hover={{ color: 'brand-text' }}
                     >
-                      <Link
+                      <RouterLink
                         to="/projects/$projectId/overview"
                         params={{ projectId: project.id }}
                       >
                         {project.name}
-                      </Link>
-                    </Button>
-                  </ItemTitle>
-                  <ItemDescription className="max-w-72 truncate text-xs">
-                    {project.description}
-                  </ItemDescription>
-                </ItemContent>
-              </Item>
-            </TableCell>
-            <TableCell>{project.task}</TableCell>
-            <TableCell>{project.datasets}</TableCell>
-            <TableCell>{project.models}</TableCell>
-            <TableCell>{project.deployed}</TableCell>
-            <TableCell className="text-muted-foreground">
-              {project.updated}
-            </TableCell>
-            <TableCell>
-              <ProjectMenu project={project} />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+                      </RouterLink>
+                    </Link>
+                    <Text maxW="72" truncate fontSize="xs" color="fg.muted">
+                      {project.description}
+                    </Text>
+                  </Box>
+                </HStack>
+              </Table.Cell>
+              <Table.Cell>{project.task}</Table.Cell>
+              <Table.Cell>{project.datasets}</Table.Cell>
+              <Table.Cell>{project.models}</Table.Cell>
+              <Table.Cell>{project.deployed}</Table.Cell>
+              <Table.Cell color="fg.muted">{project.updated}</Table.Cell>
+              <Table.Cell>
+                <ProjectMenu project={project} />
+              </Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table.Root>
+    </Table.ScrollArea>
   )
 }

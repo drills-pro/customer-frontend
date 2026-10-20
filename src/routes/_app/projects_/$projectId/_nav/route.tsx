@@ -52,7 +52,7 @@ function ProjectNavLayout() {
 
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <ProjectMark project={project} className="size-10" />
+          <ProjectMark project={project} boxSize="10" />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h1>{project.name}</h1>
@@ -70,7 +70,7 @@ function ProjectNavLayout() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          <Collaborators team={details.team} overflow={0} className="mr-2" />
+          <Collaborators team={details.team} overflow={0} me="2" />
           <Button
             size="lg"
             variant="outline"

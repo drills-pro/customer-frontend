@@ -1,15 +1,17 @@
 import * as React from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import {
+  Box,
+  Button,
+  Flex,
+  Heading,
+  Link,
+  SimpleGrid,
+  Text,
+} from '@chakra-ui/react'
+import { createFileRoute, Link as RouterLink } from '@tanstack/react-router'
 import { Plus, Search } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty'
+import { EmptyNotice } from '@/components/shared/empty-notice'
 import { SectionError, SectionLoading } from '@/components/shared/query-states'
 import { useTaskTypes } from '@/features/catalog/queries'
 import { useDashboardLayout } from '@/features/dashboard/context'
@@ -63,27 +65,43 @@ function ProjectsPage() {
     )
 
   return (
-    <main
+    <Box
+      as="main"
       id="dashboard-main"
-      className="mx-auto w-full max-w-[1448px] flex-1 p-4 sm:p-6"
+      mx="auto"
+      w="full"
+      maxW="1448px"
+      flex="1"
+      p={{ base: '4', sm: '6' }}
     >
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Projects</h1>
-          <p className="mt-1 text-muted-foreground">
+      <Flex mb="6" align="flex-start" justify="space-between" gap="4">
+        <Box>
+          <Heading
+            as="h1"
+            fontSize="2xl"
+            fontWeight="bold"
+            letterSpacing="tight"
+          >
+            Projects
+          </Heading>
+          <Text mt="1" color="fg.muted">
             {projectsQuery.data
               ? `${orgProjects.length} ${orgProjects.length === 1 ? 'project' : 'projects'} in ${org.name}`
               : org.name}
-          </p>
-        </div>
-        <Button asChild size="lg" className="px-3.5">
-          <Link to="/projects/new">
+          </Text>
+        </Box>
+        <Button asChild size="sm" variant="solid" px="3.5">
+          <RouterLink to="/projects/new">
             <Plus />
-            <span className="hidden sm:inline">New Project</span>
-            <span className="sm:hidden">New</span>
-          </Link>
+            <Text as="span" display={{ base: 'none', sm: 'inline' }}>
+              New Project
+            </Text>
+            <Text as="span" display={{ sm: 'none' }}>
+              New
+            </Text>
+          </RouterLink>
         </Button>
-      </div>
+      </Flex>
 
       <ProjectFilters
         filters={filters}
@@ -102,51 +120,77 @@ function ProjectsPage() {
         <SectionLoading />
       ) : visibleProjects.length ? (
         filters.view === 'grid' ? (
-          <section
+          <SimpleGrid
+            as="section"
             aria-label="Projects"
-            className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+            columns={{ base: 1, md: 2, xl: 3 }}
+            gap="4"
           >
             {visibleProjects.map((project) => (
               <ProjectCard key={project.id} project={project} />
             ))}
             <Link
-              to="/projects/new"
-              className="flex min-h-[200px] w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-input text-sm font-medium text-muted-foreground transition-colors hover:border-primary/60 hover:bg-primary-muted/30 hover:text-primary"
+              asChild
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              gap="3"
+              minH="200px"
+              w="full"
+              rounded="l3"
+              borderWidth="1px"
+              borderStyle="dashed"
+              borderColor="border.emphasized"
+              textStyle="body-sm"
+              fontWeight="medium"
+              color="fg.muted"
+              textDecoration="none"
+              _hover={{
+                borderColor: 'brand-text',
+                bg: 'brand.subtle',
+                color: 'brand-text',
+                textDecoration: 'none',
+              }}
             >
-              <Plus className="size-6" />
-              New project
+              <RouterLink to="/projects/new">
+                <Plus size={24} />
+                New project
+              </RouterLink>
             </Link>
-          </section>
+          </SimpleGrid>
         ) : (
           <ProjectsTable projects={visibleProjects} />
         )
       ) : (
-        <Empty className="min-h-80 border bg-card">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Search />
-            </EmptyMedia>
-            <EmptyTitle>
-              {orgProjects.length
-                ? 'No matching projects'
-                : `No projects in ${org.name} yet`}
-            </EmptyTitle>
-            <EmptyDescription>
-              {orgProjects.length
-                ? 'Try a different search or change the selected filters.'
-                : 'Create a project to start training models, or switch organization.'}
-            </EmptyDescription>
-          </EmptyHeader>
+        <EmptyNotice
+          minH="80"
+          rounded="l3"
+          borderWidth="1px"
+          borderColor="border"
+          bg="surface-raised"
+          icon={<Search />}
+          title={
+            orgProjects.length
+              ? 'No matching projects'
+              : `No projects in ${org.name} yet`
+          }
+          description={
+            orgProjects.length
+              ? 'Try a different search or change the selected filters.'
+              : 'Create a project to start training models, or switch organization.'
+          }
+        >
           {orgProjects.length === 0 && (
-            <Button asChild>
-              <Link to="/projects/new">
+            <Button asChild size="sm" variant="solid">
+              <RouterLink to="/projects/new">
                 <Plus />
                 New project
-              </Link>
+              </RouterLink>
             </Button>
           )}
-        </Empty>
+        </EmptyNotice>
       )}
-    </main>
+    </Box>
   )
 }

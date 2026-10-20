@@ -1,20 +1,18 @@
+import { Box, Flex, Input, InputGroup } from '@chakra-ui/react'
 import { Grid2X2, List, Search } from 'lucide-react'
 
 import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from '@/components/ui/input-group'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+  RadioButton,
+  RadioButtonGroup,
+} from '@/components/shared/radio-button-group'
+import { SimpleSelect } from '@/components/simple-select'
 
 import type { ProjectFiltersState, View } from './types'
+
+const views = [
+  { value: 'grid', label: 'Grid view', icon: Grid2X2 },
+  { value: 'list', label: 'List view', icon: List },
+] as const
 
 export function ProjectFilters({
   filters,
@@ -28,15 +26,22 @@ export function ProjectFilters({
   statuses: Array<string>
 }) {
   return (
-    <section
+    <Flex
+      as="section"
       aria-label="Project filters"
-      className="mb-4 flex flex-wrap items-center gap-2"
+      mb="4"
+      wrap="wrap"
+      align="center"
+      gap="2"
     >
-      <InputGroup size="lg" className="min-w-[220px] flex-1 bg-card">
-        <InputGroupAddon>
-          <Search aria-hidden="true" />
-        </InputGroupAddon>
-        <InputGroupInput
+      <InputGroup
+        flex="1"
+        minW="220px"
+        startElement={<Search size={16} aria-hidden="true" />}
+      >
+        <Input
+          size="sm"
+          bg="surface-raised"
           value={filters.query}
           onChange={(event) => onFiltersChange({ query: event.target.value })}
           placeholder="Search projects..."
@@ -44,83 +49,69 @@ export function ProjectFilters({
         />
       </InputGroup>
 
-      <Select
-        value={filters.task}
-        onValueChange={(value) => onFiltersChange({ task: value })}
-      >
-        <SelectTrigger
-          size="lg"
-          className="min-w-40 flex-1 bg-card xl:flex-none"
-          aria-label="Filter by task type"
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent position="popper" align="start">
-          <SelectItem value="all">All task types</SelectItem>
-          {taskTypes.map((item) => (
-            <SelectItem key={item} value={item}>
-              {item}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Box flex={{ base: '1', xl: 'none' }} minW="40">
+        <SimpleSelect
+          label="Filter by task type"
+          hideLabel
+          size="sm"
+          width="full"
+          value={filters.task}
+          onChange={(value) => onFiltersChange({ task: value })}
+          items={[
+            { label: 'All task types', value: 'all' },
+            ...taskTypes.map((item) => ({ label: item, value: item })),
+          ]}
+        />
+      </Box>
 
-      <Select
-        value={filters.status}
-        onValueChange={(value) => onFiltersChange({ status: value })}
-      >
-        <SelectTrigger
-          size="lg"
-          className="min-w-36 flex-1 bg-card xl:flex-none"
-          aria-label="Filter by status"
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent position="popper" align="start">
-          <SelectItem value="all">All statuses</SelectItem>
-          {statuses.map((item) => (
-            <SelectItem key={item} value={item}>
-              {item}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Box flex={{ base: '1', xl: 'none' }} minW="36">
+        <SimpleSelect
+          label="Filter by status"
+          hideLabel
+          size="sm"
+          width="full"
+          value={filters.status}
+          onChange={(value) => onFiltersChange({ status: value })}
+          items={[
+            { label: 'All statuses', value: 'all' },
+            ...statuses.map((item) => ({ label: item, value: item })),
+          ]}
+        />
+      </Box>
 
-      <Select
-        value={filters.sort}
-        onValueChange={(value) => onFiltersChange({ sort: value })}
-      >
-        <SelectTrigger
-          size="lg"
-          className="min-w-44 flex-1 bg-card xl:ml-auto xl:flex-none"
-          aria-label="Sort projects"
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent position="popper" align="start">
-          <SelectItem value="recent">Recently updated</SelectItem>
-          <SelectItem value="name">Name A–Z</SelectItem>
-        </SelectContent>
-      </Select>
+      <Box flex={{ base: '1', xl: 'none' }} minW="44" ms={{ xl: 'auto' }}>
+        <SimpleSelect
+          label="Sort projects"
+          hideLabel
+          size="sm"
+          width="full"
+          value={filters.sort}
+          onChange={(value) => onFiltersChange({ sort: value })}
+          items={[
+            { label: 'Recently updated', value: 'recent' },
+            { label: 'Name A–Z', value: 'name' },
+          ]}
+        />
+      </Box>
 
-      <ToggleGroup
-        type="single"
-        value={filters.view}
-        onValueChange={(value) =>
-          value && onFiltersChange({ view: value as View })
-        }
-        variant="outline"
-        size="lg"
-        spacing={0}
+      <RadioButtonGroup
+        attached
         aria-label="Project view"
+        value={filters.view}
+        onChange={(value) => onFiltersChange({ view: value as View })}
       >
-        <ToggleGroupItem value="grid" aria-label="Grid view">
-          <Grid2X2 />
-        </ToggleGroupItem>
-        <ToggleGroupItem value="list" aria-label="List view">
-          <List />
-        </ToggleGroupItem>
-      </ToggleGroup>
-    </section>
+        {views.map(({ value, label, icon: ViewIcon }) => (
+          <RadioButton
+            key={value}
+            value={value}
+            size="sm"
+            px="2.5"
+            aria-label={label}
+          >
+            <ViewIcon />
+          </RadioButton>
+        ))}
+      </RadioButtonGroup>
+    </Flex>
   )
 }

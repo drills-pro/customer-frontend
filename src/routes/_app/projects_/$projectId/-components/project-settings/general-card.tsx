@@ -138,7 +138,7 @@ export function GeneralCard() {
       <form onSubmit={save} noValidate>
         <CardContent className="grid gap-5 p-5">
           <div className="flex flex-wrap items-center gap-4 rounded-lg bg-muted/50 p-3">
-            <ProjectMark project={project} className="size-11" />
+            <ProjectMark project={project} boxSize="11" />
             <div className="mr-auto min-w-0">
               <p className="truncate font-medium">{values.name || '—'}</p>
               <p className="flex items-center gap-1.5 text-xs text-muted-foreground">

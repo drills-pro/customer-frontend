@@ -1,23 +1,22 @@
+import {
+  Box,
+  Button,
+  Center,
+  Flex,
+  Heading,
+  SimpleGrid,
+  Slider,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
 import { Link } from '@tanstack/react-router'
 import { Database } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import {
-  Slider,
-  SliderBar,
-  SliderDragger,
-  SliderMark,
-} from '@/components/ui/slider'
+import { EmptyNotice } from '@/components/shared/empty-notice'
 import type { Dataset, TrainingSplit } from '@/features/dashboard/data'
 
-const splitColors = ['bg-primary', 'bg-primary/70', 'bg-primary/25']
+/** Train, validation and test: one hue, stepping down in strength. */
+const splitColors = ['brand', 'brand/70', 'brand/25']
 
 export function DatasetStep({
   datasets,
@@ -43,20 +42,31 @@ export function DatasetStep({
     ['Test', split.test],
   ] as const
 
+  const segments = [
+    { start: 0, end: boundaries[0], label: `Train ${split.train}%` },
+    { start: boundaries[0], end: boundaries[1], label: `${split.validation}%` },
+    { start: boundaries[1], end: 100, label: `${split.test}%` },
+  ]
+
   return (
     <section>
-      <div>
-        <h2 className="text-lg font-semibold tracking-tight">
+      <Box>
+        <Heading
+          as="h2"
+          fontSize="lg"
+          fontWeight="semibold"
+          letterSpacing="tight"
+        >
           Choose a dataset
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        </Heading>
+        <Text mt="1" textStyle="body-sm" color="fg.muted">
           Pick the ready dataset this run will train on, then set how it's
           split.
-        </p>
-      </div>
+        </Text>
+      </Box>
       {datasets.length ? (
         <>
-          <div className="mt-6 grid gap-2.5">
+          <Stack mt="6" gap="2.5">
             {datasets.map((item) => (
               <Button
                 key={item.id}
@@ -64,49 +74,81 @@ export function DatasetStep({
                 variant="option"
                 onClick={() => setDatasetId(item.id)}
                 aria-pressed={datasetId === item.id}
-                className="w-full justify-between gap-4 rounded-xl text-left aria-pressed:[&_[data-dataset-icon]]:bg-primary aria-pressed:[&_[data-dataset-icon]]:text-primary-foreground"
+                w="full"
+                justifyContent="space-between"
+                gap="4"
+                rounded="l3"
+                css={{
+                  '&[aria-pressed=true] [data-dataset-icon]': {
+                    bg: 'brand',
+                    color: 'on-brand',
+                  },
+                  '&[aria-pressed=true] [data-chosen]': { opacity: 1 },
+                }}
               >
-                <span className="flex min-w-0 items-center gap-3.5">
-                  <span
+                <Flex minW="0" align="center" gap="3.5">
+                  <Center
                     data-dataset-icon
-                    className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-muted text-primary"
+                    boxSize="9"
+                    flexShrink={0}
+                    rounded="l2"
+                    bg="brand.subtle"
+                    color="brand.fg"
                   >
-                    <Database className="size-4.5" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold">
+                    <Database size={18} />
+                  </Center>
+                  <Box minW="0">
+                    <Text truncate textStyle="body-sm" fontWeight="semibold">
                       {item.name}
-                    </span>
-                    <span className="block text-xs text-muted-foreground">
+                    </Text>
+                    <Text fontSize="xs" color="fg.muted">
                       {item.items.toLocaleString('en-US')} items ·{' '}
                       {item.classes} classes · v{item.version}
-                    </span>
-                  </span>
-                </span>
-                <span
+                    </Text>
+                  </Box>
+                </Flex>
+                <Box
+                  data-chosen
                   aria-hidden="true"
-                  className="size-2 shrink-0 rounded-full bg-primary opacity-0 group-aria-pressed/button:opacity-100"
+                  boxSize="2"
+                  flexShrink={0}
+                  rounded="full"
+                  bg="brand"
+                  opacity={0}
                 />
               </Button>
             ))}
-          </div>
+          </Stack>
 
-          <div className="mt-5 border-t pt-5">
-            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-              <h3 className="text-sm font-semibold">
+          <Box mt="5" borderTopWidth="1px" borderColor="border" pt="5">
+            <Flex
+              mb="3"
+              wrap="wrap"
+              align="baseline"
+              justify="space-between"
+              gap="2"
+            >
+              <Heading as="h3" textStyle="body-sm" fontWeight="semibold">
                 Train / validation / test split
-              </h3>
-              <span className="text-xs text-muted-foreground">
+              </Heading>
+              <Text fontSize="xs" color="fg.muted">
                 Drag the dividers to adjust
-              </span>
-            </div>
-            <Slider
+              </Text>
+            </Flex>
+            <Slider.Root
               min={0}
               max={100}
               step={1}
               minStepsBetweenThumbs={minSplit}
               value={boundaries}
-              onValueChange={([nextTrain, nextValidationEnd]) => {
+              aria-label={['Train split', 'Validation split']}
+              getAriaValueText={({ index }) =>
+                index === 0
+                  ? `Train ${split.train}%`
+                  : `Validation ${split.validation}%, test ${split.test}%`
+              }
+              onValueChange={(event) => {
+                const [nextTrain, nextValidationEnd] = event.value
                 // The bar spans 0–100 so segment widths match their
                 // percentages; every split still keeps at least minSplit.
                 const validationEnd = Math.min(
@@ -124,72 +166,94 @@ export function DatasetStep({
                 })
               }}
             >
-              <SliderBar className="h-8">
-                <SliderMark index={0} className="bg-primary">
-                  <span className="truncate text-xs font-semibold text-primary-foreground">
-                    Train {split.train}%
-                  </span>
-                </SliderMark>
-                <SliderMark index={1} className="bg-primary/70">
-                  <span className="truncate text-xs font-semibold text-primary-foreground">
-                    {split.validation}%
-                  </span>
-                </SliderMark>
-                <SliderMark index={2} className="bg-primary/25">
-                  <span className="truncate text-xs font-semibold text-foreground">
-                    {split.test}%
-                  </span>
-                </SliderMark>
-              </SliderBar>
-              <SliderDragger
-                label="Train split"
-                valueText={`Train ${split.train}%`}
-                className="h-5 w-1 rounded-sm border-0 bg-card"
-              />
-              <SliderDragger
-                label="Validation split"
-                valueText={`Validation ${split.validation}%, test ${split.test}%`}
-                className="h-5 w-1 rounded-sm border-0 bg-card"
-              />
-            </Slider>
-            <div className="mt-3 grid grid-cols-3 gap-2">
+              <Slider.Control>
+                <Slider.Track
+                  h="8"
+                  rounded="l2"
+                  bg="bg.muted"
+                  position="relative"
+                >
+                  {segments.map((segment, index) => (
+                    <Flex
+                      key={index}
+                      position="absolute"
+                      insetY="0"
+                      left={`${segment.start}%`}
+                      w={`${Math.max(0, segment.end - segment.start)}%`}
+                      align="center"
+                      justify="center"
+                      overflow="hidden"
+                      whiteSpace="nowrap"
+                      bg={splitColors[index]}
+                      color={index === 2 ? 'fg' : 'on-brand'}
+                    >
+                      <Text
+                        as="span"
+                        truncate
+                        fontSize="xs"
+                        fontWeight="semibold"
+                      >
+                        {segment.label}
+                      </Text>
+                    </Flex>
+                  ))}
+                </Slider.Track>
+                {boundaries.map((_, index) => (
+                  <Slider.Thumb
+                    key={index}
+                    index={index}
+                    h="5"
+                    w="1"
+                    rounded="sm"
+                    borderWidth="0"
+                    bg="surface-raised"
+                    boxShadow="none"
+                  >
+                    <Slider.HiddenInput />
+                  </Slider.Thumb>
+                ))}
+              </Slider.Control>
+            </Slider.Root>
+            <SimpleGrid mt="3" columns={3} gap="2">
               {splitRows.map(([label, percentage], index) => (
-                <div key={label} className="min-w-0 text-xs">
-                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <span
-                      className={`size-2 shrink-0 rounded-sm ${splitColors[index]}`}
+                <Box key={label} minW="0" fontSize="xs">
+                  <Flex align="center" gap="1.5" color="fg.muted">
+                    <Box
+                      boxSize="2"
+                      flexShrink={0}
+                      rounded="sm"
+                      bg={splitColors[index]}
                     />
                     {label}
-                  </div>
-                  <strong className="mt-0.5 block leading-tight">
+                  </Flex>
+                  <Text as="strong" mt="0.5" display="block" lineHeight="short">
                     {percentage}% ·{' '}
                     {Math.round(
                       (dataset?.items ?? 0) * (percentage / 100),
                     ).toLocaleString('en-US')}{' '}
                     items
-                  </strong>
-                </div>
+                  </Text>
+                </Box>
               ))}
-            </div>
-          </div>
+            </SimpleGrid>
+          </Box>
         </>
       ) : (
-        <Empty className="mt-5 min-h-56 border">
-          <EmptyHeader>
-            <EmptyTitle>Add a ready dataset first</EmptyTitle>
-            <EmptyDescription>
-              Upload data and wait for processing to finish before starting
-              training.
-            </EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <Button asChild>
-              <Link to="/projects/$projectId/datasets" params={{ projectId }}>
-                Go to datasets
-              </Link>
-            </Button>
-          </EmptyContent>
-        </Empty>
+        <EmptyNotice
+          mt="5"
+          minH="56"
+          rounded="l3"
+          borderWidth="1px"
+          borderColor="border"
+          title="Add a ready dataset first"
+          description="Upload data and wait for processing to finish before starting training."
+        >
+          <Button asChild variant="solid" size="sm">
+            <Link to="/projects/$projectId/datasets" params={{ projectId }}>
+              Go to datasets
+            </Link>
+          </Button>
+        </EmptyNotice>
       )}
     </section>
   )

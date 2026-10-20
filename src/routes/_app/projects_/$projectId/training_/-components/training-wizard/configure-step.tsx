@@ -1,13 +1,20 @@
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
+import type * as React from 'react'
 import {
+  Box,
+  Checkbox,
+  Flex,
+  Heading,
+  SimpleGrid,
   Slider,
-  SliderBar,
-  SliderDragger,
-  SliderMark,
-} from '@/components/ui/slider'
-import { Switch } from '@/components/ui/switch'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+  Stack,
+  Text,
+} from '@chakra-ui/react'
+
+import {
+  RadioButton,
+  RadioButtonGroup,
+} from '@/components/shared/radio-button-group'
+import { SwitchButton } from '@/components/shared/switch-button'
 import type { TrainingScheduler } from '@/features/dashboard/data'
 import { formatLearningRate } from '@/features/training/format'
 
@@ -39,169 +46,236 @@ type ConfigureStepProps = {
   setEarlyStopping: (value: boolean) => void
 }
 
+/** A one-thumb slider with a filled range, named for assistive tech. */
+function ValueSlider({
+  label,
+  valueText,
+  value,
+  onChange,
+  min,
+  max,
+  step,
+}: {
+  label: string
+  valueText?: string
+  value: number
+  onChange: (value: number) => void
+  min: number
+  max: number
+  step: number
+}) {
+  return (
+    <Slider.Root
+      mt="3"
+      size="sm"
+      min={min}
+      max={max}
+      step={step}
+      value={[value]}
+      aria-label={[label]}
+      getAriaValueText={valueText ? () => valueText : undefined}
+      onValueChange={(event) => onChange(event.value[0])}
+    >
+      <Slider.Control>
+        <Slider.Track>
+          <Slider.Range />
+        </Slider.Track>
+        <Slider.Thumbs />
+      </Slider.Control>
+    </Slider.Root>
+  )
+}
+
+/** A setting's name with its current value on the right. */
+function SettingHeader({
+  label,
+  value,
+}: {
+  label: string
+  value: React.ReactNode
+}) {
+  return (
+    <Flex align="baseline" justify="space-between" gap="3">
+      <Text textStyle="body-sm" fontWeight="semibold">
+        {label}
+      </Text>
+      <Text
+        as="span"
+        textStyle="body-sm"
+        fontWeight="semibold"
+        color="brand-text"
+      >
+        {value}
+      </Text>
+    </Flex>
+  )
+}
+
 export function ConfigureStep(props: ConfigureStepProps) {
   const learningRateExponent = Math.log10(props.learningRate) + 5
 
   return (
     <section>
-      <div>
-        <h2 className="text-lg font-semibold tracking-tight">
+      <Box>
+        <Heading
+          as="h2"
+          fontSize="lg"
+          fontWeight="semibold"
+          letterSpacing="tight"
+        >
           Configure training
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        </Heading>
+        <Text mt="1" textStyle="body-sm" color="fg.muted">
           Tune the run's hyperparameters and augmentation.
-        </p>
-      </div>
-      <div className="mt-8 grid gap-6">
-        <div>
-          <div className="flex items-baseline justify-between gap-3">
-            <Label className="font-semibold">Epochs</Label>
-            <span className="text-sm font-semibold text-primary">
-              {props.epochs}
-            </span>
-          </div>
-          <Slider
-            className="mt-3"
+        </Text>
+      </Box>
+      <Stack mt="8" gap="6">
+        <Box>
+          <SettingHeader label="Epochs" value={props.epochs} />
+          <ValueSlider
+            label="Epochs"
             min={1}
             max={100}
             step={1}
-            value={[props.epochs]}
-            onValueChange={([value]) => props.setEpochs(value)}
-          >
-            <SliderBar>
-              <SliderMark />
-            </SliderBar>
-            <SliderDragger label="Epochs" />
-          </Slider>
-          <p className="mt-2 text-xs text-muted-foreground">
+            value={props.epochs}
+            onChange={props.setEpochs}
+          />
+          <Text mt="2" fontSize="xs" color="fg.muted">
             More epochs may improve accuracy but increase cost.
-          </p>
-        </div>
+          </Text>
+        </Box>
 
-        <div>
-          <div className="flex items-baseline justify-between gap-3">
-            <Label className="font-semibold">Learning rate</Label>
-            <span className="text-sm font-semibold text-primary">
-              {formatLearningRate(props.learningRate)}
-            </span>
-          </div>
-          <Slider
-            className="mt-3"
+        <Box>
+          <SettingHeader
+            label="Learning rate"
+            value={formatLearningRate(props.learningRate)}
+          />
+          <ValueSlider
+            label="Learning rate"
+            valueText={formatLearningRate(props.learningRate)}
             min={0}
             max={4}
             step={0.01}
-            value={[learningRateExponent]}
-            onValueChange={([value]) =>
+            value={learningRateExponent}
+            onChange={(value) =>
               props.setLearningRate(Math.pow(10, -5 + value))
             }
-          >
-            <SliderBar>
-              <SliderMark />
-            </SliderBar>
-            <SliderDragger
-              label="Learning rate"
-              valueText={formatLearningRate(props.learningRate)}
-            />
-          </Slider>
-          <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
+          />
+          <Flex mt="2" justify="space-between" fontSize="11px" color="fg.muted">
             {learningRateTicks.map((tick) => (
               <span key={tick}>{tick}</span>
             ))}
-          </div>
-          <ToggleGroup
-            type="single"
-            value={props.scheduler}
-            onValueChange={(value) => {
-              if (value) props.setScheduler(value as TrainingScheduler)
-            }}
-            variant="outline"
-            size="sm"
-            spacing={0}
+          </Flex>
+          <RadioButtonGroup
+            attached
+            mt="2"
             aria-label="Learning rate schedule"
-            className="mt-2"
+            value={props.scheduler}
+            onChange={(value) => props.setScheduler(value as TrainingScheduler)}
           >
             {(['cosine', 'linear', 'constant'] as const).map((value) => (
-              <ToggleGroupItem
+              <RadioButton
                 key={value}
                 value={value}
+                size="xs"
                 aria-label={`${value} schedule`}
-                className="capitalize data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                textTransform="capitalize"
+                _checked={{
+                  bg: 'brand',
+                  color: 'on-brand',
+                  borderColor: 'outline',
+                }}
               >
                 {value}
-              </ToggleGroupItem>
+              </RadioButton>
             ))}
-          </ToggleGroup>
-        </div>
+          </RadioButtonGroup>
+        </Box>
 
-        <div>
-          <div className="flex items-baseline justify-between gap-3">
-            <Label className="font-semibold">Batch size</Label>
-            <span className="text-sm font-semibold text-primary">
-              {props.batchSize}
-            </span>
-          </div>
-          <Slider
-            className="mt-3"
+        <Box>
+          <SettingHeader label="Batch size" value={props.batchSize} />
+          <ValueSlider
+            label="Batch size"
+            valueText={String(props.batchSize)}
             min={batchSizeMin}
             max={batchSizeMax}
             step={1}
-            value={[props.batchSize]}
-            onValueChange={([value]) => props.setBatchSize(value)}
+            value={props.batchSize}
+            onChange={props.setBatchSize}
+          />
+          <Box
+            position="relative"
+            mt="2"
+            h="4"
+            fontSize="11px"
+            color="fg.muted"
           >
-            <SliderBar>
-              <SliderMark />
-            </SliderBar>
-            <SliderDragger
-              label="Batch size"
-              valueText={String(props.batchSize)}
-            />
-          </Slider>
-          <div className="relative mt-2 h-4 text-[11px] text-muted-foreground">
             {batchSizeTicks.map((value) => {
               const percent =
                 ((value - batchSizeMin) / (batchSizeMax - batchSizeMin)) * 100
-              const translate =
-                value === batchSizeMax
-                  ? '-translate-x-full'
-                  : '-translate-x-1/2'
               return (
-                <span
+                <Text
+                  as="span"
                   key={value}
-                  className={`absolute ${translate}`}
-                  style={{ left: `${percent}%` }}
+                  position="absolute"
+                  left={`${percent}%`}
+                  transform={
+                    value === batchSizeMax
+                      ? 'translateX(-100%)'
+                      : 'translateX(-50%)'
+                  }
                 >
                   {value}
-                </span>
+                </Text>
               )
             })}
-          </div>
-        </div>
+          </Box>
+        </Box>
 
-        <Label className="font-semibold">Data augmentation</Label>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          {augmentations.map((item) => (
-            <Label
-              key={item}
-              className="flex items-center justify-between rounded-lg border p-2.5 leading-normal font-normal"
-            >
-              <span className="text-sm">{item}</span>
-              <Switch
-                checked={props.selectedAugmentations.includes(item)}
-                onCheckedChange={() => props.toggleAugmentation(item)}
-                aria-label={item}
-              />
-            </Label>
-          ))}
-        </div>
+        <Box>
+          <Text textStyle="body-sm" fontWeight="semibold">
+            Data augmentation
+          </Text>
+          <SimpleGrid mt="2" columns={{ base: 1, sm: 2 }} gap="2">
+            {augmentations.map((item) => (
+              <Flex
+                as="label"
+                key={item}
+                align="center"
+                justify="space-between"
+                rounded="l2"
+                borderWidth="1px"
+                borderColor="border"
+                p="2.5"
+                cursor="pointer"
+              >
+                <Text as="span" textStyle="body-sm">
+                  {item}
+                </Text>
+                <SwitchButton
+                  size="sm"
+                  checked={props.selectedAugmentations.includes(item)}
+                  onCheckedChange={() => props.toggleAugmentation(item)}
+                  aria-label={item}
+                />
+              </Flex>
+            ))}
+          </SimpleGrid>
+        </Box>
 
-        <Label className="flex items-center gap-2.5 text-sm leading-normal font-normal">
-          <Checkbox
-            checked={props.earlyStopping}
-            onCheckedChange={(value) => props.setEarlyStopping(value === true)}
-          />
-          Enable early stopping (patience 5)
-        </Label>
-      </div>
+        <Checkbox.Root
+          checked={props.earlyStopping}
+          onCheckedChange={(event) =>
+            props.setEarlyStopping(event.checked === true)
+          }
+        >
+          <Checkbox.HiddenInput />
+          <Checkbox.Control />
+          <Checkbox.Label textStyle="body-sm" fontWeight="normal">
+            Enable early stopping (patience 5)
+          </Checkbox.Label>
+        </Checkbox.Root>
+      </Stack>
     </section>
   )
 }

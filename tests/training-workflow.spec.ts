@@ -37,7 +37,7 @@ test('walks through the redesigned wizard and updates its summary', async ({
   await page.getByRole('button', { name: /Continue/ }).click()
   await page.getByRole('button', { name: /ResNet-50/ }).click()
   await expect(
-    page.locator('[data-slot=item-title]').filter({ hasText: 'ResNet-50' }),
+    page.getByRole('heading', { name: 'ResNet-50', level: 3 }),
   ).toBeVisible()
 
   await page.getByRole('button', { name: /Continue/ }).click()
@@ -54,7 +54,7 @@ test('walks through the redesigned wizard and updates its summary', async ({
   await page.getByRole('button', { name: /1× A100/ }).click()
   const spotSwitch = page.getByRole('switch', { name: 'Use spot instance' })
   const uncheckedStyles = await spotSwitch.evaluate((element) => {
-    const thumb = element.querySelector('[data-slot=switch-thumb]')!
+    const thumb = element.querySelector('[data-part=thumb]')!
     return {
       background: getComputedStyle(element).backgroundColor,
       translate: getComputedStyle(thumb).translate,
@@ -73,7 +73,7 @@ test('walks through the redesigned wizard and updates its summary', async ({
     .poll(() =>
       spotSwitch.evaluate(
         (element) =>
-          getComputedStyle(element.querySelector('[data-slot=switch-thumb]')!)
+          getComputedStyle(element.querySelector('[data-part=thumb]')!)
             .translate,
       ),
     )
@@ -91,7 +91,7 @@ test('walks through the redesigned wizard and updates its summary', async ({
     .poll(() =>
       spotSwitch.evaluate(
         (element) =>
-          getComputedStyle(element.querySelector('[data-slot=switch-thumb]')!)
+          getComputedStyle(element.querySelector('[data-part=thumb]')!)
             .translate,
       ),
     )
@@ -155,7 +155,7 @@ test('filters logs, stops a run, and clones its complete configuration', async (
   await page.getByRole('button', { name: /Start training/ }).click()
 
   await page.getByRole('tab', { name: 'Logs' }).click()
-  await page.getByLabel('Log level').click()
+  await page.getByRole('combobox', { name: 'Log level' }).click()
   await page.getByRole('option', { name: 'WARN' }).click()
   await expect(page.getByText('No logs at this level.')).toBeVisible()
 

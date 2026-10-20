@@ -1,17 +1,8 @@
-import * as React from 'react'
+import type * as React from 'react'
+import { Box, Button, Card, Checkbox, Flex } from '@chakra-ui/react'
 import { Download } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { SimpleSelect } from '@/components/simple-select'
 import { useTrainingLogs } from '@/features/training/queries'
 
 import { downloadText } from './helpers'
@@ -38,42 +29,78 @@ export function LogsCard({
     .filter((line) => level === 'all' || line.startsWith(level))
   const content = lines.join('\n') || 'No logs at this level.'
   return (
-    <Card size="flush">
-      <CardHeader className="flex-row flex-wrap items-center border-b [--card-section:--spacing(3)]">
-        <CardTitle className="mr-auto">Logs</CardTitle>
-        <Label className="flex items-center gap-2 text-xs leading-normal font-normal text-muted-foreground">
-          <Checkbox
-            checked={autoscroll}
-            onCheckedChange={(value) => setAutoscroll(value === true)}
-          />
-          Autoscroll
-        </Label>
-        <Select value={level} onValueChange={setLevel}>
-          <SelectTrigger aria-label="Log level" className="h-8 w-28">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All levels</SelectItem>
-            <SelectItem value="INFO">INFO</SelectItem>
-            <SelectItem value="WARN">WARN</SelectItem>
-            <SelectItem value="ERROR">ERROR</SelectItem>
-          </SelectContent>
-        </Select>
+    <Card.Root
+      as="section"
+      aria-labelledby="training-logs-title"
+      variant="outline"
+      overflow="hidden"
+    >
+      <Flex
+        wrap="wrap"
+        align="center"
+        gap="3"
+        px="5"
+        py="3"
+        borderBottomWidth="1px"
+        borderColor="border"
+      >
+        <Card.Title
+          as="h2"
+          id="training-logs-title"
+          me="auto"
+          textStyle="body"
+          fontWeight="semibold"
+        >
+          Logs
+        </Card.Title>
+        <Checkbox.Root
+          size="sm"
+          checked={autoscroll}
+          onCheckedChange={(event) => setAutoscroll(event.checked === true)}
+        >
+          <Checkbox.HiddenInput />
+          <Checkbox.Control />
+          <Checkbox.Label fontSize="xs" fontWeight="normal" color="fg.muted">
+            Autoscroll
+          </Checkbox.Label>
+        </Checkbox.Root>
+        <SimpleSelect
+          label="Log level"
+          hideLabel
+          size="sm"
+          width="28"
+          value={level}
+          onChange={setLevel}
+          items={[
+            { label: 'All levels', value: 'all' },
+            { label: 'INFO', value: 'INFO' },
+            { label: 'WARN', value: 'WARN' },
+            { label: 'ERROR', value: 'ERROR' },
+          ]}
+        />
         <Button
           variant="outline"
-          size="sm"
+          size="xs"
           onClick={() => downloadText(`${run.name}.log`, content)}
         >
           <Download />
           Download
         </Button>
-      </CardHeader>
-      <pre
+      </Flex>
+      <Box
+        as="pre"
         ref={logRef}
-        className="max-h-72 overflow-auto bg-terminal p-4 font-mono text-xs leading-relaxed text-terminal-foreground"
+        maxH="72"
+        overflow="auto"
+        bg="night"
+        color="on-night"
+        p="4"
+        fontFamily="mono"
+        fontSize="xs"
+        lineHeight="relaxed"
       >
         {content}
-      </pre>
-    </Card>
+      </Box>
+    </Card.Root>
   )
 }

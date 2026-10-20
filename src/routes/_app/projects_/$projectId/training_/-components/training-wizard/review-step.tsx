@@ -1,4 +1,6 @@
-import { Button } from '@/components/ui/button'
+import { Box, Flex, Heading, Stack, Text } from '@chakra-ui/react'
+
+import { SectionAction } from '@/components/shared/section-card'
 import type {
   TrainingScheduler,
   TrainingSplit,
@@ -15,22 +17,38 @@ export function ReviewBlock({
   onEdit: () => void
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border p-4">
-      <div className="min-w-0">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+    <Flex
+      align="center"
+      justify="space-between"
+      gap="4"
+      rounded="l3"
+      borderWidth="1px"
+      borderColor="border"
+      p="4"
+    >
+      <Box minW="0">
+        <Text
+          fontSize="11px"
+          fontWeight="medium"
+          textTransform="uppercase"
+          letterSpacing="wide"
+          color="fg.muted"
+        >
           {label}
-        </p>
-        <p className="mt-1 truncate text-sm font-semibold">{value}</p>
-      </div>
-      <Button
-        variant="link"
-        className="shrink-0 text-xs"
+        </Text>
+        <Text mt="1" truncate textStyle="body-sm" fontWeight="semibold">
+          {value}
+        </Text>
+      </Box>
+      <SectionAction
+        flexShrink={0}
+        fontSize="xs"
         onClick={onEdit}
         aria-label={`Edit ${label.toLowerCase()}`}
       >
         Edit
-      </Button>
-    </div>
+      </SectionAction>
+    </Flex>
   )
 }
 
@@ -61,15 +79,20 @@ export function ReviewStep({
 }) {
   return (
     <section>
-      <div>
-        <h2 className="text-lg font-semibold tracking-tight">
+      <Box>
+        <Heading
+          as="h2"
+          fontSize="lg"
+          fontWeight="semibold"
+          letterSpacing="tight"
+        >
           Review and start
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        </Heading>
+        <Text mt="1" textStyle="body-sm" color="fg.muted">
           Double-check your configuration before starting the run.
-        </p>
-      </div>
-      <div className="mt-6 grid gap-2.5">
+        </Text>
+      </Box>
+      <Stack mt="6" gap="2.5">
         <ReviewBlock
           label="Dataset"
           value={datasetName}
@@ -95,11 +118,18 @@ export function ReviewStep({
           value={`${computeName}${spot ? ' · spot' : ''}`}
           onEdit={() => onEditStep(3)}
         />
-      </div>
-      <div className="mt-5 rounded-lg bg-warning-muted p-3 text-xs text-warning">
+      </Stack>
+      <Box
+        mt="5"
+        rounded="l2"
+        bg="bg.warning"
+        p="3"
+        fontSize="xs"
+        color="fg.warning"
+      >
         Starting this run will immediately begin billing against your workspace
         credits.
-      </div>
+      </Box>
     </section>
   )
 }

@@ -1,11 +1,22 @@
 import * as React from 'react'
+import {
+  Box,
+  Button,
+  Card,
+  Center,
+  Flex,
+  Grid,
+  Heading,
+  Icon,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
 import { RouteBreadcrumbs } from '@/components/breadcrumbs'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { SectionCard } from '@/components/shared/section-card'
 import { isNotFound } from '@/api/errors'
 import { PageError, PageLoading } from '@/components/shared/query-states'
 import type { ApiArchitecture, ApiComputeOption } from '@/features/catalog/api'
@@ -213,52 +224,96 @@ function TrainingWizardForm({
   }
 
   return (
-    <main
+    <Box
+      as="main"
       id="dashboard-main"
-      className="mx-auto w-full max-w-[1180px] min-w-0 flex-1 p-4 sm:p-6 xl:py-10"
+      mx="auto"
+      w="full"
+      maxW="1180px"
+      minW="0"
+      flex="1"
+      p={{ base: '4', sm: '6' }}
+      py={{ xl: '10' }}
     >
       <RouteBreadcrumbs mb="4" />
 
-      <div className="mb-7">
-        <h1 className="text-2xl font-semibold tracking-tight">
+      <Box mb="7">
+        <Heading
+          as="h1"
+          fontSize="2xl"
+          fontWeight="semibold"
+          letterSpacing="tight"
+        >
           Create training
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        </Heading>
+        <Text mt="1" textStyle="body-sm" color="fg.muted">
           Configure a new model training run for {project.name}.
-        </p>
-      </div>
+        </Text>
+      </Box>
 
-      <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[220px_minmax(0,1fr)_300px]">
-        <nav aria-label="Training steps" className="grid gap-0.5">
+      <Grid
+        minW="0"
+        alignItems="start"
+        gap="5"
+        templateColumns={{ xl: '220px minmax(0, 1fr) 300px' }}
+      >
+        <Stack as="nav" aria-label="Training steps" gap="0.5">
           {steps.map((label, index) => (
             <Button
               key={label}
               type="button"
               variant="ghost"
+              colorPalette="gray"
               disabled={index > step}
               onClick={() => setStep(index)}
               aria-label={label}
               aria-current={step === index ? 'step' : undefined}
-              className="h-auto w-full justify-start gap-2.5 rounded-lg px-3 py-2.5 text-left font-normal text-muted-foreground disabled:opacity-100 aria-[current=step]:bg-primary-muted aria-[current=step]:font-semibold aria-[current=step]:text-primary"
+              h="auto"
+              w="full"
+              justifyContent="flex-start"
+              gap="2.5"
+              rounded="l2"
+              px="3"
+              py="2.5"
+              textAlign="start"
+              fontWeight="normal"
+              color="fg.muted"
+              _disabled={{ opacity: 1, cursor: 'not-allowed' }}
+              css={{
+                '&[aria-current=step]': {
+                  bg: 'brand.subtle',
+                  fontWeight: 'semibold',
+                  color: 'brand.fg',
+                },
+              }}
             >
-              <span
-                className={`flex size-5.5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
-                  index < step
-                    ? 'bg-success text-background'
-                    : index === step
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground'
-                }`}
+              <Center
+                boxSize="22px"
+                flexShrink={0}
+                rounded="full"
+                fontSize="11px"
+                fontWeight="semibold"
+                colorPalette={
+                  index < step ? 'success' : index === step ? 'brand' : 'gray'
+                }
+                bg={index > step ? 'bg.muted' : 'colorPalette.solid'}
+                color={index > step ? 'fg.muted' : 'colorPalette.contrast'}
               >
-                {index < step ? <Check className="size-3" /> : index + 1}
-              </span>
+                {index < step ? (
+                  <Icon boxSize="3" asChild>
+                    <Check />
+                  </Icon>
+                ) : (
+                  index + 1
+                )}
+              </Center>
               {label}
             </Button>
           ))}
-        </nav>
+        </Stack>
 
-        <Card size="flush" className="min-w-0">
-          <CardContent className="p-6">
+        <Card.Root variant="outline" minW="0">
+          <Card.Body p="6">
             {step === 0 && (
               <DatasetStep
                 datasets={datasets}
@@ -317,72 +372,100 @@ function TrainingWizardForm({
               />
             )}
 
-            <div className="mt-8 flex justify-between border-t pt-5">
+            <Flex
+              mt="8"
+              justify="space-between"
+              borderTopWidth="1px"
+              borderColor="border"
+              pt="5"
+            >
               {step === 0 ? (
                 <span />
               ) : (
-                <Button variant="outline" onClick={() => setStep(step - 1)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setStep(step - 1)}
+                >
                   <ChevronLeft />
                   Back
                 </Button>
               )}
               {step < steps.length - 1 ? (
-                <Button disabled={!dataset} onClick={() => setStep(step + 1)}>
+                <Button
+                  variant="solid"
+                  size="sm"
+                  disabled={!dataset}
+                  onClick={() => setStep(step + 1)}
+                >
                   Continue
                   <ChevronRight />
                 </Button>
               ) : (
-                <Button disabled={!dataset || starting} onClick={startTraining}>
+                <Button
+                  variant="solid"
+                  size="sm"
+                  disabled={!dataset || starting}
+                  onClick={startTraining}
+                >
                   {starting ? 'Starting run…' : 'Start training'}
                   <ChevronRight />
                 </Button>
               )}
-            </div>
-          </CardContent>
-        </Card>
+            </Flex>
+          </Card.Body>
+        </Card.Root>
 
-        <aside className="grid min-w-0 gap-4">
-          <Card size="lg">
-            <CardHeader>
-              <CardTitle>Run summary</CardTitle>
-            </CardHeader>
-            <CardContent>
+        <Grid as="aside" minW="0" gap="4">
+          <SectionCard title="Run summary" divided={false}>
+            <Box px="5" pb="5">
               {summaryRows.map(([label, value]) => (
-                <div
+                <Flex
                   key={label}
-                  className="flex justify-between gap-3 py-1.5 text-sm"
+                  justify="space-between"
+                  gap="3"
+                  py="1.5"
+                  textStyle="body-sm"
                 >
-                  <span className="text-muted-foreground">{label}</span>
-                  <span className="text-right font-medium">{value}</span>
-                </div>
+                  <Text as="span" color="fg.muted">
+                    {label}
+                  </Text>
+                  <Text as="span" textAlign="end" fontWeight="medium">
+                    {value}
+                  </Text>
+                </Flex>
               ))}
-            </CardContent>
-          </Card>
-          <Card size="lg">
-            <CardHeader>
-              <CardTitle>Estimate</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap items-baseline gap-2">
-                <strong className="text-3xl font-semibold">
+            </Box>
+          </SectionCard>
+          <SectionCard title="Estimate" divided={false}>
+            <Box px="5" pb="5">
+              <Flex wrap="wrap" align="baseline" gap="2">
+                <Text as="strong" fontSize="3xl" fontWeight="semibold">
                   ${estimate.cost.toFixed(2)}
-                </strong>
-                <span className="text-sm text-muted-foreground">
+                </Text>
+                <Text as="span" textStyle="body-sm" color="fg.muted">
                   ≈ {formatDuration(estimate.hours)}
-                </span>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
+                </Text>
+              </Flex>
+              <Text mt="1" fontSize="xs" color="fg.muted">
                 Billed per second. You are charged only for actual runtime.
                 {spot ? ' Spot pricing applied.' : ''}
-              </p>
-              <div className="mt-3 rounded-lg bg-success-muted p-3 text-xs text-success">
+              </Text>
+              <Box
+                mt="3"
+                rounded="l2"
+                bg="bg.success"
+                p="3"
+                fontSize="xs"
+                color="fg.success"
+              >
                 Expected metric {architecture.expected_accuracy} based on
                 similar runs.
-              </div>
-            </CardContent>
-          </Card>
-        </aside>
-      </div>
-    </main>
+              </Box>
+            </Box>
+          </SectionCard>
+        </Grid>
+      </Grid>
+    </Box>
   )
 }

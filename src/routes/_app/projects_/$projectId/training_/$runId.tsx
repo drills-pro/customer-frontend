@@ -1,32 +1,25 @@
 import * as React from 'react'
+import {
+  Box,
+  Button,
+  Card,
+  Center,
+  Flex,
+  Heading,
+  HStack,
+  Progress,
+  SimpleGrid,
+  Tabs,
+  Text,
+} from '@chakra-ui/react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Square, TriangleAlert } from 'lucide-react'
 import { toaster } from '@/components/toaster'
 
 import { TrainingStatusBadge } from '@/features/training/components/training-status-badge'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogMedia,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
 import { RouteBreadcrumbs } from '@/components/breadcrumbs'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import { Progress } from '@/components/ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AppDialog } from '@/components/shared/app-dialog'
+import { EmptyNotice } from '@/components/shared/empty-notice'
 import { isNotFound } from '@/api/errors'
 import { PageError, PageLoading } from '@/components/shared/query-states'
 import { useProjectDetail } from '@/features/dashboard/context'
@@ -71,6 +64,7 @@ function TrainingRunRoute() {
   const [tab, setTab] = React.useState('metrics')
   const [level, setLevel] = React.useState('all')
   const [autoscroll, setAutoscroll] = React.useState(true)
+  const [stopOpen, setStopOpen] = React.useState(false)
   const logRef = React.useRef<HTMLPreElement>(null)
 
   // Refreshes itself while the run is running, so the numbers keep moving.
@@ -107,7 +101,8 @@ function TrainingRunRoute() {
     ['GPU memory', run.status === 'Running' ? run.gpuMemory : '0 GB'],
   ]
 
-  const stopRun = () =>
+  const stopRun = () => {
+    setStopOpen(false)
     cancel.mutate(undefined, {
       onSuccess: () =>
         toaster.create({
@@ -115,29 +110,47 @@ function TrainingRunRoute() {
           title: `Training ${run.name} stopped.`,
         }),
     })
+  }
 
   return (
-    <main
+    <Box
+      as="main"
       id="dashboard-main"
-      className="mx-auto w-full max-w-[1448px] min-w-0 flex-1 p-4 sm:p-6"
+      mx="auto"
+      w="full"
+      maxW="1448px"
+      minW="0"
+      flex="1"
+      p={{ base: '4', sm: '6' }}
     >
       <RouteBreadcrumbs mb="3" />
 
-      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">
+      <Flex
+        mb="5"
+        wrap="wrap"
+        align="flex-start"
+        justify="space-between"
+        gap="3"
+      >
+        <Box>
+          <HStack wrap="wrap" gap="2">
+            <Heading
+              as="h1"
+              fontSize="2xl"
+              fontWeight="semibold"
+              letterSpacing="tight"
+            >
               {run.name}
-            </h1>
+            </Heading>
             <TrainingStatusBadge status={run.status} />
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
+          </HStack>
+          <Text mt="1" textStyle="body-sm" color="fg.muted">
             Run {run.id} · started by {run.author} · estimated{' '}
             {formatDuration(run.estimatedHours)}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
+          </Text>
+        </Box>
+        <HStack gap="2">
+          <Button variant="outline" size="sm" asChild>
             <Link
               to="/projects/$projectId/training/new"
               params={{ projectId: project.id }}
@@ -147,67 +160,100 @@ function TrainingRunRoute() {
             </Link>
           </Button>
           {run.status === 'Running' && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive">
-                  <Square />
-                  Stop run
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogMedia className="bg-destructive-muted text-destructive">
-                    <TriangleAlert />
-                  </AlertDialogMedia>
-                  <AlertDialogTitle>Stop this training run?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Progress will be saved, but this run will not produce model
-                    artifacts.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Keep running</AlertDialogCancel>
-                  <AlertDialogAction variant="destructive" onClick={stopRun}>
-                    Stop run
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <>
+              <Button
+                variant="solid"
+                colorPalette="danger"
+                size="sm"
+                onClick={() => setStopOpen(true)}
+              >
+                <Square />
+                Stop run
+              </Button>
+              <AppDialog
+                role="alertdialog"
+                open={stopOpen}
+                onOpenChange={setStopOpen}
+                title={
+                  <HStack gap="3">
+                    <Center
+                      boxSize="9"
+                      rounded="l2"
+                      bg="bg.error"
+                      color="fg.error"
+                    >
+                      <TriangleAlert size={18} />
+                    </Center>
+                    Stop this training run?
+                  </HStack>
+                }
+                description="Progress will be saved, but this run will not produce model artifacts."
+                footer={
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setStopOpen(false)}
+                    >
+                      Keep running
+                    </Button>
+                    <Button
+                      variant="solid"
+                      colorPalette="danger"
+                      size="sm"
+                      onClick={stopRun}
+                    >
+                      Stop run
+                    </Button>
+                  </>
+                }
+              />
+            </>
           )}
-        </div>
-      </div>
+        </HStack>
+      </Flex>
 
-      <Card size="flush">
-        <CardContent className="grid gap-5 p-5 sm:grid-cols-2 lg:grid-cols-5">
+      <Card.Root variant="outline" overflow="hidden">
+        <SimpleGrid columns={{ base: 1, sm: 2, lg: 5 }} gap="5" p="5">
           {runStats.map(([label, value]) => (
-            <div key={label}>
-              <p className="text-xs text-muted-foreground">{label}</p>
-              <p className="mt-1 text-lg font-semibold">{value}</p>
-            </div>
+            <Box key={label}>
+              <Text fontSize="xs" color="fg.muted">
+                {label}
+              </Text>
+              <Text mt="1" fontSize="lg" fontWeight="semibold">
+                {value}
+              </Text>
+            </Box>
           ))}
-        </CardContent>
-        <Progress
-          value={run.progress}
-          className="h-1.5 rounded-none [&_[data-slot=progress-indicator]]:bg-info"
-        />
-      </Card>
+        </SimpleGrid>
+        <Progress.Root size="xs" colorPalette="info" value={run.progress}>
+          <Progress.Track rounded="none" aria-label="Training progress">
+            <Progress.Range />
+          </Progress.Track>
+        </Progress.Root>
+      </Card.Root>
 
-      <Tabs value={tab} onValueChange={setTab} className="mt-6 min-w-0">
-        <TabsList variant="line">
-          <TabsTrigger value="metrics">Metrics</TabsTrigger>
-          <TabsTrigger value="logs">Logs</TabsTrigger>
-          <TabsTrigger value="config">Config</TabsTrigger>
-          <TabsTrigger value="artifacts">Artifacts</TabsTrigger>
-        </TabsList>
-        <TabsContent value="metrics" className="mt-4 grid gap-6">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <MetricCard title="Loss" dataKey="loss" color="var(--primary)" />
-            <MetricCard
-              title="Accuracy"
-              dataKey="accuracy"
-              color="var(--success)"
-            />
-          </div>
+      <Tabs.Root
+        variant="line"
+        mt="6"
+        minW="0"
+        // Only the open tab is in the page, as before.
+        lazyMount
+        unmountOnExit
+        value={tab}
+        onValueChange={(event) => setTab(event.value)}
+      >
+        <Tabs.List>
+          <Tabs.Trigger value="metrics">Metrics</Tabs.Trigger>
+          <Tabs.Trigger value="logs">Logs</Tabs.Trigger>
+          <Tabs.Trigger value="config">Config</Tabs.Trigger>
+          <Tabs.Trigger value="artifacts">Artifacts</Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content value="metrics" pt="4">
+          <SimpleGrid columns={{ base: 1, lg: 2 }} gap="6" mb="6">
+            <MetricCard title="Loss" dataKey="loss" color="brand" />
+            <MetricCard title="Accuracy" dataKey="accuracy" color="success" />
+          </SimpleGrid>
           <LogsCard
             level={level}
             setLevel={setLevel}
@@ -215,8 +261,8 @@ function TrainingRunRoute() {
             setAutoscroll={setAutoscroll}
             logRef={logRef}
           />
-        </TabsContent>
-        <TabsContent value="logs" className="mt-4">
+        </Tabs.Content>
+        <Tabs.Content value="logs" pt="4">
           <LogsCard
             level={level}
             setLevel={setLevel}
@@ -224,26 +270,29 @@ function TrainingRunRoute() {
             setAutoscroll={setAutoscroll}
             logRef={logRef}
           />
-        </TabsContent>
-        <TabsContent value="config" className="mt-4">
+        </Tabs.Content>
+        <Tabs.Content value="config" pt="4">
           <ConfigCard />
-        </TabsContent>
-        <TabsContent value="artifacts" className="mt-4">
-          <Empty className="min-h-64 border bg-card">
-            <EmptyHeader>
-              <EmptyTitle>No artifacts yet</EmptyTitle>
-              <EmptyDescription>
-                {run.status === 'Stopped'
-                  ? 'This run was stopped before producing model artifacts.'
-                  : run.status === 'Failed'
-                    ? 'This run failed before producing model artifacts. Its logs say why.'
-                    : 'Artifacts will appear when training completes.'}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        </TabsContent>
-      </Tabs>
-    </main>
+        </Tabs.Content>
+        <Tabs.Content value="artifacts" pt="4">
+          <EmptyNotice
+            minH="64"
+            rounded="l3"
+            borderWidth="1px"
+            borderColor="border"
+            bg="surface-raised"
+            title="No artifacts yet"
+            description={
+              run.status === 'Stopped'
+                ? 'This run was stopped before producing model artifacts.'
+                : run.status === 'Failed'
+                  ? 'This run failed before producing model artifacts. Its logs say why.'
+                  : 'Artifacts will appear when training completes.'
+            }
+          />
+        </Tabs.Content>
+      </Tabs.Root>
+    </Box>
   )
 }
 

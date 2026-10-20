@@ -1,7 +1,7 @@
+import { Button, Flex, SimpleGrid, Text } from '@chakra-ui/react'
 import { Download } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { SectionCard } from '@/components/shared/section-card'
 
 import { downloadText } from './helpers'
 import { useCurrentTrainingRun } from './use-current-training-run'
@@ -23,12 +23,12 @@ export function ConfigCard() {
     estimatedCost: run.estimatedCost,
   }
   return (
-    <Card size="flush">
-      <CardHeader className="flex-row items-center border-b">
-        <CardTitle className="mr-auto">Saved configuration</CardTitle>
+    <SectionCard
+      title="Saved configuration"
+      action={
         <Button
           variant="outline"
-          size="sm"
+          size="xs"
           onClick={() =>
             downloadText(
               `${run.name}-config.json`,
@@ -40,17 +40,23 @@ export function ConfigCard() {
           <Download />
           Download
         </Button>
-      </CardHeader>
-      <CardContent className="grid gap-0 p-5 sm:grid-cols-2 sm:gap-x-8">
+      }
+    >
+      <SimpleGrid columns={{ base: 1, sm: 2 }} columnGap="8" p="5">
         {Object.entries(config).map(([label, value]) => (
-          <div
+          <Flex
             key={label}
-            className="flex justify-between gap-4 border-b py-2 text-sm"
+            justify="space-between"
+            gap="4"
+            borderBottomWidth="1px"
+            borderColor="border"
+            py="2"
+            textStyle="body-sm"
           >
-            <span className="capitalize text-muted-foreground">
+            <Text as="span" textTransform="capitalize" color="fg.muted">
               {label.replace(/([A-Z])/g, ' $1')}
-            </span>
-            <span className="max-w-[60%] text-right font-medium">
+            </Text>
+            <Text as="span" maxW="60%" textAlign="end" fontWeight="medium">
               {Array.isArray(value)
                 ? value.join(', ') || 'None'
                 : typeof value === 'boolean'
@@ -58,10 +64,10 @@ export function ConfigCard() {
                     ? 'Enabled'
                     : 'Disabled'
                   : String(value)}
-            </span>
-          </div>
+            </Text>
+          </Flex>
         ))}
-      </CardContent>
-    </Card>
+      </SimpleGrid>
+    </SectionCard>
   )
 }

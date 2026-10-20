@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
+import { Box, Button, Flex, Heading, Stack, Text } from '@chakra-ui/react'
+
+import { SwitchButton } from '@/components/shared/switch-button'
 import type { ApiComputeOption } from '@/features/catalog/api'
 
 export function ComputeStep({
@@ -18,13 +18,20 @@ export function ComputeStep({
 }) {
   return (
     <section>
-      <div>
-        <h2 className="text-lg font-semibold tracking-tight">Choose compute</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <Box>
+        <Heading
+          as="h2"
+          fontSize="lg"
+          fontWeight="semibold"
+          letterSpacing="tight"
+        >
+          Choose compute
+        </Heading>
+        <Text mt="1" textStyle="body-sm" color="fg.muted">
           Larger instances finish faster but cost more per hour.
-        </p>
-      </div>
-      <div className="mt-6 grid gap-2.5">
+        </Text>
+      </Box>
+      <Stack mt="6" gap="2.5">
         {computeOptions.map((item) => (
           <Button
             key={item.id}
@@ -32,37 +39,65 @@ export function ComputeStep({
             variant="option"
             onClick={() => setInstanceId(item.id)}
             aria-pressed={instanceId === item.id}
-            className="w-full justify-between gap-4 rounded-xl text-left"
+            w="full"
+            justifyContent="space-between"
+            gap="4"
+            rounded="l3"
+            css={{ '&[aria-pressed=true] [data-chosen]': { opacity: 1 } }}
           >
-            <span>
-              <span className="block text-sm font-semibold">{item.name}</span>
-              <span className="text-xs text-muted-foreground">
+            <Box>
+              <Text textStyle="body-sm" fontWeight="semibold">
+                {item.name}
+              </Text>
+              <Text fontSize="xs" color="fg.muted">
                 {item.specification}
-              </span>
-            </span>
-            <span className="flex items-center gap-3 text-sm font-semibold">
+              </Text>
+            </Box>
+            <Flex
+              as="span"
+              align="center"
+              gap="3"
+              textStyle="body-sm"
+              fontWeight="semibold"
+            >
               ${item.hourly_rate_usd.toFixed(2)}/hr
-              <span
+              <Box
+                data-chosen
                 aria-hidden="true"
-                className="size-2 rounded-full bg-primary opacity-0 group-aria-pressed/button:opacity-100"
+                boxSize="2"
+                rounded="full"
+                bg="brand"
+                opacity={0}
               />
-            </span>
+            </Flex>
           </Button>
         ))}
-      </div>
-      <Label className="mt-5 flex items-center justify-between gap-4 border-t pt-5 leading-normal font-normal">
-        <span>
-          <span className="block text-sm font-semibold">Use spot instance</span>
-          <span className="block text-xs text-muted-foreground">
+      </Stack>
+      <Flex
+        as="label"
+        mt="5"
+        align="center"
+        justify="space-between"
+        gap="4"
+        borderTopWidth="1px"
+        borderColor="border"
+        pt="5"
+        cursor="pointer"
+      >
+        <Box>
+          <Text textStyle="body-sm" fontWeight="semibold">
+            Use spot instance
+          </Text>
+          <Text fontSize="xs" color="fg.muted">
             About 60% cheaper; may be interrupted and resumed.
-          </span>
-        </span>
-        <Switch
+          </Text>
+        </Box>
+        <SwitchButton
           checked={spot}
           onCheckedChange={setSpot}
           aria-label="Use spot instance"
         />
-      </Label>
+      </Flex>
     </section>
   )
 }

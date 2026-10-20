@@ -1,24 +1,16 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
+import {
+  Box,
+  Button,
+  Flex,
+  Link,
+  Progress,
+  Table,
+  Text,
+} from '@chakra-ui/react'
+import { Link as RouterLink, createFileRoute } from '@tanstack/react-router'
 import { Cpu, Plus } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import { Progress } from '@/components/ui/progress'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { EmptyNotice } from '@/components/shared/empty-notice'
 import { SectionError, SectionLoading } from '@/components/shared/query-states'
 import { useProjectDetail } from '@/features/dashboard/context'
 import { useProjectDatasets } from '@/features/datasets/queries'
@@ -39,7 +31,7 @@ function ProjectTrainingRoute() {
   const allDatasets = useProjectDatasets(project.id).data ?? []
 
   return (
-    <div className="mt-6">
+    <Box mt="6">
       {runsQuery.error ? (
         <SectionError
           title="Could not load training runs"
@@ -49,79 +41,90 @@ function ProjectTrainingRoute() {
       ) : runsQuery.isPending ? (
         <SectionLoading />
       ) : runs.length === 0 ? (
-        <Empty className="min-h-64 border bg-card">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Cpu />
-            </EmptyMedia>
-            <EmptyTitle>No training runs yet</EmptyTitle>
-            <EmptyDescription>
-              Start a run from a ready dataset to see it here.
-            </EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <Button asChild>
-              <Link
-                to="/projects/$projectId/training/new"
-                params={{ projectId: project.id }}
-              >
-                <Plus />
-                New Training
-              </Link>
-            </Button>
-          </EmptyContent>
-        </Empty>
+        <EmptyNotice
+          minH="64"
+          rounded="l3"
+          borderWidth="1px"
+          borderColor="border"
+          bg="surface-raised"
+          icon={<Cpu />}
+          title="No training runs yet"
+          description="Start a run from a ready dataset to see it here."
+        >
+          <Button asChild variant="solid" size="sm">
+            <RouterLink
+              to="/projects/$projectId/training/new"
+              params={{ projectId: project.id }}
+            >
+              <Plus />
+              New Training
+            </RouterLink>
+          </Button>
+        </EmptyNotice>
       ) : (
-        <Table containerClassName="overflow-y-hidden rounded-xl border bg-card shadow-xs">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Run</TableHead>
-              <TableHead>Dataset</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-48">Progress</TableHead>
-              <TableHead>Epoch</TableHead>
-              <TableHead>Estimated</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {runs.map((run) => (
-              <TableRow key={run.id}>
-                <TableCell>
-                  <Link
-                    to="/projects/$projectId/training/$runId"
-                    params={{ projectId: project.id, runId: run.id }}
-                    className="h-auto border-none p-0 font-medium text-primary"
-                  >
-                    {run.name}
-                  </Link>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {run.architecture}
-                  </p>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {allDatasets.find((item) => item.id === run.datasetId)
-                    ?.name ?? run.datasetId}
-                </TableCell>
-                <TableCell>
-                  <TrainingStatusBadge status={run.status} />
-                </TableCell>
-                <TableCell className="flex items-center gap-2">
-                  <Progress value={run.progress} className="h-1.5" />
-                  <span className="w-9 shrink-0 text-xs text-muted-foreground">
-                    {run.progress}%
-                  </span>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {Math.floor((run.progress / 100) * run.epochs)} / {run.epochs}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {formatDuration(run.estimatedHours)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <Table.ScrollArea
+          rounded="l3"
+          borderWidth="1px"
+          borderColor="border"
+          bg="surface-raised"
+        >
+          <Table.Root variant="data">
+            <Table.Header>
+              <Table.Row>
+                <Table.ColumnHeader>Run</Table.ColumnHeader>
+                <Table.ColumnHeader>Dataset</Table.ColumnHeader>
+                <Table.ColumnHeader>Status</Table.ColumnHeader>
+                <Table.ColumnHeader w="48">Progress</Table.ColumnHeader>
+                <Table.ColumnHeader>Epoch</Table.ColumnHeader>
+                <Table.ColumnHeader>Estimated</Table.ColumnHeader>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {runs.map((run) => (
+                <Table.Row key={run.id}>
+                  <Table.Cell>
+                    <Link asChild fontWeight="medium" color="brand-text">
+                      <RouterLink
+                        to="/projects/$projectId/training/$runId"
+                        params={{ projectId: project.id, runId: run.id }}
+                      >
+                        {run.name}
+                      </RouterLink>
+                    </Link>
+                    <Text mt="0.5" fontSize="xs" color="fg.muted">
+                      {run.architecture}
+                    </Text>
+                  </Table.Cell>
+                  <Table.Cell>
+                    {allDatasets.find((item) => item.id === run.datasetId)
+                      ?.name ?? run.datasetId}
+                  </Table.Cell>
+                  <Table.Cell>
+                    <TrainingStatusBadge status={run.status} />
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Flex align="center" gap="2">
+                      <Progress.Root size="xs" flex="1" value={run.progress}>
+                        <Progress.Track aria-label={`${run.name} progress`}>
+                          <Progress.Range />
+                        </Progress.Track>
+                      </Progress.Root>
+                      <Text as="span" w="9" flexShrink={0} fontSize="xs">
+                        {run.progress}%
+                      </Text>
+                    </Flex>
+                  </Table.Cell>
+                  <Table.Cell>
+                    {Math.floor((run.progress / 100) * run.epochs)} /{' '}
+                    {run.epochs}
+                  </Table.Cell>
+                  <Table.Cell>{formatDuration(run.estimatedHours)}</Table.Cell>
+                </Table.Row>
+              ))}
+            </Table.Body>
+          </Table.Root>
+        </Table.ScrollArea>
       )}
-    </div>
+    </Box>
   )
 }

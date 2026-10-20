@@ -1,33 +1,17 @@
+import { Button } from '@chakra-ui/react'
 import { Link } from '@tanstack/react-router'
 
-import { Button } from '@/components/ui/button'
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty'
+import { RecordNotFound } from '@/components/shared/record-not-found'
 
 export function TrainingNotFound() {
   return (
-    <main
-      id="dashboard-main"
-      className="mx-auto flex min-h-[60vh] w-full max-w-xl flex-1 items-center p-6"
+    <RecordNotFound
+      title="Project not found"
+      description="This project is not available in your organization."
     >
-      <Empty className="w-full border bg-card">
-        <EmptyHeader>
-          <EmptyTitle>Project not found</EmptyTitle>
-          <EmptyDescription>
-            This project is not available in your organization.
-          </EmptyDescription>
-        </EmptyHeader>
-        <EmptyContent>
-          <Button asChild>
-            <Link to="/projects">Return to projects</Link>
-          </Button>
-        </EmptyContent>
-      </Empty>
-    </main>
+      <Button asChild variant="solid" size="sm">
+        <Link to="/projects">Return to projects</Link>
+      </Button>
+    </RecordNotFound>
   )
 }

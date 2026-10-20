@@ -1,35 +1,19 @@
+import { Button } from '@chakra-ui/react'
 import { Link } from '@tanstack/react-router'
 
-import { Button } from '@/components/ui/button'
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty'
+import { RecordNotFound } from '@/components/shared/record-not-found'
 
 export function RunNotFound({ projectId }: { projectId: string }) {
   return (
-    <main
-      id="dashboard-main"
-      className="mx-auto flex min-h-[60vh] w-full max-w-xl flex-1 items-center p-6"
+    <RecordNotFound
+      title="Training run not found"
+      description="This run does not exist in the selected project."
     >
-      <Empty className="w-full border bg-card">
-        <EmptyHeader>
-          <EmptyTitle>Training run not found</EmptyTitle>
-          <EmptyDescription>
-            This run does not exist in the selected project.
-          </EmptyDescription>
-        </EmptyHeader>
-        <EmptyContent>
-          <Button asChild>
-            <Link to="/projects/$projectId/overview" params={{ projectId }}>
-              Return to project
-            </Link>
-          </Button>
-        </EmptyContent>
-      </Empty>
-    </main>
+      <Button asChild variant="solid" size="sm">
+        <Link to="/projects/$projectId/overview" params={{ projectId }}>
+          Return to project
+        </Link>
+      </Button>
+    </RecordNotFound>
   )
 }

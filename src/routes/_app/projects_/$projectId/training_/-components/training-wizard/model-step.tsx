@@ -1,13 +1,14 @@
+import {
+  Box,
+  Button,
+  Center,
+  Flex,
+  Heading,
+  SimpleGrid,
+  Text,
+} from '@chakra-ui/react'
 import { Network } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from '@/components/ui/item'
 import type { ApiArchitecture } from '@/features/catalog/api'
 
 export function ModelStep({
@@ -25,41 +26,66 @@ export function ModelStep({
 
   return (
     <section>
-      <div>
-        <h2 className="text-lg font-semibold tracking-tight">Choose a model</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <Box>
+        <Heading
+          as="h2"
+          fontSize="lg"
+          fontWeight="semibold"
+          letterSpacing="tight"
+        >
+          Choose a model
+        </Heading>
+        <Text mt="1" textStyle="body-sm" color="fg.muted">
           Pick an architecture to fine-tune, or start from scratch.
-        </p>
-      </div>
-      <Item
-        variant="outline"
-        className="mt-6 flex-nowrap gap-4 rounded-xl border-primary bg-primary-muted/70 p-5"
+        </Text>
+      </Box>
+      <Flex
+        mt="6"
+        align="center"
+        gap="4"
+        rounded="l3"
+        borderWidth="1px"
+        borderColor="brand"
+        bg="brand.subtle"
+        p="5"
       >
-        <ItemMedia className="group-has-data-[slot=item-description]/item:self-center group-has-data-[slot=item-description]/item:translate-y-0">
-          <span className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Network className="size-6" />
-          </span>
-        </ItemMedia>
-        <ItemContent className="min-w-0">
-          <ItemTitle className="text-base font-semibold">
+        <Center
+          boxSize="14"
+          flexShrink={0}
+          rounded="l3"
+          bg="brand"
+          color="on-brand"
+        >
+          <Network size={24} />
+        </Center>
+        <Box minW="0">
+          <Heading as="h3" fontSize="md" fontWeight="semibold">
             {selected.name}
-          </ItemTitle>
-          <ItemDescription className="leading-relaxed">
+          </Heading>
+          <Text textStyle="body-sm" color="fg.muted" lineHeight="relaxed">
             {selected.description}
-          </ItemDescription>
-          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-primary">
+          </Text>
+          <Flex
+            mt="1"
+            wrap="wrap"
+            columnGap="3"
+            rowGap="1"
+            fontSize="xs"
+            fontWeight="semibold"
+            color="brand-text"
+          >
             {metadata.map((value, index) => (
-              <span key={value} className="flex items-center gap-3">
+              <Flex as="span" key={value} align="center" gap="3">
                 {index > 0 && (
-                  <span className="size-1 rounded-full bg-current" />
+                  <Box as="span" boxSize="1" rounded="full" bg="currentColor" />
                 )}
                 {value}
-              </span>
+              </Flex>
             ))}
-          </div>
-        </ItemContent>
-      </Item>
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          </Flex>
+        </Box>
+      </Flex>
+      <SimpleGrid mt="5" columns={{ base: 2, sm: 3 }} gap="3">
         {architectures.map((item) => (
           <Button
             key={item.id}
@@ -67,20 +93,40 @@ export function ModelStep({
             variant="option"
             onClick={() => setArchitectureId(item.id)}
             aria-pressed={architectureId === item.id}
-            className="min-w-0 flex-col justify-start gap-2.5 rounded-xl py-5 text-center aria-pressed:[&_[data-model-icon]]:bg-primary aria-pressed:[&_[data-model-icon]]:text-primary-foreground"
+            minW="0"
+            flexDirection="column"
+            justifyContent="flex-start"
+            gap="2.5"
+            rounded="l3"
+            py="5"
+            textAlign="center"
+            css={{
+              '&[aria-pressed=true] [data-model-icon]': {
+                bg: 'brand',
+                color: 'on-brand',
+              },
+            }}
           >
-            <span
+            <Center
               data-model-icon
-              className="flex size-10 items-center justify-center rounded-lg bg-primary-muted text-primary"
+              boxSize="10"
+              rounded="l2"
+              bg="brand.subtle"
+              color="brand.fg"
             >
-              <Network className="size-5" />
-            </span>
-            <span className="max-w-full whitespace-normal text-sm font-semibold">
+              <Network size={20} />
+            </Center>
+            <Text
+              maxW="full"
+              whiteSpace="normal"
+              textStyle="body-sm"
+              fontWeight="semibold"
+            >
               {item.name}
-            </span>
+            </Text>
           </Button>
         ))}
-      </div>
+      </SimpleGrid>
     </section>
   )
 }

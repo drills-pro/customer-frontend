@@ -9,6 +9,7 @@ import { PAGES } from '../demo/App';
 import { TENANTS } from '../demo/tenants';
 import { ApiError, getMe, type Me } from './api';
 import { useAuth } from './auth';
+import { NewWorkspace } from './NewWorkspace';
 
 const themes = Object.keys(TENANTS).map((n) => ({ label: n, value: n }));
 
@@ -16,7 +17,8 @@ function Profile() {
   const { user, expire } = useAuth();
   const { t: tr } = useTranslation();
   const [me, setMe] = useState<Me | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [creating, setCreating] = useState<boolean | null>(null); // null: not chosen yet; a user with no workspace starts in the wizard
   const token = user?.access_token;
 
   useEffect(() => {
@@ -25,20 +27,21 @@ function Profile() {
       .then(setMe)
       .catch((e) => {
         if (e instanceof ApiError && e.status === 401) return expire(); // expired or wrong audience: back to login
-        setError(e.message);
+        setFailed(true);
       });
   }, [token, expire]);
 
-  if (error)
+  if (failed)
     return (
       <Alert.Root status="error" colorPalette="danger">
         <Alert.Indicator />
         <Alert.Content>
           <Alert.Title>{tr('profile.loadFailed')}</Alert.Title>
-          <Alert.Description>{error}</Alert.Description>
+          <Alert.Description>{tr('profile.loadFailedBody')}</Alert.Description>
         </Alert.Content>
       </Alert.Root>
     );
+  const wizard = creating ?? me?.tenants.length === 0;
   return (
     <Card.Root>
       <Card.Header>
@@ -63,14 +66,17 @@ function Profile() {
                 sub {me.sub}
               </Text>
             </Box>
-            {me.tenants.length === 0 ? (
-              <Alert.Root status="info" colorPalette="info">
-                <Alert.Indicator />
-                <Alert.Content>
-                  <Alert.Title>{tr('profile.noWorkspace')}</Alert.Title>
-                  <Alert.Description>{tr('profile.noTenant')}</Alert.Description>
-                </Alert.Content>
-              </Alert.Root>
+            {wizard ? (
+              <NewWorkspace
+                emailVerified={me.email_verified}
+                onClose={(made) => {
+                  setCreating(false);
+                  if (made) {
+                    setMe(null);
+                    if (token) getMe(token).then(setMe, () => setFailed(true));
+                  }
+                }}
+              />
             ) : (
               <Table.Root size="sm" variant="outline">
                 <Table.Header>
@@ -92,6 +98,11 @@ function Profile() {
                   ))}
                 </Table.Body>
               </Table.Root>
+            )}
+            {!wizard && (
+              <Box>
+                <Button onClick={() => setCreating(true)}>{tr('workspace.new')}</Button>
+              </Box>
             )}
           </>
         )}

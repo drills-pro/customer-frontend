@@ -24,4 +24,11 @@ rule inline-style 'style=\{\{' "No inline style: use style props or a token." sr
 # 5. Secrets never ride in VITE_ variables.
 rule vite-secret 'VITE_[A-Z_]*(SECRET|PASSWORD|PRIVATE|TOKEN)' "VITE_* is public in the bundle." src .env.example Dockerfile .github
 
+# 6. Customer-facing text never names internal systems or the tech stack.
+hits=$(grep -rniE 'zitadel|postgres|fastapi|core-api|traefik|kubernetes|flux|VITE_|/v1/|\.env|stack ?trace' src/locales | grep -v 'lint-ok')
+if [ -n "$hits" ]; then echo "[internal-names] Locale text must not name backend systems, endpoints or env vars."; echo "$hits"; echo; fail=1; fi
+
+# 7. Icons come from lucide-react only.
+rule icons "from '(react-icons|@chakra-ui/icons|@heroicons|@mui/icons-material|@phosphor-icons)" "Use lucide-react for icons." src
+
 exit $fail

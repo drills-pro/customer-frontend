@@ -26,6 +26,7 @@ export function Navigation() {
       <Section title="Tabs" wide>
         <Tabs.Root defaultValue="images">
           <Tabs.List>
+            <Tabs.Indicator />
             <Tabs.Trigger value="images">
               Images{' '}
               <Badge size="sm" variant="subtle">

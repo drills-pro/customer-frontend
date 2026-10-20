@@ -1,8 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import { Portal, Spinner, Stack, Toast, Toaster as ChakraToaster, createToaster } from '@chakra-ui/react';
 
-export const toaster = createToaster({ placement: 'bottom-end', pauseOnPageIdle: true });
+export const toaster = createToaster({ placement: 'bottom-end', pauseOnPageIdle: true, overlap: true, max: 3, gap: 12 });
 
 export function Toaster() {
+  const { t } = useTranslation();
   return (
     <Portal>
       <ChakraToaster toaster={toaster} insetInline={{ mdDown: '4' }}>
@@ -14,7 +16,7 @@ export function Toaster() {
               {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
             </Stack>
             {toast.action && <Toast.ActionTrigger>{toast.action.label}</Toast.ActionTrigger>}
-            {toast.closable && <Toast.CloseTrigger />}
+            <Toast.CloseTrigger aria-label={t('toast.dismiss')} />
           </Toast.Root>
         )}
       </ChakraToaster>

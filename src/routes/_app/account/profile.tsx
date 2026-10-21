@@ -1,49 +1,30 @@
-import * as React from 'react'
-import {
-  Avatar,
-  Box,
-  Button,
-  Card,
-  Field,
-  Flex,
-  HStack,
-  Input,
-  SimpleGrid,
-  Stack,
-  Text,
-} from '@chakra-ui/react'
-import { createFileRoute } from '@tanstack/react-router'
-import { toaster } from '@/components/toaster'
+import * as React from 'react';
+import { Avatar, Box, Button, Card, Field, Flex, HStack, Input, SimpleGrid, Stack, Text } from '@chakra-ui/react';
+import { createFileRoute } from '@tanstack/react-router';
+import { toaster } from '@/components/toaster';
 
-import { FormFooter } from '@/components/shared/form-footer'
-import { SimpleSelect } from '@/components/simple-select'
-import { useDashboardLayout } from '@/features/dashboard/context'
-import { PageError } from '@/components/shared/query-states'
-import type { CurrentUser } from '@/features/account/mappers'
-import { useCurrentUser, useUpdateUser } from '@/features/account/queries'
-import { isEmail } from '@/lib/validation'
-import { accountRoles } from './-components/account-data'
-import type { AccountProfile, AccountRole } from './-components/account-data'
-import { PageHeader } from './-components/page-header'
+import { FormFooter } from '@/components/shared/form-footer';
+import { SimpleSelect } from '@/components/simple-select';
+import { useDashboardLayout } from '@/features/dashboard/context';
+import { PageError } from '@/components/shared/query-states';
+import type { CurrentUser } from '@/features/account/mappers';
+import { useCurrentUser, useUpdateUser } from '@/features/account/queries';
+import { isEmail } from '@/lib/validation';
+import { accountRoles } from './-components/account-data';
+import type { AccountProfile, AccountRole } from './-components/account-data';
+import { PageHeader } from './-components/page-header';
 
 export const Route = createFileRoute('/_app/account/profile')({
   component: ProfileRoute,
-})
+});
 function ProfileRoute() {
-  const { org } = useDashboardLayout()
-  const { data: user, error, refetch } = useCurrentUser()
+  const { org } = useDashboardLayout();
+  const { data: user, error, refetch } = useCurrentUser();
   return (
     <>
-      <PageHeader
-        title="Profile"
-        description={`This information is visible to other members of ${org.name}.`}
-      />
+      <PageHeader title="Profile" description={`This information is visible to other members of ${org.name}.`} />
       {error ? (
-        <PageError
-          title="Could not load your profile"
-          error={error}
-          onRetry={() => void refetch()}
-        />
+        <PageError title="Could not load your profile" error={error} onRetry={() => void refetch()} />
       ) : (
         user && (
           <>
@@ -53,7 +34,7 @@ function ProfileRoute() {
         )
       )}
     </>
-  )
+  );
 }
 
 function ProfilePhotoCard({ user }: { user: CurrentUser }) {
@@ -108,58 +89,50 @@ function ProfilePhotoCard({ user }: { user: CurrentUser }) {
         </HStack>
       </Flex>
     </Card.Root>
-  )
+  );
 }
 
-type Errors = Partial<Record<keyof AccountProfile, string>>
+type Errors = Partial<Record<keyof AccountProfile, string>>;
 
 function validate(values: AccountProfile): Errors {
-  const errors: Errors = {}
-  if (!values.fullName.trim()) errors.fullName = 'Full name is required.'
-  if (!/^[a-z0-9_-]{3,32}$/.test(values.username.trim()))
-    errors.username = 'Use 3–32 lowercase letters, numbers, dashes or _.'
-  if (!isEmail(values.email.trim()))
-    errors.email = 'Enter a valid email address.'
-  return errors
+  const errors: Errors = {};
+  if (!values.fullName.trim()) errors.fullName = 'Full name is required.';
+  if (!/^[a-z0-9_-]{3,32}$/.test(values.username.trim())) errors.username = 'Use 3–32 lowercase letters, numbers, dashes or _.';
+  if (!isEmail(values.email.trim())) errors.email = 'Enter a valid email address.';
+  return errors;
 }
 
 function ProfileFormCard({ user }: { user: CurrentUser }) {
-  const orgName = useDashboardLayout().org.name
-  const updateUser = useUpdateUser()
+  const orgName = useDashboardLayout().org.name;
+  const updateUser = useUpdateUser();
   const saved: AccountProfile = {
     fullName: user.fullName,
     username: user.username,
     email: user.email,
     role: user.role as AccountRole,
     bio: user.bio,
-  }
-  const [values, setValues] = React.useState(saved)
-  const [submitted, setSubmitted] = React.useState(false)
+  };
+  const [values, setValues] = React.useState(saved);
+  const [submitted, setSubmitted] = React.useState(false);
 
-  const errors = submitted ? validate(values) : {}
-  const dirty = (Object.keys(saved) as Array<keyof AccountProfile>).some(
-    (key) => values[key] !== saved[key],
-  )
+  const errors = submitted ? validate(values) : {};
+  const dirty = (Object.keys(saved) as Array<keyof AccountProfile>).some((key) => values[key] !== saved[key]);
 
-  function update<TKey extends keyof AccountProfile>(
-    key: TKey,
-    value: AccountProfile[TKey],
-  ) {
-    setValues((current) => ({ ...current, [key]: value }))
+  function update<TKey extends keyof AccountProfile>(key: TKey, value: AccountProfile[TKey]) {
+    setValues((current) => ({ ...current, [key]: value }));
   }
 
   function save(event: React.FormEvent) {
-    event.preventDefault()
-    setSubmitted(true)
-    if (!dirty || updateUser.isPending || Object.keys(validate(values)).length)
-      return
+    event.preventDefault();
+    setSubmitted(true);
+    if (!dirty || updateUser.isPending || Object.keys(validate(values)).length) return;
     const next = {
       ...values,
       fullName: values.fullName.trim(),
       username: values.username.trim(),
       email: values.email.trim(),
       bio: values.bio.trim(),
-    }
+    };
     updateUser.mutate(
       {
         full_name: next.fullName,
@@ -170,12 +143,12 @@ function ProfileFormCard({ user }: { user: CurrentUser }) {
       },
       {
         onSuccess: () => {
-          setValues(next)
-          setSubmitted(false)
-          toaster.create({ type: 'success', title: 'Profile saved.' })
+          setValues(next);
+          setSubmitted(false);
+          toaster.create({ type: 'success', title: 'Profile saved.' });
         },
       },
-    )
+    );
   }
 
   return (
@@ -217,12 +190,7 @@ function ProfileFormCard({ user }: { user: CurrentUser }) {
               items={accountRoles.map((role) => ({ label: role, value: role }))}
             />
           </SimpleGrid>
-          <TextField
-            id="profile-bio"
-            label="Bio"
-            value={values.bio}
-            onChange={(value) => update('bio', value)}
-          />
+          <TextField id="profile-bio" label="Bio" value={values.bio} onChange={(value) => update('bio', value)} />
         </Stack>
 
         <FormFooter dirty={dirty}>
@@ -233,25 +201,19 @@ function ProfileFormCard({ user }: { user: CurrentUser }) {
             px="3.5"
             disabled={!dirty}
             onClick={() => {
-              setValues(saved)
-              setSubmitted(false)
+              setValues(saved);
+              setSubmitted(false);
             }}
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            variant="solid"
-            size="sm"
-            px="3.5"
-            disabled={!dirty}
-          >
+          <Button type="submit" variant="solid" size="sm" px="3.5" disabled={!dirty}>
             Save changes
           </Button>
         </FormFooter>
       </form>
     </Card.Root>
-  )
+  );
 }
 
 function TextField({
@@ -264,14 +226,14 @@ function TextField({
   autoComplete,
   onChange,
 }: {
-  id: string
-  label: string
-  value: string
-  error?: string
-  hint?: string
-  type?: string
-  autoComplete?: string
-  onChange: (value: string) => void
+  id: string;
+  label: string;
+  value: string;
+  error?: string;
+  hint?: string;
+  type?: string;
+  autoComplete?: string;
+  onChange: (value: string) => void;
 }) {
   return (
     <Field.Root invalid={Boolean(error)}>
@@ -285,15 +247,10 @@ function TextField({
       />
       {hint && !error && <Field.HelperText>{hint}</Field.HelperText>}
       {error && (
-        <Text
-          id={`${id}-error`}
-          role="alert"
-          textStyle="body-sm"
-          color="fg.error"
-        >
+        <Text id={`${id}-error`} role="alert" textStyle="body-sm" color="fg.error">
           {error}
         </Text>
       )}
     </Field.Root>
-  )
+  );
 }

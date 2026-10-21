@@ -1,6 +1,6 @@
-import type * as React from 'react'
-import { CloseButton, Dialog, Portal } from '@chakra-ui/react'
-import type { DialogContentProps } from '@chakra-ui/react'
+import type * as React from 'react';
+import { CloseButton, Dialog, Portal } from '@chakra-ui/react';
+import type { DialogContentProps } from '@chakra-ui/react';
 
 /**
  * A modal with a title, an optional description, a body and a footer of
@@ -22,15 +22,15 @@ export function AppDialog({
   children,
   ...contentProps
 }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  title: React.ReactNode
-  description?: React.ReactNode
-  footer?: React.ReactNode
-  onSubmit?: (event: React.FormEvent<HTMLFormElement>) => void
-  role?: 'dialog' | 'alertdialog'
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
-  children?: React.ReactNode
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  footer?: React.ReactNode;
+  onSubmit?: (event: React.FormEvent<HTMLFormElement>) => void;
+  role?: 'dialog' | 'alertdialog';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  children?: React.ReactNode;
 } & Omit<DialogContentProps, 'title' | 'onSubmit' | 'role'>) {
   const parts = (
     <>
@@ -48,15 +48,10 @@ export function AppDialog({
         <CloseButton size="sm" />
       </Dialog.CloseTrigger>
     </>
-  )
+  );
 
   return (
-    <Dialog.Root
-      open={open}
-      onOpenChange={(event) => onOpenChange(event.open)}
-      role={role}
-      size={size}
-    >
+    <Dialog.Root open={open} onOpenChange={(event) => onOpenChange(event.open)} role={role} size={size}>
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
@@ -72,5 +67,5 @@ export function AppDialog({
         </Dialog.Positioner>
       </Portal>
     </Dialog.Root>
-  )
+  );
 }

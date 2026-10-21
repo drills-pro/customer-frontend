@@ -1,7 +1,7 @@
-export { BasicsStep } from './basics-step'
-export { StartMethodStep } from './start-method-step'
-export { TaskStep } from './task-step'
-export { steps } from './types'
-export { useNewProjectDraft } from './use-new-project-draft'
-export type { NewProjectDraft } from './use-new-project-draft'
-export type { StartMethod } from './types'
+export { BasicsStep } from './basics-step';
+export { StartMethodStep } from './start-method-step';
+export { TaskStep } from './task-step';
+export { steps } from './types';
+export { useNewProjectDraft } from './use-new-project-draft';
+export type { NewProjectDraft } from './use-new-project-draft';
+export type { StartMethod } from './types';

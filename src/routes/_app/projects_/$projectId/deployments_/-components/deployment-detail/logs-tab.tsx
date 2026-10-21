@@ -1,53 +1,31 @@
-import * as React from 'react'
-import { Button, Card, Flex, Table } from '@chakra-ui/react'
-import { Download } from 'lucide-react'
-import { toaster } from '@/components/toaster'
+import * as React from 'react';
+import { Button, Card, Flex, Table } from '@chakra-ui/react';
+import { Download } from 'lucide-react';
+import { toaster } from '@/components/toaster';
 
-import { EmptyNotice } from '@/components/shared/empty-notice'
-import { ToneBadge } from '@/components/shared/tone-badge'
-import { SimpleSelect } from '@/components/simple-select'
-import { useDeploymentLogs } from '@/features/deployments/queries'
-import { useCurrentDeployment } from './use-current-deployment'
+import { EmptyNotice } from '@/components/shared/empty-notice';
+import { ToneBadge } from '@/components/shared/tone-badge';
+import { SimpleSelect } from '@/components/simple-select';
+import { useDeploymentLogs } from '@/features/deployments/queries';
+import { useCurrentDeployment } from './use-current-deployment';
 
 /** 2xx succeeded, 4xx is the caller's problem, 5xx is ours. */
 function statusTone(status: number) {
-  if (status < 300) return 'success' as const
-  if (status < 500) return 'warning' as const
-  return 'error' as const
+  if (status < 300) return 'success' as const;
+  if (status < 500) return 'warning' as const;
+  return 'error' as const;
 }
 
 export function LogsTab() {
-  const { project, deployment } = useCurrentDeployment()
-  const [filter, setFilter] = React.useState('all')
-  const logs = useDeploymentLogs(project.id, deployment.id).data ?? []
-  const visible = logs.filter(
-    (entry) =>
-      filter === 'all' || String(entry.status).startsWith(filter.charAt(0)),
-  )
+  const { project, deployment } = useCurrentDeployment();
+  const [filter, setFilter] = React.useState('all');
+  const logs = useDeploymentLogs(project.id, deployment.id).data ?? [];
+  const visible = logs.filter((entry) => filter === 'all' || String(entry.status).startsWith(filter.charAt(0)));
 
   return (
-    <Card.Root
-      as="section"
-      aria-labelledby="request-log-title"
-      variant="outline"
-      overflow="hidden"
-    >
-      <Flex
-        wrap="wrap"
-        align="center"
-        gap="2"
-        px="5"
-        py="3"
-        borderBottomWidth="1px"
-        borderColor="border"
-      >
-        <Card.Title
-          as="h2"
-          id="request-log-title"
-          me="auto"
-          textStyle="body"
-          fontWeight="semibold"
-        >
+    <Card.Root as="section" aria-labelledby="request-log-title" variant="outline" overflow="hidden">
+      <Flex wrap="wrap" align="center" gap="2" px="5" py="3" borderBottomWidth="1px" borderColor="border">
+        <Card.Title as="h2" id="request-log-title" me="auto" textStyle="body" fontWeight="semibold">
           Request log
         </Card.Title>
         <SimpleSelect
@@ -104,20 +82,10 @@ export function LogsTab() {
             <Table.Body>
               {visible.map((entry) => (
                 <Table.Row key={entry.requestId}>
-                  <Table.Cell
-                    px="5"
-                    fontFamily="mono"
-                    fontSize="xs"
-                    fontVariantNumeric="tabular-nums"
-                  >
+                  <Table.Cell px="5" fontFamily="mono" fontSize="xs" fontVariantNumeric="tabular-nums">
                     {entry.time}
                   </Table.Cell>
-                  <Table.Cell
-                    fontFamily="mono"
-                    fontSize="xs"
-                    fontWeight="medium"
-                    color="fg"
-                  >
+                  <Table.Cell fontFamily="mono" fontSize="xs" fontWeight="medium" color="fg">
                     {entry.method}
                   </Table.Cell>
                   <Table.Cell>
@@ -141,5 +109,5 @@ export function LogsTab() {
         </Table.ScrollArea>
       )}
     </Card.Root>
-  )
+  );
 }

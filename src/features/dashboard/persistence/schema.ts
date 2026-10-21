@@ -1,6 +1,6 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
-import { themePreferences } from '../domain/types'
+import { themePreferences } from '../domain/types';
 
 /**
  * Everything the app itself keeps in browser storage: the user's choices about
@@ -10,4 +10,4 @@ export const preferencesSchema = z.object({
   organizationId: z.string(),
   onboardingDismissed: z.boolean(),
   theme: z.enum(themePreferences),
-})
+});

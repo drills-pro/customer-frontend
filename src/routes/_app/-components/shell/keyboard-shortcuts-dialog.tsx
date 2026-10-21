@@ -1,27 +1,14 @@
-import * as React from 'react'
-import {
-  Box,
-  CloseButton,
-  Dialog,
-  Flex,
-  Heading,
-  HStack,
-  Input,
-  InputGroup,
-  Kbd,
-  Portal,
-  Stack,
-  Text,
-} from '@chakra-ui/react'
-import { Search } from 'lucide-react'
+import * as React from 'react';
+import { Box, CloseButton, Dialog, Flex, Heading, HStack, Input, InputGroup, Kbd, Portal, Stack, Text } from '@chakra-ui/react';
+import { Search } from 'lucide-react';
 
 type Shortcut = {
-  label: string
-  keywords?: string
+  label: string;
+  keywords?: string;
   /** A "chord" is pressed together; a "sequence" is pressed one after another. */
-  keys: string[]
-  sequence?: boolean
-}
+  keys: string[];
+  sequence?: boolean;
+};
 
 // Only shortcuts that are wired up belong here; see `useAppShortcuts`.
 const shortcutGroups: Array<{ title: string; shortcuts: Shortcut[] }> = [
@@ -51,35 +38,25 @@ const shortcutGroups: Array<{ title: string; shortcuts: Shortcut[] }> = [
       },
     ],
   },
-]
+];
 
-export function KeyboardShortcutsDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}) {
-  const [query, setQuery] = React.useState('')
-  const normalized = query.trim().toLowerCase()
+export function KeyboardShortcutsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const [query, setQuery] = React.useState('');
+  const normalized = query.trim().toLowerCase();
 
   const groups = shortcutGroups
     .map((group) => ({
       ...group,
-      shortcuts: group.shortcuts.filter((shortcut) =>
-        `${shortcut.label} ${shortcut.keywords ?? ''}`
-          .toLowerCase()
-          .includes(normalized),
-      ),
+      shortcuts: group.shortcuts.filter((shortcut) => `${shortcut.label} ${shortcut.keywords ?? ''}`.toLowerCase().includes(normalized)),
     }))
-    .filter((group) => group.shortcuts.length > 0)
+    .filter((group) => group.shortcuts.length > 0);
 
   return (
     <Dialog.Root
       open={open}
       onOpenChange={(event) => {
-        onOpenChange(event.open)
-        if (!event.open) setQuery('')
+        onOpenChange(event.open);
+        if (!event.open) setQuery('');
       }}
       size="lg"
       scrollBehavior="inside"
@@ -90,9 +67,7 @@ export function KeyboardShortcutsDialog({
           <Dialog.Content maxH="78vh" gap="0">
             <Dialog.Header borderBottomWidth="1px" borderColor="border" py="4">
               <Dialog.Title>Keyboard shortcuts</Dialog.Title>
-              <Dialog.Description srOnly>
-                Shortcuts available anywhere in DRILLS.
-              </Dialog.Description>
+              <Dialog.Description srOnly>Shortcuts available anywhere in DRILLS.</Dialog.Description>
             </Dialog.Header>
 
             <Box px="6" pt="4" pb="1">
@@ -114,26 +89,12 @@ export function KeyboardShortcutsDialog({
               ) : (
                 groups.map((group) => (
                   <section key={group.title}>
-                    <Heading
-                      as="h3"
-                      mt="4"
-                      mb="1"
-                      fontSize="xs"
-                      fontWeight="medium"
-                      color="fg.muted"
-                    >
+                    <Heading as="h3" mt="4" mb="1" fontSize="xs" fontWeight="medium" color="fg.muted">
                       {group.title}
                     </Heading>
                     <Stack as="ul" gap="0" listStyleType="none">
                       {group.shortcuts.map((shortcut) => (
-                        <Flex
-                          as="li"
-                          key={shortcut.label}
-                          align="center"
-                          justify="space-between"
-                          gap="4"
-                          py="1.5"
-                        >
+                        <Flex as="li" key={shortcut.label} align="center" justify="space-between" gap="4" py="1.5">
                           <span>{shortcut.label}</span>
                           <ShortcutKeys shortcut={shortcut} />
                         </Flex>
@@ -144,15 +105,7 @@ export function KeyboardShortcutsDialog({
               )}
             </Dialog.Body>
 
-            <HStack
-              gap="1.5"
-              borderTopWidth="1px"
-              borderColor="border"
-              px="6"
-              py="3"
-              fontSize="xs"
-              color="fg.muted"
-            >
+            <HStack gap="1.5" borderTopWidth="1px" borderColor="border" px="6" py="3" fontSize="xs" color="fg.muted">
               Press <Kbd size="sm">?</Kbd> anywhere to open this panel
             </HStack>
             <Dialog.CloseTrigger asChild>
@@ -162,7 +115,7 @@ export function KeyboardShortcutsDialog({
         </Dialog.Positioner>
       </Portal>
     </Dialog.Root>
-  )
+  );
 }
 
 function ShortcutKeys({ shortcut }: { shortcut: Shortcut }) {
@@ -181,5 +134,5 @@ function ShortcutKeys({ shortcut }: { shortcut: Shortcut }) {
         </React.Fragment>
       ))}
     </HStack>
-  )
+  );
 }

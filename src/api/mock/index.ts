@@ -10,31 +10,26 @@
  * (see `./router.ts`): the app then sends it to core-api, and the mock answers
  * it only with `includeRetired`.
  */
-import './handlers'
-import { MockHttpError, matchRoute } from './router'
-import type { MatchOptions } from './router'
+import './handlers';
+import { MockHttpError, matchRoute } from './router';
+import type { MatchOptions } from './router';
 
-export { MOCK_DB_STORAGE_KEY, reloadMockDb } from './db'
-export {
-  mirrorDatasets,
-  mirrorModels,
-  mirrorOrganizations,
-  mirrorProjects,
-} from './mirror'
+export { MOCK_DB_STORAGE_KEY, reloadMockDb } from './db';
+export { mirrorDatasets, mirrorModels, mirrorOrganizations, mirrorProjects } from './mirror';
 
 function json(status: number, body: unknown) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { 'Content-Type': 'application/json' },
-  })
+  });
 }
 
 function parseBody(body: unknown) {
-  if (typeof body !== 'string') return body ?? undefined
+  if (typeof body !== 'string') return body ?? undefined;
   try {
-    return JSON.parse(body) as unknown
+    return JSON.parse(body) as unknown;
   } catch {
-    return body
+    return body;
   }
 }
 
@@ -45,11 +40,11 @@ export async function handleMockRequest(
   delayMs = 0,
   options: MatchOptions = {},
 ): Promise<Response | undefined> {
-  const match = matchRoute(method.toUpperCase(), path, options)
-  if (!match) return undefined
+  const match = matchRoute(method.toUpperCase(), path, options);
+  if (!match) return undefined;
 
   if (delayMs > 0) {
-    await new Promise((resolve) => setTimeout(resolve, delayMs))
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
   }
 
   try {
@@ -57,16 +52,14 @@ export async function handleMockRequest(
       params: match.params,
       query: match.query,
       body: parseBody(body),
-    })
-    return result === undefined
-      ? new Response(null, { status: 204 })
-      : json(200, result)
+    });
+    return result === undefined ? new Response(null, { status: 204 }) : json(200, result);
   } catch (error) {
     if (error instanceof MockHttpError) {
-      return json(error.status, { detail: error.message })
+      return json(error.status, { detail: error.message });
     }
     return json(500, {
       detail: error instanceof Error ? error.message : 'Mock handler failed',
-    })
+    });
   }
 }

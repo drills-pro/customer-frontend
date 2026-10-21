@@ -1,38 +1,31 @@
-import { Box, Card, Flex, SimpleGrid, Skeleton, Text } from '@chakra-ui/react'
+import { Box, Card, Flex, SimpleGrid, Skeleton, Text } from '@chakra-ui/react';
 
-import type { ApiMetricKey } from '@/features/dashboard/api'
-import {
-  compactCount,
-  metricChange,
-  sparklinePoints,
-} from '@/features/dashboard/format'
-import {
-  useDashboardSummary,
-  useMetricHistory,
-} from '@/features/dashboard/queries'
+import type { ApiMetricKey } from '@/features/dashboard/api';
+import { compactCount, metricChange, sparklinePoints } from '@/features/dashboard/format';
+import { useDashboardSummary, useMetricHistory } from '@/features/dashboard/queries';
 
-const HISTORY_DAYS = 30
+const HISTORY_DAYS = 30;
 
 const changeColor = {
   up: 'fg.success',
   down: 'fg.error',
   flat: 'fg.muted',
-} as const
+} as const;
 
-const changeArrow = { up: '▲', down: '▼', flat: '■' } as const
+const changeArrow = { up: '▲', down: '▼', flat: '■' } as const;
 
 export function WorkspaceMetrics() {
-  const { data, isPending } = useDashboardSummary()
-  const history = useMetricHistory(HISTORY_DAYS)
-  const metrics = data?.metrics
+  const { data, isPending } = useDashboardSummary();
+  const history = useMetricHistory(HISTORY_DAYS);
+  const metrics = data?.metrics;
 
   // The counts are live from core-api; the trend and sparkline beside each
   // come from the metric history.
   const cards: Array<{
-    key: ApiMetricKey
-    title: string
-    value: string | undefined
-    format: (value: number) => string
+    key: ApiMetricKey;
+    title: string;
+    value: string | undefined;
+    format: (value: number) => string;
   }> = [
     {
       key: 'active_projects',
@@ -58,19 +51,14 @@ export function WorkspaceMetrics() {
       value: metrics && compactCount(metrics.inference_calls_30d),
       format: compactCount,
     },
-  ]
+  ];
 
   return (
-    <SimpleGrid
-      as="section"
-      aria-label="Workspace metrics"
-      columns={{ base: 1, sm: 2, xl: 4 }}
-      gap="4"
-    >
+    <SimpleGrid as="section" aria-label="Workspace metrics" columns={{ base: 1, sm: 2, xl: 4 }} gap="4">
       {cards.map(({ key, title, value, format }) => {
-        const series = history.data?.metrics[key]
-        const values = series?.points.map((point) => point.value) ?? []
-        const change = series && metricChange(series)
+        const series = history.data?.metrics[key];
+        const values = series?.points.map((point) => point.value) ?? [];
+        const change = series && metricChange(series);
 
         return (
           <Card.Root key={key} variant="outline">
@@ -82,13 +70,7 @@ export function WorkspaceMetrics() {
                 {isPending ? (
                   <Skeleton mt="2" h="9" w="16" />
                 ) : (
-                  <Text
-                    mt="2"
-                    fontSize="3xl"
-                    fontWeight="semibold"
-                    letterSpacing="tight"
-                    lineHeight="short"
-                  >
+                  <Text mt="2" fontSize="3xl" fontWeight="semibold" letterSpacing="tight" lineHeight="short">
                     {/* A dash when the request failed; the cards below say why. */}
                     {value ?? '—'}
                   </Text>
@@ -98,11 +80,7 @@ export function WorkspaceMetrics() {
                 ) : (
                   change && (
                     <Text mt="2" fontSize="xs">
-                      <Text
-                        as="span"
-                        fontWeight="medium"
-                        color={changeColor[change.direction]}
-                      >
+                      <Text as="span" fontWeight="medium" color={changeColor[change.direction]}>
                         {changeArrow[change.direction]} {change.label}
                       </Text>{' '}
                       <Text as="span" color="fg.muted">
@@ -136,8 +114,8 @@ export function WorkspaceMetrics() {
               )}
             </Flex>
           </Card.Root>
-        )
+        );
       })}
     </SimpleGrid>
-  )
+  );
 }

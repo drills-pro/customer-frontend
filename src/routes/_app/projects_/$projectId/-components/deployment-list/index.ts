@@ -1,5 +1,1 @@
-export {
-  EnvironmentBadge,
-  environmentOptions,
-  statusOptions,
-} from './status-badge'
+export { EnvironmentBadge, environmentOptions, statusOptions } from './status-badge';

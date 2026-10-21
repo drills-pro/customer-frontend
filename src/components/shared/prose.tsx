@@ -1,4 +1,4 @@
-import { chakra } from '@chakra-ui/react'
+import { chakra } from '@chakra-ui/react';
 
 /**
  * Typography for rendered Markdown (READMEs): headings, lists, code, tables
@@ -67,4 +67,4 @@ export const Prose = chakra('div', {
     '& :where(th)': { fontWeight: 'semibold' },
     '& :where(hr)': { my: '6', borderColor: 'border' },
   },
-})
+});

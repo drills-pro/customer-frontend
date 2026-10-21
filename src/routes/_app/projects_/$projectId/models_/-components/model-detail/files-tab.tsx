@@ -1,17 +1,14 @@
-import { Button, Code, Flex, Table, VisuallyHidden } from '@chakra-ui/react'
-import { Download, FileText } from 'lucide-react'
-import { toaster } from '@/components/toaster'
+import { Button, Code, Flex, Table, VisuallyHidden } from '@chakra-ui/react';
+import { Download, FileText } from 'lucide-react';
+import { toaster } from '@/components/toaster';
 
-import { SectionCard } from '@/components/shared/section-card'
-import { useCurrentModel } from './use-current-model'
+import { SectionCard } from '@/components/shared/section-card';
+import { useCurrentModel } from './use-current-model';
 
 export function FilesTab() {
-  const { model, detail } = useCurrentModel()
+  const { model, detail } = useCurrentModel();
   return (
-    <SectionCard
-      title="Artifacts"
-      action={<Code size="sm">drills://models/{model.id}</Code>}
-    >
+    <SectionCard title="Artifacts" action={<Code size="sm">drills://models/{model.id}</Code>}>
       <Table.ScrollArea>
         <Table.Root variant="data" minW="560px">
           <Table.Header>
@@ -29,14 +26,7 @@ export function FilesTab() {
             {detail.files.map((file) => (
               <Table.Row key={file.name}>
                 <Table.Cell px="5">
-                  <Flex
-                    as="span"
-                    align="center"
-                    gap="2"
-                    fontFamily="mono"
-                    fontSize="13px"
-                    color="fg"
-                  >
+                  <Flex as="span" align="center" gap="2" fontFamily="mono" fontSize="13px" color="fg">
                     <FileText size={16} aria-hidden="true" />
                     {file.name}
                   </Flex>
@@ -68,5 +58,5 @@ export function FilesTab() {
         </Table.Root>
       </Table.ScrollArea>
     </SectionCard>
-  )
+  );
 }

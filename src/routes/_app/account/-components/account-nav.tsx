@@ -1,8 +1,8 @@
-import * as React from 'react'
-import { Box, Link } from '@chakra-ui/react'
-import { Link as RouterLink, useLocation } from '@tanstack/react-router'
+import * as React from 'react';
+import { Box, Link } from '@chakra-ui/react';
+import { Link as RouterLink, useLocation } from '@tanstack/react-router';
 
-import { SECTION_OFFSET } from '@/components/shared/settings-nav'
+import { SECTION_OFFSET } from '@/components/shared/settings-nav';
 
 export const accountSections = [
   { to: '/account/profile', label: 'Profile' },
@@ -12,21 +12,20 @@ export const accountSections = [
   { to: '/account/api-keys', label: 'API keys' },
   { to: '/account/team', label: 'Team' },
   { to: '/account/appearance', label: 'Appearance' },
-] as const
+] as const;
 
 export function AccountNav() {
-  const navRef = React.useRef<HTMLElement>(null)
-  const pathname = useLocation({ select: (location) => location.pathname })
+  const navRef = React.useRef<HTMLElement>(null);
+  const pathname = useLocation({ select: (location) => location.pathname });
 
   // On narrow screens the nav is a horizontal strip; keep the current tab in
   // view. Only the strip scrolls, never the page.
   React.useEffect(() => {
-    const nav = navRef.current
-    const active = nav?.querySelector<HTMLElement>('[aria-current="page"]')
-    if (!nav || !active || nav.scrollWidth <= nav.clientWidth) return
-    nav.scrollLeft =
-      active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2
-  }, [pathname])
+    const nav = navRef.current;
+    const active = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!nav || !active || nav.scrollWidth <= nav.clientWidth) return;
+    nav.scrollLeft = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
+  }, [pathname]);
 
   return (
     <Box
@@ -69,5 +68,5 @@ export function AccountNav() {
         </Link>
       ))}
     </Box>
-  )
+  );
 }

@@ -1,1 +1,1 @@
-export { CardError, CardLoading } from '@/components/shared/query-states'
+export { CardError, CardLoading } from '@/components/shared/query-states';

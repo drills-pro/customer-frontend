@@ -1,14 +1,11 @@
-import type {
-  ApiDeployment,
-  ApiRequestLog,
-} from '@/features/deployments/api/types'
-import { SEED_NOW, daysAgo, weeksAgo } from './units'
+import type { ApiDeployment, ApiRequestLog } from '@/features/deployments/api/types';
+import { SEED_NOW, daysAgo, weeksAgo } from './units';
 
 const scaling = {
   serving: 'pinned',
   target_concurrency: 40,
   scale_down_delay_seconds: 300,
-} satisfies Partial<ApiDeployment>
+} satisfies Partial<ApiDeployment>;
 
 const idle = {
   active_replicas: 0,
@@ -18,7 +15,7 @@ const idle = {
   latency_p99_ms: null,
   error_rate_percent: null,
   cost_per_day_usd: 0,
-} satisfies Partial<ApiDeployment>
+} satisfies Partial<ApiDeployment>;
 
 /** Served models for the projects the demo populates. */
 export const deploymentSeed: ApiDeployment[] = [
@@ -120,16 +117,16 @@ export const deploymentSeed: ApiDeployment[] = [
     cost_per_day_usd: 6.8,
     deployed_at: daysAgo(4),
   },
-]
+];
 
 /**
  * 24 hourly request counts ending "now". Deterministic on purpose: these
  * values are asserted in tests.
  */
 export const requestVolume24h = [
-  3120, 2740, 2310, 2050, 1980, 2240, 3480, 5120, 7340, 8210, 8640, 8120, 7960,
-  8430, 8890, 9240, 8760, 8110, 7420, 6380, 5240, 4610, 3980, 3410,
-]
+  3120, 2740, 2310, 2050, 1980, 2240, 3480, 5120, 7340, 8210, 8640, 8120, 7960, 8430, 8890, 9240, 8760, 8110, 7420, 6380, 5240, 4610, 3980,
+  3410,
+];
 
 /** Seconds before load, status, latency, client. */
 const logShape: Array<[number, number, number | null, string]> = [
@@ -140,12 +137,12 @@ const logShape: Array<[number, number, number | null, string]> = [
   [23, 500, null, 'sdk-js/2.1'],
   [31, 200, 104, 'sdk-python/1.4'],
   [40, 200, 67, 'sdk-go/0.9'],
-]
+];
 
 /** The request log of one deployment. Empty unless it is serving. */
 export function requestLogs(deployment: ApiDeployment): ApiRequestLog[] {
-  if (deployment.status !== 'live') return []
-  const slug = deployment.endpoint_url.split('/').at(-2) ?? deployment.id
+  if (deployment.status !== 'live') return [];
+  const slug = deployment.endpoint_url.split('/').at(-2) ?? deployment.id;
   return logShape.map(([secondsAgo, status, latency_ms, client], index) => ({
     request_id: `req_${slug}_${(9124 - index * 37).toString(16)}`,
     time: new Date(SEED_NOW - secondsAgo * 1000).toISOString(),
@@ -153,8 +150,8 @@ export function requestLogs(deployment: ApiDeployment): ApiRequestLog[] {
     status,
     latency_ms,
     client,
-  }))
+  }));
 }
 
 /** Instance types a deployment can run on. */
-export const servingInstanceTypes = ['a10g-1', 't4-1', 'cpu-4', 'edge-arm64']
+export const servingInstanceTypes = ['a10g-1', 't4-1', 'cpu-4', 'edge-arm64'];

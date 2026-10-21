@@ -1,14 +1,11 @@
-import {
-  DASHBOARD_STORAGE_KEY,
-  defaultPreferences,
-} from '@/features/dashboard/data'
-import type { DashboardPreferences } from '@/features/dashboard/data'
-import { restorePreferences } from './restore'
+import { DASHBOARD_STORAGE_KEY, defaultPreferences } from '@/features/dashboard/data';
+import type { DashboardPreferences } from '@/features/dashboard/data';
+import { restorePreferences } from './restore';
 
 export type LoadPreferencesResult = {
-  preferences: DashboardPreferences
-  available: boolean
-}
+  preferences: DashboardPreferences;
+  available: boolean;
+};
 
 /**
  * Reads persisted preferences. Privacy settings can make `localStorage`
@@ -17,10 +14,10 @@ export type LoadPreferencesResult = {
  */
 export function loadPreferences(): LoadPreferencesResult {
   try {
-    const raw = window.localStorage.getItem(DASHBOARD_STORAGE_KEY)
-    return { preferences: restorePreferences(raw), available: true }
+    const raw = window.localStorage.getItem(DASHBOARD_STORAGE_KEY);
+    return { preferences: restorePreferences(raw), available: true };
   } catch {
-    return { preferences: defaultPreferences, available: false }
+    return { preferences: defaultPreferences, available: false };
   }
 }
 
@@ -30,9 +27,9 @@ export function loadPreferences(): LoadPreferencesResult {
  */
 export function savePreferences(value: DashboardPreferences): boolean {
   try {
-    window.localStorage.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify(value))
-    return true
+    window.localStorage.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify(value));
+    return true;
   } catch {
-    return false
+    return false;
   }
 }

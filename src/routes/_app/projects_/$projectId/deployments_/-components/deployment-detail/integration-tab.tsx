@@ -1,38 +1,23 @@
-import * as React from 'react'
-import {
-  Box,
-  Button,
-  Card,
-  Center,
-  Code,
-  Flex,
-  Grid,
-  SimpleGrid,
-  Tabs,
-  Text,
-} from '@chakra-ui/react'
-import { ImageUp, Play } from 'lucide-react'
-import { toaster } from '@/components/toaster'
+import * as React from 'react';
+import { Box, Button, Card, Center, Code, Flex, Grid, SimpleGrid, Tabs, Text } from '@chakra-ui/react';
+import { ImageUp, Play } from 'lucide-react';
+import { toaster } from '@/components/toaster';
 
-import { CopyButton } from '@/components/shared/copy-button'
-import { SectionCard } from '@/components/shared/section-card'
-import { ToneBadge } from '@/components/shared/tone-badge'
-import {
-  useDeploymentKey,
-  useRotateDeploymentKey,
-  useTestDeployment,
-} from '@/features/deployments/queries'
-import { relativeTimeLong } from '@/lib/format'
-import { useCurrentDeployment } from './use-current-deployment'
+import { CopyButton } from '@/components/shared/copy-button';
+import { SectionCard } from '@/components/shared/section-card';
+import { ToneBadge } from '@/components/shared/tone-badge';
+import { useDeploymentKey, useRotateDeploymentKey, useTestDeployment } from '@/features/deployments/queries';
+import { relativeTimeLong } from '@/lib/format';
+import { useCurrentDeployment } from './use-current-deployment';
 
-const languages = ['cURL', 'Python', 'JavaScript', 'Go'] as const
-type Language = (typeof languages)[number]
+const languages = ['cURL', 'Python', 'JavaScript', 'Go'] as const;
+type Language = (typeof languages)[number];
 
 function snippet(language: Language, endpoint: string, apiKey: string) {
   if (language === 'cURL') {
     return `curl -X POST "${endpoint}" \\
   -H "Authorization: Bearer ${apiKey}" \\
-  -F "image=@shelf.jpg"`
+  -F "image=@shelf.jpg"`;
   }
   if (language === 'Python') {
     return `import requests
@@ -43,7 +28,7 @@ head = {"Authorization": "Bearer ${apiKey}"}
 with open("shelf.jpg", "rb") as f:
     r = requests.post(url, headers=head, files={"image": f})
 
-print(r.json())`
+print(r.json())`;
   }
   if (language === 'JavaScript') {
     return `const body = new FormData()
@@ -55,47 +40,33 @@ const res = await fetch("${endpoint}", {
   body,
 })
 
-console.log(await res.json())`
+console.log(await res.json())`;
   }
   return `req, _ := http.NewRequest("POST",
     "${endpoint}", body)
 req.Header.Set("Authorization", "Bearer ${apiKey}")
 req.Header.Set("Content-Type", writer.FormDataContentType())
 
-res, err := http.DefaultClient.Do(req)`
+res, err := http.DefaultClient.Do(req)`;
 }
 
 export function IntegrationTab() {
-  const { project, deployment, model } = useCurrentDeployment()
-  const [language, setLanguage] = React.useState<Language>('Python')
-  const testCall = useTestDeployment(project.id, deployment.id)
-  const key = useDeploymentKey(project.id, deployment.id).data
-  const rotate = useRotateDeploymentKey(project.id, deployment.id)
+  const { project, deployment, model } = useCurrentDeployment();
+  const [language, setLanguage] = React.useState<Language>('Python');
+  const testCall = useTestDeployment(project.id, deployment.id);
+  const key = useDeploymentKey(project.id, deployment.id).data;
+  const rotate = useRotateDeploymentKey(project.id, deployment.id);
   // A rotated key is readable once, in the answer to the rotation.
-  const freshKey = rotate.data?.key
+  const freshKey = rotate.data?.key;
   // The samples carry the masked key: enough to recognise, useless to copy.
-  const code = snippet(language, deployment.endpoint, key?.masked_key ?? '')
-  const modelLabel = model
-    ? `${model.name} v${model.version}`
-    : deployment.modelId
+  const code = snippet(language, deployment.endpoint, key?.masked_key ?? '');
+  const modelLabel = model ? `${model.name} v${model.version}` : deployment.modelId;
 
   return (
-    <Grid
-      minW="0"
-      alignItems="start"
-      gap="6"
-      templateColumns={{ lg: 'repeat(3, minmax(0, 1fr))' }}
-    >
+    <Grid minW="0" alignItems="start" gap="6" templateColumns={{ lg: 'repeat(3, minmax(0, 1fr))' }}>
       <Grid minW="0" gap="6" gridColumn={{ lg: 'span 2' }}>
         <Card.Root variant="outline" overflow="hidden">
-          <Flex
-            align="center"
-            gap="2"
-            px="5"
-            py="2.5"
-            borderBottomWidth="1px"
-            borderColor="border"
-          >
+          <Flex align="center" gap="2" px="5" py="2.5" borderBottomWidth="1px" borderColor="border">
             <Tabs.Root
               variant="subtle"
               size="sm"
@@ -113,24 +84,12 @@ export function IntegrationTab() {
             </Tabs.Root>
             <CopyButton value={code} label={`Copy ${language} snippet`} />
           </Flex>
-          <Box
-            as="pre"
-            overflowX="auto"
-            bg="night"
-            color="on-night"
-            p="5"
-            fontFamily="mono"
-            fontSize="xs"
-            lineHeight="relaxed"
-          >
+          <Box as="pre" overflowX="auto" bg="night" color="on-night" p="5" fontFamily="mono" fontSize="xs" lineHeight="relaxed">
             {code}
           </Box>
         </Card.Root>
 
-        <SectionCard
-          title="Send a test request"
-          action={<ToneBadge tone="neutral">Example result</ToneBadge>}
-        >
+        <SectionCard title="Send a test request" action={<ToneBadge tone="neutral">Example result</ToneBadge>}>
           <SimpleGrid columns={{ base: 1, sm: 2 }} gap="5" p="5">
             <Box>
               <Flex
@@ -146,14 +105,7 @@ export function IntegrationTab() {
                 px="5"
                 textAlign="center"
               >
-                <Center
-                  boxSize="9"
-                  rounded="l2"
-                  bg="surface-raised"
-                  color="fg.muted"
-                  borderWidth="1px"
-                  borderColor="border"
-                >
+                <Center boxSize="9" rounded="l2" bg="surface-raised" color="fg.muted" borderWidth="1px" borderColor="border">
                   <ImageUp size={16} />
                 </Center>
                 <Text fontSize="13px" fontWeight="medium">
@@ -184,40 +136,16 @@ export function IntegrationTab() {
               </Button>
             </Box>
             <Box>
-              <Flex
-                align="center"
-                justify="space-between"
-                gap="3"
-                rounded="l2"
-                bg="bg.success"
-                color="fg.success"
-                px="4"
-                py="3"
-              >
+              <Flex align="center" justify="space-between" gap="3" rounded="l2" bg="bg.success" color="fg.success" px="4" py="3">
                 <Box minW="0">
-                  <Text
-                    fontSize="11px"
-                    fontWeight="medium"
-                    letterSpacing="widest"
-                    textTransform="uppercase"
-                  >
+                  <Text fontSize="11px" fontWeight="medium" letterSpacing="widest" textTransform="uppercase">
                     200 OK
                   </Text>
-                  <Text
-                    truncate
-                    fontFamily="mono"
-                    fontSize="15px"
-                    fontWeight="semibold"
-                  >
+                  <Text truncate fontFamily="mono" fontSize="15px" fontWeight="semibold">
                     beverages_cola_330ml
                   </Text>
                 </Box>
-                <Text
-                  flexShrink={0}
-                  fontSize="2xl"
-                  fontWeight="semibold"
-                  fontVariantNumeric="tabular-nums"
-                >
+                <Text flexShrink={0} fontSize="2xl" fontWeight="semibold" fontVariantNumeric="tabular-nums">
                   96.4%
                 </Text>
               </Flex>
@@ -255,10 +183,7 @@ export function IntegrationTab() {
               <Code size="sm" minW="0" flex="1" truncate>
                 {deployment.endpoint}
               </Code>
-              <CopyButton
-                value={deployment.endpoint}
-                label="Copy endpoint URL"
-              />
+              <CopyButton value={deployment.endpoint} label="Copy endpoint URL" />
             </Flex>
             <Box as="dl" mt="4" fontSize="13px">
               {(
@@ -301,9 +226,7 @@ export function IntegrationTab() {
                 ? 'Copy this key now. It will not be shown again.'
                 : key &&
                   `Created ${relativeTimeLong(key.created_at)} · ${
-                    key.last_used_at
-                      ? `last used ${relativeTimeLong(key.last_used_at)}`
-                      : 'never used'
+                    key.last_used_at ? `last used ${relativeTimeLong(key.last_used_at)}` : 'never used'
                   }.`}
             </Text>
             <Button
@@ -328,5 +251,5 @@ export function IntegrationTab() {
         </SectionCard>
       </Grid>
     </Grid>
-  )
+  );
 }

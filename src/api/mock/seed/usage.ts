@@ -1,36 +1,33 @@
-import type {
-  ApiResourceUsage,
-  ApiUsagePeriod,
-} from '@/features/projects/api/types'
+import type { ApiResourceUsage, ApiUsagePeriod } from '@/features/projects/api/types';
 
 /** How a project's usage differs from the default curves. */
 export type UsageScale = {
-  gpu_scale: number
-  storage_scale: number
-  endpoints_max: number
-}
+  gpu_scale: number;
+  storage_scale: number;
+  endpoints_max: number;
+};
 
 export const defaultUsageScale: UsageScale = {
   gpu_scale: 1,
   storage_scale: 1,
   endpoints_max: 2,
-}
+};
 
-const MONTH_DAYS = 30
+const MONTH_DAYS = 30;
 
 function hourLabels(): Array<[string, string]> {
   return Array.from({ length: 24 }, (_, hour) => {
-    const clock = hour % 12 === 0 ? 12 : hour % 12
-    const meridiem = hour < 12 ? 'AM' : 'PM'
-    return [`${clock} ${meridiem}`, `${clock}${hour < 12 ? 'a' : 'p'}`]
-  })
+    const clock = hour % 12 === 0 ? 12 : hour % 12;
+    const meridiem = hour < 12 ? 'AM' : 'PM';
+    return [`${clock} ${meridiem}`, `${clock}${hour < 12 ? 'a' : 'p'}`];
+  });
 }
 
 function monthDayLabels(): Array<[string, string]> {
   return Array.from({ length: MONTH_DAYS }, (_, index) => {
-    const day = index + 1
-    return [`Sep ${day}`, String(day)]
-  })
+    const day = index + 1;
+    return [`Sep ${day}`, String(day)];
+  });
 }
 
 // Each period is a window; every bar is one natural sub-unit inside it.
@@ -46,34 +43,34 @@ const usageLabels: Record<ApiUsagePeriod, Array<[string, string]>> = {
     ['Sunday', 'S'],
   ],
   month: monthDayLabels(),
-}
+};
 
 function round1(value: number) {
-  return Math.round(value * 10) / 10
+  return Math.round(value * 10) / 10;
 }
 
 type UsageCurve = {
   /** Value of the first bar, before jitter. */
-  start: number
+  start: number;
   /** Value of the last bar, before jitter. */
-  end: number
+  end: number;
   /** Exact aggregate the rendered bars should add up to, when given. */
-  total?: number
+  total?: number;
   /** Round every bar to a whole number (for "peak"-style counts). */
-  integer?: boolean
-  seed?: number
-}
+  integer?: boolean;
+  seed?: number;
+};
 
 /**
  * A repeatable stream of numbers in [0, 1): the same seed replays the same
  * stream, so seeded series can be asserted in tests.
  */
 export function seededNoise(seed: number) {
-  let state = seed
+  let state = seed;
   return () => {
-    state = (state * 1103515245 + 12345) % 2147483648
-    return state / 2147483648
-  }
+    state = (state * 1103515245 + 12345) % 2147483648;
+    return state / 2147483648;
+  };
 }
 
 /**
@@ -81,55 +78,47 @@ export function seededNoise(seed: number) {
  * purpose: these values are asserted in tests.
  */
 function usageCurve(count: number, curve: UsageCurve): number[] {
-  const { start, end, total, integer = false, seed = 7 } = curve
-  const nextNoise = seededNoise(seed)
+  const { start, end, total, integer = false, seed = 7 } = curve;
+  const nextNoise = seededNoise(seed);
   const values = Array.from({ length: count }, (_, index) => {
-    const noise = nextNoise()
-    const trend =
-      start + (end - start) * (count === 1 ? 1 : index / (count - 1))
-    const jitter = integer ? 0 : (noise - 0.5) * 0.35 * trend
-    return Math.max(0, trend + jitter)
-  })
+    const noise = nextNoise();
+    const trend = start + (end - start) * (count === 1 ? 1 : index / (count - 1));
+    const jitter = integer ? 0 : (noise - 0.5) * 0.35 * trend;
+    return Math.max(0, trend + jitter);
+  });
 
-  if (integer) return values.map((value) => Math.round(value))
-  if (total === undefined) return values.map(round1)
+  if (integer) return values.map((value) => Math.round(value));
+  if (total === undefined) return values.map(round1);
 
-  const sum = values.reduce((carry, value) => carry + value, 0)
-  const scaled = values.map((value) =>
-    round1(sum === 0 ? 0 : (value * total) / sum),
-  )
+  const sum = values.reduce((carry, value) => carry + value, 0);
+  const scaled = values.map((value) => round1(sum === 0 ? 0 : (value * total) / sum));
   // Spread rounding drift one tenth at a time so the headline total is exact
   // without any single bar jumping off the trend.
-  let drift = Math.round(
-    (total - scaled.reduce((carry, value) => carry + value, 0)) * 10,
-  )
+  let drift = Math.round((total - scaled.reduce((carry, value) => carry + value, 0)) * 10);
   for (let index = scaled.length - 1; drift !== 0 && index >= 0; index -= 1) {
-    const step = drift > 0 ? 0.1 : -0.1
-    if (scaled[index] + step < 0) continue
-    scaled[index] = round1(scaled[index] + step)
-    drift -= drift > 0 ? 1 : -1
-    if (index === 0) index = scaled.length
+    const step = drift > 0 ? 0.1 : -0.1;
+    if (scaled[index] + step < 0) continue;
+    scaled[index] = round1(scaled[index] + step);
+    drift -= drift > 0 ? 1 : -1;
+    if (index === 0) index = scaled.length;
   }
-  return scaled
+  return scaled;
 }
 
-function usageSeries(
-  curves: Record<ApiUsagePeriod, UsageCurve>,
-  scale = 1,
-): ApiResourceUsage['series'] {
+function usageSeries(curves: Record<ApiUsagePeriod, UsageCurve>, scale = 1): ApiResourceUsage['series'] {
   return Object.fromEntries(
     Object.entries(curves).map(([key, curve]) => {
-      const period = key as ApiUsagePeriod
-      const labels = usageLabels[period]
+      const period = key as ApiUsagePeriod;
+      const labels = usageLabels[period];
       return [
         period,
         usageCurve(labels.length, curve).map((value, index) => {
-          const [label, short_label] = labels[index]
-          return { label, short_label, value: round1(value * scale) }
+          const [label, short_label] = labels[index];
+          return { label, short_label, value: round1(value * scale) };
         }),
-      ]
+      ];
     }),
-  ) as ApiResourceUsage['series']
+  ) as ApiResourceUsage['series'];
 }
 
 export function resourceUsage(scale: UsageScale): ApiResourceUsage[] {
@@ -185,5 +174,5 @@ export function resourceUsage(scale: UsageScale): ApiResourceUsage[] {
         scale.endpoints_max / 2,
       ),
     },
-  ]
+  ];
 }

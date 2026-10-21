@@ -1,18 +1,15 @@
-import { Box, Flex, Input, InputGroup } from '@chakra-ui/react'
-import { Grid2X2, List, Search } from 'lucide-react'
+import { Box, Flex, Input, InputGroup } from '@chakra-ui/react';
+import { Grid2X2, List, Search } from 'lucide-react';
 
-import {
-  RadioButton,
-  RadioButtonGroup,
-} from '@/components/shared/radio-button-group'
-import { SimpleSelect } from '@/components/simple-select'
+import { RadioButton, RadioButtonGroup } from '@/components/shared/radio-button-group';
+import { SimpleSelect } from '@/components/simple-select';
 
-import type { ProjectFiltersState, View } from './types'
+import type { ProjectFiltersState, View } from './types';
 
 const views = [
   { value: 'grid', label: 'Grid view', icon: Grid2X2 },
   { value: 'list', label: 'List view', icon: List },
-] as const
+] as const;
 
 export function ProjectFilters({
   filters,
@@ -20,25 +17,14 @@ export function ProjectFilters({
   taskTypes,
   statuses,
 }: {
-  filters: ProjectFiltersState
-  onFiltersChange: (patch: Partial<ProjectFiltersState>) => void
-  taskTypes: Array<string>
-  statuses: Array<string>
+  filters: ProjectFiltersState;
+  onFiltersChange: (patch: Partial<ProjectFiltersState>) => void;
+  taskTypes: Array<string>;
+  statuses: Array<string>;
 }) {
   return (
-    <Flex
-      as="section"
-      aria-label="Project filters"
-      mb="4"
-      wrap="wrap"
-      align="center"
-      gap="2"
-    >
-      <InputGroup
-        flex="1"
-        minW="220px"
-        startElement={<Search size={16} aria-hidden="true" />}
-      >
+    <Flex as="section" aria-label="Project filters" mb="4" wrap="wrap" align="center" gap="2">
+      <InputGroup flex="1" minW="220px" startElement={<Search size={16} aria-hidden="true" />}>
         <Input
           size="sm"
           bg="surface-raised"
@@ -57,10 +43,7 @@ export function ProjectFilters({
           width="full"
           value={filters.task}
           onChange={(value) => onFiltersChange({ task: value })}
-          items={[
-            { label: 'All task types', value: 'all' },
-            ...taskTypes.map((item) => ({ label: item, value: item })),
-          ]}
+          items={[{ label: 'All task types', value: 'all' }, ...taskTypes.map((item) => ({ label: item, value: item }))]}
         />
       </Box>
 
@@ -72,10 +55,7 @@ export function ProjectFilters({
           width="full"
           value={filters.status}
           onChange={(value) => onFiltersChange({ status: value })}
-          items={[
-            { label: 'All statuses', value: 'all' },
-            ...statuses.map((item) => ({ label: item, value: item })),
-          ]}
+          items={[{ label: 'All statuses', value: 'all' }, ...statuses.map((item) => ({ label: item, value: item }))]}
         />
       </Box>
 
@@ -101,17 +81,11 @@ export function ProjectFilters({
         onChange={(value) => onFiltersChange({ view: value as View })}
       >
         {views.map(({ value, label, icon: ViewIcon }) => (
-          <RadioButton
-            key={value}
-            value={value}
-            size="sm"
-            px="2.5"
-            aria-label={label}
-          >
+          <RadioButton key={value} value={value} size="sm" px="2.5" aria-label={label}>
             <ViewIcon />
           </RadioButton>
         ))}
       </RadioButtonGroup>
     </Flex>
-  )
+  );
 }

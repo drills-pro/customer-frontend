@@ -1,19 +1,18 @@
-import type { Page, Route } from '@playwright/test'
-import type { DashboardSummary } from '../../src/features/dashboard/api'
+import type { Page, Route } from '@playwright/test';
+import type { DashboardSummary } from '../../src/features/dashboard/api';
 
 /**
  * The dev server under test is started with these (see playwright.config.ts).
  * Nothing listens at API_URL: every core-api call a test cares about is
  * answered by `mockDashboardApi`, and any other one fails fast.
  */
-export const TENANT_ID = '11111111-1111-1111-1111-111111111111'
-export const API_URL = 'http://core-api.test'
+export const TENANT_ID = '11111111-1111-1111-1111-111111111111';
+export const API_URL = 'http://core-api.test';
 
-const RETAIL = '22222222-0000-0000-0000-000000000001'
-const CHURN = '22222222-0000-0000-0000-000000000002'
+const RETAIL = '22222222-0000-0000-0000-000000000001';
+const CHURN = '22222222-0000-0000-0000-000000000002';
 
-const minutesAgo = (minutes: number) =>
-  new Date(Date.now() - minutes * 60_000).toISOString()
+const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
 
 export function dashboardSummary(): DashboardSummary {
   return {
@@ -84,29 +83,17 @@ export function dashboardSummary(): DashboardSummary {
       activity('training_run:2:start', 'training_run', 'start', '44444444', 30),
       activity('deployment:1', 'deployment', 'create', '/retail-classify', 90),
       activity('model_version:1', 'model_version', 'register', 'retail v1', 95),
-      activity(
-        'training_run:1:failed',
-        'training_run',
-        'failed',
-        '4444aaaa',
-        99,
-      ),
+      activity('training_run:1:failed', 'training_run', 'failed', '4444aaaa', 99),
       activity('dataset:1', 'dataset', 'create', 'shelf-photos', 200),
       {
         ...activity('audit:1', 'project', 'create', 'Retail Vision', 300),
         actor: 'alice',
       },
     ],
-  }
+  };
 }
 
-function activity(
-  id: string,
-  kind: string,
-  action: string,
-  name: string,
-  minutes: number,
-): DashboardSummary['activity'][number] {
+function activity(id: string, kind: string, action: string, name: string, minutes: number): DashboardSummary['activity'][number] {
   return {
     id,
     kind,
@@ -116,7 +103,7 @@ function activity(
     project_name: 'Retail Vision',
     actor: null,
     occurred_at: minutesAgo(minutes),
-  }
+  };
 }
 
 export const emptySummary: DashboardSummary = {
@@ -133,11 +120,11 @@ export const emptySummary: DashboardSummary = {
   live_trainings: [],
   deployments: [],
   activity: [],
-}
+};
 
 // The API is another origin, so a mocked answer needs the CORS header the real
 // one sends (core-api allows every origin; it authenticates by header).
-const cors = { 'access-control-allow-origin': '*' }
+const cors = { 'access-control-allow-origin': '*' };
 
 export function json(route: Route, body: unknown, status = 200) {
   return route.fulfill({
@@ -145,25 +132,22 @@ export function json(route: Route, body: unknown, status = 200) {
     headers: cors,
     contentType: 'application/json',
     body: JSON.stringify(body),
-  })
+  });
 }
 
 export type DashboardApi = {
   /** What `GET /v1/dashboard` answers next; tests may replace or mutate it. */
-  summary: DashboardSummary
+  summary: DashboardSummary;
   /** Headers of every dashboard request, to assert on. */
-  requests: Array<Record<string, string>>
-}
+  requests: Array<Record<string, string>>;
+};
 
 /** Answers `GET /v1/dashboard` from an in-memory summary. */
-export async function mockDashboardApi(
-  page: Page,
-  summary: DashboardSummary = dashboardSummary(),
-): Promise<DashboardApi> {
-  const api: DashboardApi = { summary, requests: [] }
+export async function mockDashboardApi(page: Page, summary: DashboardSummary = dashboardSummary()): Promise<DashboardApi> {
+  const api: DashboardApi = { summary, requests: [] };
   await page.route(`${API_URL}/v1/dashboard`, (route) => {
-    api.requests.push(route.request().headers())
-    return json(route, api.summary)
-  })
-  return api
+    api.requests.push(route.request().headers());
+    return json(route, api.summary);
+  });
+  return api;
 }

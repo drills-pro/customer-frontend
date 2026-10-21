@@ -1,13 +1,9 @@
-import type * as React from 'react'
-import { Flex, Link } from '@chakra-ui/react'
-import type { FlexProps } from '@chakra-ui/react'
+import type * as React from 'react';
+import { Flex, Link } from '@chakra-ui/react';
+import type { FlexProps } from '@chakra-ui/react';
 
 /** A row of line tabs that navigate between a record's sections. */
-export function SectionTabs({
-  'aria-label': label,
-  children,
-  ...props
-}: { 'aria-label': string } & FlexProps) {
+export function SectionTabs({ 'aria-label': label, children, ...props }: { 'aria-label': string } & FlexProps) {
   return (
     <Flex
       as="nav"
@@ -22,7 +18,7 @@ export function SectionTabs({
     >
       {children}
     </Flex>
-  )
+  );
 }
 
 /**
@@ -50,5 +46,5 @@ export function SectionTab({ children }: { children: React.ReactElement }) {
     >
       {children}
     </Link>
-  )
+  );
 }

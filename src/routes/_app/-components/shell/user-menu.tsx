@@ -1,73 +1,34 @@
-import {
-  Avatar,
-  Badge,
-  Box,
-  Flex,
-  HStack,
-  IconButton,
-  Menu,
-  Portal,
-  Progress,
-  Stack,
-  Text,
-} from '@chakra-ui/react'
-import type { AvatarRootProps, MenuItemProps } from '@chakra-ui/react'
-import { Link } from '@tanstack/react-router'
-import {
-  Bell,
-  CircleHelp,
-  CreditCard,
-  Keyboard,
-  Lock,
-  LogOut,
-  SunMoon,
-  User,
-  Users,
-} from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
-import { toaster } from '@/components/toaster'
+import { Avatar, Badge, Box, Flex, HStack, IconButton, Menu, Portal, Progress, Stack, Text } from '@chakra-ui/react';
+import type { AvatarRootProps, MenuItemProps } from '@chakra-ui/react';
+import { Link } from '@tanstack/react-router';
+import { Bell, CircleHelp, CreditCard, Keyboard, Lock, LogOut, SunMoon, User, Users } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { toaster } from '@/components/toaster';
 
-import type { CurrentUser } from '@/features/account/mappers'
-import { useCurrentUser } from '@/features/account/queries'
-import type {
-  Organization,
-  ThemePreference,
-} from '@/features/dashboard/domain/types'
-import { useBilling } from '@/features/organizations/queries'
-import { formatCount } from '@/lib/format'
-import { themeLabel } from '../../account/-components/account-data'
-import { unavailable } from '@/lib/unavailable'
+import type { CurrentUser } from '@/features/account/mappers';
+import { useCurrentUser } from '@/features/account/queries';
+import type { Organization, ThemePreference } from '@/features/dashboard/domain/types';
+import { useBilling } from '@/features/organizations/queries';
+import { formatCount } from '@/lib/format';
+import { themeLabel } from '../../account/-components/account-data';
+import { unavailable } from '@/lib/unavailable';
 
 type AccountLink = {
-  label: string
-  icon: LucideIcon
-  to:
-    | '/account/profile'
-    | '/account/security'
-    | '/account/billing'
-    | '/account/team'
-    | '/account/notifications'
-    | '/account/appearance'
-}
+  label: string;
+  icon: LucideIcon;
+  to: '/account/profile' | '/account/security' | '/account/billing' | '/account/team' | '/account/notifications' | '/account/appearance';
+};
 
 const accountLinks: AccountLink[] = [
   { label: 'Profile', icon: User, to: '/account/profile' },
   { label: 'Account settings', icon: Lock, to: '/account/security' },
   { label: 'Billing & usage', icon: CreditCard, to: '/account/billing' },
   { label: 'Team members', icon: Users, to: '/account/team' },
-]
+];
 
-export function UserMenu({
-  org,
-  theme,
-  onOpenShortcuts,
-}: {
-  org: Organization
-  theme: ThemePreference
-  onOpenShortcuts: () => void
-}) {
-  const user = useCurrentUser().data
-  const billing = useBilling(org.id).data
+export function UserMenu({ org, theme, onOpenShortcuts }: { org: Organization; theme: ThemePreference; onOpenShortcuts: () => void }) {
+  const user = useCurrentUser().data;
+  const billing = useBilling(org.id).data;
 
   return (
     <Menu.Root positioning={{ placement: 'bottom-end' }}>
@@ -109,34 +70,13 @@ export function UserMenu({
                   </Badge>
                 )}
               </Flex>
-              <Flex
-                align="center"
-                justify="space-between"
-                fontSize="xs"
-                color="fg.muted"
-              >
+              <Flex align="center" justify="space-between" fontSize="xs" color="fg.muted">
                 <span>Credits used</span>
-                <Text
-                  as="span"
-                  fontWeight="semibold"
-                  color="fg"
-                  fontVariantNumeric="tabular-nums"
-                >
-                  {billing
-                    ? `${formatCount(billing.credits_used)} / ${formatCount(billing.credits_total)}`
-                    : ''}
+                <Text as="span" fontWeight="semibold" color="fg" fontVariantNumeric="tabular-nums">
+                  {billing ? `${formatCount(billing.credits_used)} / ${formatCount(billing.credits_total)}` : ''}
                 </Text>
               </Flex>
-              <Progress.Root
-                size="xs"
-                value={
-                  billing
-                    ? Math.round(
-                        (billing.credits_used / billing.credits_total) * 100,
-                      )
-                    : 0
-                }
-              >
+              <Progress.Root size="xs" value={billing ? Math.round((billing.credits_used / billing.credits_total) * 100) : 0}>
                 <Progress.Track aria-label="Credits used">
                   <Progress.Range />
                 </Progress.Track>
@@ -176,10 +116,7 @@ export function UserMenu({
 
             <Menu.Separator my="0" />
             <Menu.ItemGroup p="1.5">
-              <MenuItem
-                value="help"
-                onSelect={() => unavailable('Help & documentation')}
-              >
+              <MenuItem value="help" onSelect={() => unavailable('Help & documentation')}>
                 <CircleHelp />
                 Help & documentation
               </MenuItem>
@@ -203,47 +140,28 @@ export function UserMenu({
         </Menu.Positioner>
       </Portal>
     </Menu.Root>
-  )
+  );
 }
 
 /** A menu row with a muted leading icon. */
 function MenuItem(props: MenuItemProps) {
-  return (
-    <Menu.Item
-      gap="2.5"
-      px="2.5"
-      py="2"
-      css={{ '& svg': { boxSize: '4', color: 'fg.muted' } }}
-      {...props}
-    />
-  )
+  return <Menu.Item gap="2.5" px="2.5" py="2" css={{ '& svg': { boxSize: '4', color: 'fg.muted' } }} {...props} />;
 }
 
-function MenuLink({
-  item,
-  shortcut,
-}: {
-  item: AccountLink
-  shortcut?: string
-}) {
-  const Icon = item.icon
+function MenuLink({ item, shortcut }: { item: AccountLink; shortcut?: string }) {
+  const Icon = item.icon;
   return (
     <MenuItem value={item.to} asChild>
       <Link to={item.to}>
         <Icon />
         {item.label}
-        {shortcut && (
-          <Menu.ItemCommand letterSpacing="normal">{shortcut}</Menu.ItemCommand>
-        )}
+        {shortcut && <Menu.ItemCommand letterSpacing="normal">{shortcut}</Menu.ItemCommand>}
       </Link>
     </MenuItem>
-  )
+  );
 }
 
-function UserAvatar({
-  user,
-  ...props
-}: { user: CurrentUser | undefined } & AvatarRootProps) {
+function UserAvatar({ user, ...props }: { user: CurrentUser | undefined } & AvatarRootProps) {
   return (
     <Avatar.Root
       boxSize="8"
@@ -258,5 +176,5 @@ function UserAvatar({
         {user?.initials}
       </Avatar.Fallback>
     </Avatar.Root>
-  )
+  );
 }

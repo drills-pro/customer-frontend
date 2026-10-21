@@ -1,16 +1,6 @@
 /** Turns dataset rows from the API into what the pages render. */
-import type {
-  Dataset,
-  DatasetDetail,
-  DatasetSample,
-  QualityDimension,
-} from '@/features/dashboard/domain/types'
-import {
-  formatBytes,
-  formatDate,
-  recentOrDayMonth,
-  relativeTimeLong,
-} from '@/lib/format'
+import type { Dataset, DatasetDetail, DatasetSample, QualityDimension } from '@/features/dashboard/domain/types';
+import { formatBytes, formatDate, recentOrDayMonth, relativeTimeLong } from '@/lib/format';
 import type {
   ApiDataset,
   ApiDatasetDetail,
@@ -21,23 +11,22 @@ import type {
   ApiDatasetStatus,
   ApiDatasetVersion,
   ApiQualityDimension,
-} from './api'
+} from './api';
 
 const splitLabels: Record<ApiDatasetSplit, Dataset['split']> = {
   train: 'Train',
   validation: 'Validation',
   test: 'Test',
   unsplit: 'Unsplit',
-}
+};
 
 const statusLabels: Record<ApiDatasetStatus, Dataset['status']> = {
   ready: 'Ready',
   processing: 'Processing',
   error: 'Error',
-}
+};
 
-export const toApiSplit = (split: Dataset['split']) =>
-  split.toLowerCase() as ApiDatasetSplit
+export const toApiSplit = (split: Dataset['split']) => split.toLowerCase() as ApiDatasetSplit;
 
 export function toDataset(row: ApiDataset, now?: number): Dataset {
   return {
@@ -53,13 +42,13 @@ export function toDataset(row: ApiDataset, now?: number): Dataset {
     status: statusLabels[row.status],
     created: recentOrDayMonth(row.created_at, now),
     files: row.files,
-  }
+  };
 }
 
-type SampleSplit = DatasetSample['split']
+type SampleSplit = DatasetSample['split'];
 
 function toSample(row: ApiDatasetSample): DatasetSample {
-  const split = splitLabels[row.split] as SampleSplit
+  const split = splitLabels[row.split] as SampleSplit;
   return row.modality === 'image'
     ? {
         id: row.id,
@@ -75,7 +64,7 @@ function toSample(row: ApiDatasetSample): DatasetSample {
         label: row.label,
         words: row.word_count,
         split,
-      }
+      };
 }
 
 const dimensions: Record<ApiQualityDimension, QualityDimension> = {
@@ -87,17 +76,17 @@ const dimensions: Record<ApiQualityDimension, QualityDimension> = {
   image_quality: 'imageQuality',
   split_integrity: 'splitIntegrity',
   metadata: 'metadata',
-}
+};
 
 /** The dataset page reads one object; the API serves it as five resources. */
 export function toDatasetDetail(parts: {
-  detail: ApiDatasetDetail
-  samples: ApiDatasetSample[]
-  statistics: ApiDatasetStatistics
-  quality: ApiDatasetQuality
-  versions: ApiDatasetVersion[]
+  detail: ApiDatasetDetail;
+  samples: ApiDatasetSample[];
+  statistics: ApiDatasetStatistics;
+  quality: ApiDatasetQuality;
+  versions: ApiDatasetVersion[];
 }): DatasetDetail {
-  const { composition } = parts.statistics
+  const { composition } = parts.statistics;
   return {
     samples: parts.samples.map(toSample),
     distribution: parts.statistics.label_distribution,
@@ -105,16 +94,12 @@ export function toDatasetDetail(parts: {
     composition: {
       fileFormat: composition.file_format,
       avgDimensions:
-        composition.avg_width && composition.avg_height
-          ? { width: composition.avg_width, height: composition.avg_height }
-          : undefined,
+        composition.avg_width && composition.avg_height ? { width: composition.avg_width, height: composition.avg_height } : undefined,
       avgWords: composition.avg_words,
     },
     healthChecks: parts.detail.health_checks,
     qualityReport: {
-      lastChecked: parts.quality.last_checked_at
-        ? relativeTimeLong(parts.quality.last_checked_at)
-        : 'Not yet checked',
+      lastChecked: parts.quality.last_checked_at ? relativeTimeLong(parts.quality.last_checked_at) : 'Not yet checked',
       findings: parts.quality.findings.map((finding) => ({
         ...finding,
         dimension: dimensions[finding.dimension],
@@ -129,5 +114,5 @@ export function toDatasetDetail(parts: {
       items: version.item_count,
       created: formatDate(version.created_at),
     })),
-  }
+  };
 }

@@ -1,31 +1,21 @@
-import * as React from 'react'
-import { Box, Tabs } from '@chakra-ui/react'
-import { createFileRoute } from '@tanstack/react-router'
+import * as React from 'react';
+import { Box, Tabs } from '@chakra-ui/react';
+import { createFileRoute } from '@tanstack/react-router';
 
-import { RouteBreadcrumbs } from '@/components/breadcrumbs'
-import { isNotFound } from '@/api/errors'
-import { PageError, PageLoading } from '@/components/shared/query-states'
-import { useProjectDetail } from '@/features/dashboard/context'
-import { useModel } from '@/features/models/queries'
-import {
-  FilesTab,
-  ModelHeader,
-  ModelNotFound,
-  OverviewTab,
-  PlaygroundTab,
-  tabs,
-  VersionsTab,
-} from './-components/model-detail'
-import type { ModelTab } from './-components/model-detail'
+import { RouteBreadcrumbs } from '@/components/breadcrumbs';
+import { isNotFound } from '@/api/errors';
+import { PageError, PageLoading } from '@/components/shared/query-states';
+import { useProjectDetail } from '@/features/dashboard/context';
+import { useModel } from '@/features/models/queries';
+import { FilesTab, ModelHeader, ModelNotFound, OverviewTab, PlaygroundTab, tabs, VersionsTab } from './-components/model-detail';
+import type { ModelTab } from './-components/model-detail';
 
-export const Route = createFileRoute(
-  '/_app/projects_/$projectId/models_/$modelId',
-)({
+export const Route = createFileRoute('/_app/projects_/$projectId/models_/$modelId')({
   component: ModelDetailRoute,
   notFoundComponent: ModelDetailNotFoundRoute,
   staticData: {
     breadcrumb: ({ entities: { model }, parent: { project } }) => {
-      if (!project || !model) return null
+      if (!project || !model) return null;
       return {
         items: [
           {
@@ -39,42 +29,29 @@ export const Route = createFileRoute(
           { id: model.id, label: `${model.name} v${model.version}` },
         ],
         data: { model },
-      }
+      };
     },
   },
-})
+});
 
 function ModelDetailRoute() {
-  const { modelId } = Route.useParams()
-  const { project } = useProjectDetail()
-  const [tab, setTab] = React.useState<ModelTab>('overview')
+  const { modelId } = Route.useParams();
+  const { project } = useProjectDetail();
+  const [tab, setTab] = React.useState<ModelTab>('overview');
 
-  const { data: found, error, refetch } = useModel(project.id, modelId)
+  const { data: found, error, refetch } = useModel(project.id, modelId);
 
   if (error) {
     return isNotFound(error) ? (
       <ModelNotFound projectId={project.id} />
     ) : (
-      <PageError
-        title="Could not load this model"
-        error={error}
-        onRetry={() => void refetch()}
-      />
-    )
+      <PageError title="Could not load this model" error={error} onRetry={() => void refetch()} />
+    );
   }
-  if (!found) return <PageLoading />
+  if (!found) return <PageLoading />;
 
   return (
-    <Box
-      as="main"
-      id="dashboard-main"
-      mx="auto"
-      w="full"
-      maxW="1448px"
-      minW="0"
-      flex="1"
-      p={{ base: '4', sm: '6' }}
-    >
+    <Box as="main" id="dashboard-main" mx="auto" w="full" maxW="1448px" minW="0" flex="1" p={{ base: '4', sm: '6' }}>
       <RouteBreadcrumbs mb="3" />
 
       <ModelHeader />
@@ -111,10 +88,10 @@ function ModelDetailRoute() {
         </Tabs.Content>
       </Tabs.Root>
     </Box>
-  )
+  );
 }
 
 function ModelDetailNotFoundRoute() {
-  const { projectId } = Route.useParams()
-  return <ModelNotFound projectId={projectId} />
+  const { projectId } = Route.useParams();
+  return <ModelNotFound projectId={projectId} />;
 }

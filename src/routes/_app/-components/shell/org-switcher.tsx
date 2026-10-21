@@ -1,24 +1,17 @@
-import { Box, Button, Icon, Menu, Portal, Text } from '@chakra-ui/react'
-import { Link } from '@tanstack/react-router'
-import {
-  Building2,
-  Check,
-  ChevronDown,
-  Plus,
-  Settings,
-  Users,
-} from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { Box, Button, Icon, Menu, Portal, Text } from '@chakra-ui/react';
+import { Link } from '@tanstack/react-router';
+import { Building2, Check, ChevronDown, Plus, Settings, Users } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
-import { OrgMark } from '@/features/organizations/components/org-ui'
-import { plural } from '@/features/organizations/utils'
-import type { Organization } from '@/features/dashboard/data'
+import { OrgMark } from '@/features/organizations/components/org-ui';
+import { plural } from '@/features/organizations/utils';
+import type { Organization } from '@/features/dashboard/data';
 
 export type OrgSwitcherEntry = {
-  org: Organization
-  projects: number
-  members: number
-}
+  org: Organization;
+  projects: number;
+  members: number;
+};
 
 export function OrgSwitcher({
   org,
@@ -26,18 +19,15 @@ export function OrgSwitcher({
   onSwitchOrganization,
   onCreateOrganization,
 }: {
-  org: Organization
-  entries: OrgSwitcherEntry[]
-  onSwitchOrganization: (orgId: string) => void
-  onCreateOrganization: () => void
+  org: Organization;
+  entries: OrgSwitcherEntry[];
+  onSwitchOrganization: (orgId: string) => void;
+  onCreateOrganization: () => void;
 }) {
   const links: Array<{
-    label: string
-    icon: LucideIcon
-    to:
-      | '/organizations'
-      | '/organizations/$orgId/members'
-      | '/organizations/$orgId/settings'
+    label: string;
+    icon: LucideIcon;
+    to: '/organizations' | '/organizations/$orgId/members' | '/organizations/$orgId/settings';
   }> = [
     { label: 'View all organizations', icon: Building2, to: '/organizations' },
     {
@@ -50,25 +40,14 @@ export function OrgSwitcher({
       icon: Settings,
       to: '/organizations/$orgId/settings',
     },
-  ]
+  ];
 
   return (
     <Menu.Root positioning={{ placement: 'bottom-start' }}>
       <Menu.Trigger asChild>
-        <Button
-          variant="ghost"
-          colorPalette="gray"
-          size="xs"
-          gap="2"
-          aria-label={`Current organization: ${org.name}`}
-        >
+        <Button variant="ghost" colorPalette="gray" size="xs" gap="2" aria-label={`Current organization: ${org.name}`}>
           <OrgMark org={org} boxSize="6" rounded="l1" fontSize="xs" />
-          <Text
-            as="span"
-            display={{ base: 'none', sm: 'inline' }}
-            maxW="40"
-            truncate
-          >
+          <Text as="span" display={{ base: 'none', sm: 'inline' }} maxW="40" truncate>
             {org.name}
           </Text>
           <Icon boxSize="3.5" color="fg.muted" asChild>
@@ -80,17 +59,11 @@ export function OrgSwitcher({
         <Menu.Positioner>
           <Menu.Content w="80" p="0">
             <Menu.ItemGroup p="1.5" maxH="80" overflowY="auto">
-              <Menu.ItemGroupLabel
-                fontSize="2xs"
-                fontWeight="semibold"
-                letterSpacing="wider"
-                color="fg.muted"
-                textTransform="uppercase"
-              >
+              <Menu.ItemGroupLabel fontSize="2xs" fontWeight="semibold" letterSpacing="wider" color="fg.muted" textTransform="uppercase">
                 Switch organization
               </Menu.ItemGroupLabel>
               {entries.map((entry) => {
-                const current = entry.org.id === org.id
+                const current = entry.org.id === org.id;
                 return (
                   <Menu.Item
                     key={entry.org.id}
@@ -104,24 +77,11 @@ export function OrgSwitcher({
                   >
                     <OrgMark org={entry.org} />
                     <Box as="span" minW="0" flex="1">
-                      <Text
-                        as="span"
-                        display="block"
-                        truncate
-                        fontWeight="medium"
-                      >
+                      <Text as="span" display="block" truncate fontWeight="medium">
                         {entry.org.name}
                       </Text>
-                      <Text
-                        as="span"
-                        display="block"
-                        truncate
-                        fontSize="xs"
-                        color="fg.muted"
-                      >
-                        {entry.org.plan} plan ·{' '}
-                        {plural(entry.projects, 'project')} ·{' '}
-                        {plural(entry.members, 'member')}
+                      <Text as="span" display="block" truncate fontSize="xs" color="fg.muted">
+                        {entry.org.plan} plan · {plural(entry.projects, 'project')} · {plural(entry.members, 'member')}
                       </Text>
                     </Box>
                     {current && (
@@ -130,7 +90,7 @@ export function OrgSwitcher({
                       </Icon>
                     )}
                   </Menu.Item>
-                )
+                );
               })}
             </Menu.ItemGroup>
 
@@ -174,5 +134,5 @@ export function OrgSwitcher({
         </Menu.Positioner>
       </Portal>
     </Menu.Root>
-  )
+  );
 }

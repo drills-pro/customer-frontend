@@ -1,65 +1,34 @@
-import * as React from 'react'
-import {
-  Box,
-  Button,
-  Card,
-  Center,
-  Flex,
-  Grid,
-  Heading,
-  Icon,
-  Stack,
-  Text,
-} from '@chakra-ui/react'
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { Check, ChevronLeft, ChevronRight } from 'lucide-react'
+import * as React from 'react';
+import { Box, Button, Card, Center, Flex, Grid, Heading, Icon, Stack, Text } from '@chakra-ui/react';
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
 
-import { useDashboardLayout } from '@/features/dashboard/context'
-import {
-  BasicsStep,
-  StartMethodStep,
-  steps,
-  TaskStep,
-  useNewProjectDraft,
-} from './-components/new-project'
+import { useDashboardLayout } from '@/features/dashboard/context';
+import { BasicsStep, StartMethodStep, steps, TaskStep, useNewProjectDraft } from './-components/new-project';
 
 export const Route = createFileRoute('/_app/projects_/new')({
   component: NewProjectPage,
-})
+});
 
 function NewProjectPage() {
-  const { hydrated } = useDashboardLayout()
+  const { hydrated } = useDashboardLayout();
 
   if (!hydrated) {
-    return <Box as="main" id="dashboard-main" minH="96" flex="1" />
+    return <Box as="main" id="dashboard-main" minH="96" flex="1" />;
   }
 
-  return <NewProjectFlow />
+  return <NewProjectFlow />;
 }
 
 function NewProjectFlow() {
-  const { org } = useDashboardLayout()
-  const draft = useNewProjectDraft()
-  const { step, setStep } = draft
+  const { org } = useDashboardLayout();
+  const draft = useNewProjectDraft();
+  const { step, setStep } = draft;
 
   return (
-    <Box
-      as="main"
-      id="dashboard-main"
-      mx="auto"
-      w="full"
-      maxW="1448px"
-      minW="0"
-      flex="1"
-      p={{ base: '4', sm: '6' }}
-    >
+    <Box as="main" id="dashboard-main" mx="auto" w="full" maxW="1448px" minW="0" flex="1" p={{ base: '4', sm: '6' }}>
       <Box mb="6">
-        <Heading
-          as="h1"
-          fontSize="2xl"
-          fontWeight="semibold"
-          letterSpacing="tight"
-        >
+        <Heading as="h1" fontSize="2xl" fontWeight="semibold" letterSpacing="tight">
           Create project
         </Heading>
         <Text mt="1" textStyle="body-sm" color="fg.muted">
@@ -67,24 +36,13 @@ function NewProjectFlow() {
         </Text>
       </Box>
 
-      <Grid
-        minW="0"
-        alignItems="start"
-        gap="6"
-        templateColumns={{ lg: 'repeat(3, minmax(0, 1fr))' }}
-      >
+      <Grid minW="0" alignItems="start" gap="6" templateColumns={{ lg: 'repeat(3, minmax(0, 1fr))' }}>
         <Card.Root variant="outline" minW="0" gridColumn={{ lg: 'span 2' }}>
           <Card.Body p="6">
             <Flex mb="6" align="center" gap="2">
               {steps.map((label, index) => (
                 <React.Fragment key={label}>
-                  {index > 0 && (
-                    <Box
-                      h="1px"
-                      flex="1"
-                      bg={index <= step ? 'brand' : 'border'}
-                    />
-                  )}
+                  {index > 0 && <Box h="1px" flex="1" bg={index <= step ? 'brand' : 'border'} />}
                   <Button
                     type="button"
                     variant="plain"
@@ -104,17 +62,9 @@ function NewProjectFlow() {
                       rounded="full"
                       fontSize="11px"
                       fontWeight="semibold"
-                      colorPalette={
-                        index < step
-                          ? 'success'
-                          : index === step
-                            ? 'brand'
-                            : 'gray'
-                      }
+                      colorPalette={index < step ? 'success' : index === step ? 'brand' : 'gray'}
                       bg={index > step ? 'bg.muted' : 'colorPalette.solid'}
-                      color={
-                        index > step ? 'fg.muted' : 'colorPalette.contrast'
-                      }
+                      color={index > step ? 'fg.muted' : 'colorPalette.contrast'}
                     >
                       {index < step ? (
                         <Icon boxSize="3.5" asChild>
@@ -136,44 +86,24 @@ function NewProjectFlow() {
             {step === 1 && <TaskStep draft={draft} />}
             {step === 2 && <StartMethodStep draft={draft} />}
 
-            <Flex
-              mt="8"
-              justify="space-between"
-              borderTopWidth="1px"
-              borderColor="border"
-              pt="5"
-            >
+            <Flex mt="8" justify="space-between" borderTopWidth="1px" borderColor="border" pt="5">
               {step === 0 ? (
                 <Button variant="outline" size="sm" asChild>
                   <Link to="/projects">Cancel</Link>
                 </Button>
               ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setStep((current) => current - 1)}
-                >
+                <Button variant="outline" size="sm" onClick={() => setStep((current) => current - 1)}>
                   <ChevronLeft />
                   Back
                 </Button>
               )}
               {step < steps.length - 1 ? (
-                <Button
-                  variant="solid"
-                  size="sm"
-                  disabled={!draft.canContinue}
-                  onClick={() => setStep((current) => current + 1)}
-                >
+                <Button variant="solid" size="sm" disabled={!draft.canContinue} onClick={() => setStep((current) => current + 1)}>
                   Continue
                   <ChevronRight />
                 </Button>
               ) : (
-                <Button
-                  variant="solid"
-                  size="sm"
-                  disabled={!draft.canSubmit || draft.submitting}
-                  onClick={draft.create}
-                >
+                <Button variant="solid" size="sm" disabled={!draft.canSubmit || draft.submitting} onClick={draft.create}>
                   {draft.submitting ? 'Creating…' : 'Create project'}
                   <ChevronRight />
                 </Button>
@@ -186,12 +116,7 @@ function NewProjectFlow() {
           <Card.Root variant="outline">
             <Card.Body p="5">
               <Stack gap="0">
-                <Heading
-                  as="h3"
-                  mb="2"
-                  textStyle="body-sm"
-                  fontWeight="semibold"
-                >
+                <Heading as="h3" mb="2" textStyle="body-sm" fontWeight="semibold">
                   Summary
                 </Heading>
                 {draft.summaryRows.map(([label, value]) => (
@@ -208,12 +133,7 @@ function NewProjectFlow() {
                     <Text as="span" color="fg.muted">
                       {label}
                     </Text>
-                    <Text
-                      as="span"
-                      maxW="60%"
-                      textAlign="end"
-                      fontWeight="medium"
-                    >
+                    <Text as="span" maxW="60%" textAlign="end" fontWeight="medium">
                       {value}
                     </Text>
                   </Flex>
@@ -224,5 +144,5 @@ function NewProjectFlow() {
         </Box>
       </Grid>
     </Box>
-  )
+  );
 }

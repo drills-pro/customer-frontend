@@ -1,19 +1,15 @@
-import { Button, Link, Table, Text, VisuallyHidden } from '@chakra-ui/react'
-import { Link as RouterLink } from '@tanstack/react-router'
-import { toaster } from '@/components/toaster'
+import { Button, Link, Table, Text, VisuallyHidden } from '@chakra-ui/react';
+import { Link as RouterLink } from '@tanstack/react-router';
+import { toaster } from '@/components/toaster';
 
-import { SectionCard } from '@/components/shared/section-card'
-import {
-  formatAccuracy,
-  formatF1,
-  StageBadge,
-} from '../../../-components/model-list'
-import { useSetModelStage } from '@/features/models/queries'
-import { useCurrentModel } from './use-current-model'
+import { SectionCard } from '@/components/shared/section-card';
+import { formatAccuracy, formatF1, StageBadge } from '../../../-components/model-list';
+import { useSetModelStage } from '@/features/models/queries';
+import { useCurrentModel } from './use-current-model';
 
 export function VersionsTab() {
-  const { project, model, versions } = useCurrentModel()
-  const setStage = useSetModelStage(project.id)
+  const { project, model, versions } = useCurrentModel();
+  const setStage = useSetModelStage(project.id);
   return (
     <SectionCard
       title="Versions"
@@ -44,34 +40,15 @@ export function VersionsTab() {
               <Table.Row key={item.id}>
                 <Table.Cell px="5">
                   {item.id === model.id ? (
-                    <Text
-                      as="span"
-                      fontFamily="mono"
-                      fontWeight="semibold"
-                      color="fg"
-                    >
+                    <Text as="span" fontFamily="mono" fontWeight="semibold" color="fg">
                       v{item.version}
-                      <Text
-                        as="span"
-                        ms="2"
-                        fontSize="11px"
-                        fontWeight="medium"
-                        color="brand-text"
-                      >
+                      <Text as="span" ms="2" fontSize="11px" fontWeight="medium" color="brand-text">
                         viewing
                       </Text>
                     </Text>
                   ) : (
-                    <Link
-                      asChild
-                      fontFamily="mono"
-                      fontWeight="medium"
-                      color="brand-text"
-                    >
-                      <RouterLink
-                        to="/projects/$projectId/models/$modelId"
-                        params={{ projectId: item.projectId, modelId: item.id }}
-                      >
+                    <Link asChild fontFamily="mono" fontWeight="medium" color="brand-text">
+                      <RouterLink to="/projects/$projectId/models/$modelId" params={{ projectId: item.projectId, modelId: item.id }}>
                         v{item.version}
                       </RouterLink>
                     </Link>
@@ -79,20 +56,12 @@ export function VersionsTab() {
                 </Table.Cell>
                 <Table.Cell>
                   <Link asChild fontWeight="medium" color="fg">
-                    <RouterLink
-                      to="/projects/$projectId/training/$runId"
-                      params={{ projectId: item.projectId, runId: item.runId }}
-                    >
+                    <RouterLink to="/projects/$projectId/training/$runId" params={{ projectId: item.projectId, runId: item.runId }}>
                       {item.runId}
                     </RouterLink>
                   </Link>
                 </Table.Cell>
-                <Table.Cell
-                  textAlign="end"
-                  fontWeight="semibold"
-                  fontVariantNumeric="tabular-nums"
-                  color="fg"
-                >
+                <Table.Cell textAlign="end" fontWeight="semibold" fontVariantNumeric="tabular-nums" color="fg">
                   {formatAccuracy(item.accuracy)}
                 </Table.Cell>
                 <Table.Cell textAlign="end" fontVariantNumeric="tabular-nums">
@@ -112,7 +81,7 @@ export function VersionsTab() {
                     size="xs"
                     disabled={setStage.isPending}
                     onClick={() => {
-                      const archiving = item.stage === 'Production'
+                      const archiving = item.stage === 'Production';
                       setStage.mutate(
                         {
                           modelId: item.id,
@@ -125,7 +94,7 @@ export function VersionsTab() {
                               title: `v${item.version} ${archiving ? 'archived' : 'promoted to production'}.`,
                             }),
                         },
-                      )
+                      );
                     }}
                   >
                     {item.stage === 'Production' ? 'Archive' : 'Promote'}
@@ -137,5 +106,5 @@ export function VersionsTab() {
         </Table.Root>
       </Table.ScrollArea>
     </SectionCard>
-  )
+  );
 }

@@ -1,7 +1,7 @@
-import { Box, Button, Flex, Heading, SimpleGrid, Text } from '@chakra-ui/react'
-import { FolderKanban } from 'lucide-react'
+import { Box, Button, Flex, Heading, SimpleGrid, Text } from '@chakra-ui/react';
+import { FolderKanban } from 'lucide-react';
 
-import type { NewProjectDraft } from './use-new-project-draft'
+import type { NewProjectDraft } from './use-new-project-draft';
 
 export function TaskStep({ draft }: { draft: NewProjectDraft }) {
   return (
@@ -44,5 +44,5 @@ export function TaskStep({ draft }: { draft: NewProjectDraft }) {
         ))}
       </SimpleGrid>
     </section>
-  )
+  );
 }

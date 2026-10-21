@@ -1,18 +1,14 @@
-import type {
-  ApiIntegration,
-  ApiProjectDetail,
-  ApiProjectMember,
-} from '@/features/projects/api/types'
-import { defaultUsageScale } from './usage'
-import type { UsageScale } from './usage'
-import { daysAgo, hoursAgo, mb, onDate } from './units'
+import type { ApiIntegration, ApiProjectDetail, ApiProjectMember } from '@/features/projects/api/types';
+import { defaultUsageScale } from './usage';
+import type { UsageScale } from './usage';
+import { daysAgo, hoursAgo, mb, onDate } from './units';
 
 /** A project as stored: the detail response plus what its usage is built from. */
 export type ProjectRecord = ApiProjectDetail & {
-  usage_scale: UsageScale
+  usage_scale: UsageScale;
   /** A copy of a core-api project (`../mirror.ts`). */
-  mirrored?: boolean
-}
+  mirrored?: boolean;
+};
 
 type SeedInput = Pick<
   ProjectRecord,
@@ -31,7 +27,7 @@ type SeedInput = Pick<
   | 'region'
   | 'best_model'
 > &
-  Partial<ProjectRecord>
+  Partial<ProjectRecord>;
 
 function project(values: SeedInput): ProjectRecord {
   return {
@@ -42,7 +38,7 @@ function project(values: SeedInput): ProjectRecord {
     readme_markdown: null,
     usage_scale: defaultUsageScale,
     ...values,
-  }
+  };
 }
 
 export const projectSeed: ProjectRecord[] = [
@@ -223,7 +219,7 @@ curl -X POST https://api.drills.ai/v1/predict \\
       size_bytes: mb(71),
     },
   }),
-]
+];
 
 /** The people every project starts with, until its members are changed. */
 export const defaultProjectMembers: ApiProjectMember[] = [
@@ -251,10 +247,10 @@ export const defaultProjectMembers: ApiProjectMember[] = [
     role: 'viewer',
     status: 'active',
   },
-]
+];
 
 /** Avatar colours handed to invited project members in turn. */
-export const projectInviteColors = ['#0ea5e9', '#14b8a6', '#f59e0b', '#ec4899']
+export const projectInviteColors = ['#0ea5e9', '#14b8a6', '#f59e0b', '#ec4899'];
 
 export const integrationCatalog: ApiIntegration[] = [
   {
@@ -281,4 +277,4 @@ export const integrationCatalog: ApiIntegration[] = [
     description: 'Import new images from a bucket as a dataset version.',
     enabled: false,
   },
-]
+];

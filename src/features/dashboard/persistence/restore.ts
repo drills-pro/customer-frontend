@@ -1,6 +1,6 @@
-import { defaultPreferences } from '@/features/dashboard/data'
-import type { DashboardPreferences } from '@/features/dashboard/data'
-import { preferencesSchema } from './schema'
+import { defaultPreferences } from '@/features/dashboard/data';
+import type { DashboardPreferences } from '@/features/dashboard/data';
+import { preferencesSchema } from './schema';
 
 /**
  * Turns the raw stored string into preferences. Each field is restored on its
@@ -8,22 +8,20 @@ import { preferencesSchema } from './schema'
  * discarding the others. Fields written by older versions are ignored.
  */
 export function restorePreferences(value: string | null): DashboardPreferences {
-  if (!value) return defaultPreferences
+  if (!value) return defaultPreferences;
   try {
-    const parsed: unknown = JSON.parse(value)
+    const parsed: unknown = JSON.parse(value);
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      return defaultPreferences
+      return defaultPreferences;
     }
-    const saved = parsed as Record<string, unknown>
-    const restored = { ...defaultPreferences }
-    for (const key of Object.keys(preferencesSchema.shape) as Array<
-      keyof DashboardPreferences
-    >) {
-      const result = preferencesSchema.shape[key].safeParse(saved[key])
-      if (result.success) Object.assign(restored, { [key]: result.data })
+    const saved = parsed as Record<string, unknown>;
+    const restored = { ...defaultPreferences };
+    for (const key of Object.keys(preferencesSchema.shape) as Array<keyof DashboardPreferences>) {
+      const result = preferencesSchema.shape[key].safeParse(saved[key]);
+      if (result.success) Object.assign(restored, { [key]: result.data });
     }
-    return restored
+    return restored;
   } catch {
-    return defaultPreferences
+    return defaultPreferences;
   }
 }

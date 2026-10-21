@@ -31,24 +31,24 @@ specificity argument.
 
 ```js
 // scratch script; run from the project root so `@playwright/test` resolves
-import { chromium } from '@playwright/test'
-const b = await chromium.launch()
-const p = await b.newPage()
-await p.goto('http://localhost:3000/<route>')
-const el = p.getByRole('textbox', { name: '<accessible name>' })
+import { chromium } from '@playwright/test';
+const b = await chromium.launch();
+const p = await b.newPage();
+await p.goto('http://localhost:3000/<route>');
+const el = p.getByRole('textbox', { name: '<accessible name>' });
 console.log(
   await el.evaluate((n) => {
-    const s = getComputedStyle(n)
+    const s = getComputedStyle(n);
     return {
       height: s.height,
       padding: s.padding,
       borderWidth: s.borderWidth,
       boxShadow: s.boxShadow,
       outline: s.outlineStyle,
-    }
+    };
   }),
-)
-await b.close()
+);
+await b.close();
 ```
 
 What to look for:
@@ -71,17 +71,17 @@ Clip to the component with a small margin so the focus ring is actually visible
 at a reviewable size, and capture both states:
 
 ```js
-const box = await shell.boundingBox()
+const box = await shell.boundingBox();
 const clip = {
   x: box.x - 16,
   y: box.y - 16,
   width: box.width + 32,
   height: box.height + 32,
-}
-await p.screenshot({ path: 'rest.png', clip })
-await el.focus()
-await p.waitForTimeout(250)
-await p.screenshot({ path: 'focus.png', clip })
+};
+await p.screenshot({ path: 'rest.png', clip });
+await el.focus();
+await p.waitForTimeout(250);
+await p.screenshot({ path: 'focus.png', clip });
 ```
 
 Use `deviceScaleFactor: 3` for a component crop — a 2px ring is not judgeable at

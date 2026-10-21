@@ -1,23 +1,13 @@
-import type * as React from 'react'
-import {
-  Box,
-  Card,
-  Center,
-  Flex,
-  Heading,
-  HStack,
-  Icon,
-  SimpleGrid,
-  Text,
-} from '@chakra-ui/react'
-import type { LucideIcon } from 'lucide-react'
+import type * as React from 'react';
+import { Box, Card, Center, Flex, Heading, HStack, Icon, SimpleGrid, Text } from '@chakra-ui/react';
+import type { LucideIcon } from 'lucide-react';
 
 export type EntityStat = {
-  label: string
-  value: React.ReactNode
+  label: string;
+  value: React.ReactNode;
   /** Optional comparison line, e.g. `▲ 2.5 pts vs v2`. */
-  delta?: React.ReactNode
-}
+  delta?: React.ReactNode;
+};
 
 /**
  * The detail-page header shared by datasets, models and deployments: an icon
@@ -37,47 +27,27 @@ export function EntityHeader({
   actions,
   stats,
 }: {
-  icon: LucideIcon
-  name: string
+  icon: LucideIcon;
+  name: string;
   /** Identifier-style names (models, deployments) set in the mono face. */
-  mono?: boolean
-  badges?: React.ReactNode
-  meta: React.ReactNode
-  actions: React.ReactNode
-  stats: EntityStat[]
+  mono?: boolean;
+  badges?: React.ReactNode;
+  meta: React.ReactNode;
+  actions: React.ReactNode;
+  stats: EntityStat[];
 }) {
   return (
     <Card.Root variant="outline" mb="6" overflow="hidden">
-      <Flex
-        wrap="wrap"
-        align="center"
-        justify="space-between"
-        gap="4"
-        px={{ base: '5', sm: '6' }}
-        py="5"
-      >
+      <Flex wrap="wrap" align="center" justify="space-between" gap="4" px={{ base: '5', sm: '6' }} py="5">
         <HStack gap="4" minW="0">
-          <Center
-            boxSize="12"
-            flexShrink={0}
-            rounded="l3"
-            bg="brand.subtle"
-            color="brand.fg"
-          >
+          <Center boxSize="12" flexShrink={0} rounded="l3" bg="brand.subtle" color="brand.fg">
             <Icon boxSize="6" asChild>
               <EntityIcon />
             </Icon>
           </Center>
           <Box minW="0">
             <HStack wrap="wrap" gap="2">
-              <Heading
-                as="h1"
-                truncate
-                fontSize="md"
-                fontWeight="semibold"
-                letterSpacing="tight"
-                fontFamily={mono ? 'mono' : undefined}
-              >
+              <Heading as="h1" truncate fontSize="md" fontWeight="semibold" letterSpacing="tight" fontFamily={mono ? 'mono' : undefined}>
                 {name}
               </Heading>
               {badges}
@@ -92,36 +62,13 @@ export function EntityHeader({
         </HStack>
       </Flex>
 
-      <SimpleGrid
-        columns={{ base: 2, sm: 4 }}
-        gap="1px"
-        borderTopWidth="1px"
-        borderColor="border"
-        bg="border"
-      >
+      <SimpleGrid columns={{ base: 2, sm: 4 }} gap="1px" borderTopWidth="1px" borderColor="border" bg="border">
         {stats.map((stat) => (
-          <Box
-            key={stat.label}
-            bg="surface-raised"
-            px={{ base: '5', sm: '6' }}
-            py="4"
-          >
-            <Text
-              fontSize="11px"
-              fontWeight="medium"
-              letterSpacing="widest"
-              color="fg.muted"
-              textTransform="uppercase"
-            >
+          <Box key={stat.label} bg="surface-raised" px={{ base: '5', sm: '6' }} py="4">
+            <Text fontSize="11px" fontWeight="medium" letterSpacing="widest" color="fg.muted" textTransform="uppercase">
               {stat.label}
             </Text>
-            <Text
-              mt="1"
-              fontSize="lg"
-              fontWeight="semibold"
-              fontVariantNumeric="tabular-nums"
-              letterSpacing="tight"
-            >
+            <Text mt="1" fontSize="lg" fontWeight="semibold" fontVariantNumeric="tabular-nums" letterSpacing="tight">
               {stat.value}
             </Text>
             {stat.delta ? (
@@ -133,5 +80,5 @@ export function EntityHeader({
         ))}
       </SimpleGrid>
     </Card.Root>
-  )
+  );
 }

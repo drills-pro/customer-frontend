@@ -1,7 +1,7 @@
-import { Box, Button, Flex, Heading, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Flex, Heading, Stack, Text } from '@chakra-ui/react';
 
-import { SwitchButton } from '@/components/shared/switch-button'
-import type { ApiComputeOption } from '@/features/catalog/api'
+import { SwitchButton } from '@/components/shared/switch-button';
+import type { ApiComputeOption } from '@/features/catalog/api';
 
 export function ComputeStep({
   computeOptions,
@@ -10,21 +10,16 @@ export function ComputeStep({
   spot,
   setSpot,
 }: {
-  computeOptions: ApiComputeOption[]
-  instanceId: string
-  setInstanceId: (id: string) => void
-  spot: boolean
-  setSpot: (value: boolean) => void
+  computeOptions: ApiComputeOption[];
+  instanceId: string;
+  setInstanceId: (id: string) => void;
+  spot: boolean;
+  setSpot: (value: boolean) => void;
 }) {
   return (
     <section>
       <Box>
-        <Heading
-          as="h2"
-          fontSize="lg"
-          fontWeight="semibold"
-          letterSpacing="tight"
-        >
+        <Heading as="h2" fontSize="lg" fontWeight="semibold" letterSpacing="tight">
           Choose compute
         </Heading>
         <Text mt="1" textStyle="body-sm" color="fg.muted">
@@ -53,22 +48,9 @@ export function ComputeStep({
                 {item.specification}
               </Text>
             </Box>
-            <Flex
-              as="span"
-              align="center"
-              gap="3"
-              textStyle="body-sm"
-              fontWeight="semibold"
-            >
+            <Flex as="span" align="center" gap="3" textStyle="body-sm" fontWeight="semibold">
               ${item.hourly_rate_usd.toFixed(2)}/hr
-              <Box
-                data-chosen
-                aria-hidden="true"
-                boxSize="2"
-                rounded="full"
-                bg="brand"
-                opacity={0}
-              />
+              <Box data-chosen aria-hidden="true" boxSize="2" rounded="full" bg="brand" opacity={0} />
             </Flex>
           </Button>
         ))}
@@ -92,12 +74,8 @@ export function ComputeStep({
             About 60% cheaper; may be interrupted and resumed.
           </Text>
         </Box>
-        <SwitchButton
-          checked={spot}
-          onCheckedChange={setSpot}
-          aria-label="Use spot instance"
-        />
+        <SwitchButton checked={spot} onCheckedChange={setSpot} aria-label="Use spot instance" />
       </Flex>
     </section>
-  )
+  );
 }

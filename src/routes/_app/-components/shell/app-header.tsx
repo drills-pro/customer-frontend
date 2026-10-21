@@ -1,30 +1,14 @@
-import {
-  Badge,
-  Box,
-  Button,
-  Flex,
-  IconButton,
-  Kbd,
-  Menu,
-  Portal,
-  Text,
-} from '@chakra-ui/react'
-import { Bell, BellRing, Search } from 'lucide-react'
+import { Badge, Box, Button, Flex, IconButton, Kbd, Menu, Portal, Text } from '@chakra-ui/react';
+import { Bell, BellRing, Search } from 'lucide-react';
 
-import {
-  useMarkNotificationsRead,
-  useNotifications,
-} from '@/features/account/queries'
-import type {
-  Organization,
-  ThemePreference,
-} from '@/features/dashboard/domain/types'
-import { useBilling } from '@/features/organizations/queries'
-import { formatCount } from '@/lib/format'
-import { SidebarTrigger } from './app-shell'
-import { OrgSwitcher } from './org-switcher'
-import type { OrgSwitcherEntry } from './org-switcher'
-import { UserMenu } from './user-menu'
+import { useMarkNotificationsRead, useNotifications } from '@/features/account/queries';
+import type { Organization, ThemePreference } from '@/features/dashboard/domain/types';
+import { useBilling } from '@/features/organizations/queries';
+import { formatCount } from '@/lib/format';
+import { SidebarTrigger } from './app-shell';
+import { OrgSwitcher } from './org-switcher';
+import type { OrgSwitcherEntry } from './org-switcher';
+import { UserMenu } from './user-menu';
 
 export function AppHeader({
   org,
@@ -35,18 +19,18 @@ export function AppHeader({
   onOpenSearch,
   onOpenShortcuts,
 }: {
-  org: Organization
-  orgEntries: OrgSwitcherEntry[]
-  theme: ThemePreference
-  onSwitchOrganization: (orgId: string) => void
-  onCreateOrganization: () => void
-  onOpenSearch: () => void
-  onOpenShortcuts: () => void
+  org: Organization;
+  orgEntries: OrgSwitcherEntry[];
+  theme: ThemePreference;
+  onSwitchOrganization: (orgId: string) => void;
+  onCreateOrganization: () => void;
+  onOpenSearch: () => void;
+  onOpenShortcuts: () => void;
 }) {
-  const billing = useBilling(org.id).data
-  const notifications = useNotifications().data ?? []
-  const markRead = useMarkNotificationsRead()
-  const notificationsRead = notifications.every((item) => item.read)
+  const billing = useBilling(org.id).data;
+  const notifications = useNotifications().data ?? [];
+  const markRead = useMarkNotificationsRead();
+  const notificationsRead = notifications.every((item) => item.read);
 
   return (
     <Flex
@@ -64,12 +48,7 @@ export function AppHeader({
     >
       <SidebarTrigger aria-label="Toggle navigation" />
 
-      <OrgSwitcher
-        org={org}
-        entries={orgEntries}
-        onSwitchOrganization={onSwitchOrganization}
-        onCreateOrganization={onCreateOrganization}
-      />
+      <OrgSwitcher org={org} entries={orgEntries} onSwitchOrganization={onSwitchOrganization} onCreateOrganization={onCreateOrganization} />
 
       <Button
         type="button"
@@ -95,15 +74,8 @@ export function AppHeader({
       </Button>
 
       {billing && (
-        <Badge
-          colorPalette="brand"
-          variant="subtle"
-          display={{ base: 'none', sm: 'flex' }}
-        >
-          {formatCount(
-            Math.max(0, billing.credits_total - billing.credits_used),
-          )}{' '}
-          credits
+        <Badge colorPalette="brand" variant="subtle" display={{ base: 'none', sm: 'flex' }}>
+          {formatCount(Math.max(0, billing.credits_total - billing.credits_used))} credits
         </Badge>
       )}
 
@@ -121,17 +93,11 @@ export function AppHeader({
       <Menu.Root
         positioning={{ placement: 'bottom-end' }}
         onOpenChange={(event) => {
-          if (event.open && !notificationsRead) markRead.mutate()
+          if (event.open && !notificationsRead) markRead.mutate();
         }}
       >
         <Menu.Trigger asChild>
-          <IconButton
-            variant="ghost"
-            colorPalette="gray"
-            size="xs"
-            aria-label="Notifications"
-            position="relative"
-          >
+          <IconButton variant="ghost" colorPalette="gray" size="xs" aria-label="Notifications" position="relative">
             {notificationsRead ? <Bell /> : <BellRing />}
             {!notificationsRead && (
               <Box
@@ -174,5 +140,5 @@ export function AppHeader({
 
       <UserMenu org={org} theme={theme} onOpenShortcuts={onOpenShortcuts} />
     </Flex>
-  )
+  );
 }

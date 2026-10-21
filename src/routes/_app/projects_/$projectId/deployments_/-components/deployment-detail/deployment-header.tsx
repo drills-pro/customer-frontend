@@ -1,21 +1,21 @@
-import { Box, Button, Code, Flex, Link, Text } from '@chakra-ui/react'
-import { Link as RouterLink } from '@tanstack/react-router'
-import { Pause, Play, RefreshCw, Rocket } from 'lucide-react'
-import { toaster } from '@/components/toaster'
+import { Box, Button, Code, Flex, Link, Text } from '@chakra-ui/react';
+import { Link as RouterLink } from '@tanstack/react-router';
+import { Pause, Play, RefreshCw, Rocket } from 'lucide-react';
+import { toaster } from '@/components/toaster';
 
-import { CopyButton } from '@/components/shared/copy-button'
-import { EntityHeader } from '@/components/shared/entity-header'
-import { DeploymentStatusBadge } from '@/features/deployments/components/deployment-status-badge'
-import { useDeploymentAction } from '@/features/deployments/queries'
-import { EnvironmentBadge } from '../../../-components/deployment-list'
-import { useCurrentDeployment } from './use-current-deployment'
+import { CopyButton } from '@/components/shared/copy-button';
+import { EntityHeader } from '@/components/shared/entity-header';
+import { DeploymentStatusBadge } from '@/features/deployments/components/deployment-status-badge';
+import { useDeploymentAction } from '@/features/deployments/queries';
+import { EnvironmentBadge } from '../../../-components/deployment-list';
+import { useCurrentDeployment } from './use-current-deployment';
 
 export function DeploymentHeader() {
-  const { project, deployment, model } = useCurrentDeployment()
-  const act = useDeploymentAction(project.id, deployment.id)
-  const idle = deployment.status !== 'Live'
+  const { project, deployment, model } = useCurrentDeployment();
+  const act = useDeploymentAction(project.id, deployment.id);
+  const idle = deployment.status !== 'Live';
   // Nothing to pause or resume while a rollout is still in progress.
-  const rollingOut = deployment.status === 'Deploying'
+  const rollingOut = deployment.status === 'Deploying';
 
   return (
     <EntityHeader
@@ -54,8 +54,7 @@ export function DeploymentHeader() {
             ) : (
               deployment.modelId
             )}{' '}
-            · {deployment.instanceName} · {deployment.region} · deployed{' '}
-            {deployment.deployed}
+            · {deployment.instanceName} · {deployment.region} · deployed {deployment.deployed}
           </Box>
         </>
       }
@@ -136,12 +135,11 @@ export function DeploymentHeader() {
           value: deployment.costPerDay,
           delta: (
             <Text as="span" color="fg.muted">
-              {deployment.activeReplicas} / {deployment.maxReplicas} replicas
-              active
+              {deployment.activeReplicas} / {deployment.maxReplicas} replicas active
             </Text>
           ),
         },
       ]}
     />
-  )
+  );
 }

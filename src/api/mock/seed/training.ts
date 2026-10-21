@@ -1,21 +1,18 @@
-import type { ApiTrainingRun } from '@/features/training/api/types'
-import { SEED_NOW } from './units'
+import type { ApiTrainingRun } from '@/features/training/api/types';
+import { SEED_NOW } from './units';
 
 /**
  * Wall-clock milliseconds a run takes per estimated hour of compute. A typical
  * wizard run is estimated at about 1.33 hours, so it completes in about 30
  * seconds.
  */
-export const SIMULATED_MS_PER_ESTIMATED_HOUR = 22_500
+export const SIMULATED_MS_PER_ESTIMATED_HOUR = 22_500;
 
-type SeedRun = Omit<
-  ApiTrainingRun,
-  'started_at' | 'status' | 'epoch' | 'eta_seconds' | 'author' | 'config'
-> & {
-  epochs: number
+type SeedRun = Omit<ApiTrainingRun, 'started_at' | 'status' | 'epoch' | 'eta_seconds' | 'author' | 'config'> & {
+  epochs: number;
   /** Where the run stands when the mock loads; it advances from there. */
-  elapsed_fraction: number
-}
+  elapsed_fraction: number;
+};
 
 /**
  * Seeded runs are always mid-flight on a fresh load. Their long
@@ -39,13 +36,8 @@ function run({ epochs, elapsed_fraction, ...rest }: SeedRun): ApiTrainingRun {
     status: 'running',
     epoch: Math.max(1, Math.ceil(elapsed_fraction * epochs)),
     eta_seconds: null,
-    started_at: new Date(
-      SEED_NOW -
-        elapsed_fraction *
-          rest.estimated_hours *
-          SIMULATED_MS_PER_ESTIMATED_HOUR,
-    ).toISOString(),
-  }
+    started_at: new Date(SEED_NOW - elapsed_fraction * rest.estimated_hours * SIMULATED_MS_PER_ESTIMATED_HOUR).toISOString(),
+  };
 }
 
 export const trainingRunSeed = (): ApiTrainingRun[] => [
@@ -129,4 +121,4 @@ export const trainingRunSeed = (): ApiTrainingRun[] => [
     gpu_memory_total_gb: 16,
     elapsed_fraction: 0.3,
   }),
-]
+];

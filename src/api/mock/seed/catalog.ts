@@ -2,15 +2,9 @@
  * Reference data the mock server answers the catalog endpoints from, and reads
  * itself when it creates a project, names a run or estimates a training.
  */
-import type {
-  ApiComputeOption,
-  ApiPlan,
-  ApiProjectTemplate,
-  ApiRegion,
-  ApiTaskType,
-} from '@/features/catalog/api/types'
-import type { ApiDatasetModality } from '@/features/datasets/api/types'
-import { mb } from './units'
+import type { ApiComputeOption, ApiPlan, ApiProjectTemplate, ApiRegion, ApiTaskType } from '@/features/catalog/api/types';
+import type { ApiDatasetModality } from '@/features/datasets/api/types';
+import { mb } from './units';
 
 export const taskTypes: ApiTaskType[] = [
   {
@@ -31,25 +25,20 @@ export const taskTypes: ApiTaskType[] = [
   // Types older projects were created with; no longer offered for new ones.
   { id: 'tabular', label: 'Tabular', selectable: false },
   { id: 'document_ai', label: 'Document AI', selectable: false },
-]
+];
 
 /** What a dataset added to a project of this type holds. */
 export function modalityForTask(taskType: string): ApiDatasetModality {
-  if (taskType.includes('image')) return 'image'
-  if (taskType.includes('text')) return 'text'
-  return 'tabular'
+  if (taskType.includes('image')) return 'image';
+  if (taskType.includes('text')) return 'text';
+  return 'tabular';
 }
 
 export function frameworkForTask(taskType: string) {
-  if (taskType === 'tabular' || taskType === 'tabular_prediction')
-    return 'XGBoost 3.0'
-  if (taskType === 'time_series') return 'PyTorch Forecasting'
-  if (
-    taskType === 'text_classification' ||
-    taskType === 'named_entity_recognition'
-  )
-    return 'Transformers 5.1'
-  return 'PyTorch 2.4'
+  if (taskType === 'tabular' || taskType === 'tabular_prediction') return 'XGBoost 3.0';
+  if (taskType === 'time_series') return 'PyTorch Forecasting';
+  if (taskType === 'text_classification' || taskType === 'named_entity_recognition') return 'Transformers 5.1';
+  return 'PyTorch 2.4';
 }
 
 export const regions: ApiRegion[] = [
@@ -58,7 +47,7 @@ export const regions: ApiRegion[] = [
   { id: 'eu-west-1', label: 'EU (Ireland)' },
   { id: 'eu-central-1', label: 'EU (Frankfurt)' },
   { id: 'ap-southeast-1', label: 'Asia Pacific (Singapore)' },
-]
+];
 
 export const plans: ApiPlan[] = [
   { id: 'free', seats: 3, projects: 3, credits: 100, price: '$0' },
@@ -70,11 +59,11 @@ export const plans: ApiPlan[] = [
     credits: 20000,
     price: 'Custom',
   },
-]
+];
 
 export function planLimits(plan: ApiPlan['id']) {
-  const { id: _id, ...limits } = plans.find((item) => item.id === plan)!
-  return limits
+  const { id: _id, ...limits } = plans.find((item) => item.id === plan)!;
+  return limits;
 }
 
 export const projectTemplates: ApiProjectTemplate[] = [
@@ -260,191 +249,44 @@ export const projectTemplates: ApiProjectTemplate[] = [
       class_count: 0,
     },
   },
-]
+];
 
 /** id, name, description, meta, training cost factor, expected accuracy. */
-type ArchitectureTuple = [string, string, string, string, number, string]
+type ArchitectureTuple = [string, string, string, string, number, string];
 
 const catalogs: Record<string, ArchitectureTuple[]> = {
   image_classification: [
-    [
-      'efficientnet-b4',
-      'EfficientNet-B4',
-      'Balanced accuracy and speed',
-      '19M params · ImageNet pretrained',
-      1,
-      '92–95%',
-    ],
-    [
-      'resnet50',
-      'ResNet-50',
-      'Reliable, fast-training baseline',
-      '25M params · ImageNet pretrained',
-      0.8,
-      '88–91%',
-    ],
-    [
-      'convnext-tiny',
-      'ConvNeXt-Tiny',
-      'Modern CNN, strong accuracy',
-      '28M params · ImageNet pretrained',
-      1.15,
-      '91–94%',
-    ],
-    [
-      'vit-base',
-      'ViT-Base/16',
-      'Transformer for larger datasets',
-      '86M params · ImageNet-21k pretrained',
-      1.6,
-      '93–96%',
-    ],
-    [
-      'mobilenetv3',
-      'MobileNetV3',
-      'Optimized for edge deployment',
-      '5.4M params · ImageNet pretrained',
-      0.5,
-      '85–89%',
-    ],
-    [
-      'scratch',
-      'Start from scratch',
-      'Train without pretrained weights',
-      'Random initialization',
-      1.3,
-      '70–85%',
-    ],
+    ['efficientnet-b4', 'EfficientNet-B4', 'Balanced accuracy and speed', '19M params · ImageNet pretrained', 1, '92–95%'],
+    ['resnet50', 'ResNet-50', 'Reliable, fast-training baseline', '25M params · ImageNet pretrained', 0.8, '88–91%'],
+    ['convnext-tiny', 'ConvNeXt-Tiny', 'Modern CNN, strong accuracy', '28M params · ImageNet pretrained', 1.15, '91–94%'],
+    ['vit-base', 'ViT-Base/16', 'Transformer for larger datasets', '86M params · ImageNet-21k pretrained', 1.6, '93–96%'],
+    ['mobilenetv3', 'MobileNetV3', 'Optimized for edge deployment', '5.4M params · ImageNet pretrained', 0.5, '85–89%'],
+    ['scratch', 'Start from scratch', 'Train without pretrained weights', 'Random initialization', 1.3, '70–85%'],
   ],
   text_classification: [
-    [
-      'bert-base',
-      'BERT Base',
-      'Strong general-purpose classifier',
-      '110M params · pretrained',
-      1,
-      '89–93%',
-    ],
-    [
-      'distilbert',
-      'DistilBERT',
-      'Faster, compact language model',
-      '66M params · pretrained',
-      0.6,
-      '87–91%',
-    ],
-    [
-      'roberta-base',
-      'RoBERTa Base',
-      'Robust accuracy on varied text',
-      '125M params · pretrained',
-      1.15,
-      '90–94%',
-    ],
-    [
-      'scratch',
-      'Start from scratch',
-      'Train without pretrained weights',
-      'Random initialization',
-      1.4,
-      '70–84%',
-    ],
+    ['bert-base', 'BERT Base', 'Strong general-purpose classifier', '110M params · pretrained', 1, '89–93%'],
+    ['distilbert', 'DistilBERT', 'Faster, compact language model', '66M params · pretrained', 0.6, '87–91%'],
+    ['roberta-base', 'RoBERTa Base', 'Robust accuracy on varied text', '125M params · pretrained', 1.15, '90–94%'],
+    ['scratch', 'Start from scratch', 'Train without pretrained weights', 'Random initialization', 1.4, '70–84%'],
   ],
   tabular: [
-    [
-      'xgboost',
-      'XGBoost',
-      'High-quality boosted-tree baseline',
-      'Gradient boosted trees',
-      0.35,
-      '84–91%',
-    ],
-    [
-      'lightgbm',
-      'LightGBM',
-      'Fast training on large tables',
-      'Gradient boosted trees',
-      0.25,
-      '83–91%',
-    ],
-    [
-      'tabnet',
-      'TabNet',
-      'Deep learning with feature attention',
-      'Neural tabular model',
-      0.8,
-      '82–90%',
-    ],
-    [
-      'mlp',
-      'Start from scratch',
-      'Custom multilayer perceptron',
-      'Random initialization',
-      0.65,
-      '76–87%',
-    ],
+    ['xgboost', 'XGBoost', 'High-quality boosted-tree baseline', 'Gradient boosted trees', 0.35, '84–91%'],
+    ['lightgbm', 'LightGBM', 'Fast training on large tables', 'Gradient boosted trees', 0.25, '83–91%'],
+    ['tabnet', 'TabNet', 'Deep learning with feature attention', 'Neural tabular model', 0.8, '82–90%'],
+    ['mlp', 'Start from scratch', 'Custom multilayer perceptron', 'Random initialization', 0.65, '76–87%'],
   ],
   object_detection: [
-    [
-      'yolov8',
-      'YOLOv8',
-      'Fast, production-ready detector',
-      'COCO pretrained',
-      1,
-      '87–92% mAP',
-    ],
-    [
-      'faster-rcnn',
-      'Faster R-CNN',
-      'Accurate two-stage detector',
-      'COCO pretrained',
-      1.5,
-      '89–94% mAP',
-    ],
-    [
-      'detr',
-      'DETR',
-      'Transformer-based object detector',
-      'COCO pretrained',
-      1.7,
-      '88–93% mAP',
-    ],
+    ['yolov8', 'YOLOv8', 'Fast, production-ready detector', 'COCO pretrained', 1, '87–92% mAP'],
+    ['faster-rcnn', 'Faster R-CNN', 'Accurate two-stage detector', 'COCO pretrained', 1.5, '89–94% mAP'],
+    ['detr', 'DETR', 'Transformer-based object detector', 'COCO pretrained', 1.7, '88–93% mAP'],
   ],
   document_ai: [
-    [
-      'layoutlmv3',
-      'LayoutLMv3',
-      'Understands text and page layout',
-      'Document pretrained',
-      1.25,
-      '89–94%',
-    ],
-    [
-      'donut',
-      'Donut',
-      'OCR-free document understanding',
-      'Document pretrained',
-      1.5,
-      '88–93%',
-    ],
-    [
-      'trocr',
-      'TrOCR',
-      'Transformer optical character recognition',
-      'Printed text pretrained',
-      1.1,
-      '87–92%',
-    ],
+    ['layoutlmv3', 'LayoutLMv3', 'Understands text and page layout', 'Document pretrained', 1.25, '89–94%'],
+    ['donut', 'Donut', 'OCR-free document understanding', 'Document pretrained', 1.5, '88–93%'],
+    ['trocr', 'TrOCR', 'Transformer optical character recognition', 'Printed text pretrained', 1.1, '87–92%'],
   ],
   segmentation: [
-    [
-      'unet',
-      'U-Net',
-      'Reliable encoder-decoder segmentation baseline',
-      '31M params · ImageNet pretrained encoder',
-      1,
-      '82–89% mIoU',
-    ],
+    ['unet', 'U-Net', 'Reliable encoder-decoder segmentation baseline', '31M params · ImageNet pretrained encoder', 1, '82–89% mIoU'],
     [
       'deeplabv3plus',
       'DeepLabV3+',
@@ -453,147 +295,54 @@ const catalogs: Record<string, ArchitectureTuple[]> = {
       1.3,
       '85–91% mIoU',
     ],
-    [
-      'segformer',
-      'SegFormer',
-      'Transformer-based segmentation',
-      '64M params · ImageNet-21k pretrained',
-      1.6,
-      '86–92% mIoU',
-    ],
-    [
-      'scratch',
-      'Start from scratch',
-      'Train without pretrained weights',
-      'Random initialization',
-      1.4,
-      '60–78% mIoU',
-    ],
+    ['segformer', 'SegFormer', 'Transformer-based segmentation', '64M params · ImageNet-21k pretrained', 1.6, '86–92% mIoU'],
+    ['scratch', 'Start from scratch', 'Train without pretrained weights', 'Random initialization', 1.4, '60–78% mIoU'],
   ],
   named_entity_recognition: [
-    [
-      'bert-ner',
-      'BERT (token classification)',
-      'Strong general-purpose entity tagger',
-      '110M params · pretrained',
-      1,
-      '88–93% F1',
-    ],
-    [
-      'distilbert-ner',
-      'DistilBERT (token classification)',
-      'Faster, compact entity tagger',
-      '66M params · pretrained',
-      0.6,
-      '86–91% F1',
-    ],
-    [
-      'roberta-ner',
-      'RoBERTa (token classification)',
-      'Robust accuracy on varied text',
-      '125M params · pretrained',
-      1.15,
-      '89–94% F1',
-    ],
-    [
-      'scratch',
-      'Start from scratch',
-      'Train without pretrained weights',
-      'Random initialization',
-      1.4,
-      '65–80% F1',
-    ],
+    ['bert-ner', 'BERT (token classification)', 'Strong general-purpose entity tagger', '110M params · pretrained', 1, '88–93% F1'],
+    ['distilbert-ner', 'DistilBERT (token classification)', 'Faster, compact entity tagger', '66M params · pretrained', 0.6, '86–91% F1'],
+    ['roberta-ner', 'RoBERTa (token classification)', 'Robust accuracy on varied text', '125M params · pretrained', 1.15, '89–94% F1'],
+    ['scratch', 'Start from scratch', 'Train without pretrained weights', 'Random initialization', 1.4, '65–80% F1'],
   ],
   tabular_prediction: [
-    [
-      'xgboost',
-      'XGBoost',
-      'High-quality boosted-tree baseline',
-      'Gradient boosted trees',
-      0.35,
-      '84–91%',
-    ],
-    [
-      'lightgbm',
-      'LightGBM',
-      'Fast training on large tables',
-      'Gradient boosted trees',
-      0.25,
-      '83–91%',
-    ],
-    [
-      'tabnet',
-      'TabNet',
-      'Deep learning with feature attention',
-      'Neural tabular model',
-      0.8,
-      '82–90%',
-    ],
-    [
-      'mlp',
-      'Start from scratch',
-      'Custom multilayer perceptron',
-      'Random initialization',
-      0.65,
-      '76–87%',
-    ],
+    ['xgboost', 'XGBoost', 'High-quality boosted-tree baseline', 'Gradient boosted trees', 0.35, '84–91%'],
+    ['lightgbm', 'LightGBM', 'Fast training on large tables', 'Gradient boosted trees', 0.25, '83–91%'],
+    ['tabnet', 'TabNet', 'Deep learning with feature attention', 'Neural tabular model', 0.8, '82–90%'],
+    ['mlp', 'Start from scratch', 'Custom multilayer perceptron', 'Random initialization', 0.65, '76–87%'],
   ],
   time_series: [
-    [
-      'tft',
-      'Temporal Fusion Transformer',
-      'Multi-horizon forecasting',
-      'Attention-based forecast model',
-      1.2,
-      '8–14% MAPE',
-    ],
-    [
-      'nbeats',
-      'N-BEATS',
-      'Strong univariate forecasting baseline',
-      'Deep residual forecast model',
-      0.8,
-      '10–16% MAPE',
-    ],
-    [
-      'lstm',
-      'LSTM',
-      'Reliable recurrent baseline',
-      'Sequence model',
-      0.65,
-      '12–18% MAPE',
-    ],
+    ['tft', 'Temporal Fusion Transformer', 'Multi-horizon forecasting', 'Attention-based forecast model', 1.2, '8–14% MAPE'],
+    ['nbeats', 'N-BEATS', 'Strong univariate forecasting baseline', 'Deep residual forecast model', 0.8, '10–16% MAPE'],
+    ['lstm', 'LSTM', 'Reliable recurrent baseline', 'Sequence model', 0.65, '12–18% MAPE'],
   ],
-}
+};
 
 export type MockArchitecture = {
-  id: string
-  name: string
-  description: string
-  meta: string
+  id: string;
+  name: string;
+  description: string;
+  meta: string;
   /** Relative training cost; goes into the time estimate. */
-  factor: number
-  expected_accuracy: string
-}
+  factor: number;
+  expected_accuracy: string;
+};
 
 export function architecturesFor(taskType: string): MockArchitecture[] {
-  const catalog = catalogs[taskType] ?? catalogs.text_classification
-  return catalog.map(
-    ([id, name, description, meta, factor, expected_accuracy]) => ({
-      id,
-      name,
-      description,
-      meta,
-      factor,
-      expected_accuracy,
-    }),
-  )
+  const catalog = catalogs[taskType] ?? catalogs.text_classification;
+  return catalog.map(([id, name, description, meta, factor, expected_accuracy]) => ({
+    id,
+    name,
+    description,
+    meta,
+    factor,
+    expected_accuracy,
+  }));
 }
 
 export type MockComputeOption = ApiComputeOption & {
   /** Relative speed; goes into the time estimate. */
-  performance: number
-}
+  performance: number;
+};
 
 export const computeOptions: MockComputeOption[] = [
   {
@@ -624,4 +373,4 @@ export const computeOptions: MockComputeOption[] = [
     hourly_rate_usd: 0.2,
     performance: 0.15,
   },
-]
+];

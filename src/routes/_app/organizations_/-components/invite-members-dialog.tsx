@@ -1,22 +1,14 @@
-import * as React from 'react'
-import {
-  Alert,
-  Button,
-  Field,
-  Flex,
-  Stack,
-  Text,
-  Textarea,
-} from '@chakra-ui/react'
+import * as React from 'react';
+import { Alert, Button, Field, Flex, Stack, Text, Textarea } from '@chakra-ui/react';
 
-import { AppDialog } from '@/components/shared/app-dialog'
-import { SimpleSelect } from '@/components/simple-select'
-import type { OrgRole, Organization } from '@/features/dashboard/domain/types'
-import { orgRoleDescriptions } from '@/features/organizations/constants'
-import { isEmail } from '@/lib/validation'
+import { AppDialog } from '@/components/shared/app-dialog';
+import { SimpleSelect } from '@/components/simple-select';
+import type { OrgRole, Organization } from '@/features/dashboard/domain/types';
+import { orgRoleDescriptions } from '@/features/organizations/constants';
+import { isEmail } from '@/lib/validation';
 
 /** Owners are made by transferring ownership, never by invitation. */
-const invitableRoles: OrgRole[] = ['Admin', 'Member', 'Viewer']
+const invitableRoles: OrgRole[] = ['Admin', 'Member', 'Viewer'];
 
 export function parseEmails(value: string) {
   return [
@@ -26,7 +18,7 @@ export function parseEmails(value: string) {
         .map((item) => item.trim().toLowerCase())
         .filter(Boolean),
     ),
-  ]
+  ];
 }
 
 export function InviteMembersDialog({
@@ -37,53 +29,51 @@ export function InviteMembersDialog({
   seatsLeft,
   onInvite,
 }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  org: Organization
-  existingEmails: string[]
-  seatsLeft: number
-  onInvite: (emails: string[], role: OrgRole) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  org: Organization;
+  existingEmails: string[];
+  seatsLeft: number;
+  onInvite: (emails: string[], role: OrgRole) => void;
 }) {
-  const [value, setValue] = React.useState('')
-  const [role, setRole] = React.useState<OrgRole>('Member')
-  const [error, setError] = React.useState('')
+  const [value, setValue] = React.useState('');
+  const [role, setRole] = React.useState<OrgRole>('Member');
+  const [error, setError] = React.useState('');
 
-  const emails = parseEmails(value)
-  const overLimit = emails.length > seatsLeft
+  const emails = parseEmails(value);
+  const overLimit = emails.length > seatsLeft;
 
   function close(next: boolean) {
-    onOpenChange(next)
+    onOpenChange(next);
     if (!next) {
-      setValue('')
-      setRole('Member')
-      setError('')
+      setValue('');
+      setRole('Member');
+      setError('');
     }
   }
 
   function submit(event: React.FormEvent) {
-    event.preventDefault()
+    event.preventDefault();
     if (emails.length === 0) {
-      setError('Enter at least one email address.')
-      return
+      setError('Enter at least one email address.');
+      return;
     }
-    const invalid = emails.filter((email) => !isEmail(email))
+    const invalid = emails.filter((email) => !isEmail(email));
     if (invalid.length > 0) {
-      setError(`Not a valid email: ${invalid.join(', ')}`)
-      return
+      setError(`Not a valid email: ${invalid.join(', ')}`);
+      return;
     }
-    const taken = emails.filter((email) => existingEmails.includes(email))
+    const taken = emails.filter((email) => existingEmails.includes(email));
     if (taken.length > 0) {
-      setError(`Already in ${org.name}: ${taken.join(', ')}`)
-      return
+      setError(`Already in ${org.name}: ${taken.join(', ')}`);
+      return;
     }
     if (overLimit) {
-      setError(
-        `Your ${org.plan} plan has ${seatsLeft} seat${seatsLeft === 1 ? '' : 's'} left.`,
-      )
-      return
+      setError(`Your ${org.plan} plan has ${seatsLeft} seat${seatsLeft === 1 ? '' : 's'} left.`);
+      return;
     }
-    onInvite(emails, role)
-    close(false)
+    onInvite(emails, role);
+    close(false);
   }
 
   return (
@@ -95,18 +85,11 @@ export function InviteMembersDialog({
       description={`They get an email with a link to join ${org.name}.`}
       footer={
         <>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => close(false)}
-          >
+          <Button type="button" variant="outline" size="sm" onClick={() => close(false)}>
             Cancel
           </Button>
           <Button type="submit" variant="solid" size="sm">
-            {emails.length > 1
-              ? `Send ${emails.length} invites`
-              : 'Send invite'}
+            {emails.length > 1 ? `Send ${emails.length} invites` : 'Send invite'}
           </Button>
         </>
       }
@@ -116,12 +99,7 @@ export function InviteMembersDialog({
           <Flex w="full" align="baseline" justify="space-between" gap="2">
             <Field.Label>Email addresses</Field.Label>
             {emails.length > 0 && (
-              <Text
-                as="span"
-                fontSize="xs"
-                color="fg.muted"
-                fontVariantNumeric="tabular-nums"
-              >
+              <Text as="span" fontSize="xs" color="fg.muted" fontVariantNumeric="tabular-nums">
                 {emails.length} of {seatsLeft} seats
               </Text>
             )}
@@ -131,13 +109,11 @@ export function InviteMembersDialog({
             value={value}
             placeholder="priya@acme.ai, marcus@acme.ai"
             onChange={(event) => {
-              setValue(event.target.value)
-              setError('')
+              setValue(event.target.value);
+              setError('');
             }}
           />
-          <Field.HelperText>
-            Separate addresses with commas or new lines.
-          </Field.HelperText>
+          <Field.HelperText>Separate addresses with commas or new lines.</Field.HelperText>
           <Field.ErrorText>{error}</Field.ErrorText>
         </Field.Root>
         <Stack gap="1.5">
@@ -157,12 +133,11 @@ export function InviteMembersDialog({
           <Alert.Root status="warning" colorPalette="warning">
             <Alert.Indicator />
             <Alert.Description>
-              That's more than the {seatsLeft} seats left on your {org.plan}{' '}
-              plan. Remove some addresses or upgrade.
+              That's more than the {seatsLeft} seats left on your {org.plan} plan. Remove some addresses or upgrade.
             </Alert.Description>
           </Alert.Root>
         )}
       </Stack>
     </AppDialog>
-  )
+  );
 }

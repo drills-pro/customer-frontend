@@ -1,5 +1,5 @@
-import { chakra, useSlotRecipe } from '@chakra-ui/react'
-import type { HTMLChakraProps } from '@chakra-ui/react'
+import { chakra, useSlotRecipe } from '@chakra-ui/react';
+import type { HTMLChakraProps } from '@chakra-ui/react';
 
 /**
  * An on/off switch drawn by the theme's switch recipe, as a `button` with
@@ -13,13 +13,13 @@ export function SwitchButton({
   size = 'md',
   ...props
 }: {
-  checked: boolean
-  onCheckedChange: (checked: boolean) => void
-  size?: 'xs' | 'sm' | 'md' | 'lg'
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+  size?: 'xs' | 'sm' | 'md' | 'lg';
 } & Omit<HTMLChakraProps<'button'>, 'onChange'>) {
-  const recipe = useSlotRecipe({ key: 'switch' })
-  const styles = recipe({ size })
-  const state = checked ? 'checked' : 'unchecked'
+  const recipe = useSlotRecipe({ key: 'switch' });
+  const styles = recipe({ size });
+  const state = checked ? 'checked' : 'unchecked';
 
   return (
     <chakra.button
@@ -34,5 +34,5 @@ export function SwitchButton({
     >
       <chakra.span data-part="thumb" data-state={state} css={styles.thumb} />
     </chakra.button>
-  )
+  );
 }

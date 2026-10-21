@@ -1,11 +1,11 @@
 // Must load before the mock: it fixes the clock and the random ids.
-import { FIXED_NOW, resetDeterminism } from './contract/deterministic'
-import { readFileSync, writeFileSync } from 'node:fs'
-import path from 'node:path'
-import { expect, test } from '@playwright/test'
-import { handleMockRequest, reloadMockDb } from '../src/api/mock'
-import { registeredRoutes } from '../src/api/mock/router'
-import { members, organizations } from '../src/api/mock/store'
+import { FIXED_NOW, resetDeterminism } from './contract/deterministic';
+import { readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { expect, test } from '@playwright/test';
+import { handleMockRequest, reloadMockDb } from '../src/api/mock';
+import { registeredRoutes } from '../src/api/mock/router';
+import { members, organizations } from '../src/api/mock/store';
 
 /**
  * The mock's answers, recorded as core-api's contract fixtures
@@ -21,24 +21,21 @@ import { members, organizations } from '../src/api/mock/store'
  */
 
 type ContractRequest = {
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
-  path: string
-  body?: unknown
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  path: string;
+  body?: unknown;
   /** Puts the seed in the state this request needs. */
-  setup?: () => void
-}
+  setup?: () => void;
+};
 
-const FIXTURE_DIR = path.resolve(
-  path.dirname(new URL(import.meta.url).pathname),
-  '../../core-api/tests/contract',
-)
+const FIXTURE_DIR = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../../core-api/tests/contract');
 
-const FIXED_ISO = new Date(FIXED_NOW).toISOString()
+const FIXED_ISO = new Date(FIXED_NOW).toISOString();
 
-const datasets = '/v1/projects/retail/datasets'
-const runs = '/v1/projects/retail/training-runs'
-const models = '/v1/projects/retail/models'
-const deployments = '/v1/projects/retail/deployments'
+const datasets = '/v1/projects/retail/datasets';
+const runs = '/v1/projects/retail/training-runs';
+const models = '/v1/projects/retail/models';
+const deployments = '/v1/projects/retail/deployments';
 
 const runConfig = {
   epochs: 10,
@@ -50,7 +47,7 @@ const runConfig = {
   early_stopping: true,
   instance_id: 'a10g-1',
   spot: false,
-}
+};
 
 const newProject = {
   organization_id: 'acme',
@@ -61,14 +58,14 @@ const newProject = {
   visibility: 'organization',
   start_method: 'template',
   template_id: 'retail-shelf-audit',
-}
+};
 
 const newOrganization = {
   name: 'Contract Labs',
   slug: 'contract-labs',
   plan: 'team',
   color: '#6366f1',
-}
+};
 
 const REQUESTS: Record<string, ContractRequest[]> = {
   organizations: [
@@ -329,45 +326,40 @@ const REQUESTS: Record<string, ContractRequest[]> = {
     { method: 'DELETE', path: '/v1/api-keys/key-ci' },
   ],
   dashboard: [{ method: 'GET', path: '/v1/dashboard/metrics/history?days=30' }],
-}
+};
 
 function memoryStorage() {
-  const values = new Map<string, string>()
+  const values = new Map<string, string>();
   return {
     getItem: (key: string) => values.get(key) ?? null,
     setItem: (key: string, value: string) => void values.set(key, value),
-  }
+  };
 }
 
 /** The registered pattern a request lands on, e.g. `/v1/projects/:projectId`. */
 function patternOf(request: ContractRequest) {
-  const parts = request.path.split('?')[0].split('/').filter(Boolean)
+  const parts = request.path.split('?')[0].split('/').filter(Boolean);
   const candidates = registeredRoutes().filter((item) => {
-    const segments = item.pattern.split('/').filter(Boolean)
+    const segments = item.pattern.split('/').filter(Boolean);
     return (
       item.method === request.method &&
       segments.length === parts.length &&
-      segments.every(
-        (segment, i) => segment.startsWith(':') || segment === parts[i],
-      )
-    )
-  })
+      segments.every((segment, i) => segment.startsWith(':') || segment === parts[i])
+    );
+  });
   // The most specific wins, as in matchRoute.
-  const fixed = (pattern: string) =>
-    pattern.split('/').filter((segment) => segment && !segment.startsWith(':'))
-      .length
-  return candidates.sort((a, b) => fixed(b.pattern) - fixed(a.pattern))[0]
-    ?.pattern
+  const fixed = (pattern: string) => pattern.split('/').filter((segment) => segment && !segment.startsWith(':')).length;
+  return candidates.sort((a, b) => fixed(b.pattern) - fixed(a.pattern))[0]?.pattern;
 }
 
 type Fixture = {
-  method: string
-  route: string | undefined
-  path: string
-  body: unknown
-  status: number
-  response: unknown
-}
+  method: string;
+  route: string | undefined;
+  path: string;
+  body: unknown;
+  status: number;
+  response: unknown;
+};
 
 /**
  * The mock's answer, retired routes included (src/api/mock/router.ts), or
@@ -375,18 +367,18 @@ type Fixture = {
  * committed fixture, so the contract outlives the mock.
  */
 async function record(request: ContractRequest): Promise<Fixture | undefined> {
-  resetDeterminism()
-  reloadMockDb(memoryStorage())
-  request.setup?.()
+  resetDeterminism();
+  reloadMockDb(memoryStorage());
+  request.setup?.();
   const response = await handleMockRequest(
     request.method,
     request.path,
     request.body === undefined ? undefined : JSON.stringify(request.body),
     0,
     { includeRetired: true },
-  )
-  if (!response) return undefined
-  const text = await response.text()
+  );
+  if (!response) return undefined;
+  const text = await response.text();
   return {
     method: request.method,
     route: patternOf(request),
@@ -394,59 +386,45 @@ async function record(request: ContractRequest): Promise<Fixture | undefined> {
     body: request.body ?? null,
     status: response.status,
     response: text ? (JSON.parse(text) as unknown) : null,
-  }
+  };
 }
 
 function readCommitted(file: string) {
   try {
-    return readFileSync(file, 'utf8')
+    return readFileSync(file, 'utf8');
   } catch {
-    return ''
+    return '';
   }
 }
 
 test('every mock route has a contract request', () => {
-  const requested = Object.values(REQUESTS).flat()
+  const requested = Object.values(REQUESTS).flat();
   const missing = registeredRoutes().filter(
-    (item) =>
-      !requested.some(
-        (request) =>
-          request.method === item.method && patternOf(request) === item.pattern,
-      ),
-  )
-  expect(missing).toEqual([])
-})
+    (item) => !requested.some((request) => request.method === item.method && patternOf(request) === item.pattern),
+  );
+  expect(missing).toEqual([]);
+});
 
 for (const [area, requests] of Object.entries(REQUESTS)) {
   test(`contract fixtures: ${area}`, async () => {
-    const file = path.join(FIXTURE_DIR, `${area}.json`)
-    const committed = readCommitted(file)
-    const frozen = (committed ? JSON.parse(committed) : []) as Fixture[]
+    const file = path.join(FIXTURE_DIR, `${area}.json`);
+    const committed = readCommitted(file);
+    const frozen = (committed ? JSON.parse(committed) : []) as Fixture[];
 
-    const fixtures: Fixture[] = []
+    const fixtures: Fixture[] = [];
     for (const request of requests) {
-      const fixture =
-        (await record(request)) ??
-        frozen.find(
-          (item) =>
-            item.method === request.method && item.path === request.path,
-        )
+      const fixture = (await record(request)) ?? frozen.find((item) => item.method === request.method && item.path === request.path);
       if (!fixture) {
-        throw new Error(
-          `No mock route and no committed fixture for ${request.method} ${request.path}`,
-        )
+        throw new Error(`No mock route and no committed fixture for ${request.method} ${request.path}`);
       }
-      fixtures.push(fixture)
+      fixtures.push(fixture);
     }
-    const content = `${JSON.stringify(fixtures, null, 2)}\n`
+    const content = `${JSON.stringify(fixtures, null, 2)}\n`;
 
     if (process.env.UPDATE_CONTRACT) {
-      writeFileSync(file, content)
-      return
+      writeFileSync(file, content);
+      return;
     }
-    expect(
-      committed === content,
-      `${file} is stale; run \`pnpm contract:export\``,
-    ).toBe(true)
-  })
+    expect(committed === content, `${file} is stale; run \`pnpm contract:export\``).toBe(true);
+  });
 }

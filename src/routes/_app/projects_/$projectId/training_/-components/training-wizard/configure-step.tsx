@@ -1,50 +1,31 @@
-import type * as React from 'react'
-import {
-  Box,
-  Checkbox,
-  Flex,
-  Heading,
-  SimpleGrid,
-  Slider,
-  Stack,
-  Text,
-} from '@chakra-ui/react'
+import type * as React from 'react';
+import { Box, Checkbox, Flex, Heading, SimpleGrid, Slider, Stack, Text } from '@chakra-ui/react';
 
-import {
-  RadioButton,
-  RadioButtonGroup,
-} from '@/components/shared/radio-button-group'
-import { SwitchButton } from '@/components/shared/switch-button'
-import type { TrainingScheduler } from '@/features/dashboard/data'
-import { formatLearningRate } from '@/features/training/format'
+import { RadioButton, RadioButtonGroup } from '@/components/shared/radio-button-group';
+import { SwitchButton } from '@/components/shared/switch-button';
+import type { TrainingScheduler } from '@/features/dashboard/data';
+import { formatLearningRate } from '@/features/training/format';
 
-const augmentations = [
-  'Random flip',
-  'Random crop',
-  'Color jitter',
-  'Rotation ±15°',
-  'Mixup',
-  'Random erasing',
-] as const
-const batchSizeTicks = [4, 8, 16, 32, 64, 128] as const
-const batchSizeMin = 1
-const batchSizeMax = 128
-const learningRateTicks = ['1e-5', '1e-4', '1e-3', '1e-2', '1e-1']
+const augmentations = ['Random flip', 'Random crop', 'Color jitter', 'Rotation ±15°', 'Mixup', 'Random erasing'] as const;
+const batchSizeTicks = [4, 8, 16, 32, 64, 128] as const;
+const batchSizeMin = 1;
+const batchSizeMax = 128;
+const learningRateTicks = ['1e-5', '1e-4', '1e-3', '1e-2', '1e-1'];
 
 type ConfigureStepProps = {
-  epochs: number
-  setEpochs: (value: number) => void
-  batchSize: number
-  setBatchSize: (value: number) => void
-  learningRate: number
-  setLearningRate: (value: number) => void
-  scheduler: TrainingScheduler
-  setScheduler: (value: TrainingScheduler) => void
-  selectedAugmentations: string[]
-  toggleAugmentation: (value: string) => void
-  earlyStopping: boolean
-  setEarlyStopping: (value: boolean) => void
-}
+  epochs: number;
+  setEpochs: (value: number) => void;
+  batchSize: number;
+  setBatchSize: (value: number) => void;
+  learningRate: number;
+  setLearningRate: (value: number) => void;
+  scheduler: TrainingScheduler;
+  setScheduler: (value: TrainingScheduler) => void;
+  selectedAugmentations: string[];
+  toggleAugmentation: (value: string) => void;
+  earlyStopping: boolean;
+  setEarlyStopping: (value: boolean) => void;
+};
 
 /** A one-thumb slider with a filled range, named for assistive tech. */
 function ValueSlider({
@@ -56,13 +37,13 @@ function ValueSlider({
   max,
   step,
 }: {
-  label: string
-  valueText?: string
-  value: number
-  onChange: (value: number) => void
-  min: number
-  max: number
-  step: number
+  label: string;
+  valueText?: string;
+  value: number;
+  onChange: (value: number) => void;
+  min: number;
+  max: number;
+  step: number;
 }) {
   return (
     <Slider.Root
@@ -83,46 +64,30 @@ function ValueSlider({
         <Slider.Thumbs />
       </Slider.Control>
     </Slider.Root>
-  )
+  );
 }
 
 /** A setting's name with its current value on the right. */
-function SettingHeader({
-  label,
-  value,
-}: {
-  label: string
-  value: React.ReactNode
-}) {
+function SettingHeader({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <Flex align="baseline" justify="space-between" gap="3">
       <Text textStyle="body-sm" fontWeight="semibold">
         {label}
       </Text>
-      <Text
-        as="span"
-        textStyle="body-sm"
-        fontWeight="semibold"
-        color="brand-text"
-      >
+      <Text as="span" textStyle="body-sm" fontWeight="semibold" color="brand-text">
         {value}
       </Text>
     </Flex>
-  )
+  );
 }
 
 export function ConfigureStep(props: ConfigureStepProps) {
-  const learningRateExponent = Math.log10(props.learningRate) + 5
+  const learningRateExponent = Math.log10(props.learningRate) + 5;
 
   return (
     <section>
       <Box>
-        <Heading
-          as="h2"
-          fontSize="lg"
-          fontWeight="semibold"
-          letterSpacing="tight"
-        >
+        <Heading as="h2" fontSize="lg" fontWeight="semibold" letterSpacing="tight">
           Configure training
         </Heading>
         <Text mt="1" textStyle="body-sm" color="fg.muted">
@@ -132,24 +97,14 @@ export function ConfigureStep(props: ConfigureStepProps) {
       <Stack mt="8" gap="6">
         <Box>
           <SettingHeader label="Epochs" value={props.epochs} />
-          <ValueSlider
-            label="Epochs"
-            min={1}
-            max={100}
-            step={1}
-            value={props.epochs}
-            onChange={props.setEpochs}
-          />
+          <ValueSlider label="Epochs" min={1} max={100} step={1} value={props.epochs} onChange={props.setEpochs} />
           <Text mt="2" fontSize="xs" color="fg.muted">
             More epochs may improve accuracy but increase cost.
           </Text>
         </Box>
 
         <Box>
-          <SettingHeader
-            label="Learning rate"
-            value={formatLearningRate(props.learningRate)}
-          />
+          <SettingHeader label="Learning rate" value={formatLearningRate(props.learningRate)} />
           <ValueSlider
             label="Learning rate"
             valueText={formatLearningRate(props.learningRate)}
@@ -157,9 +112,7 @@ export function ConfigureStep(props: ConfigureStepProps) {
             max={4}
             step={0.01}
             value={learningRateExponent}
-            onChange={(value) =>
-              props.setLearningRate(Math.pow(10, -5 + value))
-            }
+            onChange={(value) => props.setLearningRate(Math.pow(10, -5 + value))}
           />
           <Flex mt="2" justify="space-between" fontSize="11px" color="fg.muted">
             {learningRateTicks.map((tick) => (
@@ -203,31 +156,20 @@ export function ConfigureStep(props: ConfigureStepProps) {
             value={props.batchSize}
             onChange={props.setBatchSize}
           />
-          <Box
-            position="relative"
-            mt="2"
-            h="4"
-            fontSize="11px"
-            color="fg.muted"
-          >
+          <Box position="relative" mt="2" h="4" fontSize="11px" color="fg.muted">
             {batchSizeTicks.map((value) => {
-              const percent =
-                ((value - batchSizeMin) / (batchSizeMax - batchSizeMin)) * 100
+              const percent = ((value - batchSizeMin) / (batchSizeMax - batchSizeMin)) * 100;
               return (
                 <Text
                   as="span"
                   key={value}
                   position="absolute"
                   left={`${percent}%`}
-                  transform={
-                    value === batchSizeMax
-                      ? 'translateX(-100%)'
-                      : 'translateX(-50%)'
-                  }
+                  transform={value === batchSizeMax ? 'translateX(-100%)' : 'translateX(-50%)'}
                 >
                   {value}
                 </Text>
-              )
+              );
             })}
           </Box>
         </Box>
@@ -263,12 +205,7 @@ export function ConfigureStep(props: ConfigureStepProps) {
           </SimpleGrid>
         </Box>
 
-        <Checkbox.Root
-          checked={props.earlyStopping}
-          onCheckedChange={(event) =>
-            props.setEarlyStopping(event.checked === true)
-          }
-        >
+        <Checkbox.Root checked={props.earlyStopping} onCheckedChange={(event) => props.setEarlyStopping(event.checked === true)}>
           <Checkbox.HiddenInput />
           <Checkbox.Control />
           <Checkbox.Label textStyle="body-sm" fontWeight="normal">
@@ -277,5 +214,5 @@ export function ConfigureStep(props: ConfigureStepProps) {
         </Checkbox.Root>
       </Stack>
     </section>
-  )
+  );
 }

@@ -1,49 +1,40 @@
-import { Box, Button, Flex, Grid, Progress, Text } from '@chakra-ui/react'
-import { Chart, useChart } from '@chakra-ui/charts'
-import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from 'recharts'
+import { Box, Button, Flex, Grid, Progress, Text } from '@chakra-ui/react';
+import { Chart, useChart } from '@chakra-ui/charts';
+import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from 'recharts';
 
-import { EmptyNotice } from '@/components/shared/empty-notice'
-import { SectionCard } from '@/components/shared/section-card'
-import { useDeploymentMetrics } from '@/features/deployments/queries'
-import { useCurrentDeployment } from './use-current-deployment'
+import { EmptyNotice } from '@/components/shared/empty-notice';
+import { SectionCard } from '@/components/shared/section-card';
+import { useDeploymentMetrics } from '@/features/deployments/queries';
+import { useCurrentDeployment } from './use-current-deployment';
 
 /** Parses the leading number out of `140 ms`; `—` has none. */
 function ms(value: string) {
-  const parsed = Number.parseFloat(value)
-  return Number.isFinite(parsed) ? parsed : 0
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
-export function MonitoringTab({
-  onEditScaling,
-}: {
-  onEditScaling: () => void
-}) {
-  const { project, deployment } = useCurrentDeployment()
-  const metrics = useDeploymentMetrics(project.id, deployment.id).data
+export function MonitoringTab({ onEditScaling }: { onEditScaling: () => void }) {
+  const { project, deployment } = useCurrentDeployment();
+  const metrics = useDeploymentMetrics(project.id, deployment.id).data;
   const volumeData = (metrics?.request_volume ?? []).map((point) => ({
     hour: point.hours_ago === 0 ? 'now' : `${point.hours_ago}h ago`,
     requests: point.requests,
-  }))
-  const live = deployment.status === 'Live'
+  }));
+  const live = deployment.status === 'Live';
   /**
    * All three percentiles share one scale — p99, the slowest value shown — so
    * the bars can actually be compared against each other.
    */
-  const scale = ms(deployment.latencyP99) || 1
+  const scale = ms(deployment.latencyP99) || 1;
   const percentiles = [
     ['p50', deployment.latencyP50, 'half of requests finish faster than this'],
     ['p95', deployment.latencyP95, 'the number to quote in an SLA'],
     ['p99', deployment.latencyP99, 'the slowest 1 in 100'],
-  ] as const
-  const percentilePalette = ['success', 'warning', 'danger']
+  ] as const;
+  const percentilePalette = ['success', 'warning', 'danger'];
 
   return (
-    <Grid
-      minW="0"
-      alignItems="start"
-      gap="6"
-      templateColumns={{ lg: 'repeat(3, minmax(0, 1fr))' }}
-    >
+    <Grid minW="0" alignItems="start" gap="6" templateColumns={{ lg: 'repeat(3, minmax(0, 1fr))' }}>
       <Grid minW="0" gap="6" gridColumn={{ lg: 'span 2' }}>
         <SectionCard
           title="Request volume"
@@ -78,29 +69,14 @@ export function MonitoringTab({
             {percentiles.map(([label, value, note], index) => (
               <Box key={label} mt="4" _first={{ mt: '0' }}>
                 <Flex align="baseline" justify="space-between" gap="3">
-                  <Text
-                    as="span"
-                    fontFamily="mono"
-                    fontSize="13px"
-                    fontWeight="medium"
-                  >
+                  <Text as="span" fontFamily="mono" fontSize="13px" fontWeight="medium">
                     {label}
                   </Text>
-                  <Text
-                    as="span"
-                    fontSize="15px"
-                    fontWeight="semibold"
-                    fontVariantNumeric="tabular-nums"
-                  >
+                  <Text as="span" fontSize="15px" fontWeight="semibold" fontVariantNumeric="tabular-nums">
                     {value}
                   </Text>
                 </Flex>
-                <Progress.Root
-                  mt="1.5"
-                  size="sm"
-                  value={live ? (ms(value) / scale) * 100 : 0}
-                  colorPalette={percentilePalette[index]}
-                >
+                <Progress.Root mt="1.5" size="sm" value={live ? (ms(value) / scale) * 100 : 0} colorPalette={percentilePalette[index]}>
                   <Progress.Track aria-label={`${label} latency`}>
                     <Progress.Range />
                   </Progress.Track>
@@ -124,10 +100,7 @@ export function MonitoringTab({
                 ['p95 latency', deployment.latencyP95],
                 ['p99 latency', deployment.latencyP99],
                 ['Error rate', deployment.errorRate],
-                [
-                  'Replicas',
-                  `${deployment.activeReplicas} / ${deployment.maxReplicas}`,
-                ],
+                ['Replicas', `${deployment.activeReplicas} / ${deployment.maxReplicas}`],
                 ['Cost today', deployment.costPerDay],
               ] as const
             ).map(([label, value]) => (
@@ -146,12 +119,7 @@ export function MonitoringTab({
                 <Box as="dt" color="fg.muted">
                   {label}
                 </Box>
-                <Box
-                  as="dd"
-                  fontWeight="medium"
-                  fontVariantNumeric="tabular-nums"
-                  color={value === '—' ? 'fg.muted' : undefined}
-                >
+                <Box as="dd" fontWeight="medium" fontVariantNumeric="tabular-nums" color={value === '—' ? 'fg.muted' : undefined}>
                   {value}
                 </Box>
               </Flex>
@@ -166,56 +134,33 @@ export function MonitoringTab({
                 ['Min replicas', String(deployment.minReplicas)],
                 ['Max replicas', String(deployment.maxReplicas)],
                 ['Target concurrency', String(deployment.targetConcurrency)],
-                [
-                  'Scale-down delay',
-                  `${Math.round(deployment.scaleDownDelaySeconds / 60)} min`,
-                ],
+                ['Scale-down delay', `${Math.round(deployment.scaleDownDelaySeconds / 60)} min`],
               ] as const
             ).map(([label, value]) => (
-              <Flex
-                key={label}
-                align="center"
-                justify="space-between"
-                py="1.5"
-                fontSize="13px"
-              >
+              <Flex key={label} align="center" justify="space-between" py="1.5" fontSize="13px">
                 <Text as="span" color="fg.muted">
                   {label}
                 </Text>
-                <Text
-                  as="b"
-                  fontWeight="semibold"
-                  fontVariantNumeric="tabular-nums"
-                >
+                <Text as="b" fontWeight="semibold" fontVariantNumeric="tabular-nums">
                   {value}
                 </Text>
               </Flex>
             ))}
-            <Button
-              variant="outline"
-              size="sm"
-              mt="4"
-              w="full"
-              onClick={onEditScaling}
-            >
+            <Button variant="outline" size="sm" mt="4" w="full" onClick={onEditScaling}>
               Edit scaling
             </Button>
           </Box>
         </SectionCard>
       </Grid>
     </Grid>
-  )
+  );
 }
 
-function RequestVolumeChart({
-  data,
-}: {
-  data: { hour: string; requests: number }[]
-}) {
+function RequestVolumeChart({ data }: { data: { hour: string; requests: number }[] }) {
   const chart = useChart({
     data,
     series: [{ name: 'requests', color: 'brand', label: 'Requests' }],
-  })
+  });
   return (
     <Chart.Root chart={chart} h="56" w="full">
       <AreaChart responsive data={chart.data} accessibilityLayer>
@@ -234,9 +179,7 @@ function RequestVolumeChart({
           axisLine={false}
           width={44}
           tick={{ fill: chart.color('fg.muted'), fontSize: 12 }}
-          tickFormatter={(value: number) =>
-            value >= 1000 ? `${(value / 1000).toFixed(1)}k` : `${value}`
-          }
+          tickFormatter={(value: number) => (value >= 1000 ? `${(value / 1000).toFixed(1)}k` : `${value}`)}
         />
         <Tooltip content={<Chart.Tooltip />} />
         <Area
@@ -250,5 +193,5 @@ function RequestVolumeChart({
         />
       </AreaChart>
     </Chart.Root>
-  )
+  );
 }

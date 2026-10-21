@@ -1,6 +1,6 @@
-import * as React from 'react'
-import { Box, Button, Card, Flex } from '@chakra-ui/react'
-import type { ButtonProps, CardRootProps } from '@chakra-ui/react'
+import * as React from 'react';
+import { Box, Button, Card, Flex } from '@chakra-ui/react';
+import type { ButtonProps, CardRootProps } from '@chakra-ui/react';
 
 /**
  * A page section: an outlined card whose header (title, optional description
@@ -17,39 +17,20 @@ export function SectionCard({
   children,
   ...props
 }: {
-  title: React.ReactNode
-  description?: React.ReactNode
-  action?: React.ReactNode
-  headingLevel?: 'h2' | 'h3'
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  action?: React.ReactNode;
+  headingLevel?: 'h2' | 'h3';
   /** Rule the header off from the body. */
-  divided?: boolean
-  children?: React.ReactNode
+  divided?: boolean;
+  children?: React.ReactNode;
 } & Omit<CardRootProps, 'title'>) {
-  const titleId = React.useId()
+  const titleId = React.useId();
   return (
-    <Card.Root
-      as="section"
-      aria-labelledby={titleId}
-      variant="outline"
-      overflow="hidden"
-      {...props}
-    >
-      <Flex
-        align="center"
-        justify="space-between"
-        gap="3"
-        px="5"
-        py="4"
-        borderBottomWidth={divided ? '1px' : '0'}
-        borderColor="border"
-      >
+    <Card.Root as="section" aria-labelledby={titleId} variant="outline" overflow="hidden" {...props}>
+      <Flex align="center" justify="space-between" gap="3" px="5" py="4" borderBottomWidth={divided ? '1px' : '0'} borderColor="border">
         <Box minW="0">
-          <Card.Title
-            as={headingLevel}
-            id={titleId}
-            textStyle="body"
-            fontWeight="semibold"
-          >
+          <Card.Title as={headingLevel} id={titleId} textStyle="body" fontWeight="semibold">
             {title}
           </Card.Title>
           {description && (
@@ -62,7 +43,7 @@ export function SectionCard({
       </Flex>
       {children}
     </Card.Root>
-  )
+  );
 }
 
 /** The text action in a section header ("View all", "Dismiss"). */
@@ -78,5 +59,5 @@ export function SectionAction(props: ButtonProps) {
       _hover={{ textDecoration: 'underline' }}
       {...props}
     />
-  )
+  );
 }

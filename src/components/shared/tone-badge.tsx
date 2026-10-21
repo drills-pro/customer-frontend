@@ -1,9 +1,8 @@
-import { Badge, Box } from '@chakra-ui/react'
-import type { BadgeProps } from '@chakra-ui/react'
+import { Badge, Box } from '@chakra-ui/react';
+import type { BadgeProps } from '@chakra-ui/react';
 
 /** What a status means, independent of the palette that shows it. */
-export type Tone =
-  'success' | 'warning' | 'info' | 'neutral' | 'error' | 'accent'
+export type Tone = 'success' | 'warning' | 'info' | 'neutral' | 'error' | 'accent';
 
 const palettes: Record<Tone, string> = {
   success: 'success',
@@ -12,7 +11,7 @@ const palettes: Record<Tone, string> = {
   neutral: 'gray',
   error: 'danger',
   accent: 'brand',
-}
+};
 
 /**
  * A status badge. `dot` adds the glyph that keeps the status readable without
@@ -25,9 +24,9 @@ export function ToneBadge({
   children,
   ...props
 }: {
-  tone: Tone
-  dot?: boolean
-  pulse?: boolean
+  tone: Tone;
+  dot?: boolean;
+  pulse?: boolean;
 } & BadgeProps) {
   return (
     <Badge colorPalette={palettes[tone]} variant="subtle" gap="1.5" {...props}>
@@ -43,5 +42,5 @@ export function ToneBadge({
       )}
       {children}
     </Badge>
-  )
+  );
 }

@@ -1,20 +1,11 @@
-import {
-  Box,
-  Field,
-  Heading,
-  Input,
-  SimpleGrid,
-  Stack,
-  Text,
-  Textarea,
-} from '@chakra-ui/react'
+import { Box, Field, Heading, Input, SimpleGrid, Stack, Text, Textarea } from '@chakra-ui/react';
 
-import { SimpleSelect } from '@/components/simple-select'
-import { useDashboardLayout } from '@/features/dashboard/context'
-import type { NewProjectDraft } from './use-new-project-draft'
+import { SimpleSelect } from '@/components/simple-select';
+import { useDashboardLayout } from '@/features/dashboard/context';
+import type { NewProjectDraft } from './use-new-project-draft';
 
 export function BasicsStep({ draft }: { draft: NewProjectDraft }) {
-  const orgName = useDashboardLayout().org.name
+  const orgName = useDashboardLayout().org.name;
   return (
     <Stack as="section" gap="5">
       <Box>
@@ -31,18 +22,11 @@ export function BasicsStep({ draft }: { draft: NewProjectDraft }) {
           value={draft.name}
           onChange={(event) => draft.setName(event.target.value)}
           placeholder="e.g. Retail Vision"
-          aria-describedby={
-            draft.nameError ? 'new-project-name-error' : undefined
-          }
+          aria-describedby={draft.nameError ? 'new-project-name-error' : undefined}
           autoFocus
         />
         {draft.nameError && (
-          <Text
-            id="new-project-name-error"
-            role="alert"
-            fontSize="xs"
-            color="fg.error"
-          >
+          <Text id="new-project-name-error" role="alert" fontSize="xs" color="fg.error">
             {draft.nameError}
           </Text>
         )}
@@ -81,9 +65,7 @@ export function BasicsStep({ draft }: { draft: NewProjectDraft }) {
         label="Visibility"
         width="full"
         value={draft.visibility}
-        onChange={(value) =>
-          draft.setVisibility(value as 'Organization' | 'Private')
-        }
+        onChange={(value) => draft.setVisibility(value as 'Organization' | 'Private')}
         items={[
           {
             label: `Organization — visible to everyone in ${orgName}`,
@@ -96,5 +78,5 @@ export function BasicsStep({ draft }: { draft: NewProjectDraft }) {
         ]}
       />
     </Stack>
-  )
+  );
 }

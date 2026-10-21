@@ -1,13 +1,7 @@
-import type * as React from 'react'
-import { Box, Center, Flex, Heading, Text } from '@chakra-ui/react'
+import type * as React from 'react';
+import { Box, Center, Flex, Heading, Text } from '@chakra-ui/react';
 
-export function PageHeader({
-  title,
-  description,
-}: {
-  title: string
-  description: string
-}) {
+export function PageHeader({ title, description }: { title: string; description: string }) {
   return (
     <Box>
       <Heading as="h1" fontSize="2xl" fontWeight="bold" letterSpacing="tight">
@@ -17,7 +11,7 @@ export function PageHeader({
         {description}
       </Text>
     </Box>
-  )
+  );
 }
 
 /** A card row: optional icon tile, title and description, then actions. */
@@ -27,22 +21,15 @@ export function SettingRow({
   description,
   children,
 }: {
-  icon?: React.ComponentType<{ size?: number }>
-  title: React.ReactNode
-  description?: React.ReactNode
-  children?: React.ReactNode
+  icon?: React.ComponentType<{ size?: number }>;
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  children?: React.ReactNode;
 }) {
   return (
     <Flex wrap="wrap" align="center" columnGap="4" rowGap="3" px="5" py="4">
       {Icon && (
-        <Center
-          aria-hidden="true"
-          boxSize="9"
-          flexShrink={0}
-          rounded="l2"
-          bg="brand.subtle"
-          color="brand.fg"
-        >
+        <Center aria-hidden="true" boxSize="9" flexShrink={0} rounded="l2" bg="brand.subtle" color="brand.fg">
           <Icon size={16} />
         </Center>
       )}
@@ -58,5 +45,5 @@ export function SettingRow({
       </Box>
       {children}
     </Flex>
-  )
+  );
 }

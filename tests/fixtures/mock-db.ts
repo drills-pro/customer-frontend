@@ -1,8 +1,8 @@
-import type { Page } from '@playwright/test'
-import { MOCK_DB_STORAGE_KEY } from '../../src/api/mock/db'
-import type { ProjectRecord } from '../../src/api/mock/seed/projects'
+import type { Page } from '@playwright/test';
+import { MOCK_DB_STORAGE_KEY } from '../../src/api/mock/db';
+import type { ProjectRecord } from '../../src/api/mock/seed/projects';
 
-export { MOCK_DB_STORAGE_KEY }
+export { MOCK_DB_STORAGE_KEY };
 
 /**
  * The mock API keeps what was created or changed in `localStorage` (see
@@ -12,7 +12,7 @@ export { MOCK_DB_STORAGE_KEY }
 
 /** A project as `POST /v1/projects` stores it: a draft with nothing in it. */
 export function emptyProject(id: string, name: string): ProjectRecord {
-  const now = new Date().toISOString()
+  const now = new Date().toISOString();
   return {
     id,
     organization_id: 'acme',
@@ -34,38 +34,24 @@ export function emptyProject(id: string, name: string): ProjectRecord {
     readme: null,
     readme_markdown: null,
     usage_scale: { gpu_scale: 0, storage_scale: 0, endpoints_max: 0 },
-  }
+  };
 }
 
 /** Replaces the stored delta. Reload or navigate afterwards to pick it up. */
-export async function seedMockDb(
-  page: Page,
-  collections: Record<string, unknown[]>,
-) {
-  await page.evaluate(
-    ({ key, stored }) => localStorage.setItem(key, JSON.stringify(stored)),
-    {
-      key: MOCK_DB_STORAGE_KEY,
-      stored: Object.fromEntries(
-        Object.entries(collections).map(([name, records]) => [
-          name,
-          { records, deleted: [] },
-        ]),
-      ),
-    },
-  )
+export async function seedMockDb(page: Page, collections: Record<string, unknown[]>) {
+  await page.evaluate(({ key, stored }) => localStorage.setItem(key, JSON.stringify(stored)), {
+    key: MOCK_DB_STORAGE_KEY,
+    stored: Object.fromEntries(Object.entries(collections).map(([name, records]) => [name, { records, deleted: [] }])),
+  });
 }
 
 /** The created or changed records of one collection. */
-export async function storedRecords<T = Record<string, unknown>>(
-  page: Page,
-  collection: string,
-): Promise<T[]> {
+export async function storedRecords<T = Record<string, unknown>>(page: Page, collection: string): Promise<T[]> {
   return page.evaluate(
     ({ key, name }) => {
-      const stored = JSON.parse(localStorage.getItem(key) ?? '{}')
-      return stored[name]?.records ?? []
+      const stored = JSON.parse(localStorage.getItem(key) ?? '{}');
+      return stored[name]?.records ?? [];
     },
     { key: MOCK_DB_STORAGE_KEY, name: collection },
-  )
+  );
 }

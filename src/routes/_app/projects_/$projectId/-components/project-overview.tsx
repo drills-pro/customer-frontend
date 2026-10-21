@@ -1,40 +1,23 @@
-import type * as React from 'react'
-import {
-  Box,
-  Button,
-  Card,
-  Center,
-  Flex,
-  Heading,
-  Stack,
-  Text,
-} from '@chakra-ui/react'
-import { Link } from '@tanstack/react-router'
-import { FolderKanban } from 'lucide-react'
+import type * as React from 'react';
+import { Box, Button, Card, Center, Flex, Heading, Stack, Text } from '@chakra-ui/react';
+import { Link } from '@tanstack/react-router';
+import { FolderKanban } from 'lucide-react';
 
-import type {
-  ProjectOverview,
-  ResourceUsage,
-  UsagePeriod,
-} from '@/features/dashboard/data'
+import type { ProjectOverview, ResourceUsage, UsagePeriod } from '@/features/dashboard/data';
 
 /** The unit of a single bar within the selected period, not of the period. */
 export const usagePeriodLabels: Record<UsagePeriod, string> = {
   day: 'hours',
   week: 'days',
   month: 'days',
-}
+};
 
 /** e.g. "last 24 hours" — the count comes from the series so copy can't drift. */
 export function usageRangeLabel(resource: ResourceUsage, period: UsagePeriod) {
-  return `last ${resource.series[period].length} ${usagePeriodLabels[period]}`
+  return `last ${resource.series[period].length} ${usagePeriodLabels[period]}`;
 }
 
-export function FactList({
-  items,
-}: {
-  items: Array<[string, React.ReactNode]>
-}) {
+export function FactList({ items }: { items: Array<[string, React.ReactNode]> }) {
   return (
     <Stack as="dl" gap="4">
       {items.map(([label, value]) => (
@@ -48,7 +31,7 @@ export function FactList({
         </Flex>
       ))}
     </Stack>
-  )
+  );
 }
 
 export function serializeReadme(
@@ -82,40 +65,24 @@ ${readme.quickstart}
 ## Notes
 
 ${readme.notes.map((note) => `- **${note.label}:** ${note.text}`).join('\n')}
-`
+`;
 }
 
 export function formatUsageValue(value: number) {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1)
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
 export function getUsageSummary(resource: ResourceUsage, period: UsagePeriod) {
-  const values = resource.series[period].map((point) => point.value)
-  return resource.aggregation === 'peak'
-    ? Math.max(...values)
-    : Math.round(values.reduce((total, value) => total + value, 0) * 10) / 10
+  const values = resource.series[period].map((point) => point.value);
+  return resource.aggregation === 'peak' ? Math.max(...values) : Math.round(values.reduce((total, value) => total + value, 0) * 10) / 10;
 }
 
 export function ProjectNotFound({ projectId }: { projectId: string }) {
   return (
-    <Center
-      as="main"
-      id="dashboard-main"
-      mx="auto"
-      minH="60vh"
-      w="full"
-      maxW="1440px"
-      flex="1"
-      p={{ base: '4', sm: '6', lg: '8' }}
-    >
+    <Center as="main" id="dashboard-main" mx="auto" minH="60vh" w="full" maxW="1440px" flex="1" p={{ base: '4', sm: '6', lg: '8' }}>
       <Card.Root variant="outline" w="full" maxW="md" textAlign="center">
         <Card.Body alignItems="center" py="8">
-          <Center
-            boxSize="12"
-            rounded="full"
-            bg="brand.subtle"
-            color="brand.fg"
-          >
+          <Center boxSize="12" rounded="full" bg="brand.subtle" color="brand.fg">
             <FolderKanban />
           </Center>
           <Heading as="h1" mt="4" fontSize="xl" fontWeight="semibold">
@@ -130,5 +97,5 @@ export function ProjectNotFound({ projectId }: { projectId: string }) {
         </Card.Body>
       </Card.Root>
     </Center>
-  )
+  );
 }

@@ -1,19 +1,14 @@
-import { Box, HStack, Link, Table, Text } from '@chakra-ui/react'
-import { Link as RouterLink } from '@tanstack/react-router'
+import { Box, HStack, Link, Table, Text } from '@chakra-ui/react';
+import { Link as RouterLink } from '@tanstack/react-router';
 
-import type { Project } from '@/features/dashboard/data'
-import { ProjectMark } from '@/features/projects/components/project-ui'
+import type { Project } from '@/features/dashboard/data';
+import { ProjectMark } from '@/features/projects/components/project-ui';
 
-import { ProjectMenu } from './project-menu'
+import { ProjectMenu } from './project-menu';
 
 export function ProjectsTable({ projects }: { projects: Array<Project> }) {
   return (
-    <Table.ScrollArea
-      rounded="l3"
-      borderWidth="1px"
-      borderColor="border"
-      bg="surface-raised"
-    >
+    <Table.ScrollArea rounded="l3" borderWidth="1px" borderColor="border" bg="surface-raised">
       <Table.Root minW="780px" variant="data">
         <Table.Header>
           <Table.Row>
@@ -33,16 +28,8 @@ export function ProjectsTable({ projects }: { projects: Array<Project> }) {
                 <HStack gap="3">
                   <ProjectMark project={project} />
                   <Box minW="0">
-                    <Link
-                      asChild
-                      color="fg"
-                      fontWeight="semibold"
-                      _hover={{ color: 'brand-text' }}
-                    >
-                      <RouterLink
-                        to="/projects/$projectId/overview"
-                        params={{ projectId: project.id }}
-                      >
+                    <Link asChild color="fg" fontWeight="semibold" _hover={{ color: 'brand-text' }}>
+                      <RouterLink to="/projects/$projectId/overview" params={{ projectId: project.id }}>
                         {project.name}
                       </RouterLink>
                     </Link>
@@ -65,5 +52,5 @@ export function ProjectsTable({ projects }: { projects: Array<Project> }) {
         </Table.Body>
       </Table.Root>
     </Table.ScrollArea>
-  )
+  );
 }

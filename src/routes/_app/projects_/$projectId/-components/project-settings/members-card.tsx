@@ -1,53 +1,34 @@
-import * as React from 'react'
-import {
-  Avatar,
-  Box,
-  Button,
-  Field,
-  Flex,
-  HStack,
-  IconButton,
-  Input,
-  Stack,
-  Text,
-} from '@chakra-ui/react'
-import { UserPlus, X } from 'lucide-react'
-import { toaster } from '@/components/toaster'
+import * as React from 'react';
+import { Avatar, Box, Button, Field, Flex, HStack, IconButton, Input, Stack, Text } from '@chakra-ui/react';
+import { UserPlus, X } from 'lucide-react';
+import { toaster } from '@/components/toaster';
 
-import { AppDialog } from '@/components/shared/app-dialog'
-import { SectionCard } from '@/components/shared/section-card'
-import { SECTION_OFFSET } from '@/components/shared/settings-nav'
-import { ToneBadge } from '@/components/shared/tone-badge'
-import { SimpleSelect } from '@/components/simple-select'
-import { useProjectDetail } from '@/features/dashboard/context'
-import type {
-  ProjectMember,
-  ProjectTeamRole,
-} from '@/features/projects/mappers'
-import {
-  useInviteProjectMember,
-  useProjectMembers,
-  useRemoveProjectMember,
-  useSetProjectMemberRole,
-} from '@/features/projects/queries'
+import { AppDialog } from '@/components/shared/app-dialog';
+import { SectionCard } from '@/components/shared/section-card';
+import { SECTION_OFFSET } from '@/components/shared/settings-nav';
+import { ToneBadge } from '@/components/shared/tone-badge';
+import { SimpleSelect } from '@/components/simple-select';
+import { useProjectDetail } from '@/features/dashboard/context';
+import type { ProjectMember, ProjectTeamRole } from '@/features/projects/mappers';
+import { useInviteProjectMember, useProjectMembers, useRemoveProjectMember, useSetProjectMemberRole } from '@/features/projects/queries';
 
-type Role = ProjectTeamRole
-type Member = ProjectMember
+type Role = ProjectTeamRole;
+type Member = ProjectMember;
 
-const assignableRoles: Array<Exclude<Role, 'Owner'>> = ['Editor', 'Viewer']
+const assignableRoles: Array<Exclude<Role, 'Owner'>> = ['Editor', 'Viewer'];
 const roleDescriptions: Record<Role, string> = {
   Owner: 'Full access, including billing and deletion',
   Editor: 'Upload data, train and deploy models',
   Viewer: 'Read-only access to runs and metrics',
-}
+};
 
 export function MembersCard() {
-  const { project } = useProjectDetail()
-  const members = useProjectMembers(project.id).data ?? []
-  const inviteMember = useInviteProjectMember(project.id)
-  const setRole = useSetProjectMemberRole(project.id)
-  const removeMember = useRemoveProjectMember(project.id)
-  const [inviteOpen, setInviteOpen] = React.useState(false)
+  const { project } = useProjectDetail();
+  const members = useProjectMembers(project.id).data ?? [];
+  const inviteMember = useInviteProjectMember(project.id);
+  const setRole = useSetProjectMemberRole(project.id);
+  const removeMember = useRemoveProjectMember(project.id);
+  const [inviteOpen, setInviteOpen] = React.useState(false);
 
   function changeRole(member: Member, role: Role) {
     setRole.mutate(
@@ -59,7 +40,7 @@ export function MembersCard() {
             title: `${member.name} is now ${role === 'Editor' ? 'an' : 'a'} ${role}.`,
           }),
       },
-    )
+    );
   }
 
   function remove(member: Member) {
@@ -67,11 +48,9 @@ export function MembersCard() {
       onSuccess: () =>
         toaster.create({
           type: 'success',
-          title: member.invited
-            ? `Invitation to ${member.email} cancelled.`
-            : `${member.name} was removed from the project.`,
+          title: member.invited ? `Invitation to ${member.email} cancelled.` : `${member.name} was removed from the project.`,
         }),
-    })
+    });
   }
 
   return (
@@ -81,12 +60,7 @@ export function MembersCard() {
       title={
         <>
           Members{' '}
-          <Text
-            as="span"
-            fontWeight="normal"
-            color="fg.muted"
-            fontVariantNumeric="tabular-nums"
-          >
+          <Text as="span" fontWeight="normal" color="fg.muted" fontVariantNumeric="tabular-nums">
             {members.length}
           </Text>
         </>
@@ -120,18 +94,14 @@ export function MembersCard() {
               // The member's own color, from the API.
               bg={member.color}
             >
-              <Avatar.Fallback fontSize="11px">
-                {member.initials}
-              </Avatar.Fallback>
+              <Avatar.Fallback fontSize="11px">{member.initials}</Avatar.Fallback>
             </Avatar.Root>
             <Box me="auto" minW="0">
               <HStack gap="2" fontSize="13px" fontWeight="medium">
                 <Text as="span" truncate>
                   {member.name}
                 </Text>
-                {member.invited && (
-                  <ToneBadge tone="warning">Invited</ToneBadge>
-                )}
+                {member.invited && <ToneBadge tone="warning">Invited</ToneBadge>}
               </HStack>
               <Text truncate fontSize="xs" color="fg.muted">
                 {member.email}
@@ -187,7 +157,7 @@ export function MembersCard() {
         }
       />
     </SectionCard>
-  )
+  );
 }
 
 function InviteDialog({
@@ -196,37 +166,37 @@ function InviteDialog({
   existing,
   onInvite,
 }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  existing: string[]
-  onInvite: (email: string, role: Role) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  existing: string[];
+  onInvite: (email: string, role: Role) => void;
 }) {
-  const [email, setEmail] = React.useState('')
-  const [role, setRole] = React.useState<Role>('Editor')
-  const [error, setError] = React.useState('')
+  const [email, setEmail] = React.useState('');
+  const [role, setRole] = React.useState<Role>('Editor');
+  const [error, setError] = React.useState('');
 
   function close(next: boolean) {
-    onOpenChange(next)
+    onOpenChange(next);
     if (!next) {
-      setEmail('')
-      setRole('Editor')
-      setError('')
+      setEmail('');
+      setRole('Editor');
+      setError('');
     }
   }
 
   function submit(event: React.FormEvent) {
-    event.preventDefault()
-    const value = email.trim().toLowerCase()
+    event.preventDefault();
+    const value = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      setError('Enter a valid email address.')
-      return
+      setError('Enter a valid email address.');
+      return;
     }
     if (existing.includes(value)) {
-      setError('That person already has access.')
-      return
+      setError('That person already has access.');
+      return;
     }
-    onInvite(value, role)
-    close(false)
+    onInvite(value, role);
+    close(false);
   }
 
   return (
@@ -238,12 +208,7 @@ function InviteDialog({
       description="They get an email with a link to join this project."
       footer={
         <>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => close(false)}
-          >
+          <Button type="button" variant="outline" size="sm" onClick={() => close(false)}>
             Cancel
           </Button>
           <Button type="submit" variant="solid" size="sm">
@@ -260,8 +225,8 @@ function InviteDialog({
             value={email}
             placeholder="teammate@acme.ai"
             onChange={(event) => {
-              setEmail(event.target.value)
-              setError('')
+              setEmail(event.target.value);
+              setError('');
             }}
           />
           <Field.ErrorText>{error}</Field.ErrorText>
@@ -279,5 +244,5 @@ function InviteDialog({
         />
       </Stack>
     </AppDialog>
-  )
+  );
 }

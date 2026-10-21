@@ -1,44 +1,27 @@
-import * as React from 'react'
-import {
-  Avatar,
-  Box,
-  Button,
-  Card,
-  Center,
-  Flex,
-  Grid,
-  Heading,
-  HStack,
-  Icon,
-  SimpleGrid,
-  Stack,
-  Text,
-} from '@chakra-ui/react'
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowRight, Check } from 'lucide-react'
+import * as React from 'react';
+import { Avatar, Box, Button, Card, Center, Flex, Grid, Heading, HStack, Icon, SimpleGrid, Stack, Text } from '@chakra-ui/react';
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { ArrowRight, Check } from 'lucide-react';
 
-import { SectionCard } from '@/components/shared/section-card'
-import { ToneBadge } from '@/components/shared/tone-badge'
-import { useProjectDetail } from '@/features/dashboard/context'
-import { useUpdateProject } from '@/features/projects/queries'
-import { useInView } from '@/hooks/use-in-view'
-import { unavailable } from '@/lib/unavailable'
-import { FactList, serializeReadme } from '../-components/project-overview'
-import { ReadmeCard } from '../-components/readme-editor'
-import { ResourceUsageCard } from '../-components/resource-usage-card'
+import { SectionCard } from '@/components/shared/section-card';
+import { ToneBadge } from '@/components/shared/tone-badge';
+import { useProjectDetail } from '@/features/dashboard/context';
+import { useUpdateProject } from '@/features/projects/queries';
+import { useInView } from '@/hooks/use-in-view';
+import { unavailable } from '@/lib/unavailable';
+import { FactList, serializeReadme } from '../-components/project-overview';
+import { ReadmeCard } from '../-components/readme-editor';
+import { ResourceUsageCard } from '../-components/resource-usage-card';
 
-export const Route = createFileRoute(
-  '/_app/projects_/$projectId/_nav/overview',
-)({
+export const Route = createFileRoute('/_app/projects_/$projectId/_nav/overview')({
   component: ProjectOverviewRoute,
-})
+});
 
 function ProjectOverviewRoute() {
-  const { project, details, organization } = useProjectDetail()
-  const { ref: usageCardRef, inView: usageChartsInView } =
-    useInView<HTMLDivElement>()
-  const bestModel = details.bestModel
-  const updateProject = useUpdateProject(project.id)
+  const { project, details, organization } = useProjectDetail();
+  const { ref: usageCardRef, inView: usageChartsInView } = useInView<HTMLDivElement>();
+  const bestModel = details.bestModel;
+  const updateProject = useUpdateProject(project.id);
 
   const pipeline = [
     {
@@ -51,15 +34,13 @@ function ProjectOverviewRoute() {
     },
     {
       title: 'Evaluate',
-      description: bestModel
-        ? `Best ${bestModel.accuracy.toFixed(1)}% acc`
-        : 'No evaluations yet',
+      description: bestModel ? `Best ${bestModel.accuracy.toFixed(1)}% acc` : 'No evaluations yet',
     },
     {
       title: 'Deploy',
       description: `${project.deployed} live endpoints`,
     },
-  ]
+  ];
 
   return (
     <>
@@ -74,7 +55,7 @@ function ProjectOverviewRoute() {
           }}
         >
           {pipeline.map((stage, index) => {
-            const completed = details.pipeline.completeThrough > index + 1
+            const completed = details.pipeline.completeThrough > index + 1;
             return (
               <React.Fragment key={stage.title}>
                 <Button
@@ -121,25 +102,17 @@ function ProjectOverviewRoute() {
                   </Box>
                 </Button>
                 {index < pipeline.length - 1 && (
-                  <Box
-                    display={{ base: 'none', lg: 'block' }}
-                    color="fg.subtle"
-                  >
+                  <Box display={{ base: 'none', lg: 'block' }} color="fg.subtle">
                     <ArrowRight size={16} />
                   </Box>
                 )}
               </React.Fragment>
-            )
+            );
           })}
         </Grid>
       </SectionCard>
 
-      <Grid
-        mt="6"
-        alignItems="start"
-        gap="6"
-        templateColumns={{ xl: 'minmax(0, 2fr) minmax(300px, 1fr)' }}
-      >
+      <Grid mt="6" alignItems="start" gap="6" templateColumns={{ xl: 'minmax(0, 2fr) minmax(300px, 1fr)' }}>
         <Grid minW="0" gap="6">
           {bestModel ? (
             <SectionCard
@@ -150,12 +123,7 @@ function ProjectOverviewRoute() {
                 </ToneBadge>
               }
             >
-              <Flex
-                direction={{ base: 'column', lg: 'row' }}
-                align={{ lg: 'center' }}
-                gap="5"
-                p="5"
-              >
+              <Flex direction={{ base: 'column', lg: 'row' }} align={{ lg: 'center' }} gap="5" p="5">
                 <Box minW="44">
                   <Heading as="h3" fontSize="md" fontWeight="semibold">
                     {bestModel.name}
@@ -182,10 +150,7 @@ function ProjectOverviewRoute() {
                   ))}
                 </SimpleGrid>
                 <Button asChild variant="solid" size="sm">
-                  <Link
-                    to="/projects/$projectId/models"
-                    params={{ projectId: project.id }}
-                  >
+                  <Link to="/projects/$projectId/models" params={{ projectId: project.id }}>
                     Deploy →
                   </Link>
                 </Button>
@@ -193,25 +158,15 @@ function ProjectOverviewRoute() {
             </SectionCard>
           ) : (
             <Card.Root variant="outline">
-              <Card.Body
-                minH="40"
-                alignItems="center"
-                justifyContent="center"
-                p="6"
-                textAlign="center"
-              >
+              <Card.Body minH="40" alignItems="center" justifyContent="center" p="6" textAlign="center">
                 <Heading as="h2" fontSize="md" fontWeight="semibold">
                   No trained models yet
                 </Heading>
                 <Text mt="1" textStyle="body-sm" color="fg.muted">
-                  Add a ready dataset, then start this project's first training
-                  run.
+                  Add a ready dataset, then start this project's first training run.
                 </Text>
                 <Button asChild variant="solid" size="sm" mt="4">
-                  <Link
-                    to="/projects/$projectId/training/new"
-                    params={{ projectId: project.id }}
-                  >
+                  <Link to="/projects/$projectId/training/new" params={{ projectId: project.id }}>
                     New Training
                   </Link>
                 </Button>
@@ -250,10 +205,7 @@ function ProjectOverviewRoute() {
                     <Box as="dl" textStyle="body-sm">
                       {[
                         ['Architecture', details.readme.architecture],
-                        [
-                          'Accuracy / F1',
-                          `${bestModel.accuracy.toFixed(1)}% / ${bestModel.f1.toFixed(3)}`,
-                        ],
+                        ['Accuracy / F1', `${bestModel.accuracy.toFixed(1)}% / ${bestModel.f1.toFixed(3)}`],
                         ['Latency', `${bestModel.latency} (p50, GPU)`],
                         ['Size', bestModel.size],
                       ].map(([label, value]) => (
@@ -313,15 +265,9 @@ function ProjectOverviewRoute() {
                 </Stack>
               ) : undefined
             }
-            initialMarkdown={
-              details.readme && bestModel
-                ? serializeReadme(details.readme, bestModel, details.region)
-                : undefined
-            }
+            initialMarkdown={details.readme && bestModel ? serializeReadme(details.readme, bestModel, details.region) : undefined}
             markdown={details.readmeMarkdown}
-            onSave={(markdown) =>
-              updateProject.mutate({ readme_markdown: markdown })
-            }
+            onSave={(markdown) => updateProject.mutate({ readme_markdown: markdown })}
           />
         </Grid>
 
@@ -354,9 +300,7 @@ function ProjectOverviewRoute() {
                     // The member's own color, from the API.
                     bg={member.color}
                   >
-                    <Avatar.Fallback fontSize="xs">
-                      {member.initials}
-                    </Avatar.Fallback>
+                    <Avatar.Fallback fontSize="xs">{member.initials}</Avatar.Fallback>
                   </Avatar.Root>
                   <Box minW="0">
                     <Text textStyle="body-sm" fontWeight="medium">
@@ -373,21 +317,14 @@ function ProjectOverviewRoute() {
         </Grid>
       </Grid>
     </>
-  )
+  );
 }
 
 /** A section heading in the generated README summary. */
 function ReadmeHeading({ children }: { children: React.ReactNode }) {
   return (
-    <Heading
-      as="h3"
-      pb="2"
-      borderBottomWidth="1px"
-      borderColor="border"
-      fontSize="sm"
-      fontWeight="semibold"
-    >
+    <Heading as="h3" pb="2" borderBottomWidth="1px" borderColor="border" fontSize="sm" fontWeight="semibold">
       {children}
     </Heading>
-  )
+  );
 }

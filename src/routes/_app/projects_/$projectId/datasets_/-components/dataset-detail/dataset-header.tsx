@@ -1,24 +1,24 @@
-import { Button, Text } from '@chakra-ui/react'
-import { Link } from '@tanstack/react-router'
-import { Download, FileText, Image as ImageIcon, Table2 } from 'lucide-react'
-import { toaster } from '@/components/toaster'
+import { Button, Text } from '@chakra-ui/react';
+import { Link } from '@tanstack/react-router';
+import { Download, FileText, Image as ImageIcon, Table2 } from 'lucide-react';
+import { toaster } from '@/components/toaster';
 
-import { EntityHeader } from '@/components/shared/entity-header'
-import { ToneBadge } from '@/components/shared/tone-badge'
-import { projectDatasetsApi } from '@/features/datasets/api'
+import { EntityHeader } from '@/components/shared/entity-header';
+import { ToneBadge } from '@/components/shared/tone-badge';
+import { projectDatasetsApi } from '@/features/datasets/api';
 
-import { downloadJson, itemNoun } from './helpers'
-import { useCurrentDataset } from './use-current-dataset'
+import { downloadJson, itemNoun } from './helpers';
+import { useCurrentDataset } from './use-current-dataset';
 
 const modalityIcon = {
   image: ImageIcon,
   text: FileText,
   tabular: Table2,
-} as const
+} as const;
 
 export function DatasetHeader() {
-  const { dataset, project } = useCurrentDataset()
-  const isReady = dataset.status === 'Ready'
+  const { dataset, project } = useCurrentDataset();
+  const isReady = dataset.status === 'Ready';
 
   return (
     <EntityHeader
@@ -29,24 +29,14 @@ export function DatasetHeader() {
           <ToneBadge tone="accent" fontWeight="semibold">
             v{dataset.version}
           </ToneBadge>
-          <ToneBadge
-            fontWeight="semibold"
-            tone={
-              isReady
-                ? 'success'
-                : dataset.status === 'Error'
-                  ? 'error'
-                  : 'warning'
-            }
-          >
+          <ToneBadge fontWeight="semibold" tone={isReady ? 'success' : dataset.status === 'Error' ? 'error' : 'warning'}>
             {isReady ? '✓ Ready' : dataset.status}
           </ToneBadge>
         </>
       }
       meta={
         <>
-          {dataset.modality} dataset · {dataset.items.toLocaleString('en-US')}{' '}
-          {itemNoun(dataset)} · {dataset.classes}{' '}
+          {dataset.modality} dataset · {dataset.items.toLocaleString('en-US')} {itemNoun(dataset)} · {dataset.classes}{' '}
           {dataset.modality === 'text' ? 'labels' : 'classes'} · {dataset.size}
         </>
       }
@@ -59,12 +49,8 @@ export function DatasetHeader() {
             onClick={() =>
               void projectDatasetsApi
                 .getManifest(project.id, dataset.id)
-                .then((manifest) =>
-                  downloadJson(`${dataset.name}-manifest.json`, manifest),
-                )
-                .catch((error: Error) =>
-                  toaster.create({ type: 'error', title: error.message }),
-                )
+                .then((manifest) => downloadJson(`${dataset.name}-manifest.json`, manifest))
+                .catch((error: Error) => toaster.create({ type: 'error', title: error.message }))
             }
           >
             <Download />
@@ -72,11 +58,7 @@ export function DatasetHeader() {
           </Button>
           {isReady ? (
             <Button asChild variant="solid" size="sm" px="3.5">
-              <Link
-                to="/projects/$projectId/training/new"
-                params={{ projectId: project.id }}
-                search={{ dataset: dataset.id }}
-              >
+              <Link to="/projects/$projectId/training/new" params={{ projectId: project.id }} search={{ dataset: dataset.id }}>
                 Create Training →
               </Link>
             </Button>
@@ -107,5 +89,5 @@ export function DatasetHeader() {
         },
       ]}
     />
-  )
+  );
 }

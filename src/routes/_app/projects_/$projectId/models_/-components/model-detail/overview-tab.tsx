@@ -1,28 +1,17 @@
-import {
-  Box,
-  Center,
-  Code,
-  Flex,
-  Grid,
-  Link,
-  Progress,
-  Stack,
-  Table,
-  Text,
-} from '@chakra-ui/react'
-import type { FlexProps } from '@chakra-ui/react'
-import { Chart, useChart } from '@chakra-ui/charts'
-import { Link as RouterLink } from '@tanstack/react-router'
-import { Box as BoxIcon, ChevronDown, Cpu, Database } from 'lucide-react'
-import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from 'recharts'
+import { Box, Center, Code, Flex, Grid, Link, Progress, Stack, Table, Text } from '@chakra-ui/react';
+import type { FlexProps } from '@chakra-ui/react';
+import { Chart, useChart } from '@chakra-ui/charts';
+import { Link as RouterLink } from '@tanstack/react-router';
+import { Box as BoxIcon, ChevronDown, Cpu, Database } from 'lucide-react';
+import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from 'recharts';
 
-import { EmptyNotice } from '@/components/shared/empty-notice'
-import { SectionCard } from '@/components/shared/section-card'
-import { formatAccuracy } from '../../../-components/model-list'
-import { useCurrentModel } from './use-current-model'
+import { EmptyNotice } from '@/components/shared/empty-notice';
+import { SectionCard } from '@/components/shared/section-card';
+import { formatAccuracy } from '../../../-components/model-list';
+import { useCurrentModel } from './use-current-model';
 
 /** Below this, a class is worth investigating before the model ships. */
-const WEAK_CLASS_ACCURACY = 85
+const WEAK_CLASS_ACCURACY = 85;
 
 /**
  * The three lineage steps point at three different routes, so each caller owns
@@ -30,18 +19,8 @@ const WEAK_CLASS_ACCURACY = 85
  */
 function LineageStep(props: FlexProps) {
   return (
-    <Flex
-      minW="0"
-      align="center"
-      gap="3"
-      rounded="l2"
-      px="3"
-      py="2.5"
-      textDecoration="none"
-      transition="background 0.15s"
-      {...props}
-    />
-  )
+    <Flex minW="0" align="center" gap="3" rounded="l2" px="3" py="2.5" textDecoration="none" transition="background 0.15s" {...props} />
+  );
 }
 
 function LineageBody({
@@ -50,30 +29,18 @@ function LineageBody({
   description,
   current = false,
 }: {
-  icon: typeof BoxIcon
-  title: string
-  description: string
-  current?: boolean
+  icon: typeof BoxIcon;
+  title: string;
+  description: string;
+  current?: boolean;
 }) {
   return (
     <>
-      <Center
-        boxSize="8"
-        flexShrink={0}
-        rounded="l2"
-        bg={current ? 'brand' : 'bg.muted'}
-        color={current ? 'on-brand' : 'fg.muted'}
-      >
+      <Center boxSize="8" flexShrink={0} rounded="l2" bg={current ? 'brand' : 'bg.muted'} color={current ? 'on-brand' : 'fg.muted'}>
         <Icon size={16} />
       </Center>
       <Box minW="0">
-        <Text
-          truncate
-          fontFamily="mono"
-          fontSize="13px"
-          fontWeight="semibold"
-          color={current ? 'brand-text' : 'fg'}
-        >
+        <Text truncate fontFamily="mono" fontSize="13px" fontWeight="semibold" color={current ? 'brand-text' : 'fg'}>
           {title}
         </Text>
         <Text truncate fontSize="11px" color="fg.muted">
@@ -81,7 +48,7 @@ function LineageBody({
         </Text>
       </Box>
     </>
-  )
+  );
 }
 
 function LineageArrow() {
@@ -89,28 +56,19 @@ function LineageArrow() {
     <Box ms="7" color="fg.muted" aria-hidden="true">
       <ChevronDown size={16} />
     </Box>
-  )
+  );
 }
 
-function AccuracyChart({
-  data,
-}: {
-  data: { version: string; accuracy: number }[]
-}) {
+function AccuracyChart({ data }: { data: { version: string; accuracy: number }[] }) {
   const chart = useChart({
     data,
     series: [{ name: 'accuracy', color: 'brand', label: 'Accuracy' }],
-  })
+  });
   return (
     <Chart.Root chart={chart} h="52" w="full">
       <LineChart responsive data={chart.data} accessibilityLayer>
         <CartesianGrid stroke={chart.color('border')} vertical={false} />
-        <XAxis
-          dataKey={chart.key('version')}
-          tickLine={false}
-          axisLine={false}
-          tick={{ fill: chart.color('fg.muted'), fontSize: 12 }}
-        />
+        <XAxis dataKey={chart.key('version')} tickLine={false} axisLine={false} tick={{ fill: chart.color('fg.muted'), fontSize: 12 }} />
         <YAxis
           tickLine={false}
           axisLine={false}
@@ -130,24 +88,19 @@ function AccuracyChart({
         />
       </LineChart>
     </Chart.Root>
-  )
+  );
 }
 
 export function OverviewTab() {
-  const { model, versions, detail } = useCurrentModel()
+  const { model, versions, detail } = useCurrentModel();
   const history = versions.map((item) => ({
     version: `v${item.version}`,
     accuracy: item.accuracy,
-  }))
+  }));
 
   return (
     <>
-      <Grid
-        minW="0"
-        alignItems="start"
-        gap="6"
-        templateColumns={{ lg: 'repeat(3, minmax(0, 1fr))' }}
-      >
+      <Grid minW="0" alignItems="start" gap="6" templateColumns={{ lg: 'repeat(3, minmax(0, 1fr))' }}>
         <Box minW="0" gridColumn={{ lg: 'span 2' }}>
           <SectionCard
             title="Accuracy across versions"
@@ -173,11 +126,7 @@ export function OverviewTab() {
 
         <SectionCard title="Lineage">
           <Stack gap="1" p="3">
-            <Link
-              asChild
-              _hover={{ bg: 'bg.muted', textDecoration: 'none' }}
-              rounded="l2"
-            >
+            <Link asChild _hover={{ bg: 'bg.muted', textDecoration: 'none' }} rounded="l2">
               <RouterLink
                 to="/projects/$projectId/datasets/$datasetId"
                 params={{
@@ -186,41 +135,21 @@ export function OverviewTab() {
                 }}
               >
                 <LineageStep>
-                  <LineageBody
-                    icon={Database}
-                    title={detail.datasetId}
-                    description="Dataset"
-                  />
+                  <LineageBody icon={Database} title={detail.datasetId} description="Dataset" />
                 </LineageStep>
               </RouterLink>
             </Link>
             <LineageArrow />
-            <Link
-              asChild
-              _hover={{ bg: 'bg.muted', textDecoration: 'none' }}
-              rounded="l2"
-            >
-              <RouterLink
-                to="/projects/$projectId/training/$runId"
-                params={{ projectId: model.projectId, runId: model.runId }}
-              >
+            <Link asChild _hover={{ bg: 'bg.muted', textDecoration: 'none' }} rounded="l2">
+              <RouterLink to="/projects/$projectId/training/$runId" params={{ projectId: model.projectId, runId: model.runId }}>
                 <LineageStep>
-                  <LineageBody
-                    icon={Cpu}
-                    title={`run ${model.runId}`}
-                    description="Training run"
-                  />
+                  <LineageBody icon={Cpu} title={`run ${model.runId}`} description="Training run" />
                 </LineageStep>
               </RouterLink>
             </Link>
             <LineageArrow />
             <LineageStep bg="brand.subtle">
-              <LineageBody
-                icon={BoxIcon}
-                title={`${model.name} v${model.version}`}
-                description="This model"
-                current
-              />
+              <LineageBody icon={BoxIcon} title={`${model.name} v${model.version}`} description="This model" current />
             </LineageStep>
           </Stack>
         </SectionCard>
@@ -241,20 +170,14 @@ export function OverviewTab() {
               <Table.Header>
                 <Table.Row>
                   <Table.ColumnHeader px="5">Class</Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="end">
-                    Accuracy
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="end">
-                    Support
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="220px">
-                    Distribution
-                  </Table.ColumnHeader>
+                  <Table.ColumnHeader textAlign="end">Accuracy</Table.ColumnHeader>
+                  <Table.ColumnHeader textAlign="end">Support</Table.ColumnHeader>
+                  <Table.ColumnHeader w="220px">Distribution</Table.ColumnHeader>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
                 {detail.perClassAccuracy.map((entry) => {
-                  const weak = entry.accuracy < WEAK_CLASS_ACCURACY
+                  const weak = entry.accuracy < WEAK_CLASS_ACCURACY;
                   return (
                     <Table.Row key={entry.label}>
                       <Table.Cell px="5">
@@ -268,27 +191,18 @@ export function OverviewTab() {
                       >
                         {formatAccuracy(entry.accuracy)}
                       </Table.Cell>
-                      <Table.Cell
-                        textAlign="end"
-                        fontVariantNumeric="tabular-nums"
-                      >
+                      <Table.Cell textAlign="end" fontVariantNumeric="tabular-nums">
                         {entry.support.toLocaleString('en-US')}
                       </Table.Cell>
                       <Table.Cell>
-                        <Progress.Root
-                          size="xs"
-                          value={entry.accuracy}
-                          colorPalette={weak ? 'warning' : 'brand'}
-                        >
-                          <Progress.Track
-                            aria-label={`${entry.label} accuracy`}
-                          >
+                        <Progress.Root size="xs" value={entry.accuracy} colorPalette={weak ? 'warning' : 'brand'}>
+                          <Progress.Track aria-label={`${entry.label} accuracy`}>
                             <Progress.Range />
                           </Progress.Track>
                         </Progress.Root>
                       </Table.Cell>
                     </Table.Row>
-                  )
+                  );
                 })}
               </Table.Body>
             </Table.Root>
@@ -296,5 +210,5 @@ export function OverviewTab() {
         </SectionCard>
       ) : null}
     </>
-  )
+  );
 }

@@ -1,45 +1,26 @@
-import * as React from 'react'
-import {
-  Box,
-  Button,
-  Card,
-  Center,
-  Flex,
-  Heading,
-  HStack,
-  Progress,
-  SimpleGrid,
-  Tabs,
-  Text,
-} from '@chakra-ui/react'
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { Square, TriangleAlert } from 'lucide-react'
-import { toaster } from '@/components/toaster'
+import * as React from 'react';
+import { Box, Button, Card, Center, Flex, Heading, HStack, Progress, SimpleGrid, Tabs, Text } from '@chakra-ui/react';
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { Square, TriangleAlert } from 'lucide-react';
+import { toaster } from '@/components/toaster';
 
-import { TrainingStatusBadge } from '@/features/training/components/training-status-badge'
-import { RouteBreadcrumbs } from '@/components/breadcrumbs'
-import { AppDialog } from '@/components/shared/app-dialog'
-import { EmptyNotice } from '@/components/shared/empty-notice'
-import { isNotFound } from '@/api/errors'
-import { PageError, PageLoading } from '@/components/shared/query-states'
-import { useProjectDetail } from '@/features/dashboard/context'
-import { formatDuration } from '@/features/training/format'
-import { useCancelTraining, useTrainingRun } from '@/features/training/queries'
-import {
-  ConfigCard,
-  LogsCard,
-  MetricCard,
-  RunNotFound,
-} from './-components/training-run-detail'
+import { TrainingStatusBadge } from '@/features/training/components/training-status-badge';
+import { RouteBreadcrumbs } from '@/components/breadcrumbs';
+import { AppDialog } from '@/components/shared/app-dialog';
+import { EmptyNotice } from '@/components/shared/empty-notice';
+import { isNotFound } from '@/api/errors';
+import { PageError, PageLoading } from '@/components/shared/query-states';
+import { useProjectDetail } from '@/features/dashboard/context';
+import { formatDuration } from '@/features/training/format';
+import { useCancelTraining, useTrainingRun } from '@/features/training/queries';
+import { ConfigCard, LogsCard, MetricCard, RunNotFound } from './-components/training-run-detail';
 
-export const Route = createFileRoute(
-  '/_app/projects_/$projectId/training_/$runId',
-)({
+export const Route = createFileRoute('/_app/projects_/$projectId/training_/$runId')({
   component: TrainingRunRoute,
   notFoundComponent: RunNotFoundRoute,
   staticData: {
     breadcrumb: ({ entities: { run }, parent: { project } }) => {
-      if (!project || !run) return null
+      if (!project || !run) return null;
       return {
         items: [
           {
@@ -53,120 +34,83 @@ export const Route = createFileRoute(
           { id: run.id, label: run.name },
         ],
         data: { run },
-      }
+      };
     },
   },
-})
+});
 
 function TrainingRunRoute() {
-  const { runId } = Route.useParams()
-  const { project } = useProjectDetail()
-  const [tab, setTab] = React.useState('metrics')
-  const [level, setLevel] = React.useState('all')
-  const [autoscroll, setAutoscroll] = React.useState(true)
-  const [stopOpen, setStopOpen] = React.useState(false)
-  const logRef = React.useRef<HTMLPreElement>(null)
+  const { runId } = Route.useParams();
+  const { project } = useProjectDetail();
+  const [tab, setTab] = React.useState('metrics');
+  const [level, setLevel] = React.useState('all');
+  const [autoscroll, setAutoscroll] = React.useState(true);
+  const [stopOpen, setStopOpen] = React.useState(false);
+  const logRef = React.useRef<HTMLPreElement>(null);
 
   // Refreshes itself while the run is running, so the numbers keep moving.
-  const { data: run, error, refetch } = useTrainingRun(project.id, runId)
-  const cancel = useCancelTraining(project.id, runId)
+  const { data: run, error, refetch } = useTrainingRun(project.id, runId);
+  const cancel = useCancelTraining(project.id, runId);
 
   React.useEffect(() => {
     if (autoscroll && logRef.current) {
-      logRef.current.scrollTop = logRef.current.scrollHeight
+      logRef.current.scrollTop = logRef.current.scrollHeight;
     }
-  }, [autoscroll, tab, level, run?.status])
+  }, [autoscroll, tab, level, run?.status]);
 
   if (error) {
     return isNotFound(error) ? (
       <RunNotFound projectId={project.id} />
     ) : (
-      <PageError
-        title="Could not load this training run"
-        error={error}
-        onRetry={() => void refetch()}
-      />
-    )
+      <PageError title="Could not load this training run" error={error} onRetry={() => void refetch()} />
+    );
   }
-  if (!run) return <PageLoading />
+  if (!run) return <PageLoading />;
 
   const runStats: Array<[string, string]> = [
     ['Epoch', `${run.epoch} / ${run.epochs}`],
-    [
-      'Step',
-      `${run.step.toLocaleString()} / ${run.totalSteps.toLocaleString()}`,
-    ],
+    ['Step', `${run.step.toLocaleString()} / ${run.totalSteps.toLocaleString()}`],
     ['Throughput', run.status === 'Running' ? run.throughput : '—'],
     ['GPU util', run.status === 'Running' ? run.gpuUtilization : '0%'],
     ['GPU memory', run.status === 'Running' ? run.gpuMemory : '0 GB'],
-  ]
+  ];
 
   const stopRun = () => {
-    setStopOpen(false)
+    setStopOpen(false);
     cancel.mutate(undefined, {
       onSuccess: () =>
         toaster.create({
           type: 'info',
           title: `Training ${run.name} stopped.`,
         }),
-    })
-  }
+    });
+  };
 
   return (
-    <Box
-      as="main"
-      id="dashboard-main"
-      mx="auto"
-      w="full"
-      maxW="1448px"
-      minW="0"
-      flex="1"
-      p={{ base: '4', sm: '6' }}
-    >
+    <Box as="main" id="dashboard-main" mx="auto" w="full" maxW="1448px" minW="0" flex="1" p={{ base: '4', sm: '6' }}>
       <RouteBreadcrumbs mb="3" />
 
-      <Flex
-        mb="5"
-        wrap="wrap"
-        align="flex-start"
-        justify="space-between"
-        gap="3"
-      >
+      <Flex mb="5" wrap="wrap" align="flex-start" justify="space-between" gap="3">
         <Box>
           <HStack wrap="wrap" gap="2">
-            <Heading
-              as="h1"
-              fontSize="2xl"
-              fontWeight="semibold"
-              letterSpacing="tight"
-            >
+            <Heading as="h1" fontSize="2xl" fontWeight="semibold" letterSpacing="tight">
               {run.name}
             </Heading>
             <TrainingStatusBadge status={run.status} />
           </HStack>
           <Text mt="1" textStyle="body-sm" color="fg.muted">
-            Run {run.id} · started by {run.author} · estimated{' '}
-            {formatDuration(run.estimatedHours)}
+            Run {run.id} · started by {run.author} · estimated {formatDuration(run.estimatedHours)}
           </Text>
         </Box>
         <HStack gap="2">
           <Button variant="outline" size="sm" asChild>
-            <Link
-              to="/projects/$projectId/training/new"
-              params={{ projectId: project.id }}
-              search={{ clone: run.id }}
-            >
+            <Link to="/projects/$projectId/training/new" params={{ projectId: project.id }} search={{ clone: run.id }}>
               Clone
             </Link>
           </Button>
           {run.status === 'Running' && (
             <>
-              <Button
-                variant="solid"
-                colorPalette="danger"
-                size="sm"
-                onClick={() => setStopOpen(true)}
-              >
+              <Button variant="solid" colorPalette="danger" size="sm" onClick={() => setStopOpen(true)}>
                 <Square />
                 Stop run
               </Button>
@@ -176,12 +120,7 @@ function TrainingRunRoute() {
                 onOpenChange={setStopOpen}
                 title={
                   <HStack gap="3">
-                    <Center
-                      boxSize="9"
-                      rounded="l2"
-                      bg="bg.error"
-                      color="fg.error"
-                    >
+                    <Center boxSize="9" rounded="l2" bg="bg.error" color="fg.error">
                       <TriangleAlert size={18} />
                     </Center>
                     Stop this training run?
@@ -190,19 +129,10 @@ function TrainingRunRoute() {
                 description="Progress will be saved, but this run will not produce model artifacts."
                 footer={
                   <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setStopOpen(false)}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => setStopOpen(false)}>
                       Keep running
                     </Button>
-                    <Button
-                      variant="solid"
-                      colorPalette="danger"
-                      size="sm"
-                      onClick={stopRun}
-                    >
+                    <Button variant="solid" colorPalette="danger" size="sm" onClick={stopRun}>
                       Stop run
                     </Button>
                   </>
@@ -254,22 +184,10 @@ function TrainingRunRoute() {
             <MetricCard title="Loss" dataKey="loss" color="brand" />
             <MetricCard title="Accuracy" dataKey="accuracy" color="success" />
           </SimpleGrid>
-          <LogsCard
-            level={level}
-            setLevel={setLevel}
-            autoscroll={autoscroll}
-            setAutoscroll={setAutoscroll}
-            logRef={logRef}
-          />
+          <LogsCard level={level} setLevel={setLevel} autoscroll={autoscroll} setAutoscroll={setAutoscroll} logRef={logRef} />
         </Tabs.Content>
         <Tabs.Content value="logs" pt="4">
-          <LogsCard
-            level={level}
-            setLevel={setLevel}
-            autoscroll={autoscroll}
-            setAutoscroll={setAutoscroll}
-            logRef={logRef}
-          />
+          <LogsCard level={level} setLevel={setLevel} autoscroll={autoscroll} setAutoscroll={setAutoscroll} logRef={logRef} />
         </Tabs.Content>
         <Tabs.Content value="config" pt="4">
           <ConfigCard />
@@ -293,10 +211,10 @@ function TrainingRunRoute() {
         </Tabs.Content>
       </Tabs.Root>
     </Box>
-  )
+  );
 }
 
 function RunNotFoundRoute() {
-  const { projectId } = Route.useParams()
-  return <RunNotFound projectId={projectId} />
+  const { projectId } = Route.useParams();
+  return <RunNotFound projectId={projectId} />;
 }

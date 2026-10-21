@@ -1,47 +1,22 @@
-import * as React from 'react'
-import {
-  Badge,
-  Box,
-  Card,
-  Flex,
-  Image,
-  SimpleGrid,
-  Text,
-  VisuallyHidden,
-} from '@chakra-ui/react'
+import * as React from 'react';
+import { Badge, Box, Card, Flex, Image, SimpleGrid, Text, VisuallyHidden } from '@chakra-ui/react';
 
-import { EmptyNotice } from '@/components/shared/empty-notice'
-import { SimpleSelect } from '@/components/simple-select'
-import type { DatasetSample } from '@/features/dashboard/data'
-import { useCurrentDataset } from './use-current-dataset'
+import { EmptyNotice } from '@/components/shared/empty-notice';
+import { SimpleSelect } from '@/components/simple-select';
+import type { DatasetSample } from '@/features/dashboard/data';
+import { useCurrentDataset } from './use-current-dataset';
 
 export function ImagePreview() {
-  const { dataset, detail } = useCurrentDataset()
-  const samples = detail.samples.filter(
-    (sample): sample is Extract<DatasetSample, { modality: 'image' }> =>
-      sample.modality === 'image',
-  )
-  const [label, setLabel] = React.useState('all')
-  const [split, setSplit] = React.useState('all')
-  const labels = Array.from(new Set(samples.map((sample) => sample.label)))
-  const visible = samples.filter(
-    (sample) =>
-      (label === 'all' || sample.label === label) &&
-      (split === 'all' || sample.split === split),
-  )
+  const { dataset, detail } = useCurrentDataset();
+  const samples = detail.samples.filter((sample): sample is Extract<DatasetSample, { modality: 'image' }> => sample.modality === 'image');
+  const [label, setLabel] = React.useState('all');
+  const [split, setSplit] = React.useState('all');
+  const labels = Array.from(new Set(samples.map((sample) => sample.label)));
+  const visible = samples.filter((sample) => (label === 'all' || sample.label === label) && (split === 'all' || sample.split === split));
 
   return (
     <Card.Root variant="outline" overflow="hidden">
-      <Flex
-        wrap="wrap"
-        align="center"
-        justify="space-between"
-        gap="2"
-        px="4"
-        py="3"
-        borderBottomWidth="1px"
-        borderColor="border"
-      >
+      <Flex wrap="wrap" align="center" justify="space-between" gap="2" px="4" py="3" borderBottomWidth="1px" borderColor="border">
         <Flex wrap="wrap" align="center" gap="2">
           <SimpleSelect
             label="Filter by class"
@@ -50,10 +25,7 @@ export function ImagePreview() {
             width="36"
             value={label}
             onChange={setLabel}
-            items={[
-              { label: 'All classes', value: 'all' },
-              ...labels.map((item) => ({ label: item, value: item })),
-            ]}
+            items={[{ label: 'All classes', value: 'all' }, ...labels.map((item) => ({ label: item, value: item }))]}
           />
           <SimpleSelect
             label="Filter by split"
@@ -97,15 +69,7 @@ export function ImagePreview() {
                   transition="transform 0.2s"
                   _groupHover={{ transform: 'scale(1.05)' }}
                 />
-                <Flex
-                  as="figcaption"
-                  position="absolute"
-                  insetX="2"
-                  bottom="2"
-                  align="center"
-                  justify="space-between"
-                  gap="2"
-                >
+                <Flex as="figcaption" position="absolute" insetX="2" bottom="2" align="center" justify="space-between" gap="2">
                   <Badge bg="night" color="on-night">
                     {sample.label}
                   </Badge>
@@ -115,13 +79,9 @@ export function ImagePreview() {
             ))}
           </SimpleGrid>
         ) : (
-          <EmptyNotice
-            minH="56"
-            title="No matching samples"
-            description="Try a different class or split."
-          />
+          <EmptyNotice minH="56" title="No matching samples" description="Try a different class or split." />
         )}
       </Box>
     </Card.Root>
-  )
+  );
 }

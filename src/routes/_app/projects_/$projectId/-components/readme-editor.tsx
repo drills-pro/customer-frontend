@@ -1,12 +1,12 @@
-import * as React from 'react'
-import { Box, Button, Flex, Tabs, Text, Textarea } from '@chakra-ui/react'
-import { BookOpen, Pencil, Plus } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import * as React from 'react';
+import { Box, Button, Flex, Tabs, Text, Textarea } from '@chakra-ui/react';
+import { BookOpen, Pencil, Plus } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
-import { EmptyNotice } from '@/components/shared/empty-notice'
-import { Prose } from '@/components/shared/prose'
-import { SectionCard } from '@/components/shared/section-card'
+import { EmptyNotice } from '@/components/shared/empty-notice';
+import { Prose } from '@/components/shared/prose';
+import { SectionCard } from '@/components/shared/section-card';
 
 const PLACEHOLDER = `# Project name
 
@@ -17,7 +17,7 @@ Describe what this project does, who it's for, and how to get started.
 \`\`\`
 curl -X POST https://api.example.com/predict -d '{"input": "..."}'
 \`\`\`
-`
+`;
 
 export function ReadmeCard({
   readme,
@@ -26,36 +26,31 @@ export function ReadmeCard({
   onSave,
 }: {
   /** The generated summary, shown until a README has been written. */
-  readme?: React.ReactNode
-  initialMarkdown?: string
+  readme?: React.ReactNode;
+  initialMarkdown?: string;
   /** The saved README. */
-  markdown?: string
-  onSave: (markdown: string) => void
+  markdown?: string;
+  onSave: (markdown: string) => void;
 }) {
   // What was just saved, shown until the saved README comes back from the API.
-  const [justSaved, setJustSaved] = React.useState<string>()
-  const content = justSaved ?? markdown ?? ''
-  const [isEditing, setIsEditing] = React.useState(false)
-  const [draft, setDraft] = React.useState('')
-  const [tab, setTab] = React.useState<'edit' | 'preview'>('edit')
+  const [justSaved, setJustSaved] = React.useState<string>();
+  const content = justSaved ?? markdown ?? '';
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [draft, setDraft] = React.useState('');
+  const [tab, setTab] = React.useState<'edit' | 'preview'>('edit');
 
-  let action: React.ReactNode = null
-  let body: React.ReactNode
+  let action: React.ReactNode = null;
+  let body: React.ReactNode;
 
   if (isEditing) {
     action = (
-      <Tabs.Root
-        size="sm"
-        variant="enclosed"
-        value={tab}
-        onValueChange={(event) => setTab(event.value as 'edit' | 'preview')}
-      >
+      <Tabs.Root size="sm" variant="enclosed" value={tab} onValueChange={(event) => setTab(event.value as 'edit' | 'preview')}>
         <Tabs.List>
           <Tabs.Trigger value="edit">Edit</Tabs.Trigger>
           <Tabs.Trigger value="preview">Preview</Tabs.Trigger>
         </Tabs.List>
       </Tabs.Root>
-    )
+    );
     body = (
       <Flex w="full" flex="1" direction="column" gap="3">
         {tab === 'edit' ? (
@@ -73,15 +68,7 @@ export function ReadmeCard({
             lineHeight="1.25rem"
           />
         ) : draft.trim() ? (
-          <Prose
-            minH="96"
-            flex="1"
-            overflowY="auto"
-            rounded="l2"
-            borderWidth="1px"
-            borderColor="border"
-            p="4"
-          >
+          <Prose minH="96" flex="1" overflowY="auto" rounded="l2" borderWidth="1px" borderColor="border" p="4">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{draft}</ReactMarkdown>
           </Prose>
         ) : (
@@ -107,8 +94,8 @@ export function ReadmeCard({
             variant="outline"
             size="sm"
             onClick={() => {
-              setIsEditing(false)
-              setTab('edit')
+              setIsEditing(false);
+              setTab('edit');
             }}
           >
             Cancel
@@ -118,53 +105,53 @@ export function ReadmeCard({
             size="sm"
             disabled={!draft.trim()}
             onClick={() => {
-              setJustSaved(draft)
-              onSave(draft)
-              setIsEditing(false)
-              setTab('edit')
+              setJustSaved(draft);
+              onSave(draft);
+              setIsEditing(false);
+              setTab('edit');
             }}
           >
             Save README
           </Button>
         </Flex>
       </Flex>
-    )
+    );
   } else if (content.trim()) {
     action = (
       <Button
         variant="outline"
         size="xs"
         onClick={() => {
-          setDraft(content)
-          setTab('edit')
-          setIsEditing(true)
+          setDraft(content);
+          setTab('edit');
+          setIsEditing(true);
         }}
       >
         <Pencil />
         Edit
       </Button>
-    )
+    );
     body = (
       <Prose>
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
       </Prose>
-    )
+    );
   } else if (readme) {
     action = (
       <Button
         variant="outline"
         size="xs"
         onClick={() => {
-          setDraft(initialMarkdown ?? '')
-          setTab('edit')
-          setIsEditing(true)
+          setDraft(initialMarkdown ?? '');
+          setTab('edit');
+          setIsEditing(true);
         }}
       >
         <Pencil />
         Edit
       </Button>
-    )
-    body = readme
+    );
+    body = readme;
   } else {
     body = (
       <EmptyNotice
@@ -177,37 +164,23 @@ export function ReadmeCard({
           variant="solid"
           size="sm"
           onClick={() => {
-            setDraft('')
-            setTab('edit')
-            setIsEditing(true)
+            setDraft('');
+            setTab('edit');
+            setIsEditing(true);
           }}
         >
           <Plus />
           Add a README
         </Button>
       </EmptyNotice>
-    )
+    );
   }
 
   return (
-    <SectionCard
-      title="README.md"
-      action={action}
-      display="flex"
-      flexDirection="column"
-      minH="50rem"
-    >
-      <Box
-        display="flex"
-        minH="0"
-        flex="1"
-        overflowY="auto"
-        p="5"
-        textStyle="body-sm"
-        lineHeight="1.5rem"
-      >
+    <SectionCard title="README.md" action={action} display="flex" flexDirection="column" minH="50rem">
+      <Box display="flex" minH="0" flex="1" overflowY="auto" p="5" textStyle="body-sm" lineHeight="1.5rem">
         {body}
       </Box>
     </SectionCard>
-  )
+  );
 }

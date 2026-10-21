@@ -1,6 +1,6 @@
-export { DeploymentHealthCard } from './deployment-health-card'
-export { LiveTrainingsCard } from './live-trainings-card'
-export { RecentActivityCard } from './recent-activity-card'
-export { YourProjectsCard } from './your-projects-card'
-export { UploadDialog } from './upload-dialog'
-export { WorkspaceMetrics } from './workspace-metrics'
+export { DeploymentHealthCard } from './deployment-health-card';
+export { LiveTrainingsCard } from './live-trainings-card';
+export { RecentActivityCard } from './recent-activity-card';
+export { YourProjectsCard } from './your-projects-card';
+export { UploadDialog } from './upload-dialog';
+export { WorkspaceMetrics } from './workspace-metrics';

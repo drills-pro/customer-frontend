@@ -1,13 +1,13 @@
-import { Button, Flex, SimpleGrid, Text } from '@chakra-ui/react'
-import { Download } from 'lucide-react'
+import { Button, Flex, SimpleGrid, Text } from '@chakra-ui/react';
+import { Download } from 'lucide-react';
 
-import { SectionCard } from '@/components/shared/section-card'
+import { SectionCard } from '@/components/shared/section-card';
 
-import { downloadText } from './helpers'
-import { useCurrentTrainingRun } from './use-current-training-run'
+import { downloadText } from './helpers';
+import { useCurrentTrainingRun } from './use-current-training-run';
 
 export function ConfigCard() {
-  const { run, dataset } = useCurrentTrainingRun()
+  const { run, dataset } = useCurrentTrainingRun();
   const config = {
     dataset: dataset?.name ?? run.datasetId,
     architecture: run.architecture,
@@ -21,7 +21,7 @@ export function ConfigCard() {
     instance: run.instanceName,
     spot: run.spot,
     estimatedCost: run.estimatedCost,
-  }
+  };
   return (
     <SectionCard
       title="Saved configuration"
@@ -29,13 +29,7 @@ export function ConfigCard() {
         <Button
           variant="outline"
           size="xs"
-          onClick={() =>
-            downloadText(
-              `${run.name}-config.json`,
-              JSON.stringify(config, null, 2),
-              'application/json',
-            )
-          }
+          onClick={() => downloadText(`${run.name}-config.json`, JSON.stringify(config, null, 2), 'application/json')}
         >
           <Download />
           Download
@@ -44,15 +38,7 @@ export function ConfigCard() {
     >
       <SimpleGrid columns={{ base: 1, sm: 2 }} columnGap="8" p="5">
         {Object.entries(config).map(([label, value]) => (
-          <Flex
-            key={label}
-            justify="space-between"
-            gap="4"
-            borderBottomWidth="1px"
-            borderColor="border"
-            py="2"
-            textStyle="body-sm"
-          >
+          <Flex key={label} justify="space-between" gap="4" borderBottomWidth="1px" borderColor="border" py="2" textStyle="body-sm">
             <Text as="span" textTransform="capitalize" color="fg.muted">
               {label.replace(/([A-Z])/g, ' $1')}
             </Text>
@@ -69,5 +55,5 @@ export function ConfigCard() {
         ))}
       </SimpleGrid>
     </SectionCard>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-import * as React from 'react'
+import * as React from 'react';
 import {
   Box,
   Button,
@@ -15,63 +15,39 @@ import {
   Tabs,
   Text,
   VisuallyHidden,
-} from '@chakra-ui/react'
-import type { MenuItemProps } from '@chakra-ui/react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import {
-  ChevronLeft,
-  ChevronRight,
-  Lock,
-  MailPlus,
-  MoreHorizontal,
-  Search,
-  Send,
-  ShieldCheck,
-  UserMinus,
-  UserPlus,
-  X,
-} from 'lucide-react'
-import { toaster } from '@/components/toaster'
+} from '@chakra-ui/react';
+import type { MenuItemProps } from '@chakra-ui/react';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { ChevronLeft, ChevronRight, Lock, MailPlus, MoreHorizontal, Search, Send, ShieldCheck, UserMinus, UserPlus, X } from 'lucide-react';
+import { toaster } from '@/components/toaster';
 
-import {
-  MemberAvatar,
-  RoleBadge,
-} from '@/features/organizations/components/org-ui'
-import { formatDate, plural } from '@/features/organizations/utils'
-import { AppDialog } from '@/components/shared/app-dialog'
-import { EmptyNotice } from '@/components/shared/empty-notice'
-import { SectionCard } from '@/components/shared/section-card'
-import { SimpleSelect } from '@/components/simple-select'
-import { orgRoles } from '@/features/dashboard/domain/types'
-import type { OrgMember, OrgRole } from '@/features/dashboard/domain/types'
-import { orgRoleDescriptions } from '@/features/organizations/constants'
-import {
-  useInviteMembers,
-  useRemoveMember,
-  useResendInvitation,
-  useSetMemberRole,
-} from '@/features/organizations/queries'
-import { useOrgDetail } from '../-components/org-context'
-import { InviteMembersDialog } from '../-components/invite-members-dialog'
+import { MemberAvatar, RoleBadge } from '@/features/organizations/components/org-ui';
+import { formatDate, plural } from '@/features/organizations/utils';
+import { AppDialog } from '@/components/shared/app-dialog';
+import { EmptyNotice } from '@/components/shared/empty-notice';
+import { SectionCard } from '@/components/shared/section-card';
+import { SimpleSelect } from '@/components/simple-select';
+import { orgRoles } from '@/features/dashboard/domain/types';
+import type { OrgMember, OrgRole } from '@/features/dashboard/domain/types';
+import { orgRoleDescriptions } from '@/features/organizations/constants';
+import { useInviteMembers, useRemoveMember, useResendInvitation, useSetMemberRole } from '@/features/organizations/queries';
+import { useOrgDetail } from '../-components/org-context';
+import { InviteMembersDialog } from '../-components/invite-members-dialog';
 
-type MembersSearch = { invite?: true }
+type MembersSearch = { invite?: true };
 
 export const Route = createFileRoute('/_app/organizations_/$orgId/members')({
   validateSearch: (search: Record<string, unknown>): MembersSearch => ({
-    invite:
-      search.invite === true || search.invite === 'true' ? true : undefined,
+    invite: search.invite === true || search.invite === 'true' ? true : undefined,
   }),
   component: OrgMembers,
-})
+});
 
-const PAGE_SIZE = 10
-const assignableRoles: OrgRole[] = ['Admin', 'Member', 'Viewer']
+const PAGE_SIZE = 10;
+const assignableRoles: OrgRole[] = ['Admin', 'Member', 'Viewer'];
 
 /** A row action with a muted icon; `danger` for the destructive ones. */
-function ActionItem({
-  danger = false,
-  ...props
-}: { danger?: boolean } & MenuItemProps) {
+function ActionItem({ danger = false, ...props }: { danger?: boolean } & MenuItemProps) {
   return (
     <Menu.Item
       gap="2"
@@ -82,7 +58,7 @@ function ActionItem({
       }}
       {...props}
     />
-  )
+  );
 }
 
 /** A status with its dot, so it never relies on color alone. */
@@ -92,57 +68,49 @@ function StatusDot({ color, children }: { color: string; children: string }) {
       <Box as="span" boxSize="1.5" rounded="full" bg="currentColor" />
       {children}
     </HStack>
-  )
+  );
 }
 
 function OrgMembers() {
-  const search = Route.useSearch()
-  const navigate = useNavigate({ from: Route.fullPath })
-  const { org, members, summary, canManage } = useOrgDetail()
-  const inviteMembers = useInviteMembers(org.id)
-  const setRole = useSetMemberRole(org.id)
-  const removeMember = useRemoveMember(org.id)
-  const resendInvitation = useResendInvitation(org.id)
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+  const { org, members, summary, canManage } = useOrgDetail();
+  const inviteMembers = useInviteMembers(org.id);
+  const setRole = useSetMemberRole(org.id);
+  const removeMember = useRemoveMember(org.id);
+  const resendInvitation = useResendInvitation(org.id);
 
-  const [tab, setTab] = React.useState<'members' | 'invitations'>('members')
-  const [query, setQuery] = React.useState('')
-  const [roleFilter, setRoleFilter] = React.useState<'all' | OrgRole>('all')
-  const [page, setPage] = React.useState(0)
-  const [removing, setRemoving] = React.useState<OrgMember | null>(null)
-  const inviteOpen = canManage && search.invite === true
+  const [tab, setTab] = React.useState<'members' | 'invitations'>('members');
+  const [query, setQuery] = React.useState('');
+  const [roleFilter, setRoleFilter] = React.useState<'all' | OrgRole>('all');
+  const [page, setPage] = React.useState(0);
+  const [removing, setRemoving] = React.useState<OrgMember | null>(null);
+  const inviteOpen = canManage && search.invite === true;
 
   function setInviteOpen(open: boolean) {
     void navigate({
       search: open ? { invite: true } : {},
       replace: true,
-    })
+    });
   }
 
-  const active = members.filter((member) => member.status === 'active')
-  const invited = members.filter((member) => member.status === 'invited')
-  const source = tab === 'members' ? active : invited
-  const normalized = query.trim().toLowerCase()
+  const active = members.filter((member) => member.status === 'active');
+  const invited = members.filter((member) => member.status === 'invited');
+  const source = tab === 'members' ? active : invited;
+  const normalized = query.trim().toLowerCase();
   const filtered = source.filter(
     (member) =>
       (roleFilter === 'all' || member.role === roleFilter) &&
-      (!normalized ||
-        member.name.toLowerCase().includes(normalized) ||
-        member.email.includes(normalized)),
-  )
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const currentPage = Math.min(page, pageCount - 1)
-  const visible = filtered.slice(
-    currentPage * PAGE_SIZE,
-    (currentPage + 1) * PAGE_SIZE,
-  )
-  const seatsLeft = Math.max(
-    0,
-    summary.limits.seats - summary.members - summary.invited,
-  )
+      (!normalized || member.name.toLowerCase().includes(normalized) || member.email.includes(normalized)),
+  );
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount - 1);
+  const visible = filtered.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
+  const seatsLeft = Math.max(0, summary.limits.seats - summary.members - summary.invited);
 
   /** Admins manage everyone but owners; nobody edits their own row here. */
   function canEdit(member: OrgMember) {
-    return canManage && !member.you && member.role !== 'Owner'
+    return canManage && !member.you && member.role !== 'Owner';
   }
 
   function changeRole(member: OrgMember, role: OrgRole) {
@@ -155,7 +123,7 @@ function OrgMembers() {
             title: `${member.name} is now ${role === 'Admin' ? 'an' : 'a'} ${role}.`,
           }),
       },
-    )
+    );
   }
 
   function remove(member: OrgMember) {
@@ -163,12 +131,9 @@ function OrgMembers() {
       onSuccess: () =>
         toaster.create({
           type: 'success',
-          title:
-            member.status === 'invited'
-              ? `Invitation to ${member.email} revoked.`
-              : `${member.name} was removed from ${org.name}.`,
+          title: member.status === 'invited' ? `Invitation to ${member.email} revoked.` : `${member.name} was removed from ${org.name}.`,
         }),
-    })
+    });
   }
 
   function invite(emails: string[], role: OrgRole) {
@@ -176,52 +141,32 @@ function OrgMembers() {
       { emails, role },
       {
         onSuccess: () => {
-          setTab('invitations')
-          setPage(0)
+          setTab('invitations');
+          setPage(0);
           toaster.create({
             type: 'success',
-            title:
-              emails.length === 1
-                ? `Invitation sent to ${emails[0]}.`
-                : `${emails.length} invitations sent.`,
-          })
+            title: emails.length === 1 ? `Invitation sent to ${emails[0]}.` : `${emails.length} invitations sent.`,
+          });
         },
       },
-    )
+    );
   }
 
   return (
-    <Box
-      display="grid"
-      minW="0"
-      gap="5"
-      gridTemplateColumns={{ xl: 'minmax(0, 1fr) 300px' }}
-    >
+    <Box display="grid" minW="0" gap="5" gridTemplateColumns={{ xl: 'minmax(0, 1fr) 300px' }}>
       <Card.Root variant="outline" minW="0" overflow="hidden">
-        <Stack
-          gap="3"
-          px="5"
-          py="3.5"
-          borderBottomWidth="1px"
-          borderColor="border"
-        >
+        <Stack gap="3" px="5" py="3.5" borderBottomWidth="1px" borderColor="border">
           <Flex wrap="wrap" align="flex-start" justify="space-between" gap="3">
             <Box>
               <Card.Title as="h2" textStyle="body" fontWeight="semibold">
                 Manage members
               </Card.Title>
               <Card.Description textStyle="body-sm">
-                {plural(summary.members, 'member')} ·{' '}
-                {summary.limits.seats - seatsLeft} of {summary.limits.seats}{' '}
-                seats used
+                {plural(summary.members, 'member')} · {summary.limits.seats - seatsLeft} of {summary.limits.seats} seats used
               </Card.Description>
             </Box>
             {canManage ? (
-              <Button
-                variant="solid"
-                size="sm"
-                onClick={() => setInviteOpen(true)}
-              >
+              <Button variant="solid" size="sm" onClick={() => setInviteOpen(true)}>
                 <UserPlus />
                 Invite members
               </Button>
@@ -239,48 +184,35 @@ function OrgMembers() {
               size="sm"
               value={tab}
               onValueChange={(event) => {
-                setTab(event.value as typeof tab)
-                setPage(0)
+                setTab(event.value as typeof tab);
+                setPage(0);
               }}
             >
               <Tabs.List gap="5">
                 <Tabs.Trigger value="members" gap="1.5">
                   Members
-                  <Text
-                    as="span"
-                    color="fg.muted"
-                    fontVariantNumeric="tabular-nums"
-                  >
+                  <Text as="span" color="fg.muted" fontVariantNumeric="tabular-nums">
                     {active.length}
                   </Text>
                 </Tabs.Trigger>
                 <Tabs.Trigger value="invitations" gap="1.5">
                   Invitations
-                  <Text
-                    as="span"
-                    color="fg.muted"
-                    fontVariantNumeric="tabular-nums"
-                  >
+                  <Text as="span" color="fg.muted" fontVariantNumeric="tabular-nums">
                     {invited.length}
                   </Text>
                 </Tabs.Trigger>
               </Tabs.List>
             </Tabs.Root>
             <Flex w={{ base: 'full', sm: 'auto' }} wrap="wrap" gap="2">
-              <InputGroup
-                flex="1"
-                minW="0"
-                w={{ sm: '56' }}
-                startElement={<Search size={16} aria-hidden="true" />}
-              >
+              <InputGroup flex="1" minW="0" w={{ sm: '56' }} startElement={<Search size={16} aria-hidden="true" />}>
                 <Input
                   size="sm"
                   aria-label="Search members"
                   placeholder="Search members"
                   value={query}
                   onChange={(event) => {
-                    setQuery(event.target.value)
-                    setPage(0)
+                    setQuery(event.target.value);
+                    setPage(0);
                   }}
                 />
               </InputGroup>
@@ -291,13 +223,10 @@ function OrgMembers() {
                 width="32"
                 value={roleFilter}
                 onChange={(value) => {
-                  setRoleFilter(value as typeof roleFilter)
-                  setPage(0)
+                  setRoleFilter(value as typeof roleFilter);
+                  setPage(0);
                 }}
-                items={[
-                  { label: 'All roles', value: 'all' },
-                  ...orgRoles.map((role) => ({ label: role, value: role })),
-                ]}
+                items={[{ label: 'All roles', value: 'all' }, ...orgRoles.map((role) => ({ label: role, value: role }))]}
               />
             </Flex>
           </Flex>
@@ -307,11 +236,7 @@ function OrgMembers() {
           <EmptyNotice
             py="12"
             icon={tab === 'members' ? <Search /> : <MailPlus />}
-            title={
-              source.length === 0 && tab === 'invitations'
-                ? 'No pending invitations'
-                : 'No matching members'
-            }
+            title={source.length === 0 && tab === 'invitations' ? 'No pending invitations' : 'No matching members'}
             description={
               source.length === 0 && tab === 'invitations'
                 ? 'People you invite show up here until they accept.'
@@ -323,16 +248,10 @@ function OrgMembers() {
             <Table.Root variant="data" minW="680px">
               <Table.Header>
                 <Table.Row>
-                  <Table.ColumnHeader px="5">
-                    {tab === 'members' ? 'Member' : 'Invitee'}
-                  </Table.ColumnHeader>
+                  <Table.ColumnHeader px="5">{tab === 'members' ? 'Member' : 'Invitee'}</Table.ColumnHeader>
                   <Table.ColumnHeader>Role</Table.ColumnHeader>
-                  <Table.ColumnHeader>
-                    {tab === 'members' ? 'Joined' : 'Sent'}
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader>
-                    {tab === 'members' ? 'Last active' : 'Status'}
-                  </Table.ColumnHeader>
+                  <Table.ColumnHeader>{tab === 'members' ? 'Joined' : 'Sent'}</Table.ColumnHeader>
+                  <Table.ColumnHeader>{tab === 'members' ? 'Last active' : 'Status'}</Table.ColumnHeader>
                   <Table.ColumnHeader w="12">
                     <VisuallyHidden>Actions</VisuallyHidden>
                   </Table.ColumnHeader>
@@ -345,19 +264,10 @@ function OrgMembers() {
                       <Flex minW="0" align="center" gap="3">
                         <MemberAvatar member={member} />
                         <Box minW="0">
-                          <Text
-                            truncate
-                            fontSize="13px"
-                            fontWeight="medium"
-                            color="fg"
-                          >
+                          <Text truncate fontSize="13px" fontWeight="medium" color="fg">
                             {member.name}
                             {member.you && (
-                              <Text
-                                as="span"
-                                fontWeight="normal"
-                                color="fg.muted"
-                              >
+                              <Text as="span" fontWeight="normal" color="fg.muted">
                                 {' '}
                                 (you)
                               </Text>
@@ -377,9 +287,7 @@ function OrgMembers() {
                           size="sm"
                           width="28"
                           value={member.role}
-                          onChange={(value) =>
-                            changeRole(member, value as OrgRole)
-                          }
+                          onChange={(value) => changeRole(member, value as OrgRole)}
                           items={assignableRoles.map((role) => ({
                             label: role,
                             value: role,
@@ -403,12 +311,7 @@ function OrgMembers() {
                       {canEdit(member) && (
                         <Menu.Root positioning={{ placement: 'bottom-end' }}>
                           <Menu.Trigger asChild>
-                            <IconButton
-                              variant="ghost"
-                              colorPalette="gray"
-                              size="xs"
-                              aria-label={`Actions for ${member.name}`}
-                            >
+                            <IconButton variant="ghost" colorPalette="gray" size="xs" aria-label={`Actions for ${member.name}`}>
                               <MoreHorizontal />
                             </IconButton>
                           </Menu.Trigger>
@@ -433,11 +336,7 @@ function OrgMembers() {
                                       Resend invitation
                                     </ActionItem>
                                     <Menu.Separator />
-                                    <ActionItem
-                                      value="revoke"
-                                      danger
-                                      onSelect={() => remove(member)}
-                                    >
+                                    <ActionItem value="revoke" danger onSelect={() => remove(member)}>
                                       <X />
                                       Revoke invitation
                                     </ActionItem>
@@ -445,12 +344,7 @@ function OrgMembers() {
                                 ) : (
                                   <>
                                     {member.role !== 'Admin' && (
-                                      <ActionItem
-                                        value="make-admin"
-                                        onSelect={() =>
-                                          changeRole(member, 'Admin')
-                                        }
-                                      >
+                                      <ActionItem value="make-admin" onSelect={() => changeRole(member, 'Admin')}>
                                         <ShieldCheck />
                                         Make admin
                                       </ActionItem>
@@ -468,11 +362,7 @@ function OrgMembers() {
                                       Send message
                                     </ActionItem>
                                     <Menu.Separator />
-                                    <ActionItem
-                                      value="remove"
-                                      danger
-                                      onSelect={() => setRemoving(member)}
-                                    >
+                                    <ActionItem value="remove" danger onSelect={() => setRemoving(member)}>
                                       <UserMinus />
                                       Remove from organization
                                     </ActionItem>
@@ -504,9 +394,7 @@ function OrgMembers() {
             color="fg.muted"
           >
             <Text as="span" fontVariantNumeric="tabular-nums">
-              Showing {currentPage * PAGE_SIZE + 1}–
-              {Math.min(filtered.length, (currentPage + 1) * PAGE_SIZE)} of{' '}
-              {filtered.length}
+              Showing {currentPage * PAGE_SIZE + 1}–{Math.min(filtered.length, (currentPage + 1) * PAGE_SIZE)} of {filtered.length}
             </Text>
             <HStack gap="1">
               <IconButton
@@ -535,30 +423,13 @@ function OrgMembers() {
         )}
       </Card.Root>
 
-      <SectionCard
-        title="Roles"
-        description="What each role can do."
-        alignSelf="start"
-      >
+      <SectionCard title="Roles" description="What each role can do." alignSelf="start">
         <Box as="dl">
           {orgRoles.map((role) => (
-            <Stack
-              key={role}
-              gap="1.5"
-              px="5"
-              py="3"
-              borderTopWidth="1px"
-              borderColor="border"
-              _first={{ borderTopWidth: '0' }}
-            >
+            <Stack key={role} gap="1.5" px="5" py="3" borderTopWidth="1px" borderColor="border" _first={{ borderTopWidth: '0' }}>
               <Flex as="dt" align="center" justify="space-between" gap="2">
                 <RoleBadge role={role} />
-                <Text
-                  as="span"
-                  fontSize="xs"
-                  color="fg.muted"
-                  fontVariantNumeric="tabular-nums"
-                >
+                <Text as="span" fontSize="xs" color="fg.muted" fontVariantNumeric="tabular-nums">
                   {active.filter((member) => member.role === role).length}
                 </Text>
               </Flex>
@@ -587,11 +458,7 @@ function OrgMembers() {
         description={`They lose access to every project in ${org.name} right away. Their training runs and models stay in the organization.`}
         footer={
           <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setRemoving(null)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setRemoving(null)}>
               Cancel
             </Button>
             <Button
@@ -599,8 +466,8 @@ function OrgMembers() {
               colorPalette="danger"
               size="sm"
               onClick={() => {
-                if (removing) remove(removing)
-                setRemoving(null)
+                if (removing) remove(removing);
+                setRemoving(null);
               }}
             >
               Remove member
@@ -609,5 +476,5 @@ function OrgMembers() {
         }
       />
     </Box>
-  )
+  );
 }

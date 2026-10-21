@@ -1,18 +1,13 @@
-import { Avatar, Badge, Center } from '@chakra-ui/react'
-import type { AvatarRootProps, CenterProps } from '@chakra-ui/react'
-import type {
-  OrgMember,
-  OrgPlan,
-  OrgRole,
-  Organization,
-} from '@/features/dashboard/data'
+import { Avatar, Badge, Center } from '@chakra-ui/react';
+import type { AvatarRootProps, CenterProps } from '@chakra-ui/react';
+import type { OrgMember, OrgPlan, OrgRole, Organization } from '@/features/dashboard/data';
 
 /** The organization's colored initial tile. Size it with `boxSize`. */
 export function OrgMark({
   org,
   ...props
 }: {
-  org: Pick<Organization, 'initial' | 'color'>
+  org: Pick<Organization, 'initial' | 'color'>;
 } & CenterProps) {
   return (
     <Center
@@ -29,17 +24,17 @@ export function OrgMark({
     >
       {org.initial}
     </Center>
-  )
+  );
 }
 
 const planPalettes = {
   Free: { colorPalette: 'gray', variant: 'subtle' },
   Team: { colorPalette: 'info', variant: 'subtle' },
   Enterprise: { colorPalette: 'brand', variant: 'subtle' },
-} as const
+} as const;
 
 export function PlanBadge({ plan }: { plan: OrgPlan }) {
-  return <Badge {...planPalettes[plan]}>{plan}</Badge>
+  return <Badge {...planPalettes[plan]}>{plan}</Badge>;
 }
 
 const rolePalettes = {
@@ -47,17 +42,17 @@ const rolePalettes = {
   Admin: { colorPalette: 'success', variant: 'subtle' },
   Member: { colorPalette: 'gray', variant: 'subtle' },
   Viewer: { colorPalette: 'gray', variant: 'outline' },
-} as const
+} as const;
 
 export function RoleBadge({ role }: { role: OrgRole }) {
-  return <Badge {...rolePalettes[role]}>{role}</Badge>
+  return <Badge {...rolePalettes[role]}>{role}</Badge>;
 }
 
 export function MemberAvatar({
   member,
   ...props
 }: {
-  member: Pick<OrgMember, 'initials' | 'color'>
+  member: Pick<OrgMember, 'initials' | 'color'>;
 } & AvatarRootProps) {
   return (
     <Avatar.Root
@@ -72,5 +67,5 @@ export function MemberAvatar({
         {member.initials}
       </Avatar.Fallback>
     </Avatar.Root>
-  )
+  );
 }

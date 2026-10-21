@@ -1,55 +1,30 @@
-import { useQuery } from '@tanstack/react-query'
-import {
-  Box,
-  Button,
-  Center,
-  Flex,
-  Grid,
-  Heading,
-  Image,
-  Progress,
-  Text,
-} from '@chakra-ui/react'
-import type { BoxProps } from '@chakra-ui/react'
-import { ImageUp, Play } from 'lucide-react'
-import { toaster } from '@/components/toaster'
+import { useQuery } from '@tanstack/react-query';
+import { Box, Button, Center, Flex, Grid, Heading, Image, Progress, Text } from '@chakra-ui/react';
+import type { BoxProps } from '@chakra-ui/react';
+import { ImageUp, Play } from 'lucide-react';
+import { toaster } from '@/components/toaster';
 
-import { SectionCard } from '@/components/shared/section-card'
-import { ToneBadge } from '@/components/shared/tone-badge'
-import { modelsApi } from '@/features/models/api'
-import { modelKeys } from '@/features/models/queries'
-import { useCurrentModel } from './use-current-model'
+import { SectionCard } from '@/components/shared/section-card';
+import { ToneBadge } from '@/components/shared/tone-badge';
+import { modelsApi } from '@/features/models/api';
+import { modelKeys } from '@/features/models/queries';
+import { useCurrentModel } from './use-current-model';
 
 /**
  * A worked example rather than a live endpoint: the demo has no inference
  * backend, so the panel opens showing what a real prediction looks like and
  * labels it as an example.
  */
-const SAMPLE_IMAGE = '/dataset-samples/retail/beverages.png'
+const SAMPLE_IMAGE = '/dataset-samples/retail/beverages.png';
 
-function Bar({
-  label,
-  value,
-  mono = true,
-  palette = 'brand',
-}: {
-  label: string
-  value: number
-  mono?: boolean
-  palette?: string
-}) {
+function Bar({ label, value, mono = true, palette = 'brand' }: { label: string; value: number; mono?: boolean; palette?: string }) {
   return (
     <Box mt="3" _first={{ mt: '0' }}>
       <Flex align="baseline" justify="space-between" gap="3" fontSize="13px">
         <Text as="span" truncate fontFamily={mono ? 'mono' : undefined}>
           {label}
         </Text>
-        <Text
-          as="span"
-          flexShrink={0}
-          fontWeight="semibold"
-          fontVariantNumeric="tabular-nums"
-        >
+        <Text as="span" flexShrink={0} fontWeight="semibold" fontVariantNumeric="tabular-nums">
           {value.toFixed(1)}%
         </Text>
       </Flex>
@@ -59,19 +34,14 @@ function Bar({
         </Progress.Track>
       </Progress.Root>
     </Box>
-  )
+  );
 }
 
 /** The sample image with a saliency overlay painted over it. */
 function Saliency(props: BoxProps) {
   return (
     <Box position="relative" overflow="hidden" rounded="l2" {...props}>
-      <Image
-        src={SAMPLE_IMAGE}
-        alt="Sample shelf photo with the model's saliency overlay"
-        display="block"
-        w="full"
-      />
+      <Image src={SAMPLE_IMAGE} alt="Sample shelf photo with the model's saliency overlay" display="block" w="full" />
       <Box
         aria-hidden="true"
         position="absolute"
@@ -82,29 +52,24 @@ function Saliency(props: BoxProps) {
         }}
       />
     </Box>
-  )
+  );
 }
 
 export function PlaygroundTab() {
-  const { project, model } = useCurrentModel()
+  const { project, model } = useCurrentModel();
   // The panel opens on the model's answer for the example image; "Run
   // prediction" asks for it again.
   const prediction = useQuery({
     queryKey: [...modelKeys.one(project.id, model.id), 'example-prediction'],
     queryFn: () => modelsApi.predict(project.id, model.id),
     staleTime: Infinity,
-  })
-  const predictions = prediction.data?.predictions ?? []
-  const contributions = prediction.data?.contributions ?? []
-  const top = predictions.at(0)
+  });
+  const predictions = prediction.data?.predictions ?? [];
+  const contributions = prediction.data?.contributions ?? [];
+  const top = predictions.at(0);
 
   return (
-    <Grid
-      minW="0"
-      alignItems="start"
-      gap="6"
-      templateColumns={{ lg: 'repeat(2, minmax(0, 1fr))' }}
-    >
+    <Grid minW="0" alignItems="start" gap="6" templateColumns={{ lg: 'repeat(2, minmax(0, 1fr))' }}>
       <SectionCard title="Test this model">
         <Box p="5">
           <Flex
@@ -120,14 +85,7 @@ export function PlaygroundTab() {
             px="6"
             textAlign="center"
           >
-            <Center
-              boxSize="10"
-              rounded="l2"
-              bg="surface-raised"
-              color="fg.muted"
-              borderWidth="1px"
-              borderColor="border"
-            >
+            <Center boxSize="10" rounded="l2" bg="surface-raised" color="fg.muted" borderWidth="1px" borderColor="border">
               <ImageUp size={20} />
             </Center>
             <Text mt="1" fontSize="13px" fontWeight="medium">
@@ -137,15 +95,7 @@ export function PlaygroundTab() {
               or click to browse · JPG, PNG up to 10 MB
             </Text>
           </Flex>
-          <Flex
-            mt="4"
-            wrap="wrap"
-            align="center"
-            gap="3"
-            rounded="l2"
-            bg="bg.muted"
-            p="3"
-          >
+          <Flex mt="4" wrap="wrap" align="center" gap="3" rounded="l2" bg="bg.muted" p="3">
             <Saliency boxSize="10" flexShrink={0} />
             <Box minW="0" flex="1">
               <Text truncate fontFamily="mono" fontSize="13px">
@@ -165,12 +115,12 @@ export function PlaygroundTab() {
                     toaster.create({
                       type: 'error',
                       title: result.error.message,
-                    })
+                    });
                   else
                     toaster.create({
                       type: 'success',
                       title: 'Prediction complete.',
-                    })
+                    });
                 })
               }
             >
@@ -181,56 +131,25 @@ export function PlaygroundTab() {
         </Box>
       </SectionCard>
 
-      <SectionCard
-        title="Prediction"
-        action={<ToneBadge tone="neutral">Example result</ToneBadge>}
-      >
+      <SectionCard title="Prediction" action={<ToneBadge tone="neutral">Example result</ToneBadge>}>
         <Box p="5">
-          <Flex
-            align="center"
-            justify="space-between"
-            gap="4"
-            rounded="l2"
-            bg="bg.success"
-            color="fg.success"
-            px="4"
-            py="3"
-          >
+          <Flex align="center" justify="space-between" gap="4" rounded="l2" bg="bg.success" color="fg.success" px="4" py="3">
             <Box minW="0">
-              <Text
-                fontSize="11px"
-                fontWeight="medium"
-                letterSpacing="widest"
-                textTransform="uppercase"
-              >
+              <Text fontSize="11px" fontWeight="medium" letterSpacing="widest" textTransform="uppercase">
                 Top prediction
               </Text>
-              <Text
-                truncate
-                fontFamily="mono"
-                fontSize="15px"
-                fontWeight="semibold"
-              >
+              <Text truncate fontFamily="mono" fontSize="15px" fontWeight="semibold">
                 {top?.label}
               </Text>
             </Box>
-            <Text
-              flexShrink={0}
-              fontSize="2xl"
-              fontWeight="semibold"
-              fontVariantNumeric="tabular-nums"
-            >
+            <Text flexShrink={0} fontSize="2xl" fontWeight="semibold" fontVariantNumeric="tabular-nums">
               {top ? `${top.confidence}%` : ''}
             </Text>
           </Flex>
 
           <Box mt="4">
             {predictions.map((entry) => (
-              <Bar
-                key={entry.label}
-                label={entry.label}
-                value={entry.confidence}
-              />
+              <Bar key={entry.label} label={entry.label} value={entry.confidence} />
             ))}
           </Box>
 
@@ -250,24 +169,17 @@ export function PlaygroundTab() {
               </Box>
               <Box minW="200px" flex="1">
                 {contributions.map((entry) => (
-                  <Bar
-                    key={entry.label}
-                    label={entry.label}
-                    value={entry.weight}
-                    mono={false}
-                    palette="lens"
-                  />
+                  <Bar key={entry.label} label={entry.label} value={entry.weight} mono={false} palette="lens" />
                 ))}
               </Box>
             </Flex>
           </Box>
 
           <Text mt="4" fontSize="xs" color="fg.muted">
-            Inference {model.latencyP95} · {model.name} v{model.version} ·
-            temporary endpoint, not billed
+            Inference {model.latencyP95} · {model.name} v{model.version} · temporary endpoint, not billed
           </Text>
         </Box>
       </SectionCard>
     </Grid>
-  )
+  );
 }

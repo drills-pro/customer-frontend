@@ -1,13 +1,13 @@
-import { Badge, IconButton, Table } from '@chakra-ui/react'
-import { Download } from 'lucide-react'
+import { Badge, IconButton, Table } from '@chakra-ui/react';
+import { Download } from 'lucide-react';
 
-import { SectionCard } from '@/components/shared/section-card'
-import { ToneBadge } from '@/components/shared/tone-badge'
-import { downloadJson } from './helpers'
-import { useCurrentDataset } from './use-current-dataset'
+import { SectionCard } from '@/components/shared/section-card';
+import { ToneBadge } from '@/components/shared/tone-badge';
+import { downloadJson } from './helpers';
+import { useCurrentDataset } from './use-current-dataset';
 
 export function VersionsTab() {
-  const { dataset, detail } = useCurrentDataset()
+  const { dataset, detail } = useCurrentDataset();
   return (
     <SectionCard title="Dataset versions">
       <Table.ScrollArea>
@@ -30,9 +30,7 @@ export function VersionsTab() {
                     {version.version === dataset.version ? ' · current' : ''}
                   </Badge>
                 </Table.Cell>
-                <Table.Cell color="fg">
-                  {version.items.toLocaleString('en-US')}
-                </Table.Cell>
+                <Table.Cell color="fg">{version.items.toLocaleString('en-US')}</Table.Cell>
                 <Table.Cell>
                   <ToneBadge tone="success">Ready</ToneBadge>
                 </Table.Cell>
@@ -59,5 +57,5 @@ export function VersionsTab() {
         </Table.Root>
       </Table.ScrollArea>
     </SectionCard>
-  )
+  );
 }

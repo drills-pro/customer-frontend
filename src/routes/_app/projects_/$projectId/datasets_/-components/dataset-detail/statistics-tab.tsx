@@ -1,39 +1,31 @@
-import type * as React from 'react'
-import {
-  Box,
-  Center,
-  Flex,
-  Grid,
-  SimpleGrid,
-  Stack,
-  Text,
-} from '@chakra-ui/react'
-import { Chart, useChart } from '@chakra-ui/charts'
-import { Bar, BarChart, LabelList, Tooltip, XAxis } from 'recharts'
+import type * as React from 'react';
+import { Box, Center, Flex, Grid, SimpleGrid, Stack, Text } from '@chakra-ui/react';
+import { Chart, useChart } from '@chakra-ui/charts';
+import { Bar, BarChart, LabelList, Tooltip, XAxis } from 'recharts';
 
-import { SectionCard } from '@/components/shared/section-card'
-import type { Dataset, DatasetDetail } from '@/features/dashboard/data'
+import { SectionCard } from '@/components/shared/section-card';
+import type { Dataset, DatasetDetail } from '@/features/dashboard/data';
 
-import { getClassHistogram, getClassStats, itemNoun } from './helpers'
-import { useCurrentDataset } from './use-current-dataset'
+import { getClassHistogram, getClassStats, itemNoun } from './helpers';
+import { useCurrentDataset } from './use-current-dataset';
 
 /** Each split keeps its color even when the others are absent. */
 const SPLIT_COLORS = {
   Train: 'brand',
   Validation: 'info',
   Test: 'warning',
-} as const
+} as const;
 
 /** "train, validation, and test" — only the splits this dataset actually has. */
 function splitSentence(labels: string[]) {
-  const names = labels.map((label) => label.toLowerCase())
-  if (names.length === 1) return `the ${names[0]} split`
-  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
+  const names = labels.map((label) => label.toLowerCase());
+  if (names.length === 1) return `the ${names[0]} split`;
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 }
 
 export function StatisticsTab() {
-  const { dataset, detail } = useCurrentDataset()
-  const classNoun = dataset.modality === 'text' ? 'labels' : 'classes'
+  const { dataset, detail } = useCurrentDataset();
+  const classNoun = dataset.modality === 'text' ? 'labels' : 'classes';
 
   return (
     <Grid gap="6">
@@ -51,9 +43,7 @@ export function StatisticsTab() {
         divided={false}
         title="Split distribution"
         description={`${dataset.items.toLocaleString('en-US')} ${itemNoun(dataset)} across ${splitSentence(
-          detail.splitDistribution
-            .filter((split) => split.percent > 0)
-            .map((split) => split.label),
+          detail.splitDistribution.filter((split) => split.percent > 0).map((split) => split.label),
         )}`}
       >
         <Box px="5" pb="5">
@@ -61,61 +51,42 @@ export function StatisticsTab() {
         </Box>
       </SectionCard>
 
-      <SectionCard
-        divided={false}
-        title="Dataset composition"
-        description="Format and coverage details not shown above"
-      >
+      <SectionCard divided={false} title="Dataset composition" description="Format and coverage details not shown above">
         <Box px="5" pb="5">
           <Composition dataset={dataset} detail={detail} />
         </Box>
       </SectionCard>
     </Grid>
-  )
+  );
 }
 
-function ClassDistribution({
-  dataset,
-  detail,
-}: {
-  dataset: Dataset
-  detail: DatasetDetail
-}) {
-  const stats = getClassStats(detail.classDistribution)
-  const histogram = getClassHistogram(detail.classDistribution)
-  const isText = dataset.modality === 'text'
+function ClassDistribution({ dataset, detail }: { dataset: Dataset; detail: DatasetDetail }) {
+  const stats = getClassStats(detail.classDistribution);
+  const histogram = getClassHistogram(detail.classDistribution);
+  const isText = dataset.modality === 'text';
   // "images" / "rows", and the singular for "grouped by image count".
-  const noun = itemNoun(dataset)
-  const nounSingular = noun.replace(/s$/, '')
-  const classNoun = isText ? 'labels' : 'classes'
-  const classNounSingular = isText ? 'label' : 'class'
+  const noun = itemNoun(dataset);
+  const nounSingular = noun.replace(/s$/, '');
+  const classNoun = isText ? 'labels' : 'classes';
+  const classNounSingular = isText ? 'label' : 'class';
 
   const chart = useChart({
     data: histogram,
     series: [{ name: 'classes', color: 'brand', label: 'Classes' }],
-  })
+  });
 
   if (!stats) {
     return (
       <Text textStyle="body-sm" color="fg.muted">
         Distribution will appear after samples are processed.
       </Text>
-    )
+    );
   }
 
   return (
     <>
-      <Flex
-        wrap="wrap"
-        columnGap="8"
-        rowGap="4"
-        borderBottomWidth="1px"
-        borderColor="border"
-        pb="5"
-      >
-        <Stat label={`Avg per ${classNounSingular}`}>
-          {stats.avg.toLocaleString('en-US')}
-        </Stat>
+      <Flex wrap="wrap" columnGap="8" rowGap="4" borderBottomWidth="1px" borderColor="border" pb="5">
+        <Stat label={`Avg per ${classNounSingular}`}>{stats.avg.toLocaleString('en-US')}</Stat>
         <Stat label="Median">{stats.median.toLocaleString('en-US')}</Stat>
         <Stat label={`Largest ${classNounSingular}`}>
           {stats.largest.count.toLocaleString('en-US')}{' '}
@@ -145,12 +116,7 @@ function ClassDistribution({
         aria-label={`${classNoun} grouped by ${nounSingular} count`}
         data-testid="class-histogram"
       >
-        <BarChart
-          responsive
-          data={chart.data}
-          accessibilityLayer
-          margin={{ top: 20, right: 0, bottom: 0, left: 0 }}
-        >
+        <BarChart responsive data={chart.data} accessibilityLayer margin={{ top: 20, right: 0, bottom: 0, left: 0 }}>
           <XAxis
             dataKey={chart.key('label')}
             tickLine={false}
@@ -165,8 +131,8 @@ function ClassDistribution({
               <Chart.Tooltip
                 labelFormatter={(label) => `${label} ${noun}`}
                 render={(item) => {
-                  const names: string[] = item.payload?.names ?? []
-                  const shown = names.slice(0, 4)
+                  const names: string[] = item.payload?.names ?? [];
+                  const shown = names.slice(0, 4);
                   return (
                     <Stack gap="0.5">
                       <Text as="span" fontWeight="medium">
@@ -183,23 +149,13 @@ function ClassDistribution({
                         </Text>
                       )}
                     </Stack>
-                  )
+                  );
                 }}
               />
             }
           />
-          <Bar
-            dataKey={chart.key('classes')}
-            radius={[3, 3, 0, 0]}
-            fill={chart.color('brand')}
-          >
-            <LabelList
-              dataKey={chart.key('classes')}
-              position="top"
-              fill={chart.color('fg')}
-              fontSize={12}
-              fontWeight={600}
-            />
+          <Bar dataKey={chart.key('classes')} radius={[3, 3, 0, 0]} fill={chart.color('brand')}>
+            <LabelList dataKey={chart.key('classes')} position="top" fill={chart.color('fg')} fontSize={12} fontWeight={600} />
           </Bar>
         </BarChart>
       </Chart.Root>
@@ -208,21 +164,14 @@ function ClassDistribution({
         <Text as="span" textTransform="capitalize">
           {classNoun}
         </Text>{' '}
-        grouped by {nounSingular} count · hover a bar to see which {classNoun}{' '}
-        fall in that range
+        grouped by {nounSingular} count · hover a bar to see which {classNoun} fall in that range
       </Text>
     </>
-  )
+  );
 }
 
-function SplitDistribution({
-  dataset,
-  detail,
-}: {
-  dataset: Dataset
-  detail: DatasetDetail
-}) {
-  const splits = detail.splitDistribution.filter((split) => split.percent > 0)
+function SplitDistribution({ dataset, detail }: { dataset: Dataset; detail: DatasetDetail }) {
+  const splits = detail.splitDistribution.filter((split) => split.percent > 0);
 
   return (
     <>
@@ -241,50 +190,28 @@ function SplitDistribution({
           </Center>
         ))}
       </Flex>
-      <Flex
-        mt="3.5"
-        wrap="wrap"
-        columnGap="6"
-        rowGap="2"
-        fontSize="13px"
-        color="fg.muted"
-      >
+      <Flex mt="3.5" wrap="wrap" columnGap="6" rowGap="2" fontSize="13px" color="fg.muted">
         {splits.map((split) => (
           <Flex as="span" key={split.label} align="center" gap="2">
-            <Box
-              boxSize="2.5"
-              rounded="sm"
-              colorPalette={SPLIT_COLORS[split.label]}
-              bg="colorPalette.solid"
-            />
+            <Box boxSize="2.5" rounded="sm" colorPalette={SPLIT_COLORS[split.label]} bg="colorPalette.solid" />
             {split.label} —{' '}
             <Text as="b" fontFamily="mono" fontWeight="semibold" color="fg">
-              {Math.round((dataset.items * split.percent) / 100).toLocaleString(
-                'en-US',
-              )}
+              {Math.round((dataset.items * split.percent) / 100).toLocaleString('en-US')}
             </Text>
           </Flex>
         ))}
       </Flex>
     </>
-  )
+  );
 }
 
-function Composition({
-  dataset,
-  detail,
-}: {
-  dataset: Dataset
-  detail: DatasetDetail
-}) {
-  const { composition } = detail
-  const { avgDimensions, avgWords } = composition
+function Composition({ dataset, detail }: { dataset: Dataset; detail: DatasetDetail }) {
+  const { composition } = detail;
+  const { avgDimensions, avgWords } = composition;
 
   return (
     <SimpleGrid columns={{ base: 1, sm: 2 }} gap="5">
-      <Stat label="Label coverage">
-        {dataset.status === 'Ready' ? '100%' : 'Pending'}
-      </Stat>
+      <Stat label="Label coverage">{dataset.status === 'Ready' ? '100%' : 'Pending'}</Stat>
       <Stat label="Modality">
         <Text as="span" textTransform="capitalize">
           {dataset.modality}
@@ -295,21 +222,13 @@ function Composition({
           {avgDimensions.width} × {avgDimensions.height} px
         </Stat>
       )}
-      {avgWords !== undefined && (
-        <Stat label="Avg words per row">{avgWords}</Stat>
-      )}
+      {avgWords !== undefined && <Stat label="Avg words per row">{avgWords}</Stat>}
       <Stat label="File format">{composition.fileFormat}</Stat>
     </SimpleGrid>
-  )
+  );
 }
 
-function Stat({
-  label,
-  children,
-}: {
-  label: string
-  children: React.ReactNode
-}) {
+function Stat({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <Box>
       <Text fontSize="xs" color="fg.muted">
@@ -319,5 +238,5 @@ function Stat({
         {children}
       </Text>
     </Box>
-  )
+  );
 }

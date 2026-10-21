@@ -1,14 +1,14 @@
-import { IconButton, Menu, Portal } from '@chakra-ui/react'
-import { Link } from '@tanstack/react-router'
-import { EllipsisVertical } from 'lucide-react'
-import { toaster } from '@/components/toaster'
+import { IconButton, Menu, Portal } from '@chakra-ui/react';
+import { Link } from '@tanstack/react-router';
+import { EllipsisVertical } from 'lucide-react';
+import { toaster } from '@/components/toaster';
 
-import type { Project } from '@/features/dashboard/data'
-import { useArchiveProject } from '@/features/projects/queries'
+import type { Project } from '@/features/dashboard/data';
+import { useArchiveProject } from '@/features/projects/queries';
 
 export function ProjectMenu({ project }: { project: Project }) {
-  const archive = useArchiveProject(project.id)
-  const archived = project.status === 'Archived'
+  const archive = useArchiveProject(project.id);
+  const archived = project.status === 'Archived';
 
   return (
     <Menu.Root positioning={{ placement: 'bottom-end' }}>
@@ -28,18 +28,12 @@ export function ProjectMenu({ project }: { project: Project }) {
         <Menu.Positioner>
           <Menu.Content>
             <Menu.Item value="open" asChild>
-              <Link
-                to="/projects/$projectId/overview"
-                params={{ projectId: project.id }}
-              >
+              <Link to="/projects/$projectId/overview" params={{ projectId: project.id }}>
                 Open project
               </Link>
             </Menu.Item>
             <Menu.Item value="settings" asChild>
-              <Link
-                to="/projects/$projectId/settings"
-                params={{ projectId: project.id }}
-              >
+              <Link to="/projects/$projectId/settings" params={{ projectId: project.id }}>
                 Project settings
               </Link>
             </Menu.Item>
@@ -62,5 +56,5 @@ export function ProjectMenu({ project }: { project: Project }) {
         </Menu.Positioner>
       </Portal>
     </Menu.Root>
-  )
+  );
 }

@@ -1,10 +1,10 @@
-import { Box, Button, Heading, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Heading, Stack, Text } from '@chakra-ui/react';
 
-import { EmptyNotice } from '@/components/shared/empty-notice'
-import { useDashboardLayout } from '@/features/dashboard/context'
-import { ProjectMark } from '@/features/projects/components/project-ui'
-import { startMethods } from './types'
-import type { NewProjectDraft } from './use-new-project-draft'
+import { EmptyNotice } from '@/components/shared/empty-notice';
+import { useDashboardLayout } from '@/features/dashboard/context';
+import { ProjectMark } from '@/features/projects/components/project-ui';
+import { startMethods } from './types';
+import type { NewProjectDraft } from './use-new-project-draft';
 
 /** The dot that marks the chosen option. */
 function Chosen() {
@@ -12,11 +12,11 @@ function Chosen() {
     <Text as="span" color="brand-text" aria-hidden="true">
       ●
     </Text>
-  )
+  );
 }
 
 export function StartMethodStep({ draft }: { draft: NewProjectDraft }) {
-  const orgName = useDashboardLayout().org.name
+  const orgName = useDashboardLayout().org.name;
   return (
     <section>
       <Box>
@@ -82,14 +82,8 @@ export function StartMethodStep({ draft }: { draft: NewProjectDraft }) {
                     <Text fontSize="xs" color="fg.muted">
                       {template.description}
                     </Text>
-                    <Text
-                      mt="1"
-                      fontSize="11px"
-                      fontWeight="medium"
-                      color="fg.muted"
-                    >
-                      {template.items.toLocaleString('en-US')} items ·{' '}
-                      {template.size}
+                    <Text mt="1" fontSize="11px" fontWeight="medium" color="fg.muted">
+                      {template.items.toLocaleString('en-US')} items · {template.size}
                     </Text>
                   </Box>
                   {draft.templateId === template.id && <Chosen />}
@@ -148,11 +142,10 @@ export function StartMethodStep({ draft }: { draft: NewProjectDraft }) {
             />
           )}
           <Text mt="3" fontSize="xs" color="fg.muted">
-            Cloning copies project setup only — datasets, runs, models, and
-            deployments are not duplicated.
+            Cloning copies project setup only — datasets, runs, models, and deployments are not duplicated.
           </Text>
         </Box>
       )}
     </section>
-  )
+  );
 }

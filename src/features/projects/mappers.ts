@@ -1,25 +1,8 @@
 /** Turns project rows from the API into what the pages render. */
-import type {
-  Project,
-  ProjectOverview,
-  ResourceUsage,
-} from '@/features/dashboard/domain/types'
-import { initialsOf, toVisibility } from '@/features/organizations/mappers'
-import {
-  formatBytes,
-  formatDate,
-  formatMs,
-  relativeTime,
-  relativeTimeLong,
-} from '@/lib/format'
-import type {
-  ApiProject,
-  ApiProjectDetail,
-  ApiProjectMember,
-  ApiProjectRole,
-  ApiProjectStatus,
-  ApiResourceUsage,
-} from './api'
+import type { Project, ProjectOverview, ResourceUsage } from '@/features/dashboard/domain/types';
+import { initialsOf, toVisibility } from '@/features/organizations/mappers';
+import { formatBytes, formatDate, formatMs, relativeTime, relativeTimeLong } from '@/lib/format';
+import type { ApiProject, ApiProjectDetail, ApiProjectMember, ApiProjectRole, ApiProjectStatus, ApiResourceUsage } from './api';
 
 // The /projects filter matches these against the catalog's labels, so a task
 // type core-api serves reads the same as core-api/app/modules/user/catalog/data.py.
@@ -35,7 +18,7 @@ const taskLabels: Record<string, string> = {
   time_series: 'Time Series',
   tabular: 'Tabular',
   document_ai: 'Document AI',
-}
+};
 
 /** A task type the client has no name for reads as its id, title-cased. */
 export function taskTypeLabel(taskType: string) {
@@ -45,14 +28,14 @@ export function taskTypeLabel(taskType: string) {
       .split('_')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ')
-  )
+  );
 }
 
 const statusLabels: Record<ApiProjectStatus, Project['status']> = {
   active: 'Active',
   draft: 'Draft',
   archived: 'Archived',
-}
+};
 
 export function toProject(row: ApiProject, now?: number): Project {
   return {
@@ -69,7 +52,7 @@ export function toProject(row: ApiProject, now?: number): Project {
     updatedAt: new Date(row.updated_at).getTime(),
     updated: relativeTime(row.updated_at, now),
     color: row.color,
-  }
+  };
 }
 
 function toResourceUsage(row: ApiResourceUsage): ResourceUsage {
@@ -78,7 +61,7 @@ function toResourceUsage(row: ApiResourceUsage): ResourceUsage {
       label: point.label,
       shortLabel: point.short_label,
       value: point.value,
-    }))
+    }));
   return {
     id: row.id,
     label: row.label,
@@ -92,26 +75,25 @@ function toResourceUsage(row: ApiResourceUsage): ResourceUsage {
       week: points('week'),
       month: points('month'),
     },
-  }
+  };
 }
 
-export type ProjectTeamRole = ProjectOverview['team'][number]['role']
+export type ProjectTeamRole = ProjectOverview['team'][number]['role'];
 
 const roleLabels: Record<ApiProjectRole, ProjectTeamRole> = {
   owner: 'Owner',
   editor: 'Editor',
   viewer: 'Viewer',
-}
+};
 
-export const toProjectRole = (role: ApiProjectRole) => roleLabels[role]
-export const toApiProjectRole = (role: ProjectTeamRole) =>
-  role.toLowerCase() as ApiProjectRole
+export const toProjectRole = (role: ApiProjectRole) => roleLabels[role];
+export const toApiProjectRole = (role: ProjectTeamRole) => role.toLowerCase() as ApiProjectRole;
 
 export type ProjectMember = ProjectOverview['team'][number] & {
-  id: string
-  email: string
-  invited?: boolean
-}
+  id: string;
+  email: string;
+  invited?: boolean;
+};
 
 export function toProjectMember(row: ApiProjectMember): ProjectMember {
   return {
@@ -122,7 +104,7 @@ export function toProjectMember(row: ApiProjectMember): ProjectMember {
     role: roleLabels[row.role],
     color: row.color,
     invited: row.status === 'invited' || undefined,
-  }
+  };
 }
 
 export function toProjectOverview(
@@ -131,7 +113,7 @@ export function toProjectOverview(
   members: ApiProjectMember[],
   now?: number,
 ): ProjectOverview {
-  const best = detail.best_model
+  const best = detail.best_model;
   return {
     created: formatDate(detail.created_at),
     framework: detail.framework,
@@ -164,5 +146,5 @@ export function toProjectOverview(
         role: roleLabels[role],
         color,
       })),
-  }
+  };
 }

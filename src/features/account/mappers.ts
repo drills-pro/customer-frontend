@@ -1,17 +1,17 @@
 /** Turns account rows from the API into what the pages render. */
-import { initialsOf } from '@/features/organizations/mappers'
-import type { ApiUser } from './api'
+import { initialsOf } from '@/features/organizations/mappers';
+import type { ApiUser } from './api';
 
 export type CurrentUser = {
-  fullName: string
-  username: string
-  email: string
+  fullName: string;
+  username: string;
+  email: string;
   /** Job title, e.g. `ML Engineer`. */
-  role: string
-  bio: string
-  initials: string
-  color: string
-}
+  role: string;
+  bio: string;
+  initials: string;
+  color: string;
+};
 
 export function toCurrentUser(row: ApiUser): CurrentUser {
   return {
@@ -22,5 +22,5 @@ export function toCurrentUser(row: ApiUser): CurrentUser {
     bio: row.bio,
     initials: initialsOf(row.full_name),
     color: row.color,
-  }
+  };
 }

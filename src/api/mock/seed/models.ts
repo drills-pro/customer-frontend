@@ -1,20 +1,16 @@
-import type {
-  ApiModel,
-  ApiModelDetail,
-  ApiModelFile,
-} from '@/features/models/api/types'
-import { daysAgo, kb, mb, weeksAgo } from './units'
+import type { ApiModel, ApiModelDetail, ApiModelFile } from '@/features/models/api/types';
+import { daysAgo, kb, mb, weeksAgo } from './units';
 
 /** A model as stored: which deployment serves it is worked out per request. */
-export type ModelRecord = Omit<ApiModel, 'deployment_id'>
+export type ModelRecord = Omit<ApiModel, 'deployment_id'>;
 
-const retail = { project_id: 'retail', run_id: 't1' }
+const retail = { project_id: 'retail', run_id: 't1' };
 const support = {
   project_id: 'support',
   run_id: 't2',
   architecture: 'bert-base',
   framework: 'PyTorch 2.4',
-}
+};
 
 /** Trained model versions for the projects the demo populates. */
 export const modelSeed: ModelRecord[] = [
@@ -133,11 +129,11 @@ export const modelSeed: ModelRecord[] = [
     author: 'Alex Rivera',
     created_at: daysAgo(7),
   },
-]
+];
 
 type ModelExtras = Pick<ApiModelDetail, 'dataset_id' | 'per_class_accuracy'> & {
-  files: ApiModelFile[]
-}
+  files: ApiModelFile[];
+};
 
 const modelExtras: Partial<Record<string, ModelExtras>> = {
   'retail-resnet50-v3': {
@@ -173,7 +169,7 @@ const modelExtras: Partial<Record<string, ModelExtras>> = {
       { name: 'labels.txt', type: 'Classes', size_bytes: kb(1) },
     ],
   },
-}
+};
 
 /** A model with no fixture still gets a plausible file list and lineage. */
 export function extrasFor(model: ModelRecord): ModelExtras {
@@ -191,7 +187,7 @@ export function extrasFor(model: ModelRecord): ModelExtras {
         { name: 'README.md', type: 'Docs', size_bytes: kb(3) },
       ],
     }
-  )
+  );
 }
 
 /** What the playground answers; the mock has no model to run. */
@@ -210,4 +206,4 @@ export const cannedPrediction = {
     { label: 'Aspect ratio', weight: 12 },
     { label: 'Background contrast', weight: 9 },
   ],
-}
+};

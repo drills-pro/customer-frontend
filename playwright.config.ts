@@ -1,7 +1,7 @@
-import { defineConfig, devices } from '@playwright/test'
-import { API_URL, TENANT_ID } from './tests/fixtures/api'
+import { defineConfig, devices } from '@playwright/test';
+import { API_URL, TENANT_ID } from './tests/fixtures/api';
 
-const baseURL = process.env.DRILLS_BASE_URL || 'http://127.0.0.1:3100'
+const baseURL = process.env.DRILLS_BASE_URL || 'http://127.0.0.1:3100';
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
@@ -29,4 +29,4 @@ export default defineConfig({
           VITE_API_MOCK_DELAY_MS: '0',
         },
       },
-})
+});

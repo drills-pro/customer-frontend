@@ -1,36 +1,23 @@
-import { Box, Button, SimpleGrid, Text } from '@chakra-ui/react'
-import { FolderKanban } from 'lucide-react'
+import { Box, Button, SimpleGrid, Text } from '@chakra-ui/react';
+import { FolderKanban } from 'lucide-react';
 
-import { EmptyNotice } from '@/components/shared/empty-notice'
-import { SectionAction, SectionCard } from '@/components/shared/section-card'
-import { toDashboardProject } from '@/features/dashboard/format'
-import { useDashboardSummary } from '@/features/dashboard/queries'
-import { unavailable } from '@/lib/unavailable'
-import { CardError, CardLoading } from './card-states'
+import { EmptyNotice } from '@/components/shared/empty-notice';
+import { SectionAction, SectionCard } from '@/components/shared/section-card';
+import { toDashboardProject } from '@/features/dashboard/format';
+import { useDashboardSummary } from '@/features/dashboard/queries';
+import { unavailable } from '@/lib/unavailable';
+import { CardError, CardLoading } from './card-states';
 
 export function YourProjectsCard() {
-  const { data, error, isPending, refetch } = useDashboardSummary()
-  const orgProjects = (data?.projects ?? []).map((project) =>
-    toDashboardProject(project),
-  )
+  const { data, error, isPending, refetch } = useDashboardSummary();
+  const orgProjects = (data?.projects ?? []).map((project) => toDashboardProject(project));
 
   return (
-    <SectionCard
-      title="Your projects"
-      action={
-        <SectionAction onClick={() => unavailable('All projects')}>
-          View all
-        </SectionAction>
-      }
-    >
+    <SectionCard title="Your projects" action={<SectionAction onClick={() => unavailable('All projects')}>View all</SectionAction>}>
       {isPending ? (
         <CardLoading rows={2} />
       ) : error ? (
-        <CardError
-          title="Could not load projects"
-          error={error}
-          onRetry={() => void refetch()}
-        />
+        <CardError title="Could not load projects" error={error} onRetry={() => void refetch()} />
       ) : orgProjects.length ? (
         <SimpleGrid columns={{ base: 1, sm: 2 }} gap="3" p="4">
           {orgProjects.slice(0, 4).map((project) => (
@@ -79,5 +66,5 @@ export function YourProjectsCard() {
         />
       )}
     </SectionCard>
-  )
+  );
 }

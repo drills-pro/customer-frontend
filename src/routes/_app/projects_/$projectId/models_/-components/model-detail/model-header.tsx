@@ -1,52 +1,34 @@
-import { Badge, Box, Button, Link, Text } from '@chakra-ui/react'
-import { Link as RouterLink, useNavigate } from '@tanstack/react-router'
-import { Box as BoxIcon, Download, Rocket } from 'lucide-react'
-import { toaster } from '@/components/toaster'
+import { Badge, Box, Button, Link, Text } from '@chakra-ui/react';
+import { Link as RouterLink, useNavigate } from '@tanstack/react-router';
+import { Box as BoxIcon, Download, Rocket } from 'lucide-react';
+import { toaster } from '@/components/toaster';
 
-import { EntityHeader } from '@/components/shared/entity-header'
-import { SimpleSelect } from '@/components/simple-select'
-import { useCreateDeployment } from '@/features/deployments/queries'
-import {
-  formatAccuracy,
-  formatF1,
-  StageBadge,
-} from '../../../-components/model-list'
-import { versionDeltas } from './helpers'
-import type { Delta } from './helpers'
-import { useCurrentModel } from './use-current-model'
+import { EntityHeader } from '@/components/shared/entity-header';
+import { SimpleSelect } from '@/components/simple-select';
+import { useCreateDeployment } from '@/features/deployments/queries';
+import { formatAccuracy, formatF1, StageBadge } from '../../../-components/model-list';
+import { versionDeltas } from './helpers';
+import type { Delta } from './helpers';
+import { useCurrentModel } from './use-current-model';
 
 /** Green when the change is an improvement, which depends on the metric. */
 function DeltaLine({ delta, lower }: { delta: Delta; lower?: boolean }) {
-  const improved = lower ? delta.tone === 'down' : delta.tone === 'up'
-  const regressed = lower ? delta.tone === 'up' : delta.tone === 'down'
+  const improved = lower ? delta.tone === 'down' : delta.tone === 'up';
+  const regressed = lower ? delta.tone === 'up' : delta.tone === 'down';
   return (
-    <Text
-      as="span"
-      color={
-        improved
-          ? 'fg.success'
-          : regressed
-            ? 'fg.error'
-            : delta.tone === 'flat'
-              ? 'fg.muted'
-              : undefined
-      }
-    >
+    <Text as="span" color={improved ? 'fg.success' : regressed ? 'fg.error' : delta.tone === 'flat' ? 'fg.muted' : undefined}>
       {delta.text}
     </Text>
-  )
+  );
 }
 
 export function ModelHeader() {
-  const { project, model, versions, deployment } = useCurrentModel()
-  const navigate = useNavigate()
-  const deploy = useCreateDeployment(project.id)
-  const index = versions.findIndex((item) => item.id === model.id)
-  const deltas = versionDeltas(
-    model,
-    index > 0 ? versions[index - 1] : undefined,
-  )
-  const latest = versions.at(-1)
+  const { project, model, versions, deployment } = useCurrentModel();
+  const navigate = useNavigate();
+  const deploy = useCreateDeployment(project.id);
+  const index = versions.findIndex((item) => item.id === model.id);
+  const deltas = versionDeltas(model, index > 0 ? versions[index - 1] : undefined);
+  const latest = versions.at(-1);
 
   return (
     <EntityHeader
@@ -65,10 +47,7 @@ export function ModelHeader() {
         <>
           {model.architecture} · {model.framework} · from{' '}
           <Link asChild fontWeight="medium" color="fg">
-            <RouterLink
-              to="/projects/$projectId/training/$runId"
-              params={{ projectId: model.projectId, runId: model.runId }}
-            >
+            <RouterLink to="/projects/$projectId/training/$runId" params={{ projectId: model.projectId, runId: model.runId }}>
               run {model.runId}
             </RouterLink>
           </Link>{' '}
@@ -139,14 +118,14 @@ export function ModelHeader() {
                       toaster.create({
                         type: 'success',
                         title: `Deploying ${created.name}.`,
-                      })
+                      });
                       void navigate({
                         to: '/projects/$projectId/deployments/$deploymentId',
                         params: {
                           projectId: project.id,
                           deploymentId: created.id,
                         },
-                      })
+                      });
                     },
                   },
                 )
@@ -181,5 +160,5 @@ export function ModelHeader() {
         },
       ]}
     />
-  )
+  );
 }

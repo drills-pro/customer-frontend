@@ -16,14 +16,14 @@ export type Session = {
    * own it in dev mode, and it is the fallback when no organization is
    * selected.
    */
-  tenantId: string | undefined
-  userId: string
+  tenantId: string | undefined;
+  userId: string;
   /** Matched against invitations addressed to the caller. Optional. */
-  email: string | undefined
-  displayName: string
-}
+  email: string | undefined;
+  displayName: string;
+};
 
-const env = import.meta.env
+const env = import.meta.env;
 
 export function getSession(): Session {
   return {
@@ -31,10 +31,10 @@ export function getSession(): Session {
     userId: env.VITE_DEV_USER_ID || 'dev-user',
     email: env.VITE_DEV_USER_EMAIL || undefined,
     displayName: env.VITE_DEV_USER_NAME || 'Alex',
-  }
+  };
 }
 
-let currentOrganizationId: string | undefined
+let currentOrganizationId: string | undefined;
 
 /**
  * The organization the app is showing, sent as `X-Organization-Id` so the
@@ -43,19 +43,18 @@ let currentOrganizationId: string | undefined
  * Routes that name their organization in the path or query don't need it.
  */
 export function setCurrentOrganizationId(organizationId: string | undefined) {
-  currentOrganizationId = organizationId
+  currentOrganizationId = organizationId;
 }
 
 /** Headers that identify the caller to core-api, or `null` when unconfigured. */
 export function authHeaders(): Record<string, string> | null {
-  const session = getSession()
-  if (!session.tenantId) return null
+  const session = getSession();
+  if (!session.tenantId) return null;
   const headers: Record<string, string> = {
     'X-Tenant-Id': session.tenantId,
     'X-User-Id': session.userId,
-  }
-  if (currentOrganizationId)
-    headers['X-Organization-Id'] = currentOrganizationId
-  if (session.email) headers['X-User-Email'] = session.email
-  return headers
+  };
+  if (currentOrganizationId) headers['X-Organization-Id'] = currentOrganizationId;
+  if (session.email) headers['X-User-Email'] = session.email;
+  return headers;
 }

@@ -1,14 +1,14 @@
-import { Copy, Sparkles, Upload } from 'lucide-react'
+import { Copy, Sparkles, Upload } from 'lucide-react';
 
-export const steps = ['Basics', 'Task type', 'Start method'] as const
+export const steps = ['Basics', 'Task type', 'Start method'] as const;
 
-export type StartMethod = 'upload' | 'template' | 'clone'
+export type StartMethod = 'upload' | 'template' | 'clone';
 
 export const startMethods: Array<{
-  id: StartMethod
-  label: string
-  description: string
-  icon: typeof Upload
+  id: StartMethod;
+  label: string;
+  description: string;
+  icon: typeof Upload;
 }> = [
   {
     id: 'upload',
@@ -28,4 +28,4 @@ export const startMethods: Array<{
     description: 'Reuse the setup from an existing compatible project.',
     icon: Copy,
   },
-]
+];

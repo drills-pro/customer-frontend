@@ -1,6 +1,6 @@
-import type * as React from 'react'
-import { EmptyState, VStack } from '@chakra-ui/react'
-import type { EmptyStateRootProps } from '@chakra-ui/react'
+import type * as React from 'react';
+import { EmptyState, VStack } from '@chakra-ui/react';
+import type { EmptyStateRootProps } from '@chakra-ui/react';
 
 /**
  * The "nothing here yet" state: an icon, a title, a line of explanation and,
@@ -13,22 +13,16 @@ export function EmptyNotice({
   children,
   ...props
 }: {
-  icon?: React.ReactNode
-  title: React.ReactNode
-  description?: React.ReactNode
-  children?: React.ReactNode
+  icon?: React.ReactNode;
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  children?: React.ReactNode;
 } & Omit<EmptyStateRootProps, 'title'>) {
   return (
     <EmptyState.Root size="sm" py="8" {...props}>
       <EmptyState.Content gap="3">
         {icon && (
-          <EmptyState.Indicator
-            boxSize="8"
-            rounded="l2"
-            bg="bg.muted"
-            color="fg"
-            css={{ '& svg': { boxSize: '4' } }}
-          >
+          <EmptyState.Indicator boxSize="8" rounded="l2" bg="bg.muted" color="fg" css={{ '& svg': { boxSize: '4' } }}>
             {icon}
           </EmptyState.Indicator>
         )}
@@ -36,14 +30,10 @@ export function EmptyNotice({
           <EmptyState.Title textStyle="body-sm" fontWeight="medium">
             {title}
           </EmptyState.Title>
-          {description && (
-            <EmptyState.Description textStyle="body-sm">
-              {description}
-            </EmptyState.Description>
-          )}
+          {description && <EmptyState.Description textStyle="body-sm">{description}</EmptyState.Description>}
         </VStack>
         {children}
       </EmptyState.Content>
     </EmptyState.Root>
-  )
+  );
 }

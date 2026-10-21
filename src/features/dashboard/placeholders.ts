@@ -16,11 +16,11 @@
 export const deploymentPlaceholders = {
   latencyP95: '42ms',
   errorRate: '0.2%',
-} as const
+} as const;
 
 export const trainingPlaceholders = {
   /** Percent shown on the progress bar. */
   progress: 50,
   currentEpoch: '—',
   eta: '—',
-} as const
+} as const;

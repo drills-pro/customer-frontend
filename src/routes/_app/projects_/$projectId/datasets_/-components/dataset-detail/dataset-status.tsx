@@ -1,14 +1,14 @@
-import { Button } from '@chakra-ui/react'
-import { toaster } from '@/components/toaster'
+import { Button } from '@chakra-ui/react';
+import { toaster } from '@/components/toaster';
 
-import { EmptyNotice } from '@/components/shared/empty-notice'
-import { useReprocessDataset } from '@/features/datasets/queries'
-import { useCurrentDataset } from './use-current-dataset'
+import { EmptyNotice } from '@/components/shared/empty-notice';
+import { useReprocessDataset } from '@/features/datasets/queries';
+import { useCurrentDataset } from './use-current-dataset';
 
 export function DatasetStatus() {
-  const { project, dataset } = useCurrentDataset()
-  const reprocess = useReprocessDataset(project.id, dataset.id)
-  const failed = dataset.status === 'Error'
+  const { project, dataset } = useCurrentDataset();
+  const reprocess = useReprocessDataset(project.id, dataset.id);
+  const failed = dataset.status === 'Error';
   return (
     <EmptyNotice
       minH="72"
@@ -42,5 +42,5 @@ export function DatasetStatus() {
         </Button>
       )}
     </EmptyNotice>
-  )
+  );
 }

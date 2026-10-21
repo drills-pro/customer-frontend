@@ -1,51 +1,35 @@
-import * as React from 'react'
-import {
-  Box,
-  Button,
-  Code,
-  Field,
-  Fieldset,
-  Flex,
-  HStack,
-  Input,
-  SimpleGrid,
-  Stack,
-  Text,
-  Textarea,
-} from '@chakra-ui/react'
-import { Building2, Lock } from 'lucide-react'
-import { toaster } from '@/components/toaster'
+import * as React from 'react';
+import { Box, Button, Code, Field, Fieldset, Flex, HStack, Input, SimpleGrid, Stack, Text, Textarea } from '@chakra-ui/react';
+import { Building2, Lock } from 'lucide-react';
+import { toaster } from '@/components/toaster';
 
-import { CopyButton } from '@/components/shared/copy-button'
-import { FormFooter } from '@/components/shared/form-footer'
-import {
-  RadioButton,
-  RadioButtonGroup,
-} from '@/components/shared/radio-button-group'
-import { SectionCard } from '@/components/shared/section-card'
-import { SECTION_OFFSET } from '@/components/shared/settings-nav'
-import { ProjectMark } from '@/features/projects/components/project-ui'
-import { ApiError } from '@/api/client'
-import { useProjectDetail } from '@/features/dashboard/context'
-import type { ProjectOverview } from '@/features/dashboard/data'
-import { toApiVisibility } from '@/features/organizations/mappers'
-import { useUpdateProject } from '@/features/projects/queries'
+import { CopyButton } from '@/components/shared/copy-button';
+import { FormFooter } from '@/components/shared/form-footer';
+import { RadioButton, RadioButtonGroup } from '@/components/shared/radio-button-group';
+import { SectionCard } from '@/components/shared/section-card';
+import { SECTION_OFFSET } from '@/components/shared/settings-nav';
+import { ProjectMark } from '@/features/projects/components/project-ui';
+import { ApiError } from '@/api/client';
+import { useProjectDetail } from '@/features/dashboard/context';
+import type { ProjectOverview } from '@/features/dashboard/data';
+import { toApiVisibility } from '@/features/organizations/mappers';
+import { useUpdateProject } from '@/features/projects/queries';
 
-const NAME_MAX = 64
-const DESCRIPTION_MAX = 240
+const NAME_MAX = 64;
+const DESCRIPTION_MAX = 240;
 
-type Visibility = ProjectOverview['visibility']
+type Visibility = ProjectOverview['visibility'];
 type GeneralValues = {
-  name: string
-  description: string
-  visibility: Visibility
-}
+  name: string;
+  description: string;
+  visibility: Visibility;
+};
 
 const visibilityOptions: Array<{
-  value: Visibility
-  label: string
-  description: string
-  icon: typeof Lock
+  value: Visibility;
+  label: string;
+  description: string;
+  icon: typeof Lock;
 }> = [
   {
     value: 'Organization',
@@ -59,73 +43,59 @@ const visibilityOptions: Array<{
     description: 'Only invited members can see or open this project.',
     icon: Lock,
   },
-]
+];
 
 function nameError(name: string) {
-  const trimmed = name.trim()
-  if (!trimmed) return 'Project name is required.'
-  if (trimmed.length > NAME_MAX)
-    return `Keep the name under ${NAME_MAX} characters.`
-  return undefined
+  const trimmed = name.trim();
+  if (!trimmed) return 'Project name is required.';
+  if (trimmed.length > NAME_MAX) return `Keep the name under ${NAME_MAX} characters.`;
+  return undefined;
 }
 
 export function GeneralCard() {
-  const { project, details } = useProjectDetail()
-  const updateProject = useUpdateProject(project.id)
+  const { project, details } = useProjectDetail();
+  const updateProject = useUpdateProject(project.id);
   const saved: GeneralValues = {
     name: project.name,
     description: project.description,
     visibility: details.visibility,
-  }
-  const [values, setValues] = React.useState(saved)
+  };
+  const [values, setValues] = React.useState(saved);
   /** A name the API refused because another project already has it. */
-  const [takenName, setTakenName] = React.useState<string>()
+  const [takenName, setTakenName] = React.useState<string>();
 
-  const error =
-    values.name.trim() === takenName
-      ? 'A project with this name already exists.'
-      : nameError(values.name)
-  const dirty =
-    values.name !== saved.name ||
-    values.description !== saved.description ||
-    values.visibility !== saved.visibility
-  const taskLocked = details.pipeline.runs > 0
+  const error = values.name.trim() === takenName ? 'A project with this name already exists.' : nameError(values.name);
+  const dirty = values.name !== saved.name || values.description !== saved.description || values.visibility !== saved.visibility;
+  const taskLocked = details.pipeline.runs > 0;
 
-  function update<TKey extends keyof GeneralValues>(
-    key: TKey,
-    value: GeneralValues[TKey],
-  ) {
-    setValues((current) => ({ ...current, [key]: value }))
+  function update<TKey extends keyof GeneralValues>(key: TKey, value: GeneralValues[TKey]) {
+    setValues((current) => ({ ...current, [key]: value }));
   }
 
   function save(event: React.FormEvent) {
-    event.preventDefault()
-    if (!dirty || error || updateProject.isPending) return
-    const next = { ...values, name: values.name.trim() }
+    event.preventDefault();
+    if (!dirty || error || updateProject.isPending) return;
+    const next = { ...values, name: values.name.trim() };
     updateProject.mutate(
       {
         // Only what changed: the API has one call for the name and
         // description and another for the visibility.
         ...(next.name !== saved.name ? { name: next.name } : {}),
-        ...(next.description !== saved.description
-          ? { description: next.description }
-          : {}),
-        ...(next.visibility !== saved.visibility
-          ? { visibility: toApiVisibility(next.visibility) }
-          : {}),
+        ...(next.description !== saved.description ? { description: next.description } : {}),
+        ...(next.visibility !== saved.visibility ? { visibility: toApiVisibility(next.visibility) } : {}),
       },
       {
         onSuccess: () => {
-          setValues(next)
-          toaster.create({ type: 'success', title: 'Project settings saved.' })
+          setValues(next);
+          toaster.create({ type: 'success', title: 'Project settings saved.' });
         },
         onError: (failure) => {
           if (failure instanceof ApiError && failure.status === 409) {
-            setTakenName(next.name)
+            setTakenName(next.name);
           }
         },
       },
-    )
+    );
   }
 
   return (
@@ -137,14 +107,7 @@ export function GeneralCard() {
     >
       <form onSubmit={save} noValidate>
         <Stack gap="5" p="5">
-          <Flex
-            wrap="wrap"
-            align="center"
-            gap="4"
-            rounded="l2"
-            bg="bg.muted"
-            p="3"
-          >
+          <Flex wrap="wrap" align="center" gap="4" rounded="l2" bg="bg.muted" p="3">
             <ProjectMark project={project} boxSize="11" />
             <Box me="auto" minW="0">
               <Text truncate fontWeight="medium">
@@ -168,12 +131,7 @@ export function GeneralCard() {
               onChange={(event) => update('name', event.target.value)}
             />
             {error && (
-              <Text
-                id="project-name-error"
-                role="alert"
-                textStyle="body-sm"
-                color="fg.error"
-              >
+              <Text id="project-name-error" role="alert" textStyle="body-sm" color="fg.error">
                 {error}
               </Text>
             )}
@@ -186,11 +144,7 @@ export function GeneralCard() {
                 as="span"
                 fontSize="xs"
                 fontVariantNumeric="tabular-nums"
-                color={
-                  values.description.length > DESCRIPTION_MAX * 0.9
-                    ? 'fg.warning'
-                    : 'fg.muted'
-                }
+                color={values.description.length > DESCRIPTION_MAX * 0.9 ? 'fg.warning' : 'fg.muted'}
               >
                 {values.description.length}/{DESCRIPTION_MAX}
               </Text>
@@ -209,17 +163,13 @@ export function GeneralCard() {
               <Field.Label>Task type</Field.Label>
               <Input value={project.task} readOnly />
               <Field.HelperText>
-                {taskLocked
-                  ? 'Locked after the first training run.'
-                  : 'Chosen when the project was created.'}
+                {taskLocked ? 'Locked after the first training run.' : 'Chosen when the project was created.'}
               </Field.HelperText>
             </Field.Root>
             <Field.Root disabled>
               <Field.Label>Region</Field.Label>
               <Input value={details.region} readOnly />
-              <Field.HelperText>
-                Datasets and endpoints stay in this region.
-              </Field.HelperText>
+              <Field.HelperText>Datasets and endpoints stay in this region.</Field.HelperText>
             </Field.Root>
           </SimpleGrid>
 
@@ -288,28 +238,14 @@ export function GeneralCard() {
         </Stack>
 
         <FormFooter dirty={dirty}>
-          <Button
-            type="button"
-            variant="ghost"
-            colorPalette="gray"
-            size="sm"
-            px="3.5"
-            disabled={!dirty}
-            onClick={() => setValues(saved)}
-          >
+          <Button type="button" variant="ghost" colorPalette="gray" size="sm" px="3.5" disabled={!dirty} onClick={() => setValues(saved)}>
             Reset
           </Button>
-          <Button
-            type="submit"
-            variant="solid"
-            size="sm"
-            px="3.5"
-            disabled={!dirty || Boolean(error)}
-          >
+          <Button type="submit" variant="solid" size="sm" px="3.5" disabled={!dirty || Boolean(error)}>
             Save changes
           </Button>
         </FormFooter>
       </form>
     </SectionCard>
-  )
+  );
 }

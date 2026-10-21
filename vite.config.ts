@@ -1,3 +1,12 @@
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-export default defineConfig({ plugins: [react()] });
+
+import { tanstackStart } from '@tanstack/react-start/plugin/vite';
+
+import viteReact from '@vitejs/plugin-react';
+
+const config = defineConfig({
+  resolve: { tsconfigPaths: true },
+  plugins: [tanstackStart(), viteReact()],
+});
+
+export default config;

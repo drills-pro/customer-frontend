@@ -1,0 +1,10 @@
+/** Importing this file registers every mocked route. */
+import './account';
+import './catalog';
+import './dashboard';
+import './datasets';
+import './deployments';
+import './models';
+import './organizations';
+import './projects';
+import './training';

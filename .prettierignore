@@ -7,3 +7,10 @@ tokens/tokens.json
 .claude/skills
 .codegraph
 skills-lock.json
+
+package-lock.json
+yarn.lock
+src/routeTree.gen.ts
+test-results
+playwright-report
+.content-collections

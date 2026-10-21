@@ -3,3 +3,15 @@ dist
 .DS_Store
 *.local
 .env
+
+dist-ssr
+.nitro
+.tanstack
+.wrangler
+.output
+.vinxi
+__unconfig*
+todos.json
+# Browser test artifacts
+/test-results/
+/playwright-report/

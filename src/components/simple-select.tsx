@@ -10,16 +10,20 @@ interface Props {
   hideLabel?: boolean;
   size?: 'sm' | 'md';
   width?: string;
+  /** Shown while `value` is empty. */
+  placeholder?: string;
+  /** Set false inside a dialog: a modal hides everything outside it, including a portalled list. */
+  portalled?: boolean;
 }
 
 /** The themed replacement for a native select: one value, a list of options. */
-export function SimpleSelect({ items, value, onChange, label, hideLabel, size, width }: Props) {
+export function SimpleSelect({ items, value, onChange, label, hideLabel, size, width, placeholder, portalled = true }: Props) {
   const collection = useMemo(() => createListCollection({ items }), [items]);
   const text = <Select.Label>{label}</Select.Label>;
   return (
     <Select.Root
       collection={collection}
-      value={[value]}
+      value={value ? [value] : []}
       onValueChange={(e) => e.value[0] && onChange(e.value[0])}
       size={size}
       width={width}
@@ -29,13 +33,13 @@ export function SimpleSelect({ items, value, onChange, label, hideLabel, size, w
       {hideLabel ? <VisuallyHidden asChild>{text}</VisuallyHidden> : text}
       <Select.Control>
         <Select.Trigger>
-          <Select.ValueText />
+          <Select.ValueText placeholder={placeholder} />
         </Select.Trigger>
         <Select.IndicatorGroup>
           <Select.Indicator />
         </Select.IndicatorGroup>
       </Select.Control>
-      <Portal>
+      <Portal disabled={!portalled}>
         <Select.Positioner>
           <Select.Content>
             {collection.items.map((i) => (

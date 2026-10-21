@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "sh scripts/check-project.sh && tsc -p . && vite build",
+    "build": "sh scripts/check-project.sh && pnpm typecheck && vite build",
     "typecheck": "pnpm typegen && tsc -p .",
     "tokens": "node scripts/gen-tokens.mjs",
     "typegen": "chakra typegen src/theme/index.ts",

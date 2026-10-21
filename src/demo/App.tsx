@@ -4,6 +4,7 @@ import { Brand } from './pages/Brand';
 import { Data } from './pages/Data';
 import { Feedback } from './pages/Feedback';
 import { Forms } from './pages/Forms';
+import { Motion } from './pages/Motion';
 import { Navigation } from './pages/Navigation';
 import { Overlays } from './pages/Overlays';
 import { Overview } from './pages/Overview';
@@ -23,5 +24,6 @@ export const PAGES: { id: string; label: string; Page: ComponentType | LazyExoti
   { id: 'overlays', label: 'Overlays', Page: Overlays },
   { id: 'data', label: 'Data display', Page: Data },
   { id: 'charts', label: 'Charts', Page: Charts },
+  { id: 'motion', label: 'Motion', Page: Motion },
   { id: 'brand', label: 'Brand', Page: Brand },
 ];

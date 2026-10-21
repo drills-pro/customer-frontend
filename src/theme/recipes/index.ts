@@ -7,6 +7,14 @@ import { defineRecipe, defineSlotRecipe } from '@chakra-ui/react';
 const ring = { focusVisibleRing: 'outside' } as const;
 const pressed = { transform: 'translateY(3px)', boxShadow: 'pressed' } as const;
 
+// Cards and alerts enter on the gentle bounce.
+const riseIn = {
+  animationName: 'rise-in',
+  animationDuration: 'bounce-gentle',
+  animationTimingFunction: 'bounce-gentle',
+  _motionReduce: { animationName: 'fade-in' },
+} as const;
+
 // Controls that hold text: a sunken slot with a 2px control border.
 const field = {
   bg: 'control-bg',
@@ -52,6 +60,23 @@ export const recipes = {
           borderColor: 'transparent',
           _hover: { bg: 'bg.subtle' },
           _active: { transform: 'none', boxShadow: 'none' },
+        },
+        // Quiet icon button: muted until hovered, then brand colored with a barely-there zoom. An icon wrapped in `data-bounce`
+        // (re-keyed per click) rises from a crouch and bounces into place on the relaxed bounce.
+        hint: {
+          color: 'fg.muted',
+          borderColor: 'transparent',
+          transition: 'color',
+          transitionDuration: 'bounce-relaxed',
+          '& svg': { transition: 'transform', transitionDuration: 'bounce-relaxed' },
+          _hover: { color: 'brand-text', '& svg': { transform: 'scale(1.08)' } },
+          _active: { transform: 'none', boxShadow: 'none' },
+          '& [data-bounce]': {
+            transformOrigin: 'bottom center',
+            animationName: 'icon-bounce',
+            animationDuration: 'bounce-relaxed',
+            animationTimingFunction: 'bounce-relaxed',
+          },
         },
         plain: { color: 'colorPalette.fg', borderColor: 'transparent', _active: { transform: 'none', boxShadow: 'none' } },
       },
@@ -159,8 +184,9 @@ export const slotRecipes = {
     slots: ['root', 'label', 'control', 'thumb', 'indicator'],
     base: {
       control: { borderRadius: 'l1', borderWidth: '2px', _invalid: { outline: '3px solid', outlineColor: 'border.error' } },
-      // Square thumb that jumps one step (pixel-timing) instead of sliding.
-      thumb: { borderRadius: '0', transitionTimingFunction: 'steps(1, end)', transitionDuration: 'pixel' },
+      // Square thumb. It travels on the gentle bounce, in shape (ease-in): the whole switch, track color included, follows --ui-ease.
+      root: { '--ui-ease': 'var(--chakra-easings-bounce-gentle-in)' },
+      thumb: { borderRadius: '0', transitionDuration: 'bounce-gentle' },
       label: { fontWeight: 'medium' },
     },
     variants: {
@@ -193,11 +219,25 @@ export const slotRecipes = {
   }),
   tabs: defineSlotRecipe({
     slots: ['root', 'trigger', 'list', 'content', 'contentGroup', 'indicator'],
-    base: { trigger: { _focusVisible: { outline: '3px solid', outlineColor: 'focus', outlineOffset: '2px' } } },
+    // Switching tabs moves between two visible places: the indicator slides and the colors change on the in-out bounce.
+    base: {
+      root: { '--ui-ease': 'var(--chakra-easings-bounce-relaxed-in-out)' },
+      trigger: { _focusVisible: { outline: '3px solid', outlineColor: 'focus', outlineOffset: '2px' } },
+      content: { _open: { animationTimingFunction: 'bounce-relaxed-in-out' } },
+    },
     variants: {
       variant: {
         line: {
           list: { borderColor: 'border', _horizontal: { borderBottomWidth: '2px' } },
+          // The selected edge is the sliding <Tabs.Indicator />, so every Tabs.List renders one.
+          indicator: {
+            bg: 'selected-edge',
+            borderRadius: '0',
+            shadow: 'none',
+            height: '4px',
+            translate: '0 calc(var(--height) - 2px)',
+            '--transition-duration': 'var(--chakra-durations-bounce-relaxed)',
+          },
           trigger: {
             color: 'fg.muted',
             borderTopRadius: 'l2',
@@ -206,7 +246,6 @@ export const slotRecipes = {
               color: 'fg',
               bg: 'selected-bg',
               fontWeight: 'semibold',
-              _horizontal: { '--indicator-thickness': '4px', '--indicator-offset-y': '-2px', '--indicator-color': 'colors.selected-edge' },
             },
           },
         },
@@ -341,7 +380,13 @@ export const slotRecipes = {
   }),
   card: defineSlotRecipe({
     slots: ['root', 'header', 'body', 'footer', 'title', 'description'],
-    base: { title: { textStyle: 'h3' }, description: { color: 'fg.muted' } },
+    base: {
+      root: {
+        ...riseIn,
+      },
+      title: { textStyle: 'h3' },
+      description: { color: 'fg.muted' },
+    },
     variants: {
       variant: {
         outline: { root: { bg: 'surface-raised', borderWidth: '1px', borderColor: 'border' } },
@@ -360,11 +405,35 @@ export const slotRecipes = {
   }),
   alert: defineSlotRecipe({
     slots: ['title', 'description', 'root', 'indicator', 'content'],
-    base: { root: { borderRadius: 'l2', borderWidth: '2px', borderColor: 'colorPalette.border' }, title: { fontWeight: 'semibold' } },
+    base: {
+      root: {
+        borderRadius: 'l2',
+        borderWidth: '2px',
+        borderColor: 'colorPalette.border',
+        ...riseIn,
+      },
+      title: { fontWeight: 'semibold' },
+    },
   }),
   toast: defineSlotRecipe({
     slots: ['root', 'title', 'description', 'indicator', 'closeTrigger', 'actionTrigger'],
-    base: { root: { borderWidth: '2px', borderColor: 'outline', boxShadow: 'pop', borderRadius: 'l2' } },
+    // Chakra hardcodes 400ms and its own curve; a big surface, so the gentle bounce at its long duration.
+    base: {
+      root: {
+        borderWidth: '2px',
+        borderColor: 'outline',
+        boxShadow: 'pop',
+        borderRadius: 'l2',
+        '--ui-ease': 'var(--chakra-easings-bounce-gentle)',
+        transition:
+          'translate var(--chakra-durations-bounce-gentle), scale var(--chakra-durations-bounce-gentle), opacity var(--chakra-durations-bounce-gentle), height var(--chakra-durations-bounce-gentle)',
+        _closed: {
+          '--ui-ease': 'var(--chakra-easings-bounce-gentle-in)',
+          transition:
+            'translate var(--chakra-durations-bounce-gentle), scale var(--chakra-durations-bounce-gentle), opacity var(--chakra-durations-bounce-relaxed)',
+        },
+      },
+    },
   }),
   table: defineSlotRecipe({
     slots: ['root', 'header', 'body', 'row', 'columnHeader', 'cell', 'footer', 'caption'],

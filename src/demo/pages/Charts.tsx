@@ -26,11 +26,13 @@ import {
   YAxis,
   ZAxis,
 } from 'recharts';
+import { InView } from '../../components/in-view';
+import { chartMotion } from '../../theme/motion';
 import { Check, Page, Section, Tri } from '../parts';
 
 // Chart rules (see the Charts section of the design system): chart-1..6 for series, 2px strokes, flat tints, no smoothing,
-// no animation, hairline horizontal grid, mono ticks, a dash pattern per series so color is never the only cue.
-const ANIM = { isAnimationActive: false } as const;
+// marks grow on the theme's gentle bounce (chartMotion), hairline horizontal grid, mono ticks, a dash pattern per series so color is never the only cue.
+const ANIM = chartMotion;
 const DASH = [undefined, '6 3', '2 3', '8 3 2 3', '1 3', '10 3'];
 type Colors = { color: (token: string) => string };
 const tick = (c: Colors) => ({ fill: c.color('ink-muted'), fontFamily: 'var(--chakra-fonts-mono)', fontSize: 12 });
@@ -60,7 +62,7 @@ const Panel = ({ title, caption, children }: { title: string; caption: string; c
         <Text color="fg.muted" textStyle="body-sm">
           {caption}
         </Text>
-        {children}
+        <InView>{children}</InView>
       </Card.Body>
     </Card.Root>
   </Section>
@@ -164,20 +166,22 @@ function Stat({
           {good ? <Check /> : <Tri />}
           {delta}
         </Badge>
-        <Chart.Root h="12" chart={chart}>
-          <AreaChart responsive data={chart.data}>
-            <Area
-              dataKey="v"
-              type="linear"
-              stroke={chart.color(color)}
-              strokeWidth={2}
-              fill={chart.color(color)}
-              fillOpacity={0.2}
-              dot={false}
-              {...ANIM}
-            />
-          </AreaChart>
-        </Chart.Root>
+        <InView>
+          <Chart.Root h="12" chart={chart}>
+            <AreaChart responsive data={chart.data}>
+              <Area
+                dataKey="v"
+                type="linear"
+                stroke={chart.color(color)}
+                strokeWidth={2}
+                fill={chart.color(color)}
+                fillOpacity={0.2}
+                dot={false}
+                {...ANIM}
+              />
+            </AreaChart>
+          </Chart.Root>
+        </InView>
       </Card.Body>
     </Card.Root>
   );

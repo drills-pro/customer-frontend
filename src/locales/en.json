@@ -1,9 +1,11 @@
 {
-  "language": { "label": "Language" },
+  "language": {
+    "label": "Language"
+  },
   "auth": {
     "notConfigured": {
       "title": "Sign-in is not configured",
-      "description": "Set VITE_ZITADEL_CLIENT_ID (see .env.example) and restart."
+      "description": "Sign-in is temporarily unavailable. Please try again later."
     },
     "login": {
       "title": "Welcome back",
@@ -42,16 +44,66 @@
     "overlays": "Overlays",
     "data": "Data display",
     "charts": "Charts",
+    "motion": "Motion",
     "brand": "Brand"
   },
   "profile": {
-    "title": "Your profile · GET /v1/me",
+    "title": "Your profile",
     "loadFailed": "Could not load your profile",
     "unnamed": "Unnamed user",
     "noEmail": "No email on file",
     "noWorkspace": "No workspace yet",
-    "noTenant": "You are signed in but belong to no tenant.",
+    "noTenant": "You are signed in but have not joined a workspace yet.",
     "workspace": "Workspace",
-    "role": "Role"
+    "role": "Role",
+    "loadFailedBody": "Something went wrong on our side. Please try again."
+  },
+  "workspace": {
+    "new": "New workspace",
+    "title": "Create a workspace",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Continue",
+    "step": {
+      "verify": "Verify email",
+      "details": "Name it",
+      "review": "Review",
+      "done": "Done"
+    },
+    "verify": {
+      "title": "Verify your email first",
+      "body": "Only users with a verified email can create a workspace. Check your inbox for our verification email, confirm it, then sign in again.",
+      "cta": "I verified, sign in again"
+    },
+    "details": {
+      "name": "Workspace name",
+      "nameHelp": "Shown to your team. You can rename it later.",
+      "slug": "Handle",
+      "slugHelp": "Lowercase letters, numbers and single hyphens. It cannot be changed after creation.",
+      "slugError": {
+        "short": "Use at least {{min}} characters.",
+        "format": "Use lowercase letters, numbers and single hyphens, up to {{max}} characters."
+      }
+    },
+    "review": {
+      "owner": "You will be the Owner of this workspace and can invite members afterwards.",
+      "create": "Create workspace"
+    },
+    "done": {
+      "title": "{{name}} is ready",
+      "body": "Your workspace handle is {{slug}}.",
+      "cta": "Back to dashboard"
+    },
+    "error": {
+      "title": "Could not create the workspace",
+      "network": "Could not reach the server. Check your connection and try again.",
+      "unverified": "Your email is not verified yet. Verify it, then sign in again.",
+      "conflict": "This handle is taken, or an earlier attempt is still running. Go back and change the handle, or try again.",
+      "rateLimited": "Too many attempts. Wait a minute and try again.",
+      "generic": "Something went wrong on our side. Please try again."
+    }
+  },
+  "toast": {
+    "dismiss": "Dismiss notification"
   }
 }

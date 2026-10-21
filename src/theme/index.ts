@@ -1,5 +1,6 @@
 import { createSystem, defaultConfig, defineConfig } from '@chakra-ui/react';
 import { recipes, slotRecipes } from './recipes';
+import { linearEasing, bounceGentle, bounceRelaxed } from './motion';
 import { semanticColors, tokenColors } from './semantic-colors';
 import { fontFamilies, radiusValues, shadowValues, textStyleValues, pixelValues } from './tokens.generated';
 
@@ -30,9 +31,24 @@ export const config = defineConfig({
     '*::placeholder, *[data-placeholder]': { color: 'fg.muted', opacity: 1 },
     // Pixel art: never smoothed.
     '[data-pixel], [data-pixel] svg, [data-pixel] img': { imageRendering: 'pixelated', shapeRendering: 'crispEdges' },
-    '*, *::before, *::after': { _motionReduce: { animationDuration: '0.01ms !important', transitionDuration: '0.01ms !important' } },
+    // Every transition bounces, including Chakra's built-in `transition="backgrounds"` presets that hardcode a bezier.
+    // A subtree picks another curve by setting --ui-ease (the Motion showcase does).
+    ':root': { '--ui-ease': 'var(--chakra-easings-bounce-relaxed)' },
+    '*, *::before, *::after': {
+      transitionTimingFunction: 'var(--ui-ease) !important',
+      _motionReduce: { animationDuration: '200ms !important', transitionDuration: '200ms !important' },
+    },
   },
   theme: {
+    keyframes: {
+      // Entrance for cards and alerts. Timing comes from the bounces.
+      'rise-in': { from: { opacity: '0', transform: 'translateY(12px)' }, to: { opacity: '1', transform: 'none' } },
+      // Rises from a crouch; the bounce easing supplies the landing and rebounds.
+      'icon-bounce': {
+        from: { transform: 'translateY(8px) scale(0.8, 1.15)' },
+        to: { transform: 'none' },
+      },
+    },
     tokens: {
       colors: tokenColors as never,
       fonts: {
@@ -47,8 +63,28 @@ export const config = defineConfig({
         lg: { value: radiusValues.lg },
         pill: { value: radiusValues.pill },
       },
-      durations: { pixel: { value: pixelValues['pixel-step'] } },
-      easings: { pixel: { value: pixelValues['pixel-timing'] } },
+      // Each bounce has its own length. relaxed rebounds deep, so it stays short and small; gentle rebounds shallow, so it can run long on big things.
+      durations: {
+        pixel: { value: pixelValues['pixel-step'] },
+        'bounce-gentle': { value: '550ms' },
+        'bounce-relaxed': { value: '250ms' },
+      },
+      // Two bounces. relaxed (deep rebounds, short): small feedback (hover, press, toggle). gentle (shallow rebounds, long): large surfaces.
+      // Chakra's own easing names point at them, so every component that uses an easing token bounces too.
+      easings: {
+        pixel: { value: pixelValues['pixel-timing'] },
+        // `bounce-gentle` and `bounce-relaxed` are the out shape (arrivals, the default); -in is for leaving, -in-out for moves.
+        'bounce-gentle': { value: linearEasing(bounceGentle.out) },
+        'bounce-gentle-in': { value: linearEasing(bounceGentle.in) },
+        'bounce-gentle-in-out': { value: linearEasing(bounceGentle.inOut) },
+        'bounce-relaxed': { value: linearEasing(bounceRelaxed.out) },
+        'bounce-relaxed-in': { value: linearEasing(bounceRelaxed.in) },
+        'bounce-relaxed-in-out': { value: linearEasing(bounceRelaxed.inOut) },
+        'ease-in': { value: '{easings.bounce-relaxed-in}' },
+        'ease-out': { value: '{easings.bounce-relaxed}' },
+        'ease-in-out': { value: '{easings.bounce-relaxed-in-out}' },
+        'ease-in-smooth': { value: '{easings.bounce-gentle}' },
+      },
       sizes: {
         'sprite-1x': { value: pixelValues['sprite-1x'] },
         'sprite-4x': { value: pixelValues['sprite-4x'] },

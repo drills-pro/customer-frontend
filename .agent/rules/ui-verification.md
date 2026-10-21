@@ -2,11 +2,11 @@
 
 Read this before reporting a styling or component change as done.
 
-The premise: in this codebase **reading the `className` does not tell you what
-renders.** Two conflict systems and a CSS custom-property layer sit between the
-JSX and the pixels (see `css-cascade.md`). Several call sites shipped classes
-that did nothing for months, and a Playwright test asserting `36px` was red
-against a `32px` element without anyone noticing.
+The premise: **reading the props does not tell you what renders.** Recipe
+variants, size variants, compound variants and style props all meet at the
+element, and a prop that is not a token is passed through as raw CSS
+(`lineHeight="6"` is six times the font size). A Playwright test asserting
+`36px` once went red against a `32px` element without anyone noticing.
 
 So: verify by measuring, not by reading.
 
@@ -90,31 +90,17 @@ Use `deviceScaleFactor: 3` for a component crop — a 2px ring is not judgeable 
 ## Run the full gate
 
 ```sh
-pnpm typecheck            # variant unions, Omit<..., 'size'> clashes
-pnpm lint                 # eslint + scripts/check-focus-styles.sh
-pnpm build                # Tailwind actually emits the classes you wrote
+pnpm typecheck            # variant unions; run `pnpm typegen` after a recipe change
+pnpm lint:project         # native controls, raw hex, inline style, !important
+pnpm build
 pnpm test
 ```
 
-`pnpm build` matters more than it looks: Tailwind only generates utilities it
-finds by scanning source text. A class assembled dynamically will typecheck,
-lint and never exist in the CSS.
+`pnpm check` runs the format check, project lint, i18n parity, typecheck and
+build together; the pre-commit hook runs it.
 
-## When a guard script fires, fix the cause or narrow the rule — deliberately
+## When a guard script fires, fix the cause
 
-`scripts/check-focus-styles.sh` is intentionally strict. Two legitimate patterns
-it must keep allowing, both already exempted:
-
-- a base `ring-ring/50` (the slider thumb's decorative hover halo, not focus)
-- any `:ring-0` (zeroing a ring is how an inner element in a composite stands
-  down so the wrapper can own the focus ring)
-
-If you need to widen an exemption, say so in the response and explain why the
-pattern is correct. Do not silently loosen the pattern to get green, and do not
-add `!` to route around it.
-
-## Report honestly
-
-State the test delta, name any intentional visual change (a font weight, a
-padding, a height), and name anything you left undone and why. "Zero
-regressions" is a claim about a diff you actually ran — not a default.
+`scripts/check-project.sh` flags escape hatches around the design system. Fix
+the token, recipe or component instead. A value that is data rather than
+styling (a colour stored with a record) gets a `lint-ok` comment on its line.

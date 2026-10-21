@@ -61,7 +61,7 @@ Tenants cannot change `danger`, `focus`, `info` or the `class-*` label colors.
 
 ## DRILLS
 
-A responsive, interactive ML workspace built with React, TanStack Start, and Tailwind CSS. The UI follows the supplied DRILLS HTML design.
+A responsive, interactive ML workspace built with React, TanStack Start, and Chakra UI v3 on the drills.pro theme (`src/theme/`).
 
 Every page gets its data from an API. **Organizations, invitations, projects, the catalog, search and the dashboard come from the real backend**, `core-api`. Everything else (datasets, training, models, deployments, account, billing) calls the API this frontend wants, and an **in-app mock** answers it until core-api serves it. The full list of endpoints is in [docs/api-contract.md](docs/api-contract.md).
 
@@ -130,14 +130,15 @@ Two keys, both per browser:
 
 If browser storage is blocked or full, the app stays usable for the current session and shows one non-blocking notice. Nothing persists in that case.
 
-Authentication and billing are out of scope. `pnpm lint` fails on any `dark:` variant.
+Authentication and billing are out of scope.
 
 ### Validation
 
 ```bash
 pnpm typecheck
-pnpm lint          # eslint plus the cascade guard (focus styles, !important, dark:)
-pnpm check         # prettier
+pnpm lint          # eslint
+pnpm lint:project  # design-system rules: native controls, raw hex, inline style, !important
+pnpm check         # prettier, project rules, i18n, typecheck and build (the pre-commit hook)
 pnpm build
 pnpm exec playwright install chromium  # once, if needed
 pnpm test
@@ -161,8 +162,8 @@ src/
 │       └── handlers/      one file of routes per area
 ├── components/
 │   ├── breadcrumbs/       route-aware breadcrumb system
-│   ├── shared/            cross-route pieces, incl. loading and error states
-│   └── ui/                shadcn/Radix primitives and variants
+│   └── shared/            cross-route Chakra pieces: section cards, dialogs, badges,
+│                          empty and error states, radio-button groups, switches
 ├── features/<area>/       account, catalog, datasets, deployments, models,
 │   │                      organizations, projects, training
 │   ├── api/               endpoints.ts (the calls) and types.ts (wire shapes)
@@ -181,7 +182,7 @@ src/
 ├── routes/                TanStack file routes with route-local -components/
 ├── router.tsx             router construction
 ├── routeTree.gen.ts       generated; regenerate with `pnpm generate-routes`
-└── styles.css             layered design-system styles
+└── theme/                 Chakra theme: tokens, semantic colors and recipes
 ```
 
 `src/features/dashboard/data.ts` re-exports the UI types on the import path most of the app uses.

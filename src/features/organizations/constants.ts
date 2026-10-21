@@ -9,12 +9,12 @@ export const orgRoleDescriptions: Record<OrgRole, string> = {
 
 /** The brand colours an organization can pick from. */
 export const orgColors = [
-  '#10b981',
-  '#0ea5e9',
-  '#6366f1',
-  '#8b5cf6',
-  '#ec4899',
-  '#f43f5e',
-  '#f59e0b',
-  '#64748b',
+  '#10b981', // lint-ok: stored with the organization
+  '#0ea5e9', // lint-ok: stored with the organization
+  '#6366f1', // lint-ok: stored with the organization
+  '#8b5cf6', // lint-ok: stored with the organization
+  '#ec4899', // lint-ok: stored with the organization
+  '#f43f5e', // lint-ok: stored with the organization
+  '#f59e0b', // lint-ok: stored with the organization
+  '#64748b', // lint-ok: stored with the organization
 ]

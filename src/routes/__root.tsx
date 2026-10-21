@@ -17,7 +17,6 @@ import { system } from '@/theme'
 import '@/fonts'
 import { themeBootScript } from '@/features/dashboard/theme'
 import { ApiError } from '@/api/client'
-import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -31,7 +30,6 @@ export const Route = createRootRoute({
       },
     ],
     links: [
-      { rel: 'stylesheet', href: appCss },
       { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
     ],
   }),

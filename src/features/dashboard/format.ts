@@ -23,12 +23,12 @@ export function taskLabel(taskType: string) {
 
 // Projects have no colour of their own, so each gets a stable one from its id.
 const projectColors = [
-  '#6366f1',
-  '#0ea5e9',
-  '#10b981',
-  '#f59e0b',
-  '#ec4899',
-  '#8b5cf6',
+  '#6366f1', // lint-ok: data, not styling
+  '#0ea5e9', // lint-ok: data, not styling
+  '#10b981', // lint-ok: data, not styling
+  '#f59e0b', // lint-ok: data, not styling
+  '#ec4899', // lint-ok: data, not styling
+  '#8b5cf6', // lint-ok: data, not styling
 ]
 
 export function projectColor(projectId: string) {

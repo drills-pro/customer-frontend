@@ -5,18 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "sh scripts/check-project.sh && pnpm typecheck && vite build",
-    "typecheck": "pnpm typegen && tsc -p .",
-    "tokens": "node scripts/gen-tokens.mjs",
-    "typegen": "chakra typegen src/theme/index.ts",
-    "lint": "oxlint --deny-warnings && sh scripts/check-project.sh",
+    "build": "vite build",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "oxlint --deny-warnings && pnpm lint:project && pnpm lint:i18n",
     "lint:fix": "oxlint --fix",
-    "check": "pnpm format:check && pnpm lint && pnpm lint:i18n && pnpm typecheck && pnpm build",
-    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
     "lint:i18n": "node scripts/check-i18n.mjs",
     "lint:project": "sh scripts/check-project.sh",
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "typecheck": "pnpm typegen && tsc -p .",
+    "typegen": "chakra typegen src/theme/index.ts",
+    "tokens": "node scripts/gen-tokens.mjs",
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
   },
   "dependencies": {
     "@chakra-ui/charts": "3.37.0",

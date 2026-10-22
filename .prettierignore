@@ -7,3 +7,5 @@ tokens/tokens.json
 .claude/skills
 .codegraph
 skills-lock.json
+test-results
+playwright-report

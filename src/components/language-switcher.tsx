@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { LANGS } from '../i18n';
+import { LANGS } from '@/i18n';
 import { SimpleSelect } from './simple-select';
 
 export function LanguageSwitcher() {

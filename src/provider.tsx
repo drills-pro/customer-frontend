@@ -2,10 +2,10 @@ import { ChakraProvider } from '@chakra-ui/react';
 import type { ReactNode } from 'react';
 import './fonts';
 import { system } from './theme';
-import { ColorModeProvider } from './components/color-mode';
-import { Toaster } from './components/toaster';
-import { TenantTheme } from './tenant/TenantTheme';
-import type { TenantTemplate } from './tenant/derive';
+import { ColorModeProvider } from '@/components/color-mode';
+import { Toaster } from '@/components/toaster';
+import { TenantTheme } from '@/tenant/TenantTheme';
+import type { TenantTemplate } from '@/tenant/derive';
 
 export interface DrillsProviderProps {
   children: ReactNode;

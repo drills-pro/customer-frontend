@@ -1,7 +1,7 @@
 import { Box, type BoxProps } from '@chakra-ui/react';
 import { useEffect, useMemo, useState } from 'react';
 import BitGen, { type BitFrameOptions, type BitPose } from './bit-sprites.js';
-import { useTenant } from '../tenant/TenantTheme';
+import { useTenant } from '@/tenant/TenantTheme';
 
 const GRID = 32;
 const warnScale = (size: number, grid = GRID) => {

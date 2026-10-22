@@ -47,19 +47,7 @@
     "motion": "Motion",
     "brand": "Brand"
   },
-  "profile": {
-    "title": "Your profile",
-    "loadFailed": "Could not load your profile",
-    "unnamed": "Unnamed user",
-    "noEmail": "No email on file",
-    "noWorkspace": "No workspace yet",
-    "noTenant": "You are signed in but have not joined a workspace yet.",
-    "workspace": "Workspace",
-    "role": "Role",
-    "loadFailedBody": "Something went wrong on our side. Please try again."
-  },
   "workspace": {
-    "new": "New workspace",
     "title": "Create a workspace",
     "cancel": "Cancel",
     "back": "Back",
@@ -92,7 +80,8 @@
     "done": {
       "title": "{{name}} is ready",
       "body": "Your workspace handle is {{slug}}.",
-      "cta": "Back to dashboard"
+      "cta": "Open workspace",
+      "label": "Workspace ready"
     },
     "error": {
       "title": "Could not create the workspace",
@@ -101,7 +90,132 @@
       "conflict": "This handle is taken, or an earlier attempt is still running. Go back and change the handle, or try again.",
       "rateLimited": "Too many attempts. Wait a minute and try again.",
       "generic": "Something went wrong on our side. Please try again."
+    },
+    "label": "Create a workspace"
+  },
+  "splash": {
+    "label": "Loading drills.pro"
+  },
+  "shell": {
+    "account": "Account",
+    "switchWorkspace": "Switch workspace",
+    "workspaces": "Workspaces",
+    "pendingDelete": "Pending deletion",
+    "createWorkspace": "Create workspace",
+    "members": "Members",
+    "settings": "Settings",
+    "navLabel": "Workspace",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "notFound": {
+    "label": "Page not found",
+    "title": "We could not find that page",
+    "body": "The link may be old, or the workspace may not be yours.",
+    "cta": "Back to home"
+  },
+  "errorScreen": {
+    "label": "Something went wrong",
+    "title": "This page did not load",
+    "retry": "Try again"
+  },
+  "error": {
+    "generic": "Something went wrong on our side. Please try again.",
+    "network": "Could not reach the server. Check your connection and try again.",
+    "forbidden": "You do not have permission to do that.",
+    "notFound": "We could not find that. It may have been removed.",
+    "conflict": "That conflicts with the current state. Refresh the page and try again.",
+    "invalid": "Some of the details are not valid. Check them and try again.",
+    "rateLimited": "Too many attempts. Wait a minute and try again."
+  },
+  "role": {
+    "owner": "Owner",
+    "admin": "Admin",
+    "member": "Member"
+  },
+  "overview": {
+    "handle": "Handle",
+    "role": "Your role",
+    "created": "Created",
+    "members": "Manage members",
+    "settings": "Workspace settings"
+  },
+  "restore": {
+    "label": "Workspace waiting for deletion",
+    "title": "{{name}} is scheduled for deletion",
+    "body": "Restore it to get your workspace back as it was.",
+    "bodyMember": "Ask an owner of this workspace to restore it.",
+    "cta": "Restore workspace",
+    "other": "Open another workspace"
+  },
+  "invite": {
+    "failedLabel": "Invitation failed",
+    "failedTitle": "This invitation cannot be used",
+    "failedBody": "The link may have expired or been used already. Check that you are signed in with the email address that was invited, or ask for a new link.",
+    "doneLabel": "Invitation accepted",
+    "doneTitle": "You have joined the workspace",
+    "doneBody": "Opening it now."
+  },
+  "members": {
+    "close": "Close",
+    "col": {
+      "member": "Member",
+      "role": "Role",
+      "joined": "Joined",
+      "actions": "Actions"
+    },
+    "invite": {
+      "open": "Invite member",
+      "title": "Invite a member",
+      "email": "Email address",
+      "emailHelp": "They must sign in with this address, and it must be verified.",
+      "role": "Role",
+      "create": "Create invite link",
+      "done": "Done",
+      "linkLabel": "Invite link",
+      "linkBody": "Send this link to {{email}}. It works once and expires in 7 days.",
+      "copy": "Copy link",
+      "once": "We cannot show this link again. Copy it now."
+    },
+    "remove": {
+      "open": "Remove {{name}}",
+      "title": "Remove {{name}}?",
+      "body": "They lose access to this workspace right away. You can invite them again later.",
+      "confirm": "Remove member"
+    },
+    "pending": {
+      "title": "Pending invitations",
+      "expires": "Expires"
+    },
+    "alone": {
+      "label": "Just you in this workspace",
+      "title": "It is just you here",
+      "body": "Invite a teammate to share this workspace."
+    },
+    "denied": {
+      "label": "Members are managed by owners and admins",
+      "title": "Members are managed by owners and admins",
+      "body": "Ask an owner or admin if you need someone added or removed."
     }
+  },
+  "settings": {
+    "general": "General",
+    "renamed": "Workspace renamed",
+    "slugFixed": "The handle cannot be changed.",
+    "save": "Save changes",
+    "danger": {
+      "title": "Delete workspace",
+      "body": "Deleting hides this workspace from everyone. You can restore it from the workspace menu until it is removed for good.",
+      "open": "Delete workspace",
+      "confirmTitle": "Delete {{name}}?",
+      "confirmBody": "Everyone loses access until an owner restores it.",
+      "typeName": "Type {{name}} to confirm",
+      "mismatch": "That does not match the workspace name.",
+      "confirm": "Delete workspace"
+    }
+  },
+  "showcase": {
+    "back": "Back to app"
   },
   "toast": {
     "dismiss": "Dismiss notification"

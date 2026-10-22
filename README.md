@@ -1,10 +1,10 @@
 # @drillspro/app
 
-The drills.pro customer app: login, signup and a dashboard (your profile from `GET /v1/me`, three themes, a component showcase), on a Chakra UI v3 theme. Sign-in is Zitadel's hosted login; the API is `core-backend`; it deploys through `k8s` (`apps/frontend-user`).
+The drills.pro customer app: login, signup, and workspaces (switcher, create, members and invitations, settings), on a Chakra UI v3 theme, with a component showcase at `/showcase`. Sign-in is Zitadel's hosted login; the API is `core-backend`; it deploys through `k8s` (`apps/frontend-user`).
 
-## The app (`src/app`)
+## The app
 
-Routes: `/login`, `/signup`, `/auth/callback` and a dashboard (profile from `GET /v1/me`, theme switcher, component showcase).
+A plain SPA: TanStack Router (code-based routes in each `src/modules/<name>/routes.tsx`, assembled in `src/router.tsx`), TanStack Query, and a typed client for `core-api` generated from its OpenAPI spec (`pnpm api:gen`). Routes: `/login`, `/signup`, `/auth/callback`; behind sign-in `/`, `/new`, `/invite/$token`, `/w/$slug` (overview, `members`, `settings`) and `/showcase`. See `CLAUDE.md` for the layout.
 
 Auth is Zitadel's hosted login (OIDC code + PKCE via `oidc-client-ts`); signup is the same redirect with `prompt=create`. The access token goes to core-api as a Bearer header, which is what `core/auth.py` verifies (shared pool, ADR-021; the BFF cookie session is not built).
 
@@ -13,6 +13,7 @@ One-time Zitadel setup: in the project shared with core-api, add a **User Agent 
 ```sh
 cp .env.example .env.local   # set the client id
 pnpm dev
+pnpm api:gen    # refresh src/shared/api/schema.d.ts from <VITE_API_URL>/openapi.json (pnpm api:gen:local for a local core-api)
 pnpm tokens    # tokens/tokens.json -> src/theme/tokens.generated.ts
 pnpm typegen   # strict prop types for the custom tokens
 ```

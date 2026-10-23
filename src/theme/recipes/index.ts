@@ -79,6 +79,24 @@ export const recipes = {
           },
         },
         plain: { color: 'colorPalette.fg', borderColor: 'transparent', _active: { transform: 'none', boxShadow: 'none' } },
+        // A choice card in a picker: multi-line, start-aligned, selected via aria-pressed.
+        option: {
+          bg: 'control-bg',
+          color: 'fg',
+          borderColor: 'control-border',
+          boxShadow: 'raised',
+          h: 'auto',
+          p: '4',
+          textAlign: 'start',
+          whiteSpace: 'normal',
+          fontWeight: 'normal',
+          _hover: { borderColor: 'fg' },
+          _pressed: {
+            bg: 'selected-bg',
+            borderColor: 'selected-edge',
+            '& [data-task-icon]': { bg: 'brand', color: 'on-brand' },
+          },
+        },
       },
     },
     // One primary per screen: the default is the secondary (outline) button; ask for variant="solid" explicitly.
@@ -438,6 +456,26 @@ export const slotRecipes = {
   table: defineSlotRecipe({
     slots: ['root', 'header', 'body', 'row', 'columnHeader', 'cell', 'footer', 'caption'],
     base: { columnHeader: { fontWeight: 'semibold', color: 'fg.muted', textStyle: 'body-sm' }, row: { _selected: { bg: 'selected-bg' } } },
+    variants: {
+      variant: {
+        // Record lists in the product: a tinted caps header, roomy single-line cells, row hover.
+        data: {
+          columnHeader: {
+            bg: 'bg.muted',
+            fontSize: 'xs',
+            letterSpacing: '0.6px',
+            textTransform: 'uppercase',
+            whiteSpace: 'nowrap',
+            borderBottomWidth: '1px',
+            borderColor: 'border',
+          },
+          cell: { color: 'fg.muted', whiteSpace: 'nowrap', borderBottomWidth: '1px', borderColor: 'border.muted' },
+          row: { bg: 'transparent', _hover: { bg: 'bg.subtle' } },
+        },
+      },
+    },
+    // Padding as a compound variant: the default recipe's size variant comes after `variant` and would win.
+    compoundVariants: [{ variant: 'data', css: { columnHeader: { px: '4', py: '3' }, cell: { px: '4', py: '3' } } }],
   }),
   // Square pixel-style marks: no round thumbs or avatars, hard 2px edges.
   slider: defineSlotRecipe({

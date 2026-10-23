@@ -37,7 +37,7 @@ For anything the specs do not cover, verify UI in a browser. Check size, spacing
 
 Feature modules under `src/modules/`, shared plumbing under `src/shared/`. Import across folders with the `@/` alias (`@/shared/ui/Splash`); `../` imports
 are banned (`pnpm lint:project`), `./x` stays for the same folder. Dependencies point one way: `shared` imports no module; `auth` imports shared only;
-`workspaces` imports auth and shared; `members` imports workspaces, auth and shared. `src/router.tsx`, `src/root-route.tsx` and `src/main.tsx` may import
+`workspaces` imports auth and shared; `members` and `projects` may import workspaces, auth and shared. `src/router.tsx`, `src/root-route.tsx` and `src/main.tsx` may import
 any module. Another module is imported only through its `index.ts` (`@/modules/workspaces`), never by deep path; inside its own module a file may use deep
 `@/modules/<name>/...` paths.
 
@@ -45,6 +45,7 @@ any module. Another module is imported only through its `index.ts` (`@/modules/w
 - `src/modules/workspaces/`: `api.ts` (`me` and workspace queries and mutations), `context.tsx` (`useWorkspace`, `useCan`), `routes.tsx` (the sign-in guarded
   `app` route, `/`, `/new`, `/w/$slug` with overview and settings), `pages/`, `components/` (`AppShell`, `WorkspaceSwitcher`, `UserMenu`).
 - `src/modules/members/`: `api.ts` (members and invitations), `routes.tsx` (`/w/$slug/members`, `/invite/$token`), `pages/`, `components/`.
+- `src/modules/projects/`: `api.ts` (project queries and mutations), `routes.tsx` (`/w/$slug/projects`, `/w/$slug/projects/new`), `pages/`, `components/`.
 - Routes live in each module's `routes.tsx` (path, guards, loaders, `component: SomePage`) and are assembled into the tree in `src/router.tsx`; `src/root-route.tsx` is the root.
 - `src/shared/api/`: `client.ts` (openapi-fetch typed by `schema.d.ts`, Bearer middleware, `ApiError`, `unwrap`), `query.ts` (QueryClient, global 401 handler),
   `errors.ts` (status to locale key). `src/shared/auth/manager.ts`: the OIDC `UserManager` (no React), so route guards and the API client can read the token.

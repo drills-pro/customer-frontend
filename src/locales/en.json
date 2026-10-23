@@ -218,6 +218,165 @@
   "showcase": {
     "back": "Back to app"
   },
+  "projects": {
+    "title": "Projects",
+    "subtitle": "Every project in this workspace, with the ID you use to point other tools at it.",
+    "workspace": "Workspace",
+    "create": "Create project",
+    "loadFailed": "Could not load your projects",
+    "retry": "Try again",
+    "loadMore": "Load more",
+    "copyId": "Copy project ID",
+    "noWorkspace": {
+      "title": "Create a workspace first",
+      "body": "Projects live in a workspace. Create one from the dashboard, then come back.",
+      "cta": "Go to dashboard"
+    },
+    "empty": {
+      "title": "No projects yet",
+      "body": "Create the first project in this workspace to start training models."
+    },
+    "column": {
+      "name": "Name",
+      "task": "Task",
+      "status": "Status",
+      "created": "Created",
+      "id": "Project ID",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "archived": "Archived",
+      "pending_delete": "Being deleted"
+    },
+    "taskType": {
+      "image_classification": {
+        "label": "Image classification",
+        "description": "Sort each image into one of your classes."
+      },
+      "object_detection": {
+        "label": "Object detection",
+        "description": "Find and box every object of interest in an image."
+      },
+      "tabular_classification": {
+        "label": "Tabular classification",
+        "description": "Predict a category from rows of a spreadsheet or table."
+      },
+      "text_classification": {
+        "label": "Text classification",
+        "description": "Label pieces of text, such as reviews or support tickets."
+      },
+      "legacy_untyped": {
+        "label": "Untyped"
+      }
+    },
+    "error": {
+      "network": "Could not reach the server. Check your connection and try again.",
+      "forbidden": "Your role in this workspace cannot see its projects.",
+      "notFound": "This workspace does not exist, or you are not a member.",
+      "conflict": "Something changed while loading. Please try again.",
+      "invalid": "The request was not accepted. Reload the page and try again.",
+      "rateLimited": "Too many requests. Wait a minute and try again.",
+      "generic": "Something went wrong on our side. Please try again."
+    },
+    "count_one": "{{count}} project loaded",
+    "count_other": "{{count}} projects loaded",
+    "actions": "Actions for {{name}}",
+    "createdOn": "Created {{date}}",
+    "filter": {
+      "label": "Project filters",
+      "search": "Search projects",
+      "task": "Filter by task",
+      "status": "Filter by status",
+      "sort": "Sort projects",
+      "allTasks": "All tasks",
+      "allStatuses": "All statuses"
+    },
+    "sort": {
+      "newest": "Newest first",
+      "name": "Name A–Z"
+    },
+    "view": {
+      "label": "Project view",
+      "grid": "Grid view",
+      "list": "List view"
+    },
+    "menu": {
+      "archive": "Archive project",
+      "unarchive": "Unarchive project"
+    },
+    "toast": {
+      "copied": "Project ID copied",
+      "copyFailed": "Could not copy the project ID",
+      "archived": "{{name}} archived",
+      "unarchived": "{{name}} unarchived",
+      "updateFailed": "Could not update the project"
+    },
+    "noMatch": {
+      "title": "No matching projects",
+      "body": "Try a different search or change the filters."
+    }
+  },
+  "newProject": {
+    "title": "Create a project",
+    "subtitle": "A project holds the datasets, training runs and models for one task.",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Continue",
+    "create": "Create project",
+    "summary": "Summary",
+    "step": {
+      "basics": "Basics",
+      "task": "Task type",
+      "review": "Review",
+      "done": "Done"
+    },
+    "basics": {
+      "title": "Basics",
+      "description": "Name the project and choose who can see it.",
+      "workspace": "Workspace",
+      "name": "Project name",
+      "namePlaceholder": "e.g. Retail vision",
+      "nameHelp": "Shown to your team. You can rename it later.",
+      "visibilityLabel": "Visibility"
+    },
+    "visibility": {
+      "internal": "Workspace",
+      "private": "Private"
+    },
+    "visibilityHelp": {
+      "internal": "Everyone in {{workspace}} can see this project.",
+      "private": "Only workspace admins and the members you invite can see this project."
+    },
+    "task": {
+      "title": "Task type",
+      "description": "Choose what this project's models learn to do. It cannot be changed later."
+    },
+    "review": {
+      "title": "Review",
+      "description": "Check the details before creating the project.",
+      "edit": "Edit",
+      "editLabel": "Edit {{name}}",
+      "admin": "You will be the admin of this project and can invite members afterwards."
+    },
+    "done": {
+      "title": "{{name}} is ready",
+      "body": "Its project ID:",
+      "cta": "View projects",
+      "visibilityFailedTitle": "The project is not private yet",
+      "visibilityFailedBody": "We created the project, but could not make it private, so everyone in {{workspace}} can see it for now."
+    },
+    "error": {
+      "title": "Could not create the project",
+      "network": "Could not reach the server. Check your connection and try again.",
+      "forbidden": "Your role in this workspace cannot create projects. Ask a workspace admin.",
+      "notFound": "This workspace does not exist, or you are not a member. Go back and choose another.",
+      "conflict": "This workspace is not fully set up yet. Try again in a minute, or contact support.",
+      "invalid": "Some details were not accepted. Go back, check them and try again.",
+      "rateLimited": "Too many attempts. Wait a minute and try again.",
+      "generic": "Something went wrong on our side. Please try again."
+    }
+  },
   "toast": {
     "dismiss": "Dismiss notification"
   }

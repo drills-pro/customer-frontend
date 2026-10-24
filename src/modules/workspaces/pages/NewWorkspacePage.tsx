@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Alert, Button, Card, Center, Field, Heading, HStack, Input, Stack, Steps, Text } from '@chakra-ui/react';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { Check } from 'lucide-react';
+import { Check } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/modules/workspaces/api';
 import { ApiError, type Schemas } from '@/shared/api/client';

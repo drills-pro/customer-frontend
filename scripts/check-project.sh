@@ -42,8 +42,8 @@ for m in auth workspaces members; do
   [ -n "$banned" ] && rule "direction-$m" "@/modules/($banned)['/]" "$m must not import $banned (dependencies point auth < workspaces < members)." src/modules/$m
 done
 
-# 8. Icons come from lucide-react only.
-rule icons "from '(react-icons|@chakra-ui/icons|@heroicons|@mui/icons-material|@phosphor-icons)" "Use lucide-react for icons." src
+# 8. Icons come from pixelarticons only.
+rule icons "from '(react-icons|@chakra-ui/icons|@heroicons|@mui/icons-material|@phosphor-icons|lucide-react)" "Use pixelarticons/react for icons." src
 
 # 9. The app is bilingual, so e2e never selects or asserts by visible text.
 rule e2e-text 'getByText|getByLabel|getByPlaceholder|getByTitle|toHaveText|toContainText|getByRole\([^)]*name' "e2e asserts by data-testid, never by text." e2e

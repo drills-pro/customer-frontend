@@ -14,7 +14,7 @@ import {
   Text,
   VisuallyHidden,
 } from '@chakra-ui/react';
-import { Trash2 } from 'lucide-react';
+import { Trash } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { ApiError, type Schemas } from '@/shared/api/client';
 import { errorKey } from '@/shared/api/errors';
@@ -145,7 +145,7 @@ function MembersTable({ workspaceId }: { workspaceId: string }) {
                         data-testid={`members-remove-${m.user_sub}`}
                         onClick={() => setRemoving(m)}
                       >
-                        <Trash2 />
+                        <Trash />
                       </IconButton>
                     )}
                   </Table.Cell>

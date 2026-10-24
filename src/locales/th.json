@@ -106,7 +106,8 @@
     "settings": "การตั้งค่า",
     "navLabel": "เวิร์กสเปซ",
     "openMenu": "เปิดเมนู",
-    "closeMenu": "ปิดเมนู"
+    "closeMenu": "ปิดเมนู",
+    "appearance": { "label": "รูปลักษณ์", "system": "ตามระบบ", "dark": "มืด", "light": "สว่าง" }
   },
   "notFound": {
     "label": "ไม่พบหน้า",

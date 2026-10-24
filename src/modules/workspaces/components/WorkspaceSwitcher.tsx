@@ -1,6 +1,6 @@
 import { Avatar, Badge, Button, HStack, Menu, Portal, Text } from '@chakra-ui/react';
 import { Link } from '@tanstack/react-router';
-import { Check, ChevronsUpDown, Plus } from 'lucide-react';
+import { Check, ChevronsVertical, Plus } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/modules/workspaces/api';
 import { useWorkspace } from '@/modules/workspaces/context';
@@ -26,7 +26,7 @@ export function WorkspaceSwitcher({ onNavigate }: { onNavigate?: () => void }) {
             </Avatar.Root>
             <Text truncate>{current.name}</Text>
           </HStack>
-          <ChevronsUpDown />
+          <ChevronsVertical />
         </Button>
       </Menu.Trigger>
       <Portal>

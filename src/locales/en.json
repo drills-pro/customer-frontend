@@ -106,7 +106,8 @@
     "settings": "Settings",
     "navLabel": "Workspace",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "appearance": { "label": "Appearance", "system": "System", "dark": "Dark", "light": "Light" }
   },
   "notFound": {
     "label": "Page not found",

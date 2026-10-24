@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Badge, Box, Button, Checkbox, HStack, Icon, IconButton, Stack, Text } from '@chakra-ui/react';
-import { Dices } from 'lucide-react';
+import { Shuffle } from 'pixelarticons/react';
 import { bounceGentle, bounceRelaxed } from '@/theme/motion';
 import { Page, Section } from '@/showcase/parts';
 
@@ -91,7 +91,7 @@ export function Motion() {
           <HStack gap="3">
             <IconButton variant="hint" aria-label="Roll" onClick={() => setRolls((n) => n + 1)}>
               <Icon key={rolls} data-bounce={rolls ? '' : undefined}>
-                <Dices />
+                <Shuffle />
               </Icon>
             </IconButton>
             <Text color="fg.muted">Hint button: hover for a brand color and a small zoom, click to bounce.</Text>

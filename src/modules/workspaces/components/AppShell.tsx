@@ -1,10 +1,9 @@
 import { useState, type ReactNode } from 'react';
 import { Box, Breadcrumb, CloseButton, Drawer, Flex, HStack, IconButton, Portal, Stack } from '@chakra-ui/react';
 import { Link, useLocation } from '@tanstack/react-router';
-import { LayoutDashboard, Menu, Settings, Users } from 'lucide-react';
+import { Layout, Menu, SettingsCog, Users } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { AppIcon, Wordmark } from '@/brand/Bit';
-import { ColorModeButton } from '@/components/color-mode';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { useCan, useWorkspace } from '@/modules/workspaces/context';
 import { UserMenu } from './UserMenu';
@@ -15,9 +14,11 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const { slug } = useWorkspace();
   const canManage = useCan('tenant.member.manage');
   const items = [
-    { id: 'overview', to: '/w/$slug', label: t('nav.overview'), icon: <LayoutDashboard />, exact: true },
-    ...(canManage ? [{ id: 'members', to: '/w/$slug/members', label: t('shell.members'), icon: <Users />, exact: false }] : []),
-    { id: 'settings', to: '/w/$slug/settings', label: t('shell.settings'), icon: <Settings />, exact: false },
+    { id: 'overview', to: '/w/$slug', label: t('nav.overview'), icon: <Layout width={20} height={20} />, exact: true },
+    ...(canManage
+      ? [{ id: 'members', to: '/w/$slug/members', label: t('shell.members'), icon: <Users width={20} height={20} />, exact: false }]
+      : []),
+    { id: 'settings', to: '/w/$slug/settings', label: t('shell.settings'), icon: <SettingsCog width={20} height={20} />, exact: false },
   ] as const;
   return (
     <Stack as="nav" aria-label={t('shell.navLabel')} gap="1">
@@ -141,7 +142,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           </HStack>
           <HStack gap="3">
             <LanguageSwitcher />
-            <ColorModeButton size="sm" />
             <UserMenu />
           </HStack>
         </Flex>

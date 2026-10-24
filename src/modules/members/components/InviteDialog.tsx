@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Alert, Button, Clipboard, CloseButton, Dialog, Field, IconButton, Input, InputGroup, Portal, Stack, Text } from '@chakra-ui/react';
-import { UserPlus } from 'lucide-react';
+import { UserPlus } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '@/shared/api/client';
 import { errorKey } from '@/shared/api/errors';

@@ -74,7 +74,7 @@ not run once the page unmounts, so use `mutateAsync` when a refetch can swap the
   visible places (`bounce-gentle-in`, `bounce-relaxed-in-out`). Step changes and tabs use in-out; every `Tabs.List` renders a `<Tabs.Indicator />`. Cards, alerts and toasts already enter by themselves; charts spread `chartMotion` (from `src/theme/motion.ts`) onto every recharts series.
 - Bit appears at most once per screen, never in the shell, and never in a delete or security flow: `idle` for empty states, 404 and restore, `ship` for success,
   `oops` for failures, the `BitAnimated` morph only on `Splash`. Sizes 128, 192 or 256; alt text names the state ("Invitation failed"), not the character.
-- Icons come from `lucide-react` (`import { Dices } from 'lucide-react'`), never emoji or another icon library; icon-only buttons need an `aria-label`.
+- Icons come from `pixelarticons` (`import { Shuffle } from 'pixelarticons/react'`, a 24px pixel grid, fill-based), never emoji or another icon library; icon-only buttons need an `aria-label`.
 - User-facing text never names internal systems or the tech stack (Zitadel, core-api, Postgres, endpoints, env vars) and never shows a raw server
   error: map status codes to translated messages. `pnpm lint:project` scans `src/locales` for it.
 - Never write the em dash (U+2014) in code, comments, locale strings, docs or commit messages. Use a simple hyphen (-) instead.

@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Box, Breadcrumb, CloseButton, Drawer, Flex, HStack, IconButton, Portal, Stack } from '@chakra-ui/react';
 import { Link, useLocation } from '@tanstack/react-router';
-import { Layout, Menu, SettingsCog, Users } from 'pixelarticons/react';
+import { Briefcase, Layout, Menu, SettingsCog, Users } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { AppIcon, Wordmark } from '@/brand/Bit';
 import { LanguageSwitcher } from '@/components/language-switcher';
@@ -15,6 +15,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const canManage = useCan('tenant.member.manage');
   const items = [
     { id: 'overview', to: '/w/$slug', label: t('nav.overview'), icon: <Layout width={20} height={20} />, exact: true },
+    { id: 'projects', to: '/w/$slug/projects', label: t('projects.title'), icon: <Briefcase width={20} height={20} />, exact: false },
     ...(canManage
       ? [{ id: 'members', to: '/w/$slug/members', label: t('shell.members'), icon: <Users width={20} height={20} />, exact: false }]
       : []),
@@ -65,7 +66,13 @@ function Crumbs() {
   const { t } = useTranslation();
   const { slug, name } = useWorkspace();
   const path = useLocation({ select: (l) => l.pathname });
-  const page = path.endsWith('/members') ? t('shell.members') : path.endsWith('/settings') ? t('shell.settings') : t('nav.overview');
+  const page = path.includes('/projects')
+    ? t('projects.title')
+    : path.endsWith('/members')
+      ? t('shell.members')
+      : path.endsWith('/settings')
+        ? t('shell.settings')
+        : t('nav.overview');
   return (
     <Breadcrumb.Root size="md">
       <Breadcrumb.List>
@@ -145,7 +152,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <UserMenu />
           </HStack>
         </Flex>
-        <Box as="main" flex="1" minW="0" px={{ base: '4', md: '6' }} py="8" maxW="5xl" w="full" mx="auto">
+        <Box as="main" flex="1" minW="0" px={{ base: '4', md: '6' }} py="8" maxW="7xl" w="full" mx="auto">
           {children}
         </Box>
       </Flex>

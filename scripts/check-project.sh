@@ -33,13 +33,18 @@ if [ -n "$hits" ]; then echo "[internal-names] Locale text must not name backend
 # 7. Imports: the @/ alias, never ../ ; shared knows no module; modules depend one way and meet only through each other's index.
 rule relative "from '\.\./" "Use the @/ alias instead of a parent-relative import." src
 rule shared-modules "@/modules/" "src/shared must not import from modules." src/shared
-for m in auth workspaces members; do
-  case $m in auth) banned='workspaces|members' ;; workspaces) banned='members' ;; members) banned='' ;; esac
-  for o in auth workspaces members; do
+for m in auth workspaces members projects; do
+  case $m in
+    auth) banned='workspaces|members|projects' ;;
+    workspaces) banned='members|projects' ;;
+    members) banned='projects' ;;
+    projects) banned='members' ;;
+  esac
+  for o in auth workspaces members projects; do
     [ "$o" = "$m" ] && continue
     rule "deep-$m-$o" "@/modules/$o/" "Import another module through its index: '@/modules/$o'." src/modules/$m
   done
-  [ -n "$banned" ] && rule "direction-$m" "@/modules/($banned)['/]" "$m must not import $banned (dependencies point auth < workspaces < members)." src/modules/$m
+  [ -n "$banned" ] && rule "direction-$m" "@/modules/($banned)['/]" "$m imports a module outside its allowed dependency direction." src/modules/$m
 done
 
 # 8. Icons come from pixelarticons only.

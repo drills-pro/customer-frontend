@@ -33,14 +33,15 @@ if [ -n "$hits" ]; then echo "[internal-names] Locale text must not name backend
 # 7. Imports: the @/ alias, never ../ ; shared knows no module; modules depend one way and meet only through each other's index.
 rule relative "from '\.\./" "Use the @/ alias instead of a parent-relative import." src
 rule shared-modules "@/modules/" "src/shared must not import from modules." src/shared
-for m in auth workspaces members projects; do
+for m in auth workspaces members projects datasets; do
   case $m in
-    auth) banned='workspaces|members|projects' ;;
-    workspaces) banned='members|projects' ;;
-    members) banned='projects' ;;
-    projects) banned='members' ;;
+    auth) banned='workspaces|members|projects|datasets' ;;
+    workspaces) banned='members|projects|datasets' ;;
+    members) banned='projects|datasets' ;;
+    projects) banned='members|datasets' ;;
+    datasets) banned='members' ;;
   esac
-  for o in auth workspaces members projects; do
+  for o in auth workspaces members projects datasets; do
     [ "$o" = "$m" ] && continue
     rule "deep-$m-$o" "@/modules/$o/" "Import another module through its index: '@/modules/$o'." src/modules/$m
   done

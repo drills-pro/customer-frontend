@@ -457,70 +457,25 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/upload-url': {
+  '/v1/projects/{project_id}/datasets/{dataset_id}': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Get Upload Url
-     * @description FR (04-api.md): "upload returns presigned S3/MinIO URL, client PUTs
-     *     directly - don't proxy large files through the app backend."
-     *     `label` is the YOLO-classify-style subfolder (class name) the file
-     *     belongs under - matches the directory convention app/integrations/ray_client.py's
-     *     Ultralytics backend trains on directly.
-     */
-    post: operations['get_upload_url_v1_projects__project_id__datasets__dataset_id__upload_url_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/unlabeled-upload-url': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Get Unlabeled Upload Url
-     * @description In-app labeling canvas (req/05): upload a raw file with no class
-     *     yet - it lands in `_unlabeled/` until someone labels it via
-     *     POST .../label below.
-     */
-    post: operations['get_unlabeled_upload_url_v1_projects__project_id__datasets__dataset_id__unlabeled_upload_url_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/unlabeled': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List Unlabeled */
-    get: operations['list_unlabeled_v1_projects__project_id__datasets__dataset_id__unlabeled_get'];
+    /** Get Dataset */
+    get: operations['get_dataset_v1_projects__project_id__datasets__dataset_id__get'];
     put?: never;
     post?: never;
-    delete?: never;
+    /** Delete Dataset */
+    delete: operations['delete_dataset_v1_projects__project_id__datasets__dataset_id__delete'];
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/label': {
+  '/v1/projects/{project_id}/datasets/{dataset_id}:restore': {
     parameters: {
       query?: never;
       header?: never;
@@ -529,48 +484,15 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /**
-     * Label File
-     * @description The actual labeling action: moves an unlabeled upload into its
-     *     class folder (the same convention app/integrations/ray_client.py's Ultralytics
-     *     backend already trains on) and appends a manifest row - this is a
-     *     real, minimal in-app labeling loop, distinct from the full Label
-     *     Studio integration (app/modules/labeling/routes.py) for teams that want something
-     *     lighter than a separate labeling tool.
-     */
-    post: operations['label_file_v1_projects__project_id__datasets__dataset_id__label_post'];
+    /** Restore Dataset */
+    post: operations['restore_dataset_v1_projects__project_id__datasets__dataset_id__restore_post'];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/manifest': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get Manifest */
-    get: operations['get_manifest_v1_projects__project_id__datasets__dataset_id__manifest_get'];
-    put?: never;
-    /**
-     * Upload Manifest
-     * @description req/06 dataset-ingestion format: "CSV/manifest with image_id,
-     *     image_path,class_no (or bbox/mask equivalents)". image_path values
-     *     are expected to be keys already uploaded under this dataset (via
-     *     upload-url) - the manifest just says which uploaded file is which
-     *     example and label, it doesn't itself carry image bytes.
-     */
-    post: operations['upload_manifest_v1_projects__project_id__datasets__dataset_id__manifest_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/upload-zip': {
+  '/v1/projects/{project_id}/datasets/{dataset_id}/published': {
     parameters: {
       query?: never;
       header?: never;
@@ -578,119 +500,27 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    put?: never;
-    /**
-     * Upload Zip
-     * @description Bulk import: a .zip of `<label>/<file>` folders (the same
-     *     class-label layout the Ultralytics backend trains on directly, and
-     *     what `upload-url` builds one file at a time). Unlike upload-url, this
-     *     genuinely goes through core-api rather than direct-to-S3 - it has to,
-     *     since the server is the one unpacking the archive.
-     */
-    post: operations['upload_zip_v1_projects__project_id__datasets__dataset_id__upload_zip_post'];
-    delete?: never;
+    /** Publish Version */
+    put: operations['publish_version_v1_projects__project_id__datasets__dataset_id__published_put'];
+    post?: never;
+    /** Unpublish Dataset */
+    delete: operations['unpublish_dataset_v1_projects__project_id__datasets__dataset_id__published_delete'];
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/upload-yolo': {
+  '/v1/projects/{project_id}/datasets/{dataset_id}/versions': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    /** List Versions */
+    get: operations['list_versions_v1_projects__project_id__datasets__dataset_id__versions_get'];
     put?: never;
-    /**
-     * Upload Yolo
-     * @description FR2 (03-dataset-governance.md): a .zip in YOLO layout -
-     *     `images/<file>` + `labels/<file>.txt` (one bounding box per line:
-     *     `class_id x_center y_center width height`, normalized 0-1). Stored
-     *     under the same paths in LakeFS, plus `classes.txt` if the zip has one
-     *     (`obj.names`/`classes.txt`), unlike upload-zip's folder-per-class
-     *     convention this is for object_detection projects with real ground-truth
-     *     boxes, not just class labels.
-     */
-    post: operations['upload_yolo_v1_projects__project_id__datasets__dataset_id__upload_yolo_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/upload-coco': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Upload Coco
-     * @description FR2: a .zip with COCO `annotations.json` (images[], annotations[]
-     *     with `bbox: [x, y, w, h]` in pixels, `category_id`) plus the image
-     *     files themselves. Converted into the same YOLO-style
-     *     `images/<file>` + `labels/<file>.txt` representation upload-yolo
-     *     produces (normalized cx/cy/w/h), so the rest of the platform - preview,
-     *     training - only ever deals with one on-disk box format.
-     */
-    post: operations['upload_coco_v1_projects__project_id__datasets__dataset_id__upload_coco_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/tabular': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get Tabular */
-    get: operations['get_tabular_v1_projects__project_id__datasets__dataset_id__tabular_get'];
-    put?: never;
-    /**
-     * Upload Tabular
-     * @description Raw feature/label CSV for the Ludwig backend's default (non-HF)
-     *     path (see app/integrations/ray_client.py) - arbitrary columns, not the fixed
-     *     image_id/image_path/class_no shape `manifest` uses. If a column looks
-     *     like an image path, those files still need to actually exist in this
-     *     dataset - upload them via the normal upload-url/upload-zip flow using
-     *     the same paths this CSV references.
-     */
-    post: operations['upload_tabular_v1_projects__project_id__datasets__dataset_id__tabular_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/import-hf': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Import Hf Dataset
-     * @description Materialize a real Hugging Face Hub dataset into this dataset's own
-     *     (versioned) storage - kind="images" writes real files into the
-     *     standard <label>/<file> layout (immediately trainable with the
-     *     Ultralytics backend), kind="tabular" writes tabular.csv (immediately
-     *     trainable with the Ludwig default backend). Runs as a background Ray
-     *     job (see app/integrations/ray_client.py's submit_hf_import) since it needs network
-     *     access and the `datasets` library core-api itself doesn't carry.
-     */
-    post: operations['import_hf_dataset_v1_projects__project_id__datasets__dataset_id__import_hf_post'];
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -704,8 +534,26 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** List Dataset Imports */
-    get: operations['list_dataset_imports_v1_projects__project_id__datasets__dataset_id__imports_get'];
+    /** List Imports */
+    get: operations['list_imports_v1_projects__project_id__datasets__dataset_id__imports_get'];
+    put?: never;
+    /** Create Import */
+    post: operations['create_import_v1_projects__project_id__datasets__dataset_id__imports_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/datasets/{dataset_id}/imports/{import_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Import */
+    get: operations['get_import_v1_projects__project_id__datasets__dataset_id__imports__import_id__get'];
     put?: never;
     post?: never;
     delete?: never;
@@ -714,73 +562,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/preview': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Preview Dataset
-     * @description Thumbnail gallery for the UI - same class-label folder convention
-     *     the Ultralytics backend trains on (key = "<label>/<file>"), so this
-     *     doubles as a sanity check that what you uploaded is what the job
-     *     will actually see. `ref` optionally pins this to a specific
-     *     committed version instead of the current working state.
-     */
-    get: operations['preview_dataset_v1_projects__project_id__datasets__dataset_id__preview_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/files': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List Dataset Files */
-    get: operations['list_dataset_files_v1_projects__project_id__datasets__dataset_id__files_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/versions': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List Dataset Versions */
-    get: operations['list_dataset_versions_v1_projects__project_id__datasets__dataset_id__versions_get'];
-    put?: never;
-    /**
-     * Commit Dataset Version
-     * @description Real data versioning (req from this session): snapshots the
-     *     dataset's current file state as a LakeFS commit. Training runs can
-     *     then pin to a specific version instead of always training on
-     *     whatever's currently uploaded - see app/modules/training/routes.py's dataset_version
-     *     param.
-     */
-    post: operations['commit_dataset_version_v1_projects__project_id__datasets__dataset_id__versions_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/publish': {
+  '/v1/projects/{project_id}/datasets/{dataset_id}/imports/{import_id}/start': {
     parameters: {
       query?: never;
       header?: never;
@@ -789,34 +571,108 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /**
-     * Publish Dataset
-     * @description FR6 (08-collaboration-visibility.md): publishes the *current* LakeFS
-     *     commit, not a live pointer - a later upload doesn't become public until
-     *     re-published here.
-     */
-    post: operations['publish_dataset_v1_projects__project_id__datasets__dataset_id__publish_post'];
+    /** Start Import */
+    post: operations['start_import_v1_projects__project_id__datasets__dataset_id__imports__import_id__start_post'];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/versions/{commit_id}/training-runs': {
+  '/v1/projects/{project_id}/datasets/{dataset_id}/imports/{import_id}/cancel': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /**
-     * Get Versions Training Runs
-     * @description FR6 (05-reproducibility-lineage.md): every run ever pinned to this
-     *     exact commit - either as the training set or the test set - so an
-     *     owner sees what re-committing this dataset would affect before
-     *     finding out the hard way.
-     */
-    get: operations['get_versions_training_runs_v1_projects__project_id__datasets__dataset_id__versions__commit_id__training_runs_get'];
+    get?: never;
+    put?: never;
+    /** Cancel Import */
+    post: operations['cancel_import_v1_projects__project_id__datasets__dataset_id__imports__import_id__cancel_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/datasets/{dataset_id}/imports/{import_id}/commit': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Commit Import */
+    post: operations['commit_import_v1_projects__project_id__datasets__dataset_id__imports__import_id__commit_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/datasets/{dataset_id}/imports/{import_id}/discard': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Discard Import */
+    post: operations['discard_import_v1_projects__project_id__datasets__dataset_id__imports__import_id__discard_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Preview Version */
+    get: operations['preview_version_v1_projects__project_id__datasets__dataset_id__versions__version_id__preview_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/files/{path}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Version File */
+    get: operations['version_file_v1_projects__project_id__datasets__dataset_id__versions__version_id__files__path__get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/datasets/{dataset_id}/imports/{import_id}/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Preview Import */
+    get: operations['preview_import_v1_projects__project_id__datasets__dataset_id__imports__import_id__preview_get'];
     put?: never;
     post?: never;
     delete?: never;
@@ -942,69 +798,6 @@ export interface paths {
      * @description Tenant, owner membership and Default team in one transaction: nothing outside Postgres to undo.
      */
     post: operations['create_tenant_v1_tenants_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/labeling': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get Labeling Status */
-    get: operations['get_labeling_status_v1_projects__project_id__datasets__dataset_id__labeling_get'];
-    put?: never;
-    /** Create Labeling Project */
-    post: operations['create_labeling_project_v1_projects__project_id__datasets__dataset_id__labeling_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/labeling/export': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Export Labels
-     * @description FR: "pull labeled export".
-     */
-    get: operations['export_labels_v1_projects__project_id__datasets__dataset_id__labeling_export_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/labeling/import-label-studio-export': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Import Label Studio Export
-     * @description FR2: pull the current Label Studio export and write completed
-     *     labels back to LakeFS as a real commit - same parse-and-write shape as
-     *     03's YOLO/COCO importers, not a live sync. Classification annotations
-     *     move the file from _unlabeled/ into its class folder (Phase 1's
-     *     existing convention); object_detection annotations write a YOLO-style
-     *     labels/<file>.txt.
-     */
-    post: operations['import_label_studio_export_v1_projects__project_id__datasets__dataset_id__labeling_import_label_studio_export_post'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1173,24 +966,6 @@ export interface paths {
      * @description Takes effect on the key's next request. Revoking twice keeps the first revocation time.
      */
     delete: operations['revoke_api_key_v1_projects__project_id__api_keys__key_id__delete'];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/preprocess': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List Preprocessing Jobs */
-    get: operations['list_preprocessing_jobs_v1_projects__project_id__datasets__dataset_id__preprocess_get'];
-    put?: never;
-    /** Preprocess Dataset */
-    post: operations['preprocess_dataset_v1_projects__project_id__datasets__dataset_id__preprocess_post'];
-    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -1701,11 +1476,6 @@ export interface components {
        */
       created_at: string;
     };
-    /** Body_commit_dataset_version_v1_projects__project_id__datasets__dataset_id__versions_post */
-    Body_commit_dataset_version_v1_projects__project_id__datasets__dataset_id__versions_post: {
-      /** Message */
-      message: string;
-    };
     /** Body_create_tenant_project_v1_admin_tenants__tenant_id__projects_post */
     Body_create_tenant_project_v1_admin_tenants__tenant_id__projects_post: {
       /** Name */
@@ -1724,52 +1494,6 @@ export interface components {
       /** Zitadel Org Id */
       zitadel_org_id?: string | null;
     };
-    /** Body_import_hf_dataset_v1_projects__project_id__datasets__dataset_id__import_hf_post */
-    Body_import_hf_dataset_v1_projects__project_id__datasets__dataset_id__import_hf_post: {
-      /** Hf Dataset */
-      hf_dataset: string;
-      /** Kind */
-      kind: string;
-      /**
-       * Image Column
-       * @default image
-       */
-      image_column: string;
-      /**
-       * Label Column
-       * @default label
-       */
-      label_column: string;
-      /**
-       * Text Column
-       * @default text
-       */
-      text_column: string;
-      /**
-       * Max Rows
-       * @default 2000
-       */
-      max_rows: number | null;
-    };
-    /** Body_preprocess_dataset_v1_projects__project_id__datasets__dataset_id__preprocess_post */
-    Body_preprocess_dataset_v1_projects__project_id__datasets__dataset_id__preprocess_post: {
-      /** Resize */
-      resize?: {
-        [key: string]: unknown;
-      } | null;
-      /**
-       * Dedupe
-       * @default false
-       */
-      dedupe: boolean;
-      /** Class Balance */
-      class_balance?: string | null;
-    };
-    /** Body_publish_dataset_v1_projects__project_id__datasets__dataset_id__publish_post */
-    Body_publish_dataset_v1_projects__project_id__datasets__dataset_id__publish_post: {
-      /** Published */
-      published: boolean;
-    };
     /** Body_publish_model_v1_projects__project_id__models__model_version_id__publish_patch */
     Body_publish_model_v1_projects__project_id__models__model_version_id__publish_patch: {
       /** Publish Metadata */
@@ -1782,26 +1506,99 @@ export interface components {
       /** Status */
       status: string;
     };
-    /** Body_upload_coco_v1_projects__project_id__datasets__dataset_id__upload_coco_post */
-    Body_upload_coco_v1_projects__project_id__datasets__dataset_id__upload_coco_post: {
-      /** File */
-      file: string;
-    };
-    /** Body_upload_yolo_v1_projects__project_id__datasets__dataset_id__upload_yolo_post */
-    Body_upload_yolo_v1_projects__project_id__datasets__dataset_id__upload_yolo_post: {
-      /** File */
-      file: string;
-    };
-    /** Body_upload_zip_v1_projects__project_id__datasets__dataset_id__upload_zip_post */
-    Body_upload_zip_v1_projects__project_id__datasets__dataset_id__upload_zip_post: {
-      /** File */
-      file: string;
-    };
     /**
      * ComputeTarget
      * @enum {string}
      */
     ComputeTarget: 'cpu' | 'gpu';
+    /** DatasetCreate */
+    DatasetCreate: {
+      /** Name */
+      name: string;
+    };
+    /** DatasetImport */
+    DatasetImport: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /**
+       * Dataset Id
+       * Format: uuid
+       */
+      dataset_id: string;
+      source: components['schemas']['ImportSource'];
+      status: components['schemas']['ImportStatus'];
+      /** Base Version Id */
+      base_version_id: string | null;
+      params: components['schemas']['ImportParams'];
+      report: components['schemas']['ImportReport'] | null;
+      /** Expires At */
+      expires_at: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Completed At */
+      completed_at: string | null;
+      /** Upload Url */
+      upload_url?: string | null;
+    };
+    /** DatasetPreview */
+    DatasetPreview: {
+      /** Rows */
+      rows: components['schemas']['PreviewRow'][];
+    };
+    /**
+     * DatasetSummary
+     * @description `task_type` is the project's: one task type per project, never stored on the dataset. None for a project
+     *     without one, which cannot import.
+     */
+    DatasetSummary: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Name */
+      name: string;
+      task_type: components['schemas']['TaskType'] | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Deleted At */
+      deleted_at: string | null;
+      /** Published Version Id */
+      published_version_id: string | null;
+    };
+    /** DatasetVersion */
+    DatasetVersion: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Number */
+      number: number;
+      /**
+       * Import Id
+       * Format: uuid
+       */
+      import_id: string;
+      /** Stats */
+      stats: {
+        [key: string]: unknown;
+      };
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
     /**
      * DefaultAccess
      * @enum {string}
@@ -1821,11 +1618,154 @@ export interface components {
      * @enum {string}
      */
     DeployStrategy: 'main' | 'latest';
+    /**
+     * DeploymentCreated
+     * @description predict_key is present only when a new deployment was minted (shown once); a 'main' re-deploy omits it.
+     */
+    DeploymentCreated: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Status */
+      status: string;
+      /** Route Prefix */
+      route_prefix: string;
+      /** Rate Limit Per Minute */
+      rate_limit_per_minute: number;
+      /** Plan Tier */
+      plan_tier: string | null;
+      /** Predict Key */
+      predict_key?: string | null;
+    };
+    /** DeploymentDetail */
+    DeploymentDetail: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Status */
+      status: string;
+      /** Route Prefix */
+      route_prefix: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Project Id
+       * Format: uuid
+       */
+      project_id: string;
+      /**
+       * Training Run Id
+       * Format: uuid
+       */
+      training_run_id: string;
+      /** Rate Limit Per Minute */
+      rate_limit_per_minute: number;
+    };
+    /** DeploymentListItem */
+    DeploymentListItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Status */
+      status: string;
+      /** Route Prefix */
+      route_prefix: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /** FileLink */
+    FileLink: {
+      /** Url */
+      url: string;
+    };
     /** HTTPValidationError */
     HTTPValidationError: {
       /** Detail */
       detail?: components['schemas']['ValidationError'][];
     };
+    /** ImportCreate */
+    ImportCreate: {
+      source: components['schemas']['ImportSource'];
+      task_type?: components['schemas']['TaskType'] | null;
+      /** Base Version Id */
+      base_version_id?: string | null;
+      /** @default {} */
+      params: components['schemas']['ImportParams'];
+    };
+    /**
+     * ImportParams
+     * @description What the ingest job needs besides the upload. Stored as dataset_imports.params.
+     */
+    ImportParams: {
+      /** Target */
+      target?: string | null;
+      split?: components['schemas']['Split'] | null;
+      /** Repo */
+      repo?: string | null;
+      /** Revision */
+      revision?: string | null;
+      /** Column */
+      column?: string | null;
+    };
+    /** ImportReport */
+    ImportReport: {
+      /**
+       * Schema Version
+       * @default 1
+       * @constant
+       */
+      schema_version: 1;
+      outcome: components['schemas']['Outcome'];
+      stats?: components['schemas']['Stats'] | null;
+      /**
+       * Issues
+       * @default []
+       */
+      issues: components['schemas']['Issue'][];
+      /**
+       * Issues Omitted
+       * @default 0
+       */
+      issues_omitted: number;
+      /** Revision */
+      revision?: string | null;
+      /** License */
+      license?: string | null;
+    };
+    /**
+     * ImportSource
+     * @description Where a dataset import's data comes from. Mirrors the dataset_imports_source_check constraint.
+     * @enum {string}
+     */
+    ImportSource: 'upload' | 'huggingface';
+    /**
+     * ImportStatus
+     * @description Import lifecycle. Mirrors the dataset_imports_status_check constraint.
+     * @enum {string}
+     */
+    ImportStatus:
+      | 'awaiting_upload'
+      | 'queued'
+      | 'running'
+      | 'awaiting_review'
+      | 'committing'
+      | 'succeeded'
+      | 'failed'
+      | 'cancelled'
+      | 'expired'
+      | 'discarded';
     /** Invitation */
     Invitation: {
       /**
@@ -1885,6 +1825,105 @@ export interface components {
      * @enum {string}
      */
     InviteRole: 'admin' | 'member';
+    /** Issue */
+    Issue: {
+      code: components['schemas']['IssueCode'];
+      severity: components['schemas']['Severity'];
+      /** Path */
+      path?: string | null;
+      /** Message */
+      message: string;
+    };
+    /**
+     * IssueCode
+     * @enum {string}
+     */
+    IssueCode:
+      | 'archive_unsafe_path'
+      | 'archive_symlink'
+      | 'archive_too_large'
+      | 'archive_too_many_files'
+      | 'archive_too_deep'
+      | 'archive_duplicate_path'
+      | 'path_too_long'
+      | 'unsupported_extension'
+      | 'corrupt_image'
+      | 'image_too_large'
+      | 'label_case_collision'
+      | 'no_data'
+      | 'coco_invalid'
+      | 'csv_no_header'
+      | 'csv_duplicate_columns'
+      | 'csv_too_few_rows'
+      | 'csv_too_many_rows'
+      | 'csv_too_many_columns'
+      | 'csv_row_too_long'
+      | 'target_missing'
+      | 'target_type_mismatch'
+      | 'schema_mismatch'
+      | 'merge_conflict'
+      | 'duplicate_skipped'
+      | 'hf_card_mismatch'
+      | 'hf_schema_mismatch'
+      | 'hf_too_large'
+      | 'hf_no_data_files'
+      | 'job_timeout'
+      | 'internal_error';
+    /** LineageDeployment */
+    LineageDeployment: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Status */
+      status: string;
+      /** Route Prefix */
+      route_prefix: string;
+    };
+    /** LineageModel */
+    LineageModel: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Mlflow Model Name */
+      mlflow_model_name: string;
+      /** Mlflow Version */
+      mlflow_version: string;
+      /** Stage */
+      stage: string;
+    };
+    /** LineageRun */
+    LineageRun: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Status */
+      status: string;
+      /** Dataset Id */
+      dataset_id: string | null;
+      /** Dataset Version */
+      dataset_version: string | null;
+      /** Test Dataset Id */
+      test_dataset_id: string | null;
+      /** Test Dataset Version */
+      test_dataset_version: string | null;
+      /** Mlflow Run Id */
+      mlflow_run_id: string | null;
+      /** Reproduction Group Id */
+      reproduction_group_id: string | null;
+      /** Config */
+      config: unknown;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
     /** Me */
     Me: {
       /** Sub */
@@ -1930,6 +1969,11 @@ export interface components {
       /** Expires At */
       expires_at?: string | null;
     };
+    /**
+     * Outcome
+     * @enum {string}
+     */
+    Outcome: 'ok' | 'failed';
     /** OwnershipOffer */
     OwnershipOffer: {
       /** From Sub */
@@ -1966,6 +2010,27 @@ export interface components {
       /** Next Page Token */
       next_page_token?: string | null;
     };
+    /** Page[DatasetImport] */
+    Page_DatasetImport_: {
+      /** Items */
+      items: components['schemas']['DatasetImport'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
+    /** Page[DatasetSummary] */
+    Page_DatasetSummary_: {
+      /** Items */
+      items: components['schemas']['DatasetSummary'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
+    /** Page[DatasetVersion] */
+    Page_DatasetVersion_: {
+      /** Items */
+      items: components['schemas']['DatasetVersion'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
     /** Page[ProjectSummary] */
     Page_ProjectSummary_: {
       /** Items */
@@ -1979,6 +2044,18 @@ export interface components {
       items: components['schemas']['TenantAuditEntry'][];
       /** Next Page Token */
       next_page_token?: string | null;
+    };
+    /**
+     * PreviewRow
+     * @description One index.parquet or data.parquet row. `url` is a presigned GET of the image, when there is one.
+     */
+    PreviewRow: {
+      /** Data */
+      data: {
+        [key: string]: unknown;
+      };
+      /** Url */
+      url?: string | null;
     };
     /** ProjectDetail */
     ProjectDetail: {
@@ -2077,6 +2154,14 @@ export interface components {
       /** Default Test Dataset Id */
       default_test_dataset_id: string | null;
     };
+    /** PublishRequest */
+    PublishRequest: {
+      /**
+       * Version Id
+       * Format: uuid
+       */
+      version_id: string;
+    };
     /** PublishResult */
     PublishResult: {
       /**
@@ -2109,12 +2194,68 @@ export interface components {
      */
     Scope: 'predict';
     /**
-     * TaskType
-     * @description Mirrors the projects.task_type CHECK constraint. FR4 (02-org-team-project-model.md): set at
-     *     creation, one of a fixed vocabulary, or the legacy escape hatch for pre-Phase-2 data.
+     * Severity
      * @enum {string}
      */
-    TaskType: 'image_classification' | 'object_detection' | 'tabular_classification' | 'text_classification' | 'legacy_untyped';
+    Severity: 'error' | 'warning';
+    /**
+     * Split
+     * @description Values of the nullable `split` column. Datasets never invent one (plan decision 9).
+     * @enum {string}
+     */
+    Split: 'train' | 'validation' | 'test';
+    /**
+     * Stats
+     * @description What the new version contains (after the merge). Stored as dataset_versions.stats.
+     */
+    Stats: {
+      /** File Count */
+      file_count: number;
+      /** Total Bytes */
+      total_bytes: number;
+      /** Row Count */
+      row_count: number;
+      /**
+       * Classes
+       * @default {}
+       */
+      classes: {
+        [key: string]: number;
+      };
+      /**
+       * Splits
+       * @default {}
+       */
+      splits: {
+        [key: string]: number;
+      };
+      /**
+       * Duplicates Skipped
+       * @default 0
+       */
+      duplicates_skipped: number;
+    };
+    /**
+     * TaskType
+     * @description Hugging Face task slugs, verbatim. Mirrors the projects.task_type CHECK constraint. The whole
+     *     taxonomy is accepted by the schema; SUPPORTED_TASK_TYPES is what the platform can do today.
+     * @enum {string}
+     */
+    TaskType:
+      | 'image-classification'
+      | 'object-detection'
+      | 'image-segmentation'
+      | 'tabular-classification'
+      | 'tabular-regression'
+      | 'text-classification'
+      | 'token-classification'
+      | 'question-answering'
+      | 'summarization'
+      | 'translation'
+      | 'text-generation'
+      | 'audio-classification'
+      | 'automatic-speech-recognition'
+      | 'text-to-speech';
     /**
      * TenantAuditEntry
      * @description One audit row of the tenant: tenant-level events have no project.
@@ -2247,6 +2388,129 @@ export interface components {
        * @description Tenant-level actions the role holds
        */
       capabilities: string[];
+    };
+    /** TestCall */
+    TestCall: {
+      /** Id */
+      id: number;
+      /** Request */
+      request: unknown;
+      /** Response */
+      response: unknown;
+      /** Latency Ms */
+      latency_ms: number | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /** TestCallResult */
+    TestCallResult: {
+      /** Response */
+      response: unknown;
+      /** Latency Ms */
+      latency_ms: number;
+    };
+    /**
+     * TrainingRun
+     * @description Every training_runs column (the detail and cancel responses).
+     */
+    TrainingRun: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Status */
+      status: string;
+      /** Dataset Ref */
+      dataset_ref: string;
+      /** Ray Job Id */
+      ray_job_id: string;
+      /** Mlflow Run Id */
+      mlflow_run_id: string | null;
+      /** Config */
+      config: unknown;
+      /** Metrics */
+      metrics: unknown;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Completed At */
+      completed_at: string | null;
+      /**
+       * Tenant Id
+       * Format: uuid
+       */
+      tenant_id: string;
+      /**
+       * Project Id
+       * Format: uuid
+       */
+      project_id: string;
+      /** Idempotency Key */
+      idempotency_key: string;
+      /** Model Artifact */
+      model_artifact: unknown;
+      /** Dataset Version */
+      dataset_version: string | null;
+      /** Test Dataset Id */
+      test_dataset_id: string | null;
+      /** Test Dataset Version */
+      test_dataset_version: string | null;
+      /** Reproduction Group Id */
+      reproduction_group_id: string | null;
+      /** Dataset Id */
+      dataset_id: string | null;
+    };
+    /** TrainingRunLineage */
+    TrainingRunLineage: {
+      training_run: components['schemas']['LineageRun'];
+      /** Dataset Commit Message */
+      dataset_commit_message: string | null;
+      model_version: components['schemas']['LineageModel'] | null;
+      deployment: components['schemas']['LineageDeployment'] | null;
+    };
+    /** TrainingRunLogs */
+    TrainingRunLogs: {
+      /** Status */
+      status: string;
+      /** Logs */
+      logs: string;
+      /** Metrics */
+      metrics: unknown;
+      /** Extra Metrics */
+      extra_metrics: unknown;
+    };
+    /** TrainingRunSummary */
+    TrainingRunSummary: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Status */
+      status: string;
+      /** Dataset Ref */
+      dataset_ref: string;
+      /** Ray Job Id */
+      ray_job_id: string;
+      /** Mlflow Run Id */
+      mlflow_run_id: string | null;
+      /** Config */
+      config: unknown;
+      /** Metrics */
+      metrics: unknown;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Completed At */
+      completed_at: string | null;
     };
     /** ValidationError */
     ValidationError: {
@@ -3169,8 +3433,8 @@ export interface operations {
   list_datasets_v1_projects__project_id__datasets_get: {
     parameters: {
       query?: {
-        limit?: number;
-        offset?: number;
+        page_size?: number;
+        page_token?: string | null;
       };
       header?: {
         'x-tenant-id'?: string | null;
@@ -3189,7 +3453,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['Page_DatasetSummary_'];
         };
       };
       /** @description Validation Error */
@@ -3205,9 +3469,7 @@ export interface operations {
   };
   create_dataset_v1_projects__project_id__datasets_post: {
     parameters: {
-      query: {
-        name: string;
-      };
+      query?: never;
       header?: {
         'x-tenant-id'?: string | null;
         'x-user-id'?: string | null;
@@ -3217,7 +3479,11 @@ export interface operations {
       };
       cookie?: never;
     };
-    requestBody?: never;
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DatasetCreate'];
+      };
+    };
     responses: {
       /** @description Successful Response */
       201: {
@@ -3225,7 +3491,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['DatasetSummary'];
         };
       };
       /** @description Validation Error */
@@ -3239,82 +3505,7 @@ export interface operations {
       };
     };
   };
-  get_upload_url_v1_projects__project_id__datasets__dataset_id__upload_url_post: {
-    parameters: {
-      query: {
-        filename: string;
-        label: string;
-      };
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  get_unlabeled_upload_url_v1_projects__project_id__datasets__dataset_id__unlabeled_upload_url_post: {
-    parameters: {
-      query: {
-        filename: string;
-      };
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_unlabeled_v1_projects__project_id__datasets__dataset_id__unlabeled_get: {
+  get_dataset_v1_projects__project_id__datasets__dataset_id__get: {
     parameters: {
       query?: never;
       header?: {
@@ -3335,7 +3526,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['DatasetSummary'];
         };
       };
       /** @description Validation Error */
@@ -3349,45 +3540,7 @@ export interface operations {
       };
     };
   };
-  label_file_v1_projects__project_id__datasets__dataset_id__label_post: {
-    parameters: {
-      query: {
-        key: string;
-        label: string;
-      };
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  get_manifest_v1_projects__project_id__datasets__dataset_id__manifest_get: {
+  delete_dataset_v1_projects__project_id__datasets__dataset_id__delete: {
     parameters: {
       query?: never;
       header?: {
@@ -3401,269 +3554,6 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  upload_manifest_v1_projects__project_id__datasets__dataset_id__manifest_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  upload_zip_v1_projects__project_id__datasets__dataset_id__upload_zip_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'multipart/form-data': components['schemas']['Body_upload_zip_v1_projects__project_id__datasets__dataset_id__upload_zip_post'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  upload_yolo_v1_projects__project_id__datasets__dataset_id__upload_yolo_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'multipart/form-data': components['schemas']['Body_upload_yolo_v1_projects__project_id__datasets__dataset_id__upload_yolo_post'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  upload_coco_v1_projects__project_id__datasets__dataset_id__upload_coco_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'multipart/form-data': components['schemas']['Body_upload_coco_v1_projects__project_id__datasets__dataset_id__upload_coco_post'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  get_tabular_v1_projects__project_id__datasets__dataset_id__tabular_get: {
-    parameters: {
-      query?: {
-        ref?: string;
-      };
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  upload_tabular_v1_projects__project_id__datasets__dataset_id__tabular_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  import_hf_dataset_v1_projects__project_id__datasets__dataset_id__import_hf_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Body_import_hf_dataset_v1_projects__project_id__datasets__dataset_id__import_hf_post'];
-      };
-    };
     responses: {
       /** @description Successful Response */
       202: {
@@ -3671,7 +3561,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['DatasetSummary'];
         };
       };
       /** @description Validation Error */
@@ -3685,7 +3575,7 @@ export interface operations {
       };
     };
   };
-  list_dataset_imports_v1_projects__project_id__datasets__dataset_id__imports_get: {
+  restore_dataset_v1_projects__project_id__datasets__dataset_id__restore_post: {
     parameters: {
       query?: never;
       header?: {
@@ -3706,7 +3596,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['DatasetSummary'];
         };
       };
       /** @description Validation Error */
@@ -3720,117 +3610,7 @@ export interface operations {
       };
     };
   };
-  preview_dataset_v1_projects__project_id__datasets__dataset_id__preview_get: {
-    parameters: {
-      query?: {
-        limit?: number;
-        ref?: string;
-      };
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_dataset_files_v1_projects__project_id__datasets__dataset_id__files_get: {
-    parameters: {
-      query?: {
-        ref?: string;
-      };
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_dataset_versions_v1_projects__project_id__datasets__dataset_id__versions_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  commit_dataset_version_v1_projects__project_id__datasets__dataset_id__versions_post: {
+  publish_version_v1_projects__project_id__datasets__dataset_id__published_put: {
     parameters: {
       query?: never;
       header?: {
@@ -3845,7 +3625,158 @@ export interface operations {
     };
     requestBody: {
       content: {
-        'application/json': components['schemas']['Body_commit_dataset_version_v1_projects__project_id__datasets__dataset_id__versions_post'];
+        'application/json': components['schemas']['PublishRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DatasetSummary'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  unpublish_dataset_v1_projects__project_id__datasets__dataset_id__published_delete: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path: {
+        project_id: string;
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DatasetSummary'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_versions_v1_projects__project_id__datasets__dataset_id__versions_get: {
+    parameters: {
+      query?: {
+        page_size?: number;
+        page_token?: string | null;
+      };
+      header?: {
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path: {
+        project_id: string;
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Page_DatasetVersion_'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_imports_v1_projects__project_id__datasets__dataset_id__imports_get: {
+    parameters: {
+      query?: {
+        page_size?: number;
+        page_token?: string | null;
+      };
+      header?: {
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path: {
+        project_id: string;
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Page_DatasetImport_'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  create_import_v1_projects__project_id__datasets__dataset_id__imports_post: {
+    parameters: {
+      query?: never;
+      header: {
+        'Idempotency-Key': string;
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path: {
+        project_id: string;
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ImportCreate'];
       };
     };
     responses: {
@@ -3855,7 +3786,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['DatasetImport'];
         };
       };
       /** @description Validation Error */
@@ -3869,7 +3800,7 @@ export interface operations {
       };
     };
   };
-  publish_dataset_v1_projects__project_id__datasets__dataset_id__publish_post: {
+  get_import_v1_projects__project_id__datasets__dataset_id__imports__import_id__get: {
     parameters: {
       query?: never;
       header?: {
@@ -3879,46 +3810,7 @@ export interface operations {
       path: {
         project_id: string;
         dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Body_publish_dataset_v1_projects__project_id__datasets__dataset_id__publish_post'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  get_versions_training_runs_v1_projects__project_id__datasets__dataset_id__versions__commit_id__training_runs_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-        commit_id: string;
+        import_id: string;
       };
       cookie?: never;
     };
@@ -3930,7 +3822,264 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['DatasetImport'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  start_import_v1_projects__project_id__datasets__dataset_id__imports__import_id__start_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path: {
+        project_id: string;
+        dataset_id: string;
+        import_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DatasetImport'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  cancel_import_v1_projects__project_id__datasets__dataset_id__imports__import_id__cancel_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path: {
+        project_id: string;
+        dataset_id: string;
+        import_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DatasetImport'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  commit_import_v1_projects__project_id__datasets__dataset_id__imports__import_id__commit_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path: {
+        project_id: string;
+        dataset_id: string;
+        import_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DatasetVersion'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  discard_import_v1_projects__project_id__datasets__dataset_id__imports__import_id__discard_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path: {
+        project_id: string;
+        dataset_id: string;
+        import_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DatasetImport'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  preview_version_v1_projects__project_id__datasets__dataset_id__versions__version_id__preview_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+      };
+      header?: {
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path: {
+        project_id: string;
+        dataset_id: string;
+        version_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DatasetPreview'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  version_file_v1_projects__project_id__datasets__dataset_id__versions__version_id__files__path__get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path: {
+        project_id: string;
+        dataset_id: string;
+        version_id: string;
+        path: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FileLink'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  preview_import_v1_projects__project_id__datasets__dataset_id__imports__import_id__preview_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+      };
+      header?: {
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path: {
+        project_id: string;
+        dataset_id: string;
+        import_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DatasetPreview'];
         };
       };
       /** @description Validation Error */
@@ -3964,7 +4113,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['DeploymentListItem'][];
         };
       };
       /** @description Validation Error */
@@ -4000,7 +4149,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['DeploymentCreated'];
         };
       };
       /** @description Validation Error */
@@ -4035,7 +4184,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['DeploymentDetail'];
         };
       };
       /** @description Validation Error */
@@ -4076,7 +4225,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['TestCallResult'];
         };
       };
       /** @description Validation Error */
@@ -4113,7 +4262,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['TestCall'][];
         };
       };
       /** @description Validation Error */
@@ -4217,146 +4366,6 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['TenantCreated'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  get_labeling_status_v1_projects__project_id__datasets__dataset_id__labeling_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  create_labeling_project_v1_projects__project_id__datasets__dataset_id__labeling_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  export_labels_v1_projects__project_id__datasets__dataset_id__labeling_export_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  import_label_studio_export_v1_projects__project_id__datasets__dataset_id__labeling_import_label_studio_export_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
         };
       };
       /** @description Validation Error */
@@ -4753,80 +4762,6 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_preprocessing_jobs_v1_projects__project_id__datasets__dataset_id__preprocess_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  preprocess_dataset_v1_projects__project_id__datasets__dataset_id__preprocess_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: {
-      content: {
-        'application/json': components['schemas']['Body_preprocess_dataset_v1_projects__project_id__datasets__dataset_id__preprocess_post'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      202: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
       };
       /** @description Validation Error */
       422: {
@@ -5691,7 +5626,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['TrainingRunSummary'][];
         };
       };
       /** @description Validation Error */
@@ -5707,16 +5642,8 @@ export interface operations {
   };
   create_training_run_v1_projects__project_id__training_runs_post: {
     parameters: {
-      query: {
-        dataset_ref: string;
-        dataset_id?: string | null;
-        dataset_version?: string | null;
-        test_dataset_id?: string | null;
-        test_dataset_version?: string | null;
-        reproduction_group_id?: string | null;
-      };
-      header: {
-        'Idempotency-Key': string;
+      query?: never;
+      header?: {
         'x-tenant-id'?: string | null;
         'x-user-id'?: string | null;
       };
@@ -5725,13 +5652,7 @@ export interface operations {
       };
       cookie?: never;
     };
-    requestBody?: {
-      content: {
-        'application/json': {
-          [key: string]: unknown;
-        };
-      };
-    };
+    requestBody?: never;
     responses: {
       /** @description Successful Response */
       202: {
@@ -5774,7 +5695,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['TrainingRun'];
         };
       };
       /** @description Validation Error */
@@ -5809,7 +5730,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['TrainingRunLogs'];
         };
       };
       /** @description Validation Error */
@@ -5844,7 +5765,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['TrainingRunLineage'];
         };
       };
       /** @description Validation Error */
@@ -5879,7 +5800,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['TrainingRun'];
         };
       };
       /** @description Validation Error */

@@ -1,4 +1,4 @@
-import { createRoute } from '@tanstack/react-router';
+import { createRoute, type AnyRoute } from '@tanstack/react-router';
 import { NewProjectPage } from '@/modules/projects/pages/NewProjectPage';
 import { ProjectsPage } from '@/modules/projects/pages/ProjectsPage';
 import { workspaceRoute } from '@/modules/workspaces';
@@ -7,3 +7,7 @@ import { workspaceRoute } from '@/modules/workspaces';
 export const projectsLayoutRoute = createRoute({ getParentRoute: () => workspaceRoute, path: 'projects' });
 export const projectListRoute = createRoute({ getParentRoute: () => projectsLayoutRoute, path: '/', component: ProjectsPage });
 export const newProjectRoute = createRoute({ getParentRoute: () => projectsLayoutRoute, path: 'new', component: NewProjectPage });
+
+/** The /projects subtree. Modules that hang pages under a project (datasets) pass their routes in, since projects cannot import them. */
+export const projectsRoute = <T extends AnyRoute[]>(...more: T) =>
+  projectsLayoutRoute.addChildren([projectListRoute, newProjectRoute, ...more]);

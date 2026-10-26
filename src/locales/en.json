@@ -250,19 +250,19 @@
       "pending_delete": "Being deleted"
     },
     "taskType": {
-      "image_classification": {
+      "image-classification": {
         "label": "Image classification",
         "description": "Sort each image into one of your classes."
       },
-      "object_detection": {
+      "object-detection": {
         "label": "Object detection",
         "description": "Find and box every object of interest in an image."
       },
-      "tabular_classification": {
+      "tabular-classification": {
         "label": "Tabular classification",
         "description": "Predict a category from rows of a spreadsheet or table."
       },
-      "text_classification": {
+      "text-classification": {
         "label": "Text classification",
         "description": "Label pieces of text, such as reviews or support tickets."
       },

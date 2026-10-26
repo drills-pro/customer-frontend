@@ -4,13 +4,13 @@ import { client, unwrap, type Schemas } from '@/shared/api/client';
 export type ProjectSummary = Schemas['ProjectSummary'];
 export type ProjectStatus = Schemas['ProjectStatus'];
 export type Visibility = Schemas['Visibility'];
-export type TaskType = Exclude<Schemas['TaskType'], 'legacy_untyped'>;
+export type TaskType = Schemas['TaskType'];
 
 export const TASK_TYPES = [
-  'image_classification',
-  'object_detection',
-  'tabular_classification',
-  'text_classification',
+  'image-classification',
+  'object-detection',
+  'tabular-classification',
+  'text-classification',
 ] as const satisfies readonly TaskType[];
 export const LEGACY_TASK_TYPE = 'legacy_untyped' as const;
 export const VISIBILITIES = ['internal', 'private'] as const satisfies readonly Visibility[];

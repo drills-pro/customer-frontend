@@ -250,19 +250,19 @@
       "pending_delete": "กำลังลบ"
     },
     "taskType": {
-      "image_classification": {
+      "image-classification": {
         "label": "จำแนกรูปภาพ",
         "description": "จัดแต่ละรูปภาพเข้าคลาสใดคลาสหนึ่งของคุณ"
       },
-      "object_detection": {
+      "object-detection": {
         "label": "ตรวจจับวัตถุ",
         "description": "หาและตีกรอบวัตถุที่สนใจทุกชิ้นในรูปภาพ"
       },
-      "tabular_classification": {
+      "tabular-classification": {
         "label": "จำแนกข้อมูลตาราง",
         "description": "ทำนายหมวดหมู่จากแถวในสเปรดชีตหรือตาราง"
       },
-      "text_classification": {
+      "text-classification": {
         "label": "จำแนกข้อความ",
         "description": "ติดป้ายกำกับข้อความ เช่น รีวิวหรือคำร้องขอความช่วยเหลือ"
       },

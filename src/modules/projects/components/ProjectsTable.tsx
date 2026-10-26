@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react';
-import { HStack, Table, Text } from '@chakra-ui/react';
+import { HStack, Link as ChakraLink, Table } from '@chakra-ui/react';
+import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import type { ProjectSummary } from '@/modules/projects/api';
 import { CopyId } from '@/modules/projects/components/CopyId';
 import { ProjectMark } from '@/modules/projects/components/ProjectMark';
 import { StatusBadge } from '@/modules/projects/components/StatusBadge';
+import { useWorkspace } from '@/modules/workspaces';
 
 /** The list view: one row per project. `created` formats a date; `menu` renders a project's actions. */
 export function ProjectsTable({
@@ -17,6 +19,7 @@ export function ProjectsTable({
   menu: (project: ProjectSummary) => ReactNode;
 }) {
   const { t } = useTranslation();
+  const { slug } = useWorkspace();
   return (
     <Table.ScrollArea borderRadius="l3" borderWidth="1px" borderColor="border" bg="surface-raised">
       <Table.Root minW="3xl" variant="data">
@@ -36,9 +39,11 @@ export function ProjectsTable({
               <Table.Cell>
                 <HStack gap="3">
                   <ProjectMark taskType={p.task_type} />
-                  <Text color="fg" fontWeight="semibold" maxW="72" truncate>
-                    {p.name}
-                  </Text>
+                  <ChakraLink asChild fontWeight="semibold" maxW="72" truncate data-testid="project-datasets-link">
+                    <Link to="/w/$slug/projects/$projectId/datasets" params={{ slug, projectId: p.id }}>
+                      {p.name}
+                    </Link>
+                  </ChakraLink>
                 </HStack>
               </Table.Cell>
               <Table.Cell>{t(`projects.taskType.${p.task_type}.label`)}</Table.Cell>

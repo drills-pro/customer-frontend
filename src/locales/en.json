@@ -107,7 +107,12 @@
     "navLabel": "Workspace",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "appearance": { "label": "Appearance", "system": "System", "dark": "Dark", "light": "Light" }
+    "appearance": {
+      "label": "Appearance",
+      "system": "System",
+      "dark": "Dark",
+      "light": "Light"
+    }
   },
   "notFound": {
     "label": "Page not found",
@@ -268,6 +273,36 @@
       },
       "legacy_untyped": {
         "label": "Untyped"
+      },
+      "image-segmentation": {
+        "label": "Image segmentation"
+      },
+      "tabular-regression": {
+        "label": "Tabular regression"
+      },
+      "token-classification": {
+        "label": "Token classification"
+      },
+      "question-answering": {
+        "label": "Question answering"
+      },
+      "summarization": {
+        "label": "Summarization"
+      },
+      "translation": {
+        "label": "Translation"
+      },
+      "text-generation": {
+        "label": "Text generation"
+      },
+      "audio-classification": {
+        "label": "Audio classification"
+      },
+      "automatic-speech-recognition": {
+        "label": "Speech recognition"
+      },
+      "text-to-speech": {
+        "label": "Text to speech"
       }
     },
     "error": {
@@ -379,5 +414,230 @@
   },
   "toast": {
     "dismiss": "Dismiss notification"
+  },
+  "datasets": {
+    "title": "Datasets",
+    "subtitle": "The data this project trains on. Each import adds a version you can review, publish and preview.",
+    "backToProjects": "Back to projects",
+    "backToDatasets": "Back to datasets",
+    "backToDataset": "Back to dataset",
+    "cancel": "Cancel",
+    "close": "Close",
+    "retry": "Try again",
+    "loadMore": "Load more",
+    "undo": "Undo",
+    "none": "None yet",
+    "loadFailed": "Could not load the datasets",
+    "loadOneFailed": "Could not load this dataset",
+    "readOnly": "Your role cannot change datasets in this project, so editing is turned off.",
+    "noTask": "No task type",
+    "notPublished": "Not published",
+    "published": "Published",
+    "deleted": "Pending deletion",
+    "deletedNotice": "This dataset is pending deletion. You can restore it until {{date}}.",
+    "versionNumber": "Version {{number}}",
+    "actions": "Actions for {{name}}",
+    "restore": "Restore dataset",
+    "rows_one": "{{formatted}} row",
+    "rows_other": "{{formatted}} rows",
+    "files_one": "{{formatted}} file",
+    "files_other": "{{formatted}} files",
+    "empty": {
+      "title": "No datasets yet",
+      "body": "Create a dataset, then import a file or a Hugging Face dataset into it."
+    },
+    "column": {
+      "name": "Name",
+      "task": "Task",
+      "published": "Published",
+      "latestImport": "Latest import",
+      "actions": "Actions",
+      "version": "Version",
+      "contents": "Contents",
+      "created": "Created",
+      "source": "Source",
+      "status": "Status"
+    },
+    "create": {
+      "open": "Create dataset",
+      "title": "Create a dataset",
+      "name": "Name",
+      "nameHelp": "You can tell datasets apart by this name.",
+      "submit": "Create"
+    },
+    "delete": {
+      "action": "Delete dataset",
+      "title": "Delete {{name}}?",
+      "body": "The dataset and its versions are hidden now and removed after {{days}} days. Until then you can restore it.",
+      "confirm": "Delete"
+    },
+    "toast": {
+      "deleted": "{{name}} was deleted",
+      "deleteFailed": "Could not delete the dataset",
+      "restored": "{{name}} was restored",
+      "restoreFailed": "Could not restore the dataset",
+      "published": "Version {{number}} is published",
+      "unpublished": "The dataset is no longer published",
+      "publishFailed": "Could not change what is published",
+      "committed": "Version {{number}} was created",
+      "commitFailed": "Could not commit the import",
+      "discardFailed": "Could not discard the import",
+      "cancelFailed": "Could not cancel the import"
+    },
+    "tab": {
+      "versions": "Versions",
+      "imports": "Imports"
+    },
+    "versions": {
+      "loadFailed": "Could not load the versions",
+      "preview": "Preview",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "empty": {
+        "title": "No versions yet",
+        "body": "A version appears when you commit an import."
+      }
+    },
+    "imports": {
+      "loadFailed": "Could not load the imports",
+      "open": "Details",
+      "empty": {
+        "title": "No imports yet",
+        "body": "Import a file or a Hugging Face dataset to make the first version."
+      }
+    },
+    "source": {
+      "upload": "File upload",
+      "huggingface": "Hugging Face"
+    },
+    "split": {
+      "none": "No split",
+      "train": "Train",
+      "validation": "Validation",
+      "test": "Test"
+    },
+    "status": {
+      "awaiting_upload": "Waiting for upload",
+      "queued": "Queued",
+      "running": "Checking data",
+      "awaiting_review": "Ready for review",
+      "committing": "Committing",
+      "succeeded": "Committed",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "expired": "Expired",
+      "discarded": "Discarded"
+    },
+    "import": {
+      "new": "New import",
+      "title": "Import",
+      "loadFailed": "Could not load this import",
+      "createdOn": "Started {{date}}",
+      "noTask": "This project has no task type, so datasets in it cannot import data. Create a project with a task type to import.",
+      "unsupportedTask": "Importing is not available for this project's task type yet.",
+      "deleted": "This dataset is pending deletion. Restore it to import data.",
+      "working": {
+        "queued": "Waiting for a free worker",
+        "running": "Checking your data"
+      },
+      "workingHelp": "This page updates by itself. You can leave and come back.",
+      "awaitingUpload": "This import is still waiting for its file. Cancel it and start a new import to upload again.",
+      "committing": "Saving the new version",
+      "review": "Review the result, then commit it as a new version or discard it.",
+      "reviewUntil": "Review the result, then commit it as a new version or discard it. It expires on {{date}}.",
+      "previewTitle": "Preview of the result",
+      "commit": "Commit",
+      "discard": "Discard",
+      "cancel": "Cancel import",
+      "succeeded": "The import was committed as a new version.",
+      "succeededVersion": "The import was committed as version {{number}}.",
+      "viewVersions": "View versions",
+      "failed": "The import failed, so no version was made. These are the reasons.",
+      "ended": {
+        "cancelled": "This import was cancelled.",
+        "expired": "This import expired before it was committed.",
+        "discarded": "This import was discarded."
+      }
+    },
+    "newImport": {
+      "title": "New import",
+      "source": "Source",
+      "sourceHelp": {
+        "upload": "Upload a file from your computer.",
+        "huggingface": "Import a public dataset from Hugging Face."
+      },
+      "file": "File",
+      "drop": "Drop a file here",
+      "choose": "Choose file",
+      "acceptCsv": "A CSV file with a header row",
+      "acceptZip": "A ZIP archive of your images and labels",
+      "target": "Target column",
+      "targetHelp": "The column the model learns to predict.",
+      "repo": "Repository",
+      "repoHelp": "A public dataset, written as owner/name.",
+      "revision": "Revision",
+      "revisionHelp": "A branch, tag or commit. Leave empty for main.",
+      "column": "Column",
+      "columnHelp": "Which column to use when the dataset has several candidates. Optional.",
+      "split": "Split",
+      "splitHelp": "Tag every imported row with this split. Optional.",
+      "base": "Add to version",
+      "baseHelp": "The import adds to the latest version and makes a new one. Earlier versions never change.",
+      "uploading": "Uploading",
+      "submit": "Upload and import",
+      "retry": "Try again",
+      "startOver": "Start over",
+      "uploadFailed": "The upload did not finish. Try again, or start over.",
+      "uploadLinkLost": "The upload link is no longer available. Start over to make a new import.",
+      "error": {
+        "required": "This is required.",
+        "invalid": "This value is not valid.",
+        "fileRequired": "Choose a file to import."
+      }
+    },
+    "report": {
+      "rows": "Rows",
+      "files": "Files",
+      "size": "Size",
+      "duplicates": "Duplicates skipped",
+      "classes": "Classes",
+      "splits": "Splits",
+      "issues_one": "{{count}} issue",
+      "issues_other": "{{count}} issues",
+      "severity": "Severity",
+      "code": "Code",
+      "path": "Where",
+      "message": "Details",
+      "error": "Error",
+      "warning": "Warning",
+      "omitted_one": "{{count}} more issue is not shown.",
+      "omitted_other": "{{count}} more issues are not shown."
+    },
+    "preview": {
+      "limit": "Rows to show",
+      "limitOption_one": "{{count}} row",
+      "limitOption_other": "{{count}} rows",
+      "refresh": "Refresh",
+      "loadFailed": "Could not load the preview",
+      "empty": "There are no rows to show.",
+      "image": "Image",
+      "imageAlt": "Image in row {{row}}",
+      "shown_one": "Showing {{count}} row",
+      "shown_other": "Showing {{count}} rows"
+    },
+    "version": {
+      "title": "Version preview",
+      "titleNumber": "Version {{number}}",
+      "subtitle": "A sample of the rows in this version."
+    },
+    "error": {
+      "invalidState": "Someone else already changed this import. We loaded its current state.",
+      "tooManyImports": "Your workspace has too many imports in progress. Wait for one to finish and try again.",
+      "noTaskType": "This project has no task type, so it cannot import data.",
+      "invalidParams": "Some import details were not accepted. Check them and try again.",
+      "staleBase": "A newer version exists. Reload and start the import from the latest version.",
+      "notDeleted": "This dataset is not pending deletion, or the time to restore it has passed.",
+      "keyReused": "This attempt was already used with different details. Start over."
+    }
   }
 }

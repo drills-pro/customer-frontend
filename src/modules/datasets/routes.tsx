@@ -33,3 +33,6 @@ export const versionRoute = createRoute({
   path: '$datasetId/versions/$versionId',
   component: VersionPage,
 });
+
+/** The whole subtree, for the router to mount under the project route. */
+export const datasetsRoute = datasetsLayoutRoute.addChildren([datasetListRoute, datasetRoute, newImportRoute, importRoute, versionRoute]);

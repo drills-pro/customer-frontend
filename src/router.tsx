@@ -3,7 +3,7 @@ import { createQueryClient } from '@/shared/api/query';
 import { manager } from '@/shared/auth/manager';
 import { ErrorScreen } from '@/shared/ui/ErrorScreen';
 import { callbackRoute, loginRoute, signupRoute } from '@/modules/auth';
-import { datasetListRoute, datasetRoute, datasetsLayoutRoute, importRoute, newImportRoute, versionRoute } from '@/modules/datasets';
+import { datasetsRoute } from '@/modules/datasets';
 import { membersRoute, inviteRoute } from '@/modules/members';
 import { newProjectRoute, projectListRoute, projectsLayoutRoute } from '@/modules/projects';
 import { appRoute, homeRoute, newRoute, overviewRoute, settingsRoute, workspaceRoute } from '@/modules/workspaces';
@@ -20,11 +20,7 @@ const routeTree = rootRoute.addChildren([
     inviteRoute,
     workspaceRoute.addChildren([
       overviewRoute,
-      projectsLayoutRoute.addChildren([
-        projectListRoute,
-        newProjectRoute,
-        datasetsLayoutRoute.addChildren([datasetListRoute, datasetRoute, newImportRoute, importRoute, versionRoute]),
-      ]),
+      projectsLayoutRoute.addChildren([projectListRoute, newProjectRoute, datasetsRoute]),
       membersRoute,
       settingsRoute,
     ]),

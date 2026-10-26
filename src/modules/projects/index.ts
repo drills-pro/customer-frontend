@@ -1,1 +1,1 @@
-export { newProjectRoute, projectListRoute, projectsLayoutRoute } from './routes';
+export { projectsLayoutRoute, projectsRoute } from './routes';

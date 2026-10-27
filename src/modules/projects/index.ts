@@ -1,1 +1,1 @@
-export { projectsLayoutRoute, projectsRoute } from './routes';
+export { projectRoute, projectsRoute } from './routes';

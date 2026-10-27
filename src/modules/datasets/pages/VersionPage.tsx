@@ -29,7 +29,7 @@ export function VersionPage() {
             {t('datasets.backToDataset')}
           </Link>
         </Button>
-        <Heading as="h1" textStyle="h1">
+        <Heading as="h2" textStyle="h2">
           {number === undefined ? t('datasets.version.title') : t('datasets.version.titleNumber', { number })}
         </Heading>
         <Text mt="1" color="fg.muted">

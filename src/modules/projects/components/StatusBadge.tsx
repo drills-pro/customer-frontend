@@ -16,7 +16,7 @@ export function StatusBadge({ status }: { status: ProjectStatus }) {
   const { t } = useTranslation();
   const look = STATUS_LOOK[status];
   return (
-    <Badge colorPalette={look.palette} variant="subtle" gap="1">
+    <Badge colorPalette={look.palette} variant="subtle" gap="1" data-testid="project-status" data-status={status}>
       <look.icon width={12} height={12} />
       {t(`projects.status.${status}`)}
     </Badge>

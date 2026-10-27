@@ -5,10 +5,10 @@ import { DatasetsPage } from '@/modules/datasets/pages/DatasetsPage';
 import { ImportPage } from '@/modules/datasets/pages/ImportPage';
 import { NewImportPage } from '@/modules/datasets/pages/NewImportPage';
 import { VersionPage } from '@/modules/datasets/pages/VersionPage';
-import { projectsLayoutRoute } from '@/modules/projects';
+import { projectRoute } from '@/modules/projects';
 
 /** Parent of every /w/$slug/projects/$projectId/datasets page; renders only its child. */
-export const datasetsLayoutRoute = createRoute({ getParentRoute: () => projectsLayoutRoute, path: '$projectId/datasets' });
+export const datasetsLayoutRoute = createRoute({ getParentRoute: () => projectRoute, path: 'datasets' });
 export const datasetListRoute = createRoute({ getParentRoute: () => datasetsLayoutRoute, path: '/', component: DatasetsPage });
 export const datasetRoute = createRoute({
   getParentRoute: () => datasetsLayoutRoute,

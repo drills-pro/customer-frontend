@@ -18,8 +18,8 @@ export function ProjectCard({ project, created, menu }: { project: ProjectSummar
         <ProjectMark taskType={project.task_type} />
         <Box flex="1" minW="0">
           <Card.Title as="h2" textStyle="body" fontWeight="semibold" truncate>
-            <ChakraLink asChild data-testid="project-datasets-link">
-              <Link to="/w/$slug/projects/$projectId/datasets" params={{ slug, projectId: project.id }}>
+            <ChakraLink asChild data-testid="project-link">
+              <Link to="/w/$slug/projects/$projectId" params={{ slug, projectId: project.id }}>
                 {project.name}
               </Link>
             </ChakraLink>

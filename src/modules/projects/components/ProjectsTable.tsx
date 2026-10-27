@@ -39,8 +39,8 @@ export function ProjectsTable({
               <Table.Cell>
                 <HStack gap="3">
                   <ProjectMark taskType={p.task_type} />
-                  <ChakraLink asChild fontWeight="semibold" maxW="72" truncate data-testid="project-datasets-link">
-                    <Link to="/w/$slug/projects/$projectId/datasets" params={{ slug, projectId: p.id }}>
+                  <ChakraLink asChild fontWeight="semibold" maxW="72" truncate data-testid="project-link">
+                    <Link to="/w/$slug/projects/$projectId" params={{ slug, projectId: p.id }}>
                       {p.name}
                     </Link>
                   </ChakraLink>

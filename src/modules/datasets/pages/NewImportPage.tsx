@@ -63,7 +63,7 @@ export function NewImportPage() {
     <Stack gap="6">
       <Box>
         {back}
-        <Heading as="h1" textStyle="h1">
+        <Heading as="h2" textStyle="h2">
           {t('datasets.newImport.title')}
         </Heading>
       </Box>

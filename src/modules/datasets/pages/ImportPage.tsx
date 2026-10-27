@@ -72,7 +72,7 @@ export function ImportPage() {
       <Box>
         {back}
         <Flex align="center" gap="3" wrap="wrap">
-          <Heading as="h1" textStyle="h1">
+          <Heading as="h2" textStyle="h2">
             {t('datasets.import.title')}
           </Heading>
           <ImportStatusBadge status={item.status} />
@@ -194,7 +194,7 @@ function ImportBody({
           </Alert.Root>
           {item.report && <ReportView report={item.report} />}
           <Box>
-            <Heading as="h2" textStyle="h3" mb="3">
+            <Heading as="h3" textStyle="h3" mb="3">
               {t('datasets.import.previewTitle')}
             </Heading>
             <PreviewPanel query={preview} limit={limit} onLimit={setLimit} />

@@ -18,6 +18,14 @@ export const workspaceQuery = (id: string) =>
   });
 export const useWorkspaceDetail = (id: string) => useSuspenseQuery(workspaceQuery(id)).data;
 
+/** The workspace's members with their names. Listing them takes `tenant.admin`. */
+export const membersKey = (id: string) => [...workspaceKey(id), 'members'] as const;
+export const membersQuery = (id: string) =>
+  queryOptions({
+    queryKey: membersKey(id),
+    queryFn: () => unwrap(client.GET('/v1/tenants/{tenant_id}/members', { params: { path: { tenant_id: id } } })),
+  });
+
 /** Anything that changes a workspace also changes the switcher, which reads /v1/me. */
 function useRefresh(id?: string) {
   const qc = useQueryClient();

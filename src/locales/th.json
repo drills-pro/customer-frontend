@@ -350,6 +350,76 @@
     "noMatch": {
       "title": "ไม่พบโปรเจกต์ที่ตรงกัน",
       "body": "ลองค้นหาด้วยคำอื่นหรือเปลี่ยนตัวกรอง"
+    },
+    "detail": {
+      "back": "กลับไปโปรเจกต์",
+      "sections": "ส่วนของโปรเจกต์",
+      "loadFailed": "โหลดโปรเจกต์นี้ไม่สำเร็จ",
+      "tab": {
+        "overview": "ภาพรวม",
+        "datasets": "ชุดข้อมูล"
+      },
+      "newTraining": "เทรนใหม่"
+    },
+    "overview": {
+      "pipeline": {
+        "title": "ไปป์ไลน์",
+        "unavailable": "ไม่พร้อมใช้งาน",
+        "withActive": "{{total}}, กำลังดำเนินการ {{active}}",
+        "data": {
+          "title": "ข้อมูล",
+          "count_one": "{{count}} ชุดข้อมูล",
+          "count_other": "{{count}} ชุดข้อมูล",
+          "countMore_one": "{{count}}+ ชุดข้อมูล",
+          "countMore_other": "{{count}}+ ชุดข้อมูล"
+        },
+        "train": {
+          "title": "เทรน",
+          "count_one": "เทรน {{count}} รอบ",
+          "count_other": "เทรน {{count}} รอบ",
+          "countMore_one": "เทรน {{count}}+ รอบ",
+          "countMore_other": "เทรน {{count}}+ รอบ"
+        },
+        "deploy": {
+          "title": "ดีพลอย",
+          "count_one": "ใช้งานอยู่ {{count}} ปลายทาง",
+          "count_other": "ใช้งานอยู่ {{count}} ปลายทาง",
+          "countMore_one": "ใช้งานอยู่ {{count}}+ ปลายทาง",
+          "countMore_other": "ใช้งานอยู่ {{count}}+ ปลายทาง"
+        },
+        "state": {
+          "done": "เสร็จแล้ว",
+          "active": "กำลังดำเนินการ",
+          "todo": "ยังไม่เริ่ม",
+          "unavailable": "ไม่พร้อมใช้งาน"
+        }
+      },
+      "info": {
+        "title": "ข้อมูลโปรเจกต์",
+        "created": "สร้างเมื่อ",
+        "task": "งาน",
+        "status": "สถานะ",
+        "visibility": "การมองเห็น",
+        "access": "สิทธิ์ของสมาชิก",
+        "accessLevel": {
+          "read": "ดูได้",
+          "edit": "แก้ไขได้"
+        }
+      },
+      "team": {
+        "title": "ทีม",
+        "you": "คุณ",
+        "empty": "ยังไม่มีใครถูกเพิ่มในโปรเจกต์นี้",
+        "loadFailed": "โหลดรายชื่อทีมไม่สำเร็จ"
+      }
+    },
+    "role": {
+      "project_admin": "ผู้ดูแลโปรเจกต์",
+      "editor": "ผู้แก้ไข",
+      "dataset_editor": "ผู้แก้ไขชุดข้อมูล",
+      "model_editor": "ผู้แก้ไขโมเดล",
+      "deployer": "ผู้ดีพลอย",
+      "viewer": "ผู้ดู"
     }
   },
   "newProject": {
@@ -418,7 +488,6 @@
   "datasets": {
     "title": "ชุดข้อมูล",
     "subtitle": "ข้อมูลที่โปรเจกต์นี้ใช้ฝึกโมเดล การนำเข้าแต่ละครั้งจะเพิ่มเวอร์ชันที่ตรวจสอบ เผยแพร่ และดูตัวอย่างได้",
-    "backToProjects": "กลับไปโปรเจกต์",
     "backToDatasets": "กลับไปชุดข้อมูล",
     "backToDataset": "กลับไปชุดข้อมูลนี้",
     "cancel": "ยกเลิก",

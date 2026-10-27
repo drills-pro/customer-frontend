@@ -1,15 +1,9 @@
 import { useMutation, useQueryClient, useSuspenseQuery, queryOptions } from '@tanstack/react-query';
 import { client, unwrap } from '@/shared/api/client';
-import { meKey } from '@/modules/workspaces';
+import { meKey, membersKey, membersQuery } from '@/modules/workspaces';
 
-export const membersKey = (id: string) => ['workspace', id, 'members'] as const;
 export const invitationsKey = (id: string) => ['workspace', id, 'invitations'] as const;
 
-export const membersQuery = (id: string) =>
-  queryOptions({
-    queryKey: membersKey(id),
-    queryFn: () => unwrap(client.GET('/v1/tenants/{tenant_id}/members', { params: { path: { tenant_id: id } } })),
-  });
 export const invitationsQuery = (id: string) =>
   queryOptions({
     queryKey: invitationsKey(id),

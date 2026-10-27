@@ -7,15 +7,15 @@ import { CopyId } from '@/modules/projects/components/CopyId';
 import { ProjectMark } from '@/modules/projects/components/ProjectMark';
 import { ProjectMenu } from '@/modules/projects/components/ProjectMenu';
 import { StatusBadge } from '@/modules/projects/components/StatusBadge';
-import { PROJECT_TABS } from '@/modules/projects/constants';
+import { PROJECT_TABS, ProjectTab } from '@/modules/projects/constants';
 import { useWorkspace } from '@/modules/workspaces';
 import { ApiError } from '@/shared/api/client';
 import { errorKey } from '@/shared/api/errors';
 import { NotFound } from '@/shared/ui/NotFound';
 
 const TAB_PATHS = {
-  [PROJECT_TABS.overview]: '/w/$slug/projects/$projectId',
-  [PROJECT_TABS.datasets]: '/w/$slug/projects/$projectId/datasets',
+  [ProjectTab.Overview]: '/w/$slug/projects/$projectId',
+  [ProjectTab.Datasets]: '/w/$slug/projects/$projectId/datasets',
 } as const;
 
 /** One project: its header and section tabs around the section's page. */
@@ -25,7 +25,7 @@ export function ProjectLayout() {
   const { projectId } = useParams({ from: '/app/w/$slug/projects/$projectId' });
   const matchRoute = useMatchRoute();
   const { data: project, error, isError, isPending, refetch } = useProject(workspaceId, projectId);
-  const tab = matchRoute({ to: TAB_PATHS[PROJECT_TABS.datasets], fuzzy: true }) ? PROJECT_TABS.datasets : PROJECT_TABS.overview;
+  const tab = matchRoute({ to: TAB_PATHS[ProjectTab.Datasets], fuzzy: true }) ? ProjectTab.Datasets : ProjectTab.Overview;
 
   if (isError) {
     if (error instanceof ApiError && error.status === 404) return <NotFound />;
@@ -88,7 +88,7 @@ export function ProjectLayout() {
       <Tabs.Root value={tab} activationMode="manual">
         <Tabs.List aria-label={t('projects.detail.sections')}>
           <Tabs.Indicator />
-          {Object.values(PROJECT_TABS).map((id) => (
+          {PROJECT_TABS.map((id) => (
             <Tabs.Trigger key={id} value={id} asChild data-testid={`project-tab-${id}`}>
               <Link to={TAB_PATHS[id]} params={{ slug, projectId }}>
                 {t(`projects.detail.tab.${id}`)}

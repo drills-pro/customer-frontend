@@ -383,9 +383,7 @@
         "deploy": {
           "title": "Deploy",
           "count_one": "{{count}} live endpoint",
-          "count_other": "{{count}} live endpoints",
-          "countMore_one": "{{count}}+ live endpoints",
-          "countMore_other": "{{count}}+ live endpoints"
+          "count_other": "{{count}} live endpoints"
         },
         "state": {
           "done": "Done",

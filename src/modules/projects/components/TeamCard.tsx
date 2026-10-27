@@ -4,7 +4,8 @@ import { Users } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { useProjectMembers, type ProjectDetail } from '@/modules/projects/api';
 import { PROJECT_ROLES } from '@/modules/projects/constants';
-import { membersQuery, useCan, useMe, useWorkspace } from '@/modules/workspaces';
+import { membersQuery } from '@/modules/members';
+import { useCan, useMe, useWorkspace } from '@/modules/workspaces';
 
 /** Shown in place of a name we cannot read: the start of the member's id. */
 const SHORT_ID_LENGTH = 8;

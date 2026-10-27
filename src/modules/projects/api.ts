@@ -1,6 +1,7 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useInfiniteQuery, useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { TRAINING_RUN_LIMIT } from '@/modules/projects/constants';
 import { client, unwrap, type Schemas } from '@/shared/api/client';
+import { datasetListKey } from '@/shared/api/keys';
 
 export type ProjectSummary = Schemas['ProjectSummary'];
 export type ProjectStatus = Schemas['ProjectStatus'];
@@ -90,13 +91,15 @@ export function useUpdateProjectStatus(workspaceId: string) {
   });
 }
 
-export function useProject(workspaceId: string, projectId: string) {
-  return useQuery({
+const projectQuery = (workspaceId: string, projectId: string) =>
+  queryOptions({
     queryKey: projectKey(workspaceId, projectId),
     queryFn: () =>
       unwrap(client.GET('/v1/projects/{project_id}', { params: { path: { project_id: projectId }, header: tenantHeader(workspaceId) } })),
   });
-}
+export const useProject = (workspaceId: string, projectId: string) => useQuery(projectQuery(workspaceId, projectId));
+/** For pages under the project layout, which renders them only once the project has loaded. */
+export const useProjectDetail = (workspaceId: string, projectId: string) => useSuspenseQuery(projectQuery(workspaceId, projectId)).data;
 
 export function useProjectMembers(workspaceId: string, projectId: string) {
   return useQuery({
@@ -132,14 +135,10 @@ export function useDeployments(workspaceId: string, projectId: string) {
   });
 }
 
-/**
- * The first page of the project's datasets, for a count. The key sits under the datasets module's list key
- * (`['project', id, 'datasets', 'list']`, the datasets module's `listKey`), so creating, deleting or restoring a dataset refreshes it.
- * Projects cannot import datasets (the dependency points the other way), hence the shared prefix instead of a shared query.
- */
+/** The first page of the project's datasets, for a count. Its key sits under the dataset list's, so dataset changes refresh it. */
 export function useDatasetCount(workspaceId: string, projectId: string) {
   return useQuery({
-    queryKey: ['project', projectId, 'datasets', 'list', 'count'],
+    queryKey: [...datasetListKey(projectId), 'count'],
     queryFn: () =>
       unwrap(
         client.GET('/v1/projects/{project_id}/datasets', {

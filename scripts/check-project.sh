@@ -38,7 +38,7 @@ for m in auth workspaces members projects datasets; do
     auth) banned='workspaces|members|projects|datasets' ;;
     workspaces) banned='members|projects|datasets' ;;
     members) banned='projects|datasets' ;;
-    projects) banned='members|datasets' ;;
+    projects) banned='datasets' ;;
     datasets) banned='members' ;;
   esac
   for o in auth workspaces members projects datasets; do

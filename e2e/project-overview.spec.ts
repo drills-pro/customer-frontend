@@ -26,7 +26,7 @@ test('the pipeline counts datasets, runs and live deployments', async ({ page, a
   await expect(page.getByTestId('pipeline-deploy')).toHaveAttribute('data-count', '1');
 });
 
-test('an empty project has every stage still to do', async ({ page, api }) => {
+test('a deployment in progress marks only the deploy stage active', async ({ page, api }) => {
   deployment(api, 'deploying');
   await page.goto(BASE);
   await expect(page.getByTestId('pipeline-data')).toHaveAttribute('data-state', 'todo');

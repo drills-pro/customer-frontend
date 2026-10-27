@@ -1,8 +1,6 @@
-import type { ComponentType, SVGProps } from 'react';
 import { AiScan, Grid2x3, Image, TextStartT } from 'pixelarticons/react';
 import type { ProjectRole, TASK_TYPES } from '@/modules/projects/api';
-
-type PixelIcon = ComponentType<SVGProps<SVGSVGElement>>;
+import type { PixelIcon } from '@/shared/ui/icons';
 
 /** The wizard's steps; `done` shows the new project. Each id is also its `newProject.step.*` key. */
 export const STEPS = ['basics', 'task', 'review', 'done'] as const;
@@ -20,8 +18,17 @@ export const TASK_ICONS: Record<(typeof TASK_TYPES)[number], PixelIcon> = {
 };
 
 /** The project's sections; each id is also its `projects.detail.tab.*` key. */
-export const PROJECT_TABS = { overview: 'overview', datasets: 'datasets' } as const;
-export type ProjectTab = (typeof PROJECT_TABS)[keyof typeof PROJECT_TABS];
+export const ProjectTab = { Overview: 'overview', Datasets: 'datasets' } as const;
+export type ProjectTab = (typeof ProjectTab)[keyof typeof ProjectTab];
+export const PROJECT_TABS: readonly ProjectTab[] = [ProjectTab.Overview, ProjectTab.Datasets];
+
+/** The overview's pipeline stages, in order; each id is also its `projects.overview.pipeline.*` key. */
+export const PIPELINE_STAGES = ['data', 'train', 'deploy'] as const;
+export type StageId = (typeof PIPELINE_STAGES)[number];
+
+/** Where a pipeline stage stands; each is also its `projects.overview.pipeline.state.*` key. */
+export const StageState = { Done: 'done', Active: 'active', Todo: 'todo', Unavailable: 'unavailable' } as const;
+export type StageState = (typeof StageState)[keyof typeof StageState];
 
 /** The API types run and deployment `status` as a plain string. Values mirror core-api (training/constants.py, deployments/status.py). */
 export const TrainingStatus = {

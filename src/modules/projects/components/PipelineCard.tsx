@@ -1,13 +1,14 @@
-import { Fragment, type ComponentType, type SVGProps } from 'react';
+import { Fragment } from 'react';
 import { Badge, Box, Card, Center, Flex, Grid, HStack, Link as ChakraLink, Skeleton, Text } from '@chakra-ui/react';
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, Checkbox, CheckboxOn, Hourglass, Minus } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { useDatasetCount, useDeployments, useTrainingRuns } from '@/modules/projects/api';
-import { dataStage, deployStage, PIPELINE_STAGES, StageState, trainStage, type Stage, type StageId } from '@/modules/projects/pipeline';
+import { PIPELINE_STAGES, StageState, type StageId } from '@/modules/projects/constants';
+import { dataStage, deployStage, trainStage, type Stage } from '@/modules/projects/pipeline';
 import { useWorkspace } from '@/modules/workspaces';
+import type { PixelIcon } from '@/shared/ui/icons';
 
-type PixelIcon = ComponentType<SVGProps<SVGSVGElement>>;
 /** Status always shows a glyph and a word. */
 const STATE_LOOK: Record<StageState, { icon: PixelIcon; palette: string }> = {
   [StageState.Done]: { icon: CheckboxOn, palette: 'success' },

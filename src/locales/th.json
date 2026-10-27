@@ -383,9 +383,7 @@
         "deploy": {
           "title": "ดีพลอย",
           "count_one": "ใช้งานอยู่ {{count}} ปลายทาง",
-          "count_other": "ใช้งานอยู่ {{count}} ปลายทาง",
-          "countMore_one": "ใช้งานอยู่ {{count}}+ ปลายทาง",
-          "countMore_other": "ใช้งานอยู่ {{count}}+ ปลายทาง"
+          "count_other": "ใช้งานอยู่ {{count}} ปลายทาง"
         },
         "state": {
           "done": "เสร็จแล้ว",

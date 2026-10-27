@@ -1,12 +1,11 @@
 import { Box, Flex, Input, InputGroup } from '@chakra-ui/react';
-import type { ComponentType, SVGProps } from 'react';
 import { Grid2x22, ListBox, Search } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { RadioButton, RadioButtonGroup } from '@/components/radio-button-group';
 import { SimpleSelect } from '@/components/simple-select';
 import { ALL, LISTED_STATUSES, LISTED_TASK_TYPES, SORTS, VIEWS, type ProjectFiltersState, type View } from '@/modules/projects/filters';
+import type { PixelIcon } from '@/shared/ui/icons';
 
-type PixelIcon = ComponentType<SVGProps<SVGSVGElement>>;
 const VIEW_ICONS: Record<View, PixelIcon> = { grid: Grid2x22, list: ListBox };
 
 /** Search, task, status and sort over the loaded projects, and the grid/list switch. */

@@ -1,11 +1,10 @@
 import { Badge } from '@chakra-ui/react';
-import type { ComponentType, SVGProps } from 'react';
 import { Archive, CheckboxOn, Trash } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import type { ProjectStatus } from '@/modules/projects/api';
+import type { PixelIcon } from '@/shared/ui/icons';
 
 /** Status always shows a glyph and a word. */
-type PixelIcon = ComponentType<SVGProps<SVGSVGElement>>;
 const STATUS_LOOK: Record<ProjectStatus, { icon: PixelIcon; palette: string }> = {
   active: { icon: CheckboxOn, palette: 'success' },
   archived: { icon: Archive, palette: 'gray' },

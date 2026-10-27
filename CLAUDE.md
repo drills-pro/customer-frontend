@@ -37,7 +37,7 @@ For anything the specs do not cover, verify UI in a browser. Check size, spacing
 
 Feature modules under `src/modules/`, shared plumbing under `src/shared/`. Import across folders with the `@/` alias (`@/shared/ui/Splash`); `../` imports
 are banned (`pnpm lint:project`), `./x` stays for the same folder. Dependencies point one way: `shared` imports no module; `auth` imports shared only;
-`workspaces` imports auth and shared; `members` and `projects` may import workspaces, auth and shared; `datasets` may also import projects (its routes hang under the project route). `src/router.tsx`, `src/root-route.tsx` and `src/main.tsx` may import
+`workspaces` imports auth and shared; `members` may import workspaces, auth and shared; `projects` may also import members (the team card reads the member list); `datasets` may also import projects (its routes hang under the project route). `src/router.tsx`, `src/root-route.tsx` and `src/main.tsx` may import
 any module. Another module is imported only through its `index.ts` (`@/modules/workspaces`), never by deep path; inside its own module a file may use deep
 `@/modules/<name>/...` paths.
 

@@ -35,7 +35,14 @@ export function ProjectMenu({ project, workspaceId }: { project: ProjectSummary;
   return (
     <Menu.Root positioning={{ placement: 'bottom-end' }}>
       <Menu.Trigger asChild>
-        <IconButton variant="ghost" size="xs" flexShrink={0} color="fg.muted" aria-label={t('projects.actions', { name: project.name })}>
+        <IconButton
+          variant="ghost"
+          size="xs"
+          flexShrink={0}
+          color="fg.muted"
+          aria-label={t('projects.actions', { name: project.name })}
+          data-testid="project-menu"
+        >
           <MoreVertical />
         </IconButton>
       </Menu.Trigger>
@@ -46,7 +53,7 @@ export function ProjectMenu({ project, workspaceId }: { project: ProjectSummary;
               <Copy />
               {t('projects.copyId')}
             </Menu.Item>
-            <Menu.Item value="archive" disabled={updateStatus.isPending} onSelect={toggleArchive}>
+            <Menu.Item value="archive" disabled={updateStatus.isPending} onSelect={toggleArchive} data-testid="project-menu-archive">
               {archived ? <Undo /> : <Archive />}
               {t(archived ? 'projects.menu.unarchive' : 'projects.menu.archive')}
             </Menu.Item>

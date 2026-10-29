@@ -5,6 +5,7 @@ import { meKey } from '@/modules/workspaces';
 export const membersKey = (id: string) => ['workspace', id, 'members'] as const;
 export const invitationsKey = (id: string) => ['workspace', id, 'invitations'] as const;
 
+/** The workspace's members with their names. Listing them takes `tenant.admin`. */
 export const membersQuery = (id: string) =>
   queryOptions({
     queryKey: membersKey(id),

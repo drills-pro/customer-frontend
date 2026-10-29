@@ -350,6 +350,74 @@
     "noMatch": {
       "title": "No matching projects",
       "body": "Try a different search or change the filters."
+    },
+    "detail": {
+      "back": "Back to projects",
+      "sections": "Project sections",
+      "loadFailed": "Could not load this project",
+      "tab": {
+        "overview": "Overview",
+        "datasets": "Datasets"
+      },
+      "newTraining": "New training"
+    },
+    "overview": {
+      "pipeline": {
+        "title": "Pipeline",
+        "unavailable": "Not available",
+        "withActive": "{{total}}, {{active}} in progress",
+        "data": {
+          "title": "Data",
+          "count_one": "{{count}} dataset",
+          "count_other": "{{count}} datasets",
+          "countMore_one": "{{count}}+ datasets",
+          "countMore_other": "{{count}}+ datasets"
+        },
+        "train": {
+          "title": "Train",
+          "count_one": "{{count}} run",
+          "count_other": "{{count}} runs",
+          "countMore_one": "{{count}}+ runs",
+          "countMore_other": "{{count}}+ runs"
+        },
+        "deploy": {
+          "title": "Deploy",
+          "count_one": "{{count}} live endpoint",
+          "count_other": "{{count}} live endpoints"
+        },
+        "state": {
+          "done": "Done",
+          "active": "In progress",
+          "todo": "Not started",
+          "unavailable": "Unavailable"
+        }
+      },
+      "info": {
+        "title": "Project info",
+        "created": "Created",
+        "task": "Task",
+        "status": "Status",
+        "visibility": "Visibility",
+        "access": "Member access",
+        "accessLevel": {
+          "read": "Can view",
+          "edit": "Can edit"
+        }
+      },
+      "team": {
+        "title": "Team",
+        "you": "You",
+        "empty": "No one has been added to this project yet.",
+        "loadFailed": "Could not load the team."
+      }
+    },
+    "role": {
+      "project_admin": "Project admin",
+      "editor": "Editor",
+      "dataset_editor": "Dataset editor",
+      "model_editor": "Model editor",
+      "deployer": "Deployer",
+      "viewer": "Viewer"
     }
   },
   "newProject": {
@@ -418,7 +486,6 @@
   "datasets": {
     "title": "Datasets",
     "subtitle": "The data this project trains on. Each import adds a version you can review, publish and preview.",
-    "backToProjects": "Back to projects",
     "backToDatasets": "Back to datasets",
     "backToDataset": "Back to dataset",
     "cancel": "Cancel",

@@ -52,7 +52,7 @@ export function DatasetPage() {
         </Button>
         <Flex align="end" justify="space-between" gap="4" wrap="wrap">
           <Box minW="0">
-            <Heading as="h1" textStyle="h1" truncate data-testid="dataset-name">
+            <Heading as="h2" textStyle="h2" truncate data-testid="dataset-name">
               {dataset.name}
             </Heading>
             <HStack mt="1" gap="3" wrap="wrap" color="fg.muted">

@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { ApiError, client, unwrap, type Schemas } from '@/shared/api/client';
+import { datasetListKey, projectDatasetsKey } from '@/shared/api/keys';
 import { isForbidden } from '@/modules/datasets/errors';
 import { nextPoll } from '@/modules/datasets/status';
 
@@ -11,10 +12,7 @@ export type ImportCreate = Schemas['ImportCreate'];
 export type ImportReport = Schemas['ImportReport'];
 export type DatasetPreview = Schemas['DatasetPreview'];
 
-/** Every dataset query hangs off the project, so one invalidation covers a project's datasets. */
-const root = (projectId: string) => ['project', projectId, 'datasets'] as const;
-export const datasetKey = (projectId: string, datasetId: string) => [...root(projectId), datasetId] as const;
-const listKey = (projectId: string) => [...root(projectId), 'list'] as const;
+export const datasetKey = (projectId: string, datasetId: string) => [...projectDatasetsKey(projectId), datasetId] as const;
 const versionsKey = (projectId: string, datasetId: string) => [...datasetKey(projectId, datasetId), 'versions'] as const;
 const importsKey = (projectId: string, datasetId: string, pageSize?: number) =>
   [...datasetKey(projectId, datasetId), 'imports', pageSize ?? 'all'] as const;
@@ -23,7 +21,7 @@ export const importKey = (projectId: string, datasetId: string, importId: string
 
 const path = (projectId: string, datasetId: string) => ({ project_id: projectId, dataset_id: datasetId });
 
-const deniedKey = (projectId: string) => [...root(projectId), 'write-denied'] as const;
+const deniedKey = (projectId: string) => [...projectDatasetsKey(projectId), 'write-denied'] as const;
 /** A 403 on any write means this user cannot change the project's datasets: remember it so the pages disable their write actions. */
 const noteDenied = (qc: QueryClient, projectId: string) => (e: unknown) => {
   if (isForbidden(e)) qc.setQueryData(deniedKey(projectId), true);
@@ -40,7 +38,7 @@ const onImportError = (qc: QueryClient, projectId: string, datasetId: string, im
 
 export function useDatasets(projectId: string) {
   const query = useInfiniteQuery({
-    queryKey: listKey(projectId),
+    queryKey: datasetListKey(projectId),
     initialPageParam: null as string | null,
     queryFn: ({ pageParam }) =>
       unwrap(
@@ -63,7 +61,7 @@ export function useCreateDataset(projectId: string) {
   return useMutation({
     mutationFn: (name: string) =>
       unwrap(client.POST('/v1/projects/{project_id}/datasets', { params: { path: { project_id: projectId } }, body: { name } })),
-    onSuccess: () => qc.invalidateQueries({ queryKey: listKey(projectId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: datasetListKey(projectId) }),
     onError: noteDenied(qc, projectId),
   });
 }
@@ -75,7 +73,7 @@ function useDatasetMutation<V>(projectId: string, run: (datasetId: string, vars:
     mutationFn: ({ datasetId, ...vars }: { datasetId: string } & V) => run(datasetId, vars as V),
     onSuccess: (dataset) => {
       qc.setQueryData(datasetKey(projectId, dataset.id), dataset);
-      return qc.invalidateQueries({ queryKey: listKey(projectId) });
+      return qc.invalidateQueries({ queryKey: datasetListKey(projectId) });
     },
     onError: noteDenied(qc, projectId),
   });

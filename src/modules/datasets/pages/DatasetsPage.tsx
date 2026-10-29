@@ -1,6 +1,6 @@
 import { Box, Button, EmptyState, Flex, Heading, Skeleton, Stack, Text } from '@chakra-ui/react';
-import { Link, useNavigate, useParams } from '@tanstack/react-router';
-import { ArrowLeft, Database } from 'pixelarticons/react';
+import { useNavigate, useParams } from '@tanstack/react-router';
+import { Database } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { useDatasets, useWriteDenied } from '@/modules/datasets/api';
 import { CreateDatasetDialog } from '@/modules/datasets/components/CreateDatasetDialog';
@@ -22,25 +22,17 @@ export function DatasetsPage() {
 
   return (
     <Stack gap="6">
-      <Box>
-        <Button asChild variant="ghost" size="sm" mb="2">
-          <Link to="/w/$slug/projects" params={{ slug }}>
-            <ArrowLeft />
-            {t('datasets.backToProjects')}
-          </Link>
-        </Button>
-        <Flex align="end" justify="space-between" gap="4" wrap="wrap">
-          <Box>
-            <Heading as="h1" textStyle="h1">
-              {t('datasets.title')}
-            </Heading>
-            <Text mt="1" color="fg.muted">
-              {t('datasets.subtitle')}
-            </Text>
-          </Box>
-          {create}
-        </Flex>
-      </Box>
+      <Flex align="end" justify="space-between" gap="4" wrap="wrap">
+        <Box>
+          <Heading as="h2" textStyle="h2">
+            {t('datasets.title')}
+          </Heading>
+          <Text mt="1" color="fg.muted">
+            {t('datasets.subtitle')}
+          </Text>
+        </Box>
+        {create}
+      </Flex>
       {denied && (
         <Text color="fg.muted" data-testid="datasets-read-only">
           {t('datasets.readOnly')}

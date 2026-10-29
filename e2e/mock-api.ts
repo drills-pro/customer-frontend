@@ -60,6 +60,41 @@ export interface VersionRec {
   stats: Record<string, number>;
   created_at: string;
 }
+export interface ProjectRec {
+  id: string;
+  name: string;
+  status: 'active' | 'archived' | 'pending_delete';
+  team_id: string | null;
+  task_type: string;
+  created_at: string;
+  default_test_dataset_id: string | null;
+  settings: Record<string, unknown>;
+  visibility: 'internal' | 'private';
+  default_access: 'read' | 'edit';
+  publish_project_metadata: boolean;
+}
+export interface ProjectMemberRec {
+  user_sub: string;
+  roles: string[];
+  created_at: string;
+}
+export interface RunRec {
+  id: string;
+  status: string;
+  dataset_ref: string;
+  ray_job_id: string;
+  mlflow_run_id: string | null;
+  config: unknown;
+  metrics: unknown;
+  created_at: string;
+  completed_at: string | null;
+}
+export interface DeploymentRec {
+  id: string;
+  status: string;
+  route_prefix: string;
+  created_at: string;
+}
 export interface PreviewRow {
   data: Record<string, unknown>;
   url?: string;
@@ -72,6 +107,13 @@ export interface ApiState {
   invitations: Invitation[];
   /** Tokens `POST /v1/invitations/{token}:accept` accepts, mapped to the workspace they join. */
   acceptable: Record<string, string>;
+  /** The workspace's one project, PROJECT; any other id answers 404. */
+  project: ProjectRec;
+  projectMembers: ProjectMemberRec[];
+  runs: RunRec[];
+  deployments: DeploymentRec[];
+  /** The training-runs list answers 500. */
+  failRuns: boolean;
   datasets: DatasetRec[];
   imports: ImportRec[];
   versions: VersionRec[];
@@ -114,6 +156,23 @@ export const newState = (): ApiState => ({
   members: [{ user_sub: 'me', role: 'owner', created_at: '2026-10-01T00:00:00Z', email: 'dev@example.com', display_name: 'Dev User' }],
   invitations: [],
   acceptable: { good: SIDE },
+  project: {
+    id: PROJECT,
+    name: 'Shelf vision',
+    status: 'active',
+    team_id: null,
+    task_type: 'tabular-classification',
+    created_at: '2026-10-02T00:00:00Z',
+    default_test_dataset_id: null,
+    settings: {},
+    visibility: 'internal',
+    default_access: 'read',
+    publish_project_metadata: false,
+  },
+  projectMembers: [{ user_sub: 'me', roles: ['project_admin'], created_at: '2026-10-02T00:00:00Z' }],
+  runs: [],
+  deployments: [],
+  failRuns: false,
   datasets: [],
   imports: [],
   versions: [],
@@ -271,6 +330,8 @@ export async function installApi(page: Page, state: ApiState) {
     }
     const ds = datasetRoutes(route, state, method, path, req);
     if (ds) return ds;
+    const pr = projectRoutes(route, state, method, path, req);
+    if (pr) return pr;
     return json(route, 404, { code: 'not_found' });
   });
   await page.route(`${UPLOAD_HOST}/**`, async (route) => {
@@ -290,6 +351,52 @@ const paginate = <T>(items: T[], url: string, size: number) => {
   const next = from + size;
   return { items: items.slice(from, next), next_page_token: next < items.length ? String(next) : null };
 };
+
+export const run = (state: ApiState, status: string): RunRec => {
+  const r: RunRec = {
+    id: crypto.randomUUID(),
+    status,
+    dataset_ref: 'ref',
+    ray_job_id: 'job',
+    mlflow_run_id: null,
+    config: {},
+    metrics: {},
+    created_at: NOW,
+    completed_at: null,
+  };
+  state.runs.push(r);
+  return r;
+};
+export const deployment = (state: ApiState, status: string): DeploymentRec => {
+  const d: DeploymentRec = { id: crypto.randomUUID(), status, route_prefix: '/p', created_at: NOW };
+  state.deployments.push(d);
+  return d;
+};
+
+/** /v1/projects and /v1/projects/{PROJECT} with its members, runs and deployments. Returns undefined when the path is not one of them. */
+function projectRoutes(route: Route, state: ApiState, method: string, path: string, req: ReturnType<Route['request']>) {
+  if (path === '/v1/projects' && method === 'GET') {
+    const { id, name, status, team_id, task_type, created_at } = state.project;
+    return json(route, 200, paginate([{ id, name, status, team_id, task_type, created_at }], req.url(), state.pageSize));
+  }
+  const m = path.match(/^\/v1\/projects\/([^/:]+)(\/[a-z-]+)?$/);
+  if (!m) return undefined;
+  if (m[1] !== PROJECT) return problem(route, 404, 'not_found');
+  switch (m[2] ?? '') {
+    case '': {
+      const status = new URL(req.url()).searchParams.get('status');
+      if (method === 'PATCH' && status) state.project.status = status as ProjectRec['status'];
+      return json(route, 200, state.project);
+    }
+    case '/members':
+      return json(route, 200, state.projectMembers);
+    case '/training-runs':
+      return state.failRuns ? problem(route, 500, 'internal') : json(route, 200, state.runs);
+    case '/deployments':
+      return json(route, 200, state.deployments);
+  }
+  return undefined;
+}
 
 /** /v1/projects/{PROJECT}/datasets/...: the dataset flows. Returns undefined when the path is not one of them. */
 function datasetRoutes(route: Route, state: ApiState, method: string, path: string, req: ReturnType<Route['request']>) {

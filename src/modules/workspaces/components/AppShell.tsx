@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from 'react';
+import { Fragment, useState, type ComponentType, type ReactNode } from 'react';
 import { Box, Breadcrumb, CloseButton, Drawer, Flex, HStack, IconButton, Portal, Stack } from '@chakra-ui/react';
-import { Link, useLocation } from '@tanstack/react-router';
+import { Link, useMatches } from '@tanstack/react-router';
 import { Briefcase, Layout, Menu, SettingsCog, Users } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { AppIcon, Wordmark } from '@/brand/Bit';
@@ -62,31 +62,45 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
+/** Phones show only the current page and its parent. */
+const PHONE_CRUMBS = 2;
+const hiddenOnPhone = { base: 'none', md: 'inline-flex' } as const;
+
+type Crumb = { id: string; to: string; search?: Record<string, string>; Label: ComponentType };
+
+/** One crumb per matched route that declares `staticData.crumb`, so a page deep in a project still shows where it sits. */
 function Crumbs() {
-  const { t } = useTranslation();
-  const { slug, name } = useWorkspace();
-  const path = useLocation({ select: (l) => l.pathname });
-  const page = path.includes('/projects')
-    ? t('projects.title')
-    : path.endsWith('/members')
-      ? t('shell.members')
-      : path.endsWith('/settings')
-        ? t('shell.settings')
-        : t('nav.overview');
+  const crumbs = useMatches({
+    select: (matches) =>
+      matches.reduce<Crumb[]>((acc, m) => {
+        const { crumb, parentSearch } = m.staticData;
+        const parent = acc.at(-1);
+        const withParent = parentSearch && parent ? [...acc.slice(0, -1), { ...parent, search: parentSearch }] : acc;
+        return crumb ? [...withParent, { id: m.id, to: m.pathname, Label: crumb }] : withParent;
+      }, []),
+  });
+  const firstOnPhone = crumbs.length - PHONE_CRUMBS;
   return (
-    <Breadcrumb.Root size="md">
-      <Breadcrumb.List>
-        <Breadcrumb.Item display={{ base: 'none', md: 'inline-flex' }}>
-          <Breadcrumb.Link asChild>
-            <Link to="/w/$slug" params={{ slug }}>
-              {name}
-            </Link>
-          </Breadcrumb.Link>
-        </Breadcrumb.Item>
-        <Breadcrumb.Separator display={{ base: 'none', md: 'inline-flex' }} />
-        <Breadcrumb.Item>
-          <Breadcrumb.CurrentLink whiteSpace="nowrap">{page}</Breadcrumb.CurrentLink>
-        </Breadcrumb.Item>
+    <Breadcrumb.Root size="md" minW="0">
+      <Breadcrumb.List flexWrap="nowrap" minW="0">
+        {crumbs.map(({ id, to, search, Label }, i) => (
+          <Fragment key={id}>
+            {i > 0 && <Breadcrumb.Separator display={i > firstOnPhone ? undefined : hiddenOnPhone} data-testid="shell-crumb-separator" />}
+            <Breadcrumb.Item minW="0" display={i >= firstOnPhone ? undefined : hiddenOnPhone} data-testid="shell-crumb">
+              {i === crumbs.length - 1 ? (
+                <Breadcrumb.CurrentLink maxW="64" truncate>
+                  <Label />
+                </Breadcrumb.CurrentLink>
+              ) : (
+                <Breadcrumb.Link asChild maxW="48" truncate>
+                  <Link to={to} search={search}>
+                    <Label />
+                  </Link>
+                </Breadcrumb.Link>
+              )}
+            </Breadcrumb.Item>
+          </Fragment>
+        ))}
       </Breadcrumb.List>
     </Breadcrumb.Root>
   );

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Alert, Box, Button, Flex, Heading, HStack, Progress, Skeleton, Stack, Text } from '@chakra-ui/react';
 import { Link, useParams } from '@tanstack/react-router';
-import { ArrowLeft } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { toaster } from '@/components/toaster';
 import {
@@ -37,40 +36,15 @@ export function ImportPage() {
   const { data: item, error, isError, isPending, refetch } = useImport(projectId, datasetId, importId);
   const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium', timeStyle: 'short' });
 
-  const back = (
-    <Button asChild variant="ghost" size="sm" mb="2">
-      <Link
-        to="/w/$slug/projects/$projectId/datasets/$datasetId"
-        params={{ slug, projectId, datasetId }}
-        search={{ tab: DATASET_TABS.imports }}
-      >
-        <ArrowLeft />
-        {t('datasets.backToDataset')}
-      </Link>
-    </Button>
-  );
-
   if (isError) {
     if (error instanceof ApiError && error.status === 404) return <NotFound />;
-    return (
-      <Stack gap="4">
-        {back}
-        <LoadError title={t('datasets.import.loadFailed')} error={error} onRetry={() => void refetch()} />
-      </Stack>
-    );
+    return <LoadError title={t('datasets.import.loadFailed')} error={error} onRetry={() => void refetch()} />;
   }
-  if (isPending)
-    return (
-      <Stack gap="4">
-        {back}
-        <Skeleton h="48" />
-      </Stack>
-    );
+  if (isPending) return <Skeleton h="48" />;
 
   return (
     <Stack gap="6">
       <Box>
-        {back}
         <Flex align="center" gap="3" wrap="wrap">
           <Heading as="h2" textStyle="h2">
             {t('datasets.import.title')}

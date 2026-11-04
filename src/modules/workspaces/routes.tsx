@@ -3,11 +3,12 @@ import { Skeleton } from '@chakra-ui/react';
 import { createRoute, notFound, Outlet, redirect, useParams } from '@tanstack/react-router';
 import { rootRoute } from '@/root-route';
 import { getToken } from '@/shared/auth/manager';
+import { textCrumb } from '@/shared/ui/crumbs';
 import { NotFound } from '@/shared/ui/NotFound';
 import { Splash } from '@/shared/ui/Splash';
 import { meQuery, useMe } from '@/modules/workspaces/api';
 import { AppShell } from '@/modules/workspaces/components/AppShell';
-import { WorkspaceProvider } from '@/modules/workspaces/context';
+import { useWorkspace, WorkspaceProvider } from '@/modules/workspaces/context';
 import { NewWorkspacePage } from '@/modules/workspaces/pages/NewWorkspacePage';
 import { OverviewPage } from '@/modules/workspaces/pages/OverviewPage';
 import { RestorePage } from '@/modules/workspaces/pages/RestorePage';
@@ -79,6 +80,10 @@ function WorkspaceLayout() {
   );
 }
 
+function WorkspaceCrumb() {
+  return useWorkspace().name;
+}
+
 /** The slug must be one of the user's workspaces (from /v1/me), else 404. An old link with the tenant id is redirected to the slug. */
 export const workspaceRoute = createRoute({
   getParentRoute: () => appRoute,
@@ -91,8 +96,19 @@ export const workspaceRoute = createRoute({
     throw redirect({ to: location.pathname.replace(`/w/${params.slug}`, `/w/${byId.slug}`), replace: true });
   },
   notFoundComponent: () => <NotFound page />,
+  staticData: { crumb: WorkspaceCrumb },
   component: WorkspaceLayout,
 });
 
-export const overviewRoute = createRoute({ getParentRoute: () => workspaceRoute, path: '/', component: OverviewPage });
-export const settingsRoute = createRoute({ getParentRoute: () => workspaceRoute, path: 'settings', component: SettingsPage });
+export const overviewRoute = createRoute({
+  getParentRoute: () => workspaceRoute,
+  path: '/',
+  staticData: { crumb: textCrumb('nav.overview') },
+  component: OverviewPage,
+});
+export const settingsRoute = createRoute({
+  getParentRoute: () => workspaceRoute,
+  path: 'settings',
+  staticData: { crumb: textCrumb('shell.settings') },
+  component: SettingsPage,
+});

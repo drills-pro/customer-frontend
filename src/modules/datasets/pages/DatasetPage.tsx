@@ -1,6 +1,6 @@
 import { Alert, Badge, Box, Button, Flex, Heading, HStack, Skeleton, Stack, Tabs, Text } from '@chakra-ui/react';
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router';
-import { ArrowLeft, Upload } from 'pixelarticons/react';
+import { Upload } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { useDataset, useWriteDenied } from '@/modules/datasets/api';
 import { DatasetMenu } from '@/modules/datasets/components/DatasetMenu';
@@ -15,7 +15,7 @@ import { ApiError } from '@/shared/api/client';
 import { NotFound } from '@/shared/ui/NotFound';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const FROM = '/app/w/$slug/projects/$projectId/datasets/$datasetId';
+const FROM = '/app/w/$slug/projects/$projectId/datasets/$datasetId/';
 
 /** One dataset: its versions and its imports, and the way to start a new import. */
 export function DatasetPage() {
@@ -40,52 +40,44 @@ export function DatasetPage() {
   const blocked = importable ? null : dataset.task_type === null ? 'datasets.import.noTask' : 'datasets.import.unsupportedTask';
   const importsDisabled = deleted || denied || !importable;
   const restorableUntil = dataset.deleted_at ? date.format(new Date(new Date(dataset.deleted_at).getTime() + RETENTION_DAYS * DAY_MS)) : '';
+  // The header holds the screen's primary action; the empty state repeats it as a secondary one.
+  const newImport = (testId: string, variant: 'solid' | 'outline') => (
+    <Button asChild variant={variant}>
+      <Link to="/w/$slug/projects/$projectId/datasets/$datasetId/imports/new" params={{ slug, projectId, datasetId }} data-testid={testId}>
+        <Upload />
+        {t('datasets.import.new')}
+      </Link>
+    </Button>
+  );
 
   return (
     <Stack gap="6">
-      <Box>
-        <Button asChild variant="ghost" size="sm" mb="2">
-          <Link to="/w/$slug/projects/$projectId/datasets" params={{ slug, projectId }}>
-            <ArrowLeft />
-            {t('datasets.backToDatasets')}
-          </Link>
-        </Button>
-        <Flex align="end" justify="space-between" gap="4" wrap="wrap">
-          <Box minW="0">
-            <Heading as="h2" textStyle="h2" truncate data-testid="dataset-name">
-              {dataset.name}
-            </Heading>
-            <HStack mt="1" gap="3" wrap="wrap" color="fg.muted">
-              <Text>{dataset.task_type ? taskLabel(t, dataset.task_type) : t('datasets.noTask')}</Text>
-              {deleted && (
-                <Badge colorPalette="danger" variant="subtle">
-                  {t('datasets.deleted')}
-                </Badge>
-              )}
-            </HStack>
-          </Box>
-          <HStack gap="2">
-            {importsDisabled ? (
-              <Button variant="solid" disabled data-testid="dataset-new-import">
-                <Upload />
-                {t('datasets.import.new')}
-              </Button>
-            ) : (
-              <Button asChild variant="solid">
-                <Link
-                  to="/w/$slug/projects/$projectId/datasets/$datasetId/imports/new"
-                  params={{ slug, projectId, datasetId }}
-                  data-testid="dataset-new-import"
-                >
-                  <Upload />
-                  {t('datasets.import.new')}
-                </Link>
-              </Button>
+      <Flex align="end" justify="space-between" gap="4" wrap="wrap">
+        <Box minW="0">
+          <Heading as="h2" textStyle="h2" truncate data-testid="dataset-name">
+            {dataset.name}
+          </Heading>
+          <HStack mt="1" gap="3" wrap="wrap" color="fg.muted">
+            <Text>{dataset.task_type ? taskLabel(t, dataset.task_type) : t('datasets.noTask')}</Text>
+            {deleted && (
+              <Badge colorPalette="danger" variant="subtle">
+                {t('datasets.deleted')}
+              </Badge>
             )}
-            <DatasetMenu projectId={projectId} dataset={dataset} disabled={denied} />
           </HStack>
-        </Flex>
-      </Box>
+        </Box>
+        <HStack gap="2">
+          {importsDisabled ? (
+            <Button variant="solid" disabled data-testid="dataset-new-import">
+              <Upload />
+              {t('datasets.import.new')}
+            </Button>
+          ) : (
+            newImport('dataset-new-import', 'solid')
+          )}
+          <DatasetMenu projectId={projectId} dataset={dataset} disabled={denied} />
+        </HStack>
+      </Flex>
       {deleted && (
         <Alert.Root status="warning" colorPalette="warning" data-testid="dataset-deleted">
           <Alert.Indicator />
@@ -105,6 +97,8 @@ export function DatasetPage() {
       )}
       {!deleted && (
         <Tabs.Root
+          variant="subtle"
+          size="sm"
           value={tab}
           onValueChange={(e) =>
             void navigate({
@@ -124,7 +118,14 @@ export function DatasetPage() {
             </Tabs.Trigger>
           </Tabs.List>
           <Tabs.Content value={DATASET_TABS.versions}>
-            <VersionsTab projectId={projectId} slug={slug} dataset={dataset} denied={denied} when={when} />
+            <VersionsTab
+              projectId={projectId}
+              slug={slug}
+              dataset={dataset}
+              denied={denied}
+              when={when}
+              emptyAction={importsDisabled ? undefined : newImport('dataset-versions-empty-import', 'outline')}
+            />
           </Tabs.Content>
           <Tabs.Content value={DATASET_TABS.imports}>
             <ImportsTab projectId={projectId} slug={slug} datasetId={datasetId} when={when} />

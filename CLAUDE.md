@@ -52,6 +52,9 @@ any module. Another module is imported only through its `index.ts` (`@/modules/w
   (`/w/$slug/projects/$projectId/datasets` and its dataset, new-import, import and version pages), `pages/`, `components/`. The file goes to storage
   through `src/shared/api/upload.ts`, not the API.
 - Routes live in each module's `routes.tsx` (path, guards, loaders, `component: SomePage`) and are assembled into the tree in `src/router.tsx`; `src/root-route.tsx` is the root.
+  A route that is a level of the hierarchy sets `staticData: { crumb }` (`textCrumb('key')` or a small component that reads its params and the cached
+  query, see `src/shared/ui/crumbs.tsx`); the shell breadcrumb renders the matched crumbs, so pages have no "Back to ..." links. Pages that sit under
+  one record nest under a layout route for it (`$datasetId`), so its crumb is above each of them.
 - `src/shared/api/`: `client.ts` (openapi-fetch typed by `schema.d.ts`, Bearer middleware, `ApiError`, `unwrap`), `query.ts` (QueryClient, global 401 handler),
   `errors.ts` (status to locale key). `src/shared/auth/manager.ts`: the OIDC `UserManager` (no React), so route guards and the API client can read the token.
   `src/shared/ui/`: `StateScreen` (one Bit plus text), `Splash`, `NotFound`, `ErrorScreen`.

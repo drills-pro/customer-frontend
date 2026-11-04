@@ -267,6 +267,20 @@ export const slotRecipes = {
             },
           },
         },
+        // Tabs nested under a `line` row: no rule under the list, the sliding indicator is a filled block like the segment control.
+        subtle: {
+          list: { gap: '1' },
+          indicator: {
+            bg: 'selected-bg',
+            shadow: 'inset 0 0 0 2px var(--chakra-colors-selected-edge)',
+            '--transition-duration': 'var(--chakra-durations-bounce-relaxed)',
+          },
+          trigger: {
+            color: 'fg.muted',
+            _hover: { color: 'fg' },
+            _selected: { bg: 'transparent', color: 'fg', fontWeight: 'semibold' },
+          },
+        },
       },
     },
   }),

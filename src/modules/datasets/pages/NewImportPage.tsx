@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Alert, Box, Button, Field, FileUpload, Heading, Input, Progress, Skeleton, Stack, Text } from '@chakra-ui/react';
-import { Link, useNavigate, useParams } from '@tanstack/react-router';
-import { ArrowLeft, Upload } from 'pixelarticons/react';
+import { useNavigate, useParams } from '@tanstack/react-router';
+import { Upload } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { RadioButton, RadioButtonGroup } from '@/components/radio-button-group';
 import { SimpleSelect } from '@/components/simple-select';
@@ -51,22 +51,11 @@ export function NewImportPage() {
   const abort = useRef<AbortController | null>(null);
   useEffect(() => () => abort.current?.abort(), []);
 
-  const back = (
-    <Button asChild variant="ghost" size="sm" mb="2">
-      <Link to="/w/$slug/projects/$projectId/datasets/$datasetId" params={{ slug, projectId, datasetId }}>
-        <ArrowLeft />
-        {t('datasets.backToDataset')}
-      </Link>
-    </Button>
-  );
   const shell = (body: ReactNode) => (
     <Stack gap="6">
-      <Box>
-        {back}
-        <Heading as="h2" textStyle="h2">
-          {t('datasets.newImport.title')}
-        </Heading>
-      </Box>
+      <Heading as="h2" textStyle="h2">
+        {t('datasets.newImport.title')}
+      </Heading>
       {body}
     </Stack>
   );

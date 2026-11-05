@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures';
+import { crumbTo, PHONE } from './crumbs';
 import { ACME_SLUG, PROJECT, dataset, importOf, versionOf } from './mock-api';
 
 const BASE = `/w/${ACME_SLUG}/projects/${PROJECT}/datasets`;
@@ -100,4 +101,53 @@ test('imports tab lists imports and links to one', async ({ page, api }) => {
   await page.getByTestId('import-link').click();
   await expect(page).toHaveURL(new RegExp(`/imports/${imp.id}$`));
   await expect(page.getByTestId('import-ended')).toBeVisible();
+});
+
+test('the breadcrumb leads from a dataset back to its datasets', async ({ page, api }) => {
+  const d = dataset(api);
+  await page.goto(`${BASE}/${d.id}`);
+  // Workspace, projects, the project, datasets, the dataset.
+  await expect(page.getByTestId('shell-crumb')).toHaveCount(5);
+  await crumbTo(page, BASE).click();
+  await expect(page).toHaveURL(BASE);
+});
+
+test('an import sits under its dataset in the breadcrumb, which returns to the imports tab', async ({ page, api }) => {
+  const d = dataset(api);
+  const imp = importOf(api, d.id, { status: 'succeeded' });
+  await page.goto(`${BASE}/${d.id}/imports/${imp.id}`);
+  await expect(page.getByTestId('shell-crumb')).toHaveCount(6);
+  await crumbTo(page, `${BASE}/${d.id}?tab=imports`).click();
+  await expect(page).toHaveURL(`${BASE}/${d.id}?tab=imports`);
+  await expect(page.getByTestId('dataset-tab-imports')).toHaveAttribute('aria-selected', 'true');
+});
+
+test('phones show only the last two crumbs', async ({ page, api }) => {
+  const d = dataset(api);
+  await page.setViewportSize(PHONE);
+  await page.goto(`${BASE}/${d.id}`);
+  const crumbs = page.getByTestId('shell-crumb');
+  const separators = page.getByTestId('shell-crumb-separator');
+  await expect(crumbs).toHaveCount(5);
+  await expect(separators).toHaveCount(4);
+  await Promise.all([
+    ...[0, 1, 2].map((i) => expect(crumbs.nth(i)).toBeHidden()),
+    ...[3, 4].map((i) => expect(crumbs.nth(i)).toBeVisible()),
+    ...[0, 1, 2].map((i) => expect(separators.nth(i)).toBeHidden()),
+    expect(separators.nth(3)).toBeVisible(),
+  ]);
+});
+
+test('the empty versions state starts an import', async ({ page, api }) => {
+  const d = dataset(api);
+  await page.goto(`${BASE}/${d.id}`);
+  await page.getByTestId('dataset-versions-empty-import').click();
+  await expect(page).toHaveURL(`${BASE}/${d.id}/imports/new`);
+});
+
+test('the empty versions state offers no import when importing is blocked', async ({ page, api }) => {
+  const d = dataset(api, { task_type: null });
+  await page.goto(`${BASE}/${d.id}`);
+  await expect(page.getByTestId('dataset-import-blocked')).toBeVisible();
+  await expect(page.getByTestId('dataset-versions-empty-import')).toHaveCount(0);
 });

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Badge, Box, Button, EmptyState, HStack, Skeleton, Stack, Table, Text } from '@chakra-ui/react';
 import { Link } from '@tanstack/react-router';
 import { Eye, Files } from 'pixelarticons/react';
@@ -8,19 +9,21 @@ import { LoadError } from '@/modules/datasets/components/LoadError';
 import { datasetErrorKey } from '@/modules/datasets/errors';
 import { formatBytes, versionCounts } from '@/modules/datasets/format';
 
-/** Versions, newest first. Publishing picks the version training reads; there is at most one. */
+/** Versions, newest first. Publishing picks the version training reads; there is at most one. `emptyAction` leads out of the empty state. */
 export function VersionsTab({
   projectId,
   slug,
   dataset,
   denied,
   when,
+  emptyAction,
 }: {
   projectId: string;
   slug: string;
   dataset: DatasetSummary;
   denied: boolean;
   when: (iso: string) => string;
+  emptyAction?: ReactNode;
 }) {
   const { t, i18n } = useTranslation();
   const { versions, error, isError, isPending, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } = useVersions(
@@ -44,6 +47,7 @@ export function VersionsTab({
           </EmptyState.Indicator>
           <EmptyState.Title>{t('datasets.versions.empty.title')}</EmptyState.Title>
           <EmptyState.Description>{t('datasets.versions.empty.body')}</EmptyState.Description>
+          {emptyAction}
         </EmptyState.Content>
       </EmptyState.Root>
     );

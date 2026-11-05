@@ -1,9 +1,8 @@
 import { Alert, Box, Button, Flex, Heading, HStack, Skeleton, Stack, Tabs, Text } from '@chakra-ui/react';
 import { Link, Outlet, useMatchRoute, useParams } from '@tanstack/react-router';
-import { ArrowLeft, Plus } from 'pixelarticons/react';
+import { Plus } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { useProject } from '@/modules/projects/api';
-import { CopyId } from '@/modules/projects/components/CopyId';
 import { ProjectMark } from '@/modules/projects/components/ProjectMark';
 import { ProjectMenu } from '@/modules/projects/components/ProjectMenu';
 import { StatusBadge } from '@/modules/projects/components/StatusBadge';
@@ -18,7 +17,7 @@ const TAB_PATHS = {
   [ProjectTab.Datasets]: '/w/$slug/projects/$projectId/datasets',
 } as const;
 
-/** One project: its header and section tabs around the section's page. */
+/** One project: its header and section tabs around the section's page. The shell breadcrumb leads back up. */
 export function ProjectLayout() {
   const { t } = useTranslation();
   const { id: workspaceId, slug } = useWorkspace();
@@ -26,6 +25,8 @@ export function ProjectLayout() {
   const matchRoute = useMatchRoute();
   const { data: project, error, isError, isPending, refetch } = useProject(workspaceId, projectId);
   const tab = matchRoute({ to: TAB_PATHS[ProjectTab.Datasets], fuzzy: true }) ? ProjectTab.Datasets : ProjectTab.Overview;
+  // One primary action per screen: a section brings its own, so the header's training button shows on the overview only.
+  const training = tab === ProjectTab.Overview;
 
   if (isError) {
     if (error instanceof ApiError && error.status === 404) return <NotFound />;
@@ -49,13 +50,8 @@ export function ProjectLayout() {
   return (
     <Stack gap="6">
       <Box data-testid="project-header">
-        <Button asChild variant="ghost" size="sm" mb="2">
-          <Link to="/w/$slug/projects" params={{ slug }}>
-            <ArrowLeft />
-            {t('projects.detail.back')}
-          </Link>
-        </Button>
-        <Flex direction={{ base: 'column', sm: 'row' }} align="flex-start" justify="space-between" gap="4">
+        {/* With only the menu beside it, the title keeps one row on phones too. */}
+        <Flex direction={training ? { base: 'column', sm: 'row' } : 'row'} align="flex-start" justify="space-between" gap="4">
           <Flex minW="0" align="flex-start" gap="3">
             <ProjectMark taskType={project.task_type} />
             <Box minW="0">
@@ -67,18 +63,17 @@ export function ProjectLayout() {
                 <Text textStyle="body-sm" color="fg.muted">
                   {t(`projects.taskType.${project.task_type}.label`)}
                 </Text>
-                <Box minW="0" maxW="full">
-                  <CopyId id={project.id} />
-                </Box>
               </HStack>
             </Box>
           </Flex>
           <HStack gap="2" flexShrink={0}>
             {/* Training has no page yet (the API answers 501); the button holds its place until it does. */}
-            <Button variant="solid" size="sm" disabled data-testid="project-new-training">
-              <Plus />
-              {t('projects.detail.newTraining')}
-            </Button>
+            {training && (
+              <Button variant="solid" size="sm" disabled data-testid="project-new-training">
+                <Plus />
+                {t('projects.detail.newTraining')}
+              </Button>
+            )}
             <ProjectMenu project={project} workspaceId={workspaceId} />
           </HStack>
         </Flex>

@@ -352,7 +352,6 @@
       "body": "Try a different search or change the filters."
     },
     "detail": {
-      "back": "Back to projects",
       "sections": "Project sections",
       "loadFailed": "Could not load this project",
       "tab": {
@@ -402,7 +401,8 @@
         "accessLevel": {
           "read": "Can view",
           "edit": "Can edit"
-        }
+        },
+        "id": "Project ID"
       },
       "team": {
         "title": "Team",
@@ -486,8 +486,6 @@
   "datasets": {
     "title": "Datasets",
     "subtitle": "The data this project trains on. Each import adds a version you can review, publish and preview.",
-    "backToDatasets": "Back to datasets",
-    "backToDataset": "Back to dataset",
     "cancel": "Cancel",
     "close": "Close",
     "retry": "Try again",

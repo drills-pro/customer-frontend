@@ -50,6 +50,18 @@ export function Navigation() {
         </Tabs.Root>
       </Section>
 
+      <Section title="Nested tabs" wide>
+        <Tabs.Root defaultValue="versions" variant="subtle" size="sm">
+          <Tabs.List>
+            <Tabs.Indicator />
+            <Tabs.Trigger value="versions">Versions</Tabs.Trigger>
+            <Tabs.Trigger value="imports">Imports</Tabs.Trigger>
+          </Tabs.List>
+          <Tabs.Content value="versions">Second-level tabs sit under a line tab row, so they read as its children.</Tabs.Content>
+          <Tabs.Content value="imports">3 imports, 1 waiting for review.</Tabs.Content>
+        </Tabs.Root>
+      </Section>
+
       <Section title="Workflow steps" wide>
         <Steps.Root defaultStep={2} count={steps.length}>
           <Steps.List>

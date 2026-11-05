@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures';
+import { crumbTo } from './crumbs';
 import { ACME_SLUG, PROJECT, dataset, deployment, run } from './mock-api';
 
 const BASE = `/w/${ACME_SLUG}/projects/${PROJECT}`;
@@ -81,4 +82,23 @@ test('an unknown project shows not found', async ({ page }) => {
 test('new training waits for the next release', async ({ page }) => {
   await page.goto(BASE);
   await expect(page.getByTestId('project-new-training')).toBeDisabled();
+});
+
+test('new training shows only on the overview', async ({ page }) => {
+  await page.goto(`${BASE}/datasets`);
+  await expect(page.getByTestId('datasets-create-open')).toBeVisible();
+  await expect(page.getByTestId('project-new-training')).toHaveCount(0);
+});
+
+test('the breadcrumb ends at the project and leads back to the list', async ({ page }) => {
+  await page.goto(BASE);
+  // Workspace, projects, the project.
+  await expect(page.getByTestId('shell-crumb')).toHaveCount(3);
+  await crumbTo(page, `/w/${ACME_SLUG}/projects`).click();
+  await expect(page).toHaveURL(`/w/${ACME_SLUG}/projects`);
+});
+
+test('the info card carries the project ID', async ({ page }) => {
+  await page.goto(BASE);
+  await expect(page.getByTestId('project-info').getByRole('button')).toHaveCount(1);
 });

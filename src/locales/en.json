@@ -176,12 +176,14 @@
       "email": "Email address",
       "emailHelp": "They must sign in with this address, and it must be verified.",
       "role": "Role",
-      "create": "Create invite link",
+      "create": "Send invitation",
       "done": "Done",
       "linkLabel": "Invite link",
       "linkBody": "Send this link to {{email}}. It works once and expires in 7 days.",
       "copy": "Copy link",
-      "once": "We cannot show this link again. Copy it now."
+      "once": "We cannot show this link again. Copy it now.",
+      "sentBody": "Invitation sent to {{email}}. They join once they open the link in the email and sign in with that address. It expires in 7 days.",
+      "mailFailed": "We could not send the invitation email. Try again in a moment."
     },
     "remove": {
       "open": "Remove {{name}}",

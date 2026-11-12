@@ -8,7 +8,20 @@ test('an owner alone is invited to invite', async ({ page }) => {
   await expect(page.getByTestId('state-screen')).toHaveAttribute('data-pose', 'idle');
 });
 
-test('inviting shows a one-time link and a pending row', async ({ page, api }) => {
+test('a mailed invitation says it was sent and shows no link', async ({ page, api }) => {
+  api.mailInvites = true;
+  await page.goto(members);
+  await page.getByTestId('members-invite-open').click();
+  await page.getByTestId('invite-email').fill('new@example.com');
+  await page.getByTestId('invite-submit').click();
+
+  await expect(page.getByTestId('invite-sent')).toBeVisible();
+  await expect(page.getByTestId('invite-link')).toHaveCount(0);
+  await page.getByTestId('invite-close').click();
+  await expect(page.getByTestId(`members-invitation-${api.invitations[0].id}`)).toBeVisible();
+});
+
+test('inviting with mail off shows a one-time link and a pending row', async ({ page, api }) => {
   await page.goto(members);
   await page.getByTestId('members-invite-open').click();
   await page.getByTestId('invite-email').fill('new@example.com');

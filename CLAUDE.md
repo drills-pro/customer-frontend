@@ -65,7 +65,7 @@ any module. Another module is imported only through its `index.ts` (`@/modules/w
 
 Data rules: `/v1/me` is the workspace list and carries each workspace's `capabilities`; gate UI with `useCan('tenant.admin')`, not roles (the API still decides).
 The URL carries the workspace slug (`/v1/me` returns it on every workspace); the API is still called by id (`workspace.id`). An old `/w/<uuid>` link redirects to the slug. Mutations that change a workspace invalidate `['me']`. Per-call `mutate(..., { onSuccess })` does
-not run once the page unmounts, so use `mutateAsync` when a refetch can swap the page away. Invitations are links (no mail service yet): the token is shown once.
+not run once the page unmounts, so use `mutateAsync` when a refetch can swap the page away. Invitations are mailed by the backend (`email_sent`); with mail off (dev) the response carries the token and the dialog shows the link once.
 
 ## Rules
 

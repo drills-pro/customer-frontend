@@ -6,22 +6,28 @@ import { useAcceptInvitation } from '@/modules/members/api';
 import { Splash } from '@/shared/ui/Splash';
 import { StateScreen } from '@/shared/ui/StateScreen';
 
-/** /invite/$token: accept on arrival (the route already required sign-in), then open the workspace. */
+const OPEN_DELAY_MS = 1500; // long enough to read "You have joined"
+
+/** /invite/$token: accept on arrival (the route already required sign-in), then open the workspace. Opening a link
+ * already accepted by this person opens the workspace too (the API answers it again). */
 export function InvitePage() {
   const { t } = useTranslation();
   const { token } = useParams({ from: '/app/invite/$token' });
   const navigate = useNavigate();
   const accept = useAcceptInvitation();
-  const sent = useRef(false); // StrictMode runs effects twice and a token works once
+  const sent = useRef(false); // StrictMode runs effects twice
 
   useEffect(() => {
     if (sent.current) return;
     sent.current = true;
-    accept.mutate(token, {
-      onSuccess: (r) => {
-        window.setTimeout(() => void navigate({ to: '/w/$slug', params: { slug: r.tenant_id }, replace: true }), 1500);
-      },
-    });
+    // mutateAsync, not mutate's per-call onSuccess: that one is dropped if the page remounts, and the redirect with it.
+    accept
+      .mutateAsync(token)
+      .then((r) => {
+        // The id resolves to the workspace's slug in the workspace route.
+        window.setTimeout(() => void navigate({ to: '/w/$slug', params: { slug: r.tenant_id }, replace: true }), OPEN_DELAY_MS);
+      })
+      .catch(() => undefined); // accept.isError renders the failure
   }, [accept, token, navigate]);
 
   if (accept.isError)

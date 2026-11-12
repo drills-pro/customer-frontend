@@ -37,7 +37,7 @@ For anything the specs do not cover, verify UI in a browser. Check size, spacing
 
 Feature modules under `src/modules/`, shared plumbing under `src/shared/`. Import across folders with the `@/` alias (`@/shared/ui/Splash`); `../` imports
 are banned (`pnpm lint:project`), `./x` stays for the same folder. Dependencies point one way: `shared` imports no module; `auth` imports shared only;
-`workspaces` imports auth and shared; `members` may import workspaces, auth and shared; `projects` may also import members (the team card reads the member list); `datasets` may also import projects (its routes hang under the project route). `src/router.tsx`, `src/root-route.tsx` and `src/main.tsx` may import
+`workspaces` imports auth and shared; `members` may import workspaces, auth and shared; `projects` may also import members (the team card reads the member list); `datasets` may also import projects (its routes hang under the project route); `training` may import datasets, projects, workspaces, auth and shared (not members), and nothing but the router imports it. `src/router.tsx`, `src/root-route.tsx` and `src/main.tsx` may import
 any module. Another module is imported only through its `index.ts` (`@/modules/workspaces`), never by deep path; inside its own module a file may use deep
 `@/modules/<name>/...` paths.
 
@@ -51,13 +51,19 @@ any module. Another module is imported only through its `index.ts` (`@/modules/w
   (`useImport` polls while the status is moving), `import-form.ts` (validation and the create body), `errors.ts` (problem code to locale key), `routes.tsx`
   (`/w/$slug/projects/$projectId/datasets` and its dataset, new-import, import and version pages), `pages/`, `components/`. The file goes to storage
   through `src/shared/api/upload.ts`, not the API.
+- `src/modules/training/`: `constants.ts` (wizard steps, hyperparameters, seed bounds, problem codes), `status.ts` (run status to UI table and the polling schedule),
+  `api.ts` (presets, create with an `Idempotency-Key` per attempt, `useRuns`, `useRun` and `useRunLogs` poll while a run moves, `useRunOnce` for a clone, cancel),
+  `run-form.ts` (validation against the preset's bounds, the create body, and a clone's values from a run's `config`), `report.ts` (reads the run's untrusted `report`:
+  scores, confusion matrix, near duplicates, failure code), `format.ts` (run durations), `errors.ts`, `routes.tsx` (`/w/$slug/projects/$projectId/training`, the runs
+  list and the project's Training tab, with `.../training/new`, a step wizard with a vertical step list at `xl` and `?clone=<run>` to start from a run, and
+  `.../training/$runId`, the run page: stats and progress bar, Clone, Stop behind a confirm dialog, and Metrics, Logs and Config tabs), `pages/`, `components/`.
 - Routes live in each module's `routes.tsx` (path, guards, loaders, `component: SomePage`) and are assembled into the tree in `src/router.tsx`; `src/root-route.tsx` is the root.
   A route that is a level of the hierarchy sets `staticData: { crumb }` (`textCrumb('key')` or a small component that reads its params and the cached
   query, see `src/shared/ui/crumbs.tsx`); the shell breadcrumb renders the matched crumbs, so pages have no "Back to ..." links. Pages that sit under
   one record nest under a layout route for it (`$datasetId`), so its crumb is above each of them.
 - `src/shared/api/`: `client.ts` (openapi-fetch typed by `schema.d.ts`, Bearer middleware, `ApiError`, `unwrap`), `query.ts` (QueryClient, global 401 handler),
-  `errors.ts` (status to locale key). `src/shared/auth/manager.ts`: the OIDC `UserManager` (no React), so route guards and the API client can read the token.
-  `src/shared/ui/`: `StateScreen` (one Bit plus text), `Splash`, `NotFound`, `ErrorScreen`.
+  `errors.ts` (status to locale key), `poll.ts` (the backoff shared by pages that follow a server job). `src/shared/auth/manager.ts`: the OIDC `UserManager` (no React), so route guards and the API client can read the token.
+  `src/shared/ui/`: `StateScreen` (one Bit plus text), `Splash`, `NotFound`, `ErrorScreen`, `wizard.tsx` (the step header, sliding body, summary aside and review rows of a create flow).
 - `src/config.ts`: the only place that reads env.
 - `src/i18n.ts`, `src/locales/{en,th}.json`, `src/components/language-switcher.tsx`: react-i18next. `en` is bundled; other languages load lazily.
 - `src/theme/`, `src/tenant/`, `src/brand/`, `src/components/`, `src/provider.tsx`: the design system. `DrillsProvider` wraps the app.

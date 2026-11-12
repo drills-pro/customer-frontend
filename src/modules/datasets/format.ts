@@ -13,7 +13,14 @@ export function formatBytes(bytes: number, locale?: string): string {
 /** Version stats are an open dict on the wire; read only the counts the report defines, ignoring anything else. */
 export function versionCounts(stats: Record<string, unknown>) {
   const num = (key: string) => (typeof stats[key] === 'number' ? (stats[key] as number) : undefined);
-  return { rows: num('row_count'), files: num('file_count'), bytes: num('total_bytes') };
+  const classes = stats.classes;
+  return {
+    rows: num('row_count'),
+    files: num('file_count'),
+    bytes: num('total_bytes'),
+    /** How many labels the version has, when it reports them. */
+    classes: typeof classes === 'object' && classes !== null && !Array.isArray(classes) ? Object.keys(classes).length : undefined,
+  };
 }
 
 /** A project's task type as a word; a type the app has no copy for shows its slug. */

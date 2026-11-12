@@ -364,7 +364,8 @@
       "loadFailed": "Could not load this project",
       "tab": {
         "overview": "Overview",
-        "datasets": "Datasets"
+        "datasets": "Datasets",
+        "training": "Training"
       },
       "newTraining": "New training"
     },
@@ -711,6 +712,248 @@
       "staleBase": "A newer version exists. Reload and start the import from the latest version.",
       "notDeleted": "This dataset is not pending deletion, or the time to restore it has passed.",
       "keyReused": "This attempt was already used with different details. Start over."
+    }
+  },
+  "training": {
+    "retry": "Try again",
+    "new": {
+      "title": "New training",
+      "subtitle": "Train a model on one version of a dataset. You can follow the run once it starts.",
+      "loadFailed": "Could not load the training options",
+      "step": {
+        "data": "Data",
+        "model": "Model",
+        "settings": "Settings",
+        "review": "Review"
+      },
+      "cancel": "Cancel",
+      "back": "Back",
+      "next": "Next",
+      "start": "Start training",
+      "retry": "Try again",
+      "summary": "Summary",
+      "steps": "Training steps"
+    },
+    "data": {
+      "title": "Data",
+      "description": "Pick the dataset and the version to train on. A version never changes, so the run can be repeated.",
+      "loadFailed": "Could not load this project's datasets.",
+      "noDatasets": "This project has no datasets yet. Create one and import data before training.",
+      "goToDatasets": "Go to datasets",
+      "dataset": "Dataset",
+      "versionsFailed": "Could not load this dataset's versions.",
+      "noVersions": "This dataset has no versions yet. Import data into it first.",
+      "goToDataset": "Open dataset",
+      "versionLabel": "Version",
+      "version": "Version {{number}}",
+      "versionHelp": "The published version is picked first.",
+      "createdOn": "Created {{date}}",
+      "items_one": "{{value}} item",
+      "items_other": "{{value}} items",
+      "classes_one": "{{count}} class",
+      "classes_other": "{{count}} classes",
+      "published": "Published"
+    },
+    "model": {
+      "title": "Model",
+      "description": "Pick a size. Larger models can learn more but take longer to train.",
+      "label": "Model",
+      "details": "Training method",
+      "baseModel": "{{repo}} ({{license}} licence)",
+      "augmentation": {
+        "none": "No image augmentation",
+        "flip": "Flipped images",
+        "flip_crop": "Flipped and cropped images"
+      },
+      "lrSchedule": {
+        "constant": "steady learning rate",
+        "cosine": "learning rate that eases off"
+      },
+      "lrWarmup": "{{schedule}} after a {{percent}}% warmup",
+      "earlyStopping_one": "stops early after {{count}} epoch without improvement",
+      "earlyStopping_other": "stops early after {{count}} epochs without improvement",
+      "noEarlyStopping": "runs every epoch"
+    },
+    "preset": {
+      "small": {
+        "label": "Small",
+        "description": "Fastest to train. A good first run."
+      },
+      "medium": {
+        "label": "Medium",
+        "description": "A balance of speed and accuracy."
+      },
+      "large": {
+        "label": "Large",
+        "description": "Most accurate, slowest to train."
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "The model's defaults suit most data. Change them only if you know you need to.",
+      "epochs": {
+        "label": "Epochs",
+        "help": "Passes over the data. Default {{value}}, from {{min}} to {{max}}."
+      },
+      "batch_size": {
+        "label": "Batch size",
+        "help": "Examples per step. Default {{value}}, from {{min}} to {{max}}."
+      },
+      "image_size": {
+        "label": "Image size",
+        "help": "Pixels per side. Default {{value}}, from {{min}} to {{max}}."
+      },
+      "seed": {
+        "label": "Seed",
+        "help": "The same seed, data and settings give the same result."
+      },
+      "reset": "Reset to defaults",
+      "advanced": "Advanced",
+      "error": {
+        "required": "Enter a number.",
+        "range": "Enter a whole number from {{min}} to {{max}}."
+      },
+      "method": {
+        "title": "Set by the model",
+        "description": "These come with the model size and stay the same for every run of it.",
+        "augmentation": "Augmentation",
+        "learningRate": "Learning rate",
+        "earlyStopping": "Early stopping",
+        "rate": "{{rate}}, {{schedule}}"
+      }
+    },
+    "review": {
+      "title": "Review",
+      "description": "Check the details before the run starts.",
+      "edit": "Edit",
+      "editLabel": "Edit {{name}}",
+      "note": "The run starts as soon as there is room for it. You can cancel it from its page.",
+      "failed": "The run did not start"
+    },
+    "error": {
+      "noTask": "This project has no task type, so it cannot train.",
+      "taskMismatch": "This project's task type changed. Reload the page and try again.",
+      "notTrainable": "Training is not available for this project's task type yet.",
+      "tooManyRuns": "Too many runs are in progress in this workspace. Wait for one to finish, then try again.",
+      "keyReused": "This request was already sent with other settings. Reload the page and try again.",
+      "startFailed": "The run could not start right now. Try again in a moment.",
+      "unknownPreset": "That model size is no longer offered. Pick another one.",
+      "outOfRange": "A setting is outside its allowed range. Check the settings and try again.",
+      "invalidState": "This run has already ended.",
+      "versionGone": "That dataset version is no longer available. Pick another one.",
+      "cancelFailed": "The run could not be stopped right now. It is unchanged; try again in a moment."
+    },
+    "status": {
+      "submitted": "Queued",
+      "running": "Training",
+      "succeeded": "Done",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "unknown": "Unknown"
+    },
+    "run": {
+      "title": "Training run",
+      "loadFailed": "Could not load this run",
+      "preset": "Model: {{name}}",
+      "data": "{{name}}, version {{number}}",
+      "startedOn": "Started {{date}}",
+      "endedOn": "Ended {{date}}",
+      "working": {
+        "submitted": "Waiting for room to start",
+        "running": "Training"
+      },
+      "workingHelp": "This page updates by itself. You can leave and come back.",
+      "succeeded": "Training finished.",
+      "failed": "Training failed. The log below shows the last thing the run did.",
+      "tryAgain": "Try again",
+      "cancelled": "This run was cancelled.",
+      "new": "New training",
+      "metrics": "Results",
+      "logs": "Log",
+      "noLogs": "The log appears once the run starts.",
+      "progress": "Epoch {{epoch}} of {{epochs}}",
+      "latest": "Latest epoch",
+      "failure": {
+        "oom": "Training ran out of memory. Try a smaller model or a smaller batch size.",
+        "bad_data": "Training could not read the dataset version. Check its files and labels, then try again.",
+        "unsupported": "This combination of task and model is not supported. Pick another model.",
+        "timeout": "Training ran past its time limit. Try fewer epochs or a smaller model.",
+        "internal": "Training stopped because of a problem on our side. Try again in a moment."
+      },
+      "confusion": {
+        "title": "Where the model gets confused",
+        "description": "Each row is the true class and each column what the model answered. The diagonal is correct.",
+        "axes": "True \\ answered"
+      },
+      "nearDuplicates": {
+        "title": "Some test images look like training images",
+        "description_one": "{{count}} test image is almost the same as an image the model trained on, so the scores may read higher than they will be on new images.",
+        "description_other": "{{count}} test images are almost the same as images the model trained on, so the scores may read higher than they will be on new images."
+      },
+      "id": "Run {{id}}",
+      "clone": "Clone",
+      "sections": "Run sections",
+      "tab": {
+        "metrics": "Metrics",
+        "logs": "Logs",
+        "config": "Config"
+      },
+      "stats": {
+        "epoch": "Epoch",
+        "epochValue": "{{epoch}} / {{epochs}}",
+        "elapsed": "Time",
+        "model": "Model",
+        "score": "Score"
+      },
+      "stop": {
+        "open": "Stop run",
+        "title": "Stop this training run?",
+        "description": "The epochs so far are kept, but this run will not produce a model.",
+        "keep": "Keep running",
+        "confirm": "Stop run"
+      },
+      "autoscroll": "Autoscroll",
+      "download": "Download",
+      "config": {
+        "title": "Saved configuration"
+      },
+      "noScores": "Scores appear here after the first epoch."
+    },
+    "toast": {
+      "cancelFailed": "Could not cancel the run"
+    },
+    "title": "Training",
+    "list": {
+      "subtitle": "Every run of this project, newest first.",
+      "loadFailed": "Could not load the training runs",
+      "empty": {
+        "title": "No training runs yet",
+        "body": "Start a run to teach a model from one of your dataset versions."
+      },
+      "more": "Showing the latest {{count}} runs.",
+      "col": {
+        "run": "Run",
+        "status": "Status",
+        "result": "Result",
+        "duration": "Duration"
+      }
+    },
+    "resources": {
+      "title": "Resources",
+      "cpu": "CPU",
+      "memory": "Memory",
+      "gpu": "GPU",
+      "vram": "GPU memory",
+      "runtime": "Time limit",
+      "gb": "{{value}} GB",
+      "hours": "{{value}} h"
+    },
+    "duration": {
+      "days": "{{days}} d {{hours}} h",
+      "hours": "{{hours}} h {{minutes}} min",
+      "minutes_one": "{{count}} min",
+      "minutes_other": "{{count}} min",
+      "underMinute": "Under a minute"
     }
   }
 }

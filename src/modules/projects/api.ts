@@ -29,6 +29,9 @@ export const DEFAULT_VISIBILITY: Visibility = VISIBILITY_INTERNAL;
 export const projectsKey = (workspaceId: string) => ['workspace', workspaceId, 'projects'] as const;
 /** Under `projectsKey`, so the list's invalidations (archive, restore) refresh the open project too. */
 const projectKey = (workspaceId: string, projectId: string) => [...projectsKey(workspaceId), projectId] as const;
+/** The project's training runs. Exported so the training pages refresh the overview's Train stage when they create or cancel one. */
+export const trainingRunsKey = (workspaceId: string, projectId: string) =>
+  [...projectKey(workspaceId, projectId), 'training-runs'] as const;
 const tenantHeader = (workspaceId: string) => ({ 'x-tenant-id': workspaceId });
 
 export function useProjects(workspaceId: string) {
@@ -111,9 +114,10 @@ export function useProjectMembers(workspaceId: string, projectId: string) {
   });
 }
 
-export function useTrainingRuns(workspaceId: string, projectId: string) {
-  return useQuery({
-    queryKey: [...projectKey(workspaceId, projectId), 'training-runs'],
+/** The project's runs, newest first, one page of TRAINING_RUN_LIMIT. Shared with the training list, which adds polling. */
+export const trainingRunsQuery = (workspaceId: string, projectId: string) =>
+  queryOptions({
+    queryKey: trainingRunsKey(workspaceId, projectId),
     queryFn: () =>
       unwrap(
         client.GET('/v1/projects/{project_id}/training-runs', {
@@ -121,7 +125,8 @@ export function useTrainingRuns(workspaceId: string, projectId: string) {
         }),
       ),
   });
-}
+
+export const useTrainingRuns = (workspaceId: string, projectId: string) => useQuery(trainingRunsQuery(workspaceId, projectId));
 
 export function useDeployments(workspaceId: string, projectId: string) {
   return useQuery({

@@ -79,9 +79,12 @@ test('an unknown project shows not found', async ({ page }) => {
   await expect(page.getByTestId('project-header')).toHaveCount(0);
 });
 
-test('new training waits for the next release', async ({ page }) => {
+test('new training opens the training wizard', async ({ page }) => {
   await page.goto(BASE);
-  await expect(page.getByTestId('project-new-training')).toBeDisabled();
+  await page.getByTestId('project-new-training').click();
+  await expect(page).toHaveURL(`${BASE}/training/new`);
+  await expect(page.getByTestId('project-new-training')).toHaveCount(0);
+  await expect(page.getByTestId('project-tab-training')).toHaveAttribute('aria-selected', 'true');
 });
 
 test('new training shows only on the overview', async ({ page }) => {

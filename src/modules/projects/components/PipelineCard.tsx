@@ -17,6 +17,12 @@ const STATE_LOOK: Record<StageState, { icon: PixelIcon; palette: string }> = {
   [StageState.Unavailable]: { icon: Minus, palette: 'gray' },
 };
 
+/** The stages that have a page of their own; the stage title leads there. */
+const STAGE_LINKS = {
+  data: '/w/$slug/projects/$projectId/datasets',
+  train: '/w/$slug/projects/$projectId/training',
+} as const satisfies Partial<Record<StageId, string>>;
+
 /** Data, train, deploy: how far the project has come, from what each part of the API reports. A part that fails to load reads as unavailable. */
 export function PipelineCard({ projectId }: { projectId: string }) {
   const { t } = useTranslation();
@@ -62,9 +68,9 @@ export function PipelineCard({ projectId }: { projectId: string }) {
                       <Center boxSize="7" flexShrink={0} borderRadius="full" bg="bg.muted" color="fg.muted" textStyle="body-sm">
                         {index + 1}
                       </Center>
-                      {id === 'data' ? (
-                        <ChakraLink asChild fontWeight="semibold" data-testid="pipeline-data-link">
-                          <Link to="/w/$slug/projects/$projectId/datasets" params={{ slug, projectId }}>
+                      {id in STAGE_LINKS ? (
+                        <ChakraLink asChild fontWeight="semibold" data-testid={`pipeline-${id}-link`}>
+                          <Link to={STAGE_LINKS[id as keyof typeof STAGE_LINKS]} params={{ slug, projectId }}>
                             {title}
                           </Link>
                         </ChakraLink>

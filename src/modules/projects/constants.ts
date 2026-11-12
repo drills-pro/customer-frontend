@@ -18,9 +18,9 @@ export const TASK_ICONS: Record<(typeof TASK_TYPES)[number], PixelIcon> = {
 };
 
 /** The project's sections; each id is also its `projects.detail.tab.*` key. */
-export const ProjectTab = { Overview: 'overview', Datasets: 'datasets' } as const;
+export const ProjectTab = { Overview: 'overview', Datasets: 'datasets', Training: 'training' } as const;
 export type ProjectTab = (typeof ProjectTab)[keyof typeof ProjectTab];
-export const PROJECT_TABS: readonly ProjectTab[] = [ProjectTab.Overview, ProjectTab.Datasets];
+export const PROJECT_TABS: readonly ProjectTab[] = [ProjectTab.Overview, ProjectTab.Datasets, ProjectTab.Training];
 
 /** The overview's pipeline stages, in order; each id is also its `projects.overview.pipeline.*` key. */
 export const PIPELINE_STAGES = ['data', 'train', 'deploy'] as const;
@@ -38,6 +38,7 @@ export const TrainingStatus = {
   Failed: 'failed',
   Cancelled: 'cancelled',
 } as const;
+export type TrainingStatus = (typeof TrainingStatus)[keyof typeof TrainingStatus];
 export const DeploymentStatus = { Deploying: 'deploying', Active: 'active', Failed: 'failed', Deleted: 'deleted' } as const;
 /** The overview reads one page of runs: the API's largest. A full page reads as "N+". */
 export const TRAINING_RUN_LIMIT = 200;

@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { canImport, HF_REPO, HF_REVISION, ImportSource, ImportStatus, isTabular, Split } from '@/modules/datasets/constants';
 import { EMPTY_FORM, formErrors, toImportBody, type ImportFormValues } from '@/modules/datasets/import-form';
-import { nextPoll, POLL_BASE_MS, POLL_MAX_MS, pollDelay, STATUS_UI } from '@/modules/datasets/status';
+import { nextPoll, STATUS_UI } from '@/modules/datasets/status';
+import { POLL_BASE_MS, POLL_MAX_MS, pollDelay } from '@/shared/api/poll';
 
 const ALL = Object.values(ImportStatus);
 

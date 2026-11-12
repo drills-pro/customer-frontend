@@ -82,12 +82,52 @@ export interface RunRec {
   id: string;
   status: string;
   dataset_ref: string;
+  dataset_id: string | null;
+  dataset_version_id: string | null;
+  preset: string | null;
+  idempotency_key: string;
   ray_job_id: string;
   mlflow_run_id: string | null;
   config: unknown;
   metrics: unknown;
   created_at: string;
   completed_at: string | null;
+  /** Epochs the trainer reported (detail only in core-api; the mock sends it everywhere). */
+  progress: { latest: ProgressRec; history: ProgressRec[] } | null;
+  /** The job's report.json once it ended. */
+  report: unknown;
+}
+export interface ProgressRec {
+  seq: number;
+  epoch: number;
+  epochs: number;
+  metrics: Record<string, number>;
+  created_at: string;
+}
+export interface PresetRec {
+  name: string;
+  base_model: { repo_id: string; revision: string };
+  learning_rate: number;
+  cpu: number;
+  memory_bytes: number;
+  gpu: number;
+  max_runtime_s: number;
+  hyperparameters: Record<'epochs' | 'batch_size' | 'image_size', { default: number; min: number; max: number }>;
+  vram_gb: number | null;
+  lr_schedule: 'constant' | 'cosine';
+  warmup_fraction: number;
+  augmentation: 'none' | 'flip' | 'flip_crop';
+  early_stopping_patience: number;
+}
+/** One reported epoch per entry of `metrics`, as core-api's RunProgress. */
+export const progressOf = (epochs: number, metrics: Record<string, number>[]): RunRec['progress'] => {
+  const history = metrics.map((m, i) => ({ seq: i, epoch: i + 1, epochs, metrics: m, created_at: NOW }));
+  return history.length ? { latest: history[history.length - 1], history } : null;
+};
+/** A problem the next call answers with. */
+export interface Fail {
+  status: number;
+  code: string;
 }
 export interface DeploymentRec {
   id: string;
@@ -118,6 +158,19 @@ export interface ApiState {
   deployments: DeploymentRec[];
   /** The training-runs list answers 500. */
   failRuns: boolean;
+  /** What the training-presets list answers with: the project's task type's presets. */
+  presets: PresetRec[];
+  /** The training-presets list answers this problem instead. */
+  failPresets: Fail | null;
+  /** The next run cancel answers this problem instead. */
+  failCancel: Fail | null;
+  /** The next training-run creates answer these problems, one each, in order. */
+  failCreates: Fail[];
+  /** The Idempotency-Key and body of each training-run create that reached the backend, in order. */
+  runKeys: string[];
+  runBodies: unknown[];
+  /** Every run's log tail. */
+  logs: string;
   datasets: DatasetRec[];
   imports: ImportRec[];
   versions: VersionRec[];
@@ -179,6 +232,13 @@ export const newState = (): ApiState => ({
   runs: [],
   deployments: [],
   failRuns: false,
+  presets: [preset('small', 10, 32), preset('medium', 20, 16)],
+  failPresets: null,
+  failCancel: null,
+  failCreates: [],
+  runKeys: [],
+  runBodies: [],
+  logs: '',
   datasets: [],
   imports: [],
   versions: [],
@@ -195,6 +255,30 @@ export const newState = (): ApiState => ({
 });
 
 const NOW = '2026-10-20T10:00:00Z';
+const presetDefaults = (state: ApiState, name: string): Record<string, number> =>
+  Object.fromEntries(Object.entries(state.presets.find((p) => p.name === name)?.hyperparameters ?? {}).map(([k, v]) => [k, v.default]));
+
+function preset(name: string, epochs: number, batch: number): PresetRec {
+  return {
+    name,
+    base_model: { repo_id: `facebook/convnext-${name}-224`, revision: 'a'.repeat(40) },
+    learning_rate: 1e-4,
+    cpu: 4,
+    memory_bytes: 8 * 1024 ** 3,
+    gpu: 0,
+    max_runtime_s: 7200,
+    hyperparameters: {
+      epochs: { default: epochs, min: 1, max: 100 },
+      batch_size: { default: batch, min: 1, max: 256 },
+      image_size: { default: 224, min: 64, max: 512 },
+    },
+    vram_gb: null,
+    lr_schedule: 'cosine',
+    warmup_fraction: 0.05,
+    augmentation: 'flip_crop',
+    early_stopping_patience: 3,
+  };
+}
 export const dataset = (state: ApiState, patch: Partial<DatasetRec> = {}): DatasetRec => {
   const d: DatasetRec = {
     id: crypto.randomUUID(),
@@ -365,17 +449,24 @@ const paginate = <T>(items: T[], url: string, size: number) => {
   return { items: items.slice(from, next), next_page_token: next < items.length ? String(next) : null };
 };
 
-export const run = (state: ApiState, status: string): RunRec => {
+export const run = (state: ApiState, status: string, patch: Partial<RunRec> = {}): RunRec => {
   const r: RunRec = {
     id: crypto.randomUUID(),
     status,
     dataset_ref: 'ref',
+    dataset_id: null,
+    dataset_version_id: null,
+    preset: 'small',
+    idempotency_key: crypto.randomUUID(),
     ray_job_id: 'job',
     mlflow_run_id: null,
     config: {},
     metrics: {},
     created_at: NOW,
     completed_at: null,
+    progress: null,
+    report: null,
+    ...patch,
   };
   state.runs.push(r);
   return r;
@@ -392,6 +483,8 @@ function projectRoutes(route: Route, state: ApiState, method: string, path: stri
     const { id, name, status, team_id, task_type, created_at } = state.project;
     return json(route, 200, paginate([{ id, name, status, team_id, task_type, created_at }], req.url(), state.pageSize));
   }
+  const tr = trainingRoutes(route, state, method, path, req);
+  if (tr) return tr;
   const m = path.match(/^\/v1\/projects\/([^/:]+)(\/[a-z-]+)?$/);
   if (!m) return undefined;
   if (m[1] !== PROJECT) return problem(route, 404, 'not_found');
@@ -409,6 +502,51 @@ function projectRoutes(route: Route, state: ApiState, method: string, path: stri
       return json(route, 200, state.deployments);
   }
   return undefined;
+}
+
+/** Presets, creating a run (replayed by Idempotency-Key, like core-api), one run, its logs and cancel. Returns undefined for any other path. */
+function trainingRoutes(route: Route, state: ApiState, method: string, path: string, req: ReturnType<Route['request']>) {
+  if (path === `/v1/projects/${PROJECT}/training-presets`) {
+    return state.failPresets ? problem(route, state.failPresets.status, state.failPresets.code) : json(route, 200, state.presets);
+  }
+  if (path === `/v1/projects/${PROJECT}/training-runs` && method === 'POST') {
+    const key = req.headers()['idempotency-key'] ?? '';
+    const body = (req.postDataJSON() ?? {}) as { dataset_version_id: string; preset: string; hyperparameters?: Record<string, number> };
+    state.runKeys.push(key);
+    state.runBodies.push(body);
+    const fail = state.failCreates.shift();
+    if (fail) return problem(route, fail.status, fail.code);
+    const same = state.runs.find((r) => r.idempotency_key === key);
+    if (same) return json(route, 202, same);
+    const version = state.versions.find((v) => v.id === body.dataset_version_id);
+    const datasetId = state.imports.find((i) => i.id === version?.import_id)?.dataset_id ?? null;
+    return json(
+      route,
+      202,
+      run(state, 'submitted', {
+        idempotency_key: key,
+        preset: body.preset,
+        // core-api keeps the resolved hyperparameters: the preset's defaults where the request is silent.
+        config: { ...presetDefaults(state, body.preset), ...body.hyperparameters },
+        dataset_version_id: body.dataset_version_id,
+        dataset_id: datasetId,
+      }),
+    );
+  }
+  const m = path.match(new RegExp(`^/v1/projects/${PROJECT}/training-runs/([^/]+)(/logs|/cancel)?$`));
+  if (!m) return undefined;
+  const r = state.runs.find((x) => x.id === m[1]);
+  if (!r) return problem(route, 404, 'not_found');
+  if (m[2] === '/logs') return json(route, 200, { status: r.status, logs: state.logs });
+  if (m[2] === '/cancel') {
+    const fail = state.failCancel;
+    state.failCancel = null;
+    if (fail) return problem(route, fail.status, fail.code);
+    if (r.status !== 'submitted' && r.status !== 'running') return problem(route, 409, 'invalid_training_state');
+    r.status = 'cancelled';
+    r.completed_at = NOW;
+  }
+  return json(route, 200, r);
 }
 
 /** /v1/projects/{PROJECT}/datasets/...: the dataset flows. Returns undefined when the path is not one of them. */

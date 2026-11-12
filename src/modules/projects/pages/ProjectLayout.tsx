@@ -15,7 +15,10 @@ import { NotFound } from '@/shared/ui/NotFound';
 const TAB_PATHS = {
   [ProjectTab.Overview]: '/w/$slug/projects/$projectId',
   [ProjectTab.Datasets]: '/w/$slug/projects/$projectId/datasets',
+  [ProjectTab.Training]: '/w/$slug/projects/$projectId/training',
 } as const;
+/** The section tabs that own a subtree: any page under one keeps it selected. Anything else is the overview. */
+const SECTION_TABS = [ProjectTab.Datasets, ProjectTab.Training] as const;
 
 /** One project: its header and section tabs around the section's page. The shell breadcrumb leads back up. */
 export function ProjectLayout() {
@@ -24,9 +27,9 @@ export function ProjectLayout() {
   const { projectId } = useParams({ from: '/app/w/$slug/projects/$projectId' });
   const matchRoute = useMatchRoute();
   const { data: project, error, isError, isPending, refetch } = useProject(workspaceId, projectId);
-  const tab = matchRoute({ to: TAB_PATHS[ProjectTab.Datasets], fuzzy: true }) ? ProjectTab.Datasets : ProjectTab.Overview;
+  const tab = SECTION_TABS.find((id) => matchRoute({ to: TAB_PATHS[id], fuzzy: true })) ?? ProjectTab.Overview;
   // One primary action per screen: a section brings its own, so the header's training button shows on the overview only.
-  const training = tab === ProjectTab.Overview;
+  const training = Boolean(matchRoute({ to: TAB_PATHS[ProjectTab.Overview] }));
 
   if (isError) {
     if (error instanceof ApiError && error.status === 404) return <NotFound />;
@@ -67,11 +70,12 @@ export function ProjectLayout() {
             </Box>
           </Flex>
           <HStack gap="2" flexShrink={0}>
-            {/* Training has no page yet (the API answers 501); the button holds its place until it does. */}
             {training && (
-              <Button variant="solid" size="sm" disabled data-testid="project-new-training">
-                <Plus />
-                {t('projects.detail.newTraining')}
+              <Button asChild variant="solid" size="sm">
+                <Link to="/w/$slug/projects/$projectId/training/new" params={{ slug, projectId }} data-testid="project-new-training">
+                  <Plus />
+                  {t('projects.detail.newTraining')}
+                </Link>
               </Button>
             )}
             <ProjectMenu project={project} workspaceId={workspaceId} />
@@ -79,8 +83,10 @@ export function ProjectLayout() {
         </Flex>
       </Box>
 
-      {/* Manual activation: arrows move focus, Enter follows the focused link. The URL owns the value. */}
-      <Tabs.Root value={tab} activationMode="manual">
+      {/* Manual activation: arrows move focus, Enter follows the focused link. The URL owns the value, so `navigate` is off:
+          by default the tabs click the selected trigger's link whenever the value changes, which would send a deep link
+          (training/new) back up to its section's root. */}
+      <Tabs.Root value={tab} activationMode="manual" navigate={null}>
         <Tabs.List aria-label={t('projects.detail.sections')}>
           <Tabs.Indicator />
           {PROJECT_TABS.map((id) => (

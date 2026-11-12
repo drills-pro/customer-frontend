@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Alert, Box, Button, Card, Flex, Grid, Heading, HStack, Stack, Steps, Text } from '@chakra-ui/react';
+import { Alert, Box, Button, Card, Grid, Heading, HStack, Stack, Text } from '@chakra-ui/react';
 import { Link } from '@tanstack/react-router';
-import { Check, ChevronLeft, ChevronRight } from 'pixelarticons/react';
+import { ChevronLeft, ChevronRight } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import {
   DEFAULT_VISIBILITY,
@@ -18,6 +18,7 @@ import { TaskStep } from '@/modules/projects/components/TaskStep';
 import { step as stepIndex, STEPS } from '@/modules/projects/constants';
 import { useWorkspace } from '@/modules/workspaces';
 import { errorKey } from '@/shared/api/errors';
+import { SummaryCard, WizardBody, WizardSteps } from '@/shared/ui/wizard';
 
 const BASICS = stepIndex('basics');
 const TASK = stepIndex('task');
@@ -96,29 +97,10 @@ function ProjectForm({ workspace }: { workspace: { id: string; slug: string; nam
     <Grid minW="0" alignItems="start" gap="6" templateColumns={{ lg: 'repeat(3, minmax(0, 1fr))' }}>
       <Card.Root minW="0" gridColumn={{ lg: 'span 2' }}>
         <Card.Header>
-          <Steps.Root count={STEPS.length} step={step} linear size="sm">
-            <Steps.List>
-              {STEPS.map((id, index) => (
-                <Steps.Item key={id} index={index}>
-                  <Steps.Indicator>
-                    <Steps.Status complete={<Check />} incomplete={<Steps.Number />} current={<Steps.Number />} />
-                  </Steps.Indicator>
-                  <Steps.Title hideBelow="sm">{t(`newProject.step.${id}`)}</Steps.Title>
-                  <Steps.Separator />
-                </Steps.Item>
-              ))}
-            </Steps.List>
-          </Steps.Root>
+          <WizardSteps labels={STEPS.map((id) => t(`newProject.step.${id}`))} step={step} />
         </Card.Header>
 
-        <Card.Body
-          key={step}
-          animationName="slide-from-right, fade-in"
-          animationDuration="bounce-gentle"
-          animationTimingFunction="bounce-gentle-in-out"
-          css={{ '--slide-from-right-distance': '1.5rem' }}
-          _motionReduce={{ animationName: 'fade-in' }}
-        >
+        <WizardBody step={step}>
           {step === BASICS && (
             <BasicsStep
               workspaces={[{ label: workspace.name, value: workspace.id }]}
@@ -153,7 +135,7 @@ function ProjectForm({ workspace }: { workspace: { id: string; slug: string; nam
               )}
             </Stack>
           )}
-        </Card.Body>
+        </WizardBody>
 
         <Card.Footer justifyContent="space-between" gap="3" flexWrap="wrap">
           {step === DONE ? (
@@ -194,34 +176,7 @@ function ProjectForm({ workspace }: { workspace: { id: string; slug: string; nam
         </Card.Footer>
       </Card.Root>
 
-      <Card.Root as="aside" size="sm" minW="0">
-        <Card.Header>
-          <Heading as="h2" textStyle="body" fontWeight="semibold">
-            {t('newProject.summary')}
-          </Heading>
-        </Card.Header>
-        <Card.Body gap="0">
-          {summary.map((row) => (
-            <Flex
-              key={row.id}
-              justify="space-between"
-              gap="3"
-              py="2"
-              textStyle="body-sm"
-              borderBottomWidth="1px"
-              borderColor="border"
-              _last={{ borderBottomWidth: '0' }}
-            >
-              <Text as="span" color="fg.muted">
-                {row.label}
-              </Text>
-              <Text as="span" maxW="60%" textAlign="end" fontWeight="medium" wordBreak="break-word">
-                {row.value}
-              </Text>
-            </Flex>
-          ))}
-        </Card.Body>
-      </Card.Root>
+      <SummaryCard title={t('newProject.summary')} rows={summary} />
     </Grid>
   );
 }

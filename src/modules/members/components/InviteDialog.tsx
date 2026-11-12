@@ -8,15 +8,19 @@ import { useInvite } from '@/modules/members/api';
 import { SimpleSelect } from '@/components/simple-select';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/** The backend's problem code when the invitation email was refused (the invitation is then not created). */
+const MAIL_NOT_SENT = 'mail_not_sent';
 
-/** Invite by email. There is no mail service yet, so the one-time link is shown for the inviter to send. */
+/** Invite by email. The backend mails the one-time link to the invitee; with mail off (dev) it hands the link back to show here. */
 export function InviteDialog({ workspaceId }: { workspaceId: string }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'admin' | 'member'>('member');
   const invite = useInvite(workspaceId);
-  const link = invite.data ? `${location.origin}/invite/${invite.data.token}` : null;
+  const sent = invite.data?.email_sent === true;
+  const link = invite.data?.token ? `${location.origin}/invite/${invite.data.token}` : null;
+  const done = sent || link !== null;
   const roles = [
     { label: t('role.member'), value: 'member' },
     { label: t('role.admin'), value: 'admin' },
@@ -30,6 +34,8 @@ export function InviteDialog({ workspaceId }: { workspaceId: string }) {
     }
   };
   const hideError = invite.error instanceof ApiError && invite.error.status === 401;
+  const errorText =
+    invite.error instanceof ApiError && invite.error.code === MAIL_NOT_SENT ? 'members.invite.mailFailed' : errorKey(invite.error);
 
   return (
     <Dialog.Root open={open} onOpenChange={(e) => onOpenChange(e.open)}>
@@ -47,7 +53,12 @@ export function InviteDialog({ workspaceId }: { workspaceId: string }) {
               <Dialog.Title>{t('members.invite.title')}</Dialog.Title>
             </Dialog.Header>
             <Dialog.Body>
-              {link ? (
+              {sent ? (
+                <Alert.Root status="success" colorPalette="success" data-testid="invite-sent">
+                  <Alert.Indicator />
+                  <Alert.Description>{t('members.invite.sentBody', { email: invite.data?.email })}</Alert.Description>
+                </Alert.Root>
+              ) : link ? (
                 <Stack gap="4">
                   <Text>{t('members.invite.linkBody', { email: invite.data?.email })}</Text>
                   <Clipboard.Root value={link}>
@@ -95,7 +106,7 @@ export function InviteDialog({ workspaceId }: { workspaceId: string }) {
                   {invite.isError && !hideError && (
                     <Alert.Root status="error" colorPalette="danger">
                       <Alert.Indicator />
-                      <Alert.Description>{t(errorKey(invite.error))}</Alert.Description>
+                      <Alert.Description>{t(errorText)}</Alert.Description>
                     </Alert.Root>
                   )}
                 </Stack>
@@ -103,9 +114,9 @@ export function InviteDialog({ workspaceId }: { workspaceId: string }) {
             </Dialog.Body>
             <Dialog.Footer>
               <Dialog.ActionTrigger asChild>
-                <Button data-testid="invite-close">{t(link ? 'members.invite.done' : 'workspace.cancel')}</Button>
+                <Button data-testid="invite-close">{t(done ? 'members.invite.done' : 'workspace.cancel')}</Button>
               </Dialog.ActionTrigger>
-              {!link && (
+              {!done && (
                 <Button
                   type="submit"
                   form="invite-form"

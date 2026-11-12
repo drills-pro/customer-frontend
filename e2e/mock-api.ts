@@ -105,6 +105,8 @@ export interface ApiState {
   workspaces: Workspace[];
   members: Member[];
   invitations: Invitation[];
+  /** Creating an invitation mails the link (production) instead of handing it back (mail off, dev). */
+  mailInvites: boolean;
   /** Tokens `POST /v1/invitations/{token}:accept` accepts, mapped to the workspace they join. */
   acceptable: Record<string, string>;
   /** The workspace's one project, PROJECT; any other id answers 404. */
@@ -155,6 +157,7 @@ export const newState = (): ApiState => ({
   workspaces: [workspace(ACME, 'Acme Vision', ACME_SLUG, 'owner'), workspace(SIDE, 'Side Project', SIDE_SLUG, 'member')],
   members: [{ user_sub: 'me', role: 'owner', created_at: '2026-10-01T00:00:00Z', email: 'dev@example.com', display_name: 'Dev User' }],
   invitations: [],
+  mailInvites: false,
   acceptable: { good: SIDE },
   project: {
     id: PROJECT,
@@ -322,7 +325,8 @@ export async function installApi(page: Page, state: ApiState) {
         created_at: new Date().toISOString(),
       };
       state.invitations.push(invitation);
-      return json(route, 201, { ...invitation, token: `tok_${state.invitations.length}` });
+      if (state.mailInvites) return json(route, 201, { ...invitation, email_sent: true, token: null });
+      return json(route, 201, { ...invitation, email_sent: false, token: `tok_${state.invitations.length}` });
     }
     if ((m = path.match(/^\/v1\/invitations\/(.+):accept$/))) {
       const tenantId = state.acceptable[decodeURIComponent(m[1])];

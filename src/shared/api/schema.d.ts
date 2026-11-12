@@ -1816,8 +1816,10 @@ export interface components {
       expires_at: string;
       /** Created At */
       created_at?: string | null;
+      /** Email Sent */
+      email_sent: boolean;
       /** Token */
-      token: string;
+      token?: string | null;
     };
     /**
      * InviteRole

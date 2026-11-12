@@ -36,8 +36,8 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
           borderRadius="l2"
           color="fg.muted"
           fontWeight="medium"
-          _hover={{ bg: 'bg.subtle', color: 'fg' }}
-          _currentPage={{ bg: 'selected-bg', color: 'fg', fontWeight: 'semibold' }}
+          _hover={{ bg: 'selected-bg/50', color: 'fg' }}
+          _currentPage={{ bg: 'selected-bg', color: 'fg', fontWeight: 'semibold', _hover: { bg: 'selected-bg' } }}
         >
           <Link to={i.to} params={{ slug }} activeOptions={{ exact: i.exact }} onClick={onNavigate}>
             {i.icon}

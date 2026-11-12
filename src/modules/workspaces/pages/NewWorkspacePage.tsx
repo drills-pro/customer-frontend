@@ -1,9 +1,10 @@
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Button, Card, Center, Field, Heading, HStack, Input, Stack, Steps, Text } from '@chakra-ui/react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { Check } from 'pixelarticons/react';
+import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useMe } from '@/modules/workspaces/api';
+import { sendVerificationEmail, useEmailVerified, useMe } from '@/modules/workspaces/api';
 import { ApiError, type Schemas } from '@/shared/api/client';
 import { errorKey } from '@/shared/api/errors';
 import { useCreateWorkspace } from '@/modules/workspaces/api';
@@ -16,6 +17,66 @@ const SLUG_MAX = 40;
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const NAME_MAX = 100;
 const STEPS = ['verify', 'details', 'review', 'done'] as const;
+const ALREADY_VERIFIED = 'email_already_verified'; // core-api ProblemCode.EMAIL_ALREADY_VERIFIED
+const SENT_KEY = 'drills-verify-sent';
+type Notice = 'sent' | 'wait' | 'failed';
+
+/** Whether this tab already had the automatic mail sent; storage that throws (private mode) counts as not sent. */
+function sentBefore(key: string): boolean {
+  try {
+    return sessionStorage.getItem(key) !== null;
+  } catch {
+    return false;
+  }
+}
+function markSent(key: string, sent: boolean) {
+  try {
+    if (sent) sessionStorage.setItem(key, '1');
+    else sessionStorage.removeItem(key);
+  } catch {
+    /* private mode: the next visit sends again */
+  }
+}
+
+/** The verify step: the API has the identity provider mail a link on arrival, then this waits for the link to be opened
+ *  and signs in again (silently while the identity session lives) so the new token says the email is verified. */
+function useEmailVerification(active: boolean, sub: string) {
+  const { signIn } = useAuth();
+  const sentKey = `${SENT_KEY}:${sub}`;
+  const [notice, setNotice] = useState<Notice | null>(() => (sentBefore(sentKey) ? 'sent' : null));
+  const leaving = useRef(false);
+  const verified = useEmailVerified(active);
+
+  const continueIn = useCallback(() => {
+    if (leaving.current) return;
+    leaving.current = true;
+    signIn('/');
+  }, [signIn]);
+
+  const { mutate: send, isPending: sending } = useMutation({
+    mutationFn: sendVerificationEmail,
+    onSuccess: () => setNotice('sent'),
+    onError: (e) => {
+      if (e instanceof ApiError && e.code === ALREADY_VERIFIED) return continueIn();
+      const tooSoon = e instanceof ApiError && e.status === 429;
+      if (!tooSoon) markSent(sentKey, false); // nothing went out: a reload may try again
+      setNotice(tooSoon ? 'wait' : 'failed');
+    },
+  });
+
+  useEffect(() => {
+    if (verified) continueIn();
+  }, [verified, continueIn]);
+
+  // One automatic mail per tab and user: a reload would otherwise replace the link that is already on its way.
+  useEffect(() => {
+    if (!active || sentBefore(sentKey)) return;
+    markSent(sentKey, true);
+    send();
+  }, [active, sentKey, send]);
+
+  return { notice, sending, resend: () => send(), continueIn };
+}
 
 const slugify = (name: string) =>
   name
@@ -33,11 +94,11 @@ function slugProblem(slug: string): 'short' | 'format' | null {
 /** Four-step "new workspace" wizard: verify email, name and handle, review, done. */
 export function NewWorkspacePage() {
   const { t } = useTranslation();
-  const { signIn } = useAuth();
   const me = useMe();
   const navigate = useNavigate();
   const create = useCreateWorkspace();
   const [step, setStep] = useState(me.email_verified ? 1 : 0);
+  const verify = useEmailVerification(step === 0, me.sub);
   const go = (to: number) => {
     if (to === 2) key.current = crypto.randomUUID(); // a fresh attempt gets a fresh key, else the server would replay the first answer
     setStep(to);
@@ -127,8 +188,20 @@ export function NewWorkspacePage() {
               <Alert.Indicator />
               <Alert.Content>
                 <Alert.Title>{t('workspace.verify.title')}</Alert.Title>
-                <Alert.Description>{t('workspace.verify.body')}</Alert.Description>
+                <Alert.Description>{t('workspace.verify.body', { email: me.email ?? '' })}</Alert.Description>
               </Alert.Content>
+            </Alert.Root>
+          )}
+          {step === 0 && verify.notice && (
+            <Alert.Root
+              size="sm"
+              status={verify.notice === 'failed' ? 'error' : 'info'}
+              colorPalette={verify.notice === 'failed' ? 'danger' : 'info'}
+              data-testid="wizard-verify-notice"
+              data-notice={verify.notice}
+            >
+              <Alert.Indicator />
+              <Alert.Title>{t(`workspace.verify.notice.${verify.notice}`)}</Alert.Title>
             </Alert.Root>
           )}
 
@@ -209,7 +282,12 @@ export function NewWorkspacePage() {
               </Button>
             )}
             {step === 0 && (
-              <Button onClick={() => signIn('/')} data-testid="wizard-verify">
+              <Button variant="outline" onClick={verify.resend} loading={verify.sending} data-testid="wizard-resend">
+                {t('workspace.verify.resend')}
+              </Button>
+            )}
+            {step === 0 && (
+              <Button onClick={verify.continueIn} data-testid="wizard-verify">
                 {t('workspace.verify.cta')}
               </Button>
             )}

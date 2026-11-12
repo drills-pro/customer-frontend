@@ -60,8 +60,14 @@
     },
     "verify": {
       "title": "Verify your email first",
-      "body": "Only users with a verified email can create a workspace. Check your inbox for our verification email, confirm it, then sign in again.",
-      "cta": "I verified, sign in again"
+      "body": "Only users with a verified email can create a workspace. We sent a verification link to {{email}}. Open it, and this page continues by itself.",
+      "cta": "I verified, continue",
+      "resend": "Resend email",
+      "notice": {
+        "sent": "Verification email sent. It can take a minute to arrive, so check your spam folder too.",
+        "wait": "An email was just sent. Wait a minute before asking for another.",
+        "failed": "We could not send the email. Try again in a moment."
+      }
     },
     "details": {
       "name": "Workspace name",

@@ -40,6 +40,17 @@ test('creates a dataset and opens it', async ({ page, api }) => {
   expect(api.datasets.map((d) => d.name)).toEqual(['fresh']);
 });
 
+test('a project with datasets can add another from the card under the list', async ({ page, api }) => {
+  dataset(api, { name: 'first' });
+  await page.goto(BASE);
+  await expect(page.getByTestId('dataset-row')).toHaveCount(1);
+  await page.getByTestId('datasets-add-card').getByTestId('datasets-create-open').click();
+  await page.getByTestId('datasets-create-name').fill('second');
+  await page.getByTestId('datasets-create-submit').click();
+  await expect(page.getByTestId('dataset-name')).toBeVisible();
+  expect(api.datasets.map((d) => d.name).sort()).toEqual(['first', 'second']);
+});
+
 test('deletes with a confirmation, and restores from the deleted dataset', async ({ page, api }) => {
   const d = dataset(api, { name: 'gone' });
   await page.goto(BASE);

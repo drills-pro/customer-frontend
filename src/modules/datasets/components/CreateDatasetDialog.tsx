@@ -32,7 +32,7 @@ export function CreateDatasetDialog({
   return (
     <Dialog.Root open={open} onOpenChange={(e) => onOpenChange(e.open)}>
       <Dialog.Trigger asChild>
-        <Button variant="solid" disabled={disabled} data-testid="datasets-create-open">
+        <Button disabled={disabled} data-testid="datasets-create-open">
           <Plus />
           {t('datasets.create.open')}
         </Button>

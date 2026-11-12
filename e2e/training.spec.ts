@@ -402,7 +402,7 @@ test.describe('runs list', () => {
     await page.goto(`${BASE}/training`);
     await expect(page.getByTestId('project-tab-training')).toHaveAttribute('aria-selected', 'true');
     await expect(page.getByTestId('training-list-empty')).toBeVisible();
-    await page.getByTestId('training-list-new').click();
+    await page.getByTestId('project-new-training').click();
     await expect(page).toHaveURL(NEW);
   });
 

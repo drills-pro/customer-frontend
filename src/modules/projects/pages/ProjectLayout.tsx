@@ -17,6 +17,7 @@ const TAB_PATHS = {
   [ProjectTab.Datasets]: '/w/$slug/projects/$projectId/datasets',
   [ProjectTab.Training]: '/w/$slug/projects/$projectId/training',
 } as const;
+const NEW_TRAINING_PATH = '/w/$slug/projects/$projectId/training/new';
 /** The section tabs that own a subtree: any page under one keeps it selected. Anything else is the overview. */
 const SECTION_TABS = [ProjectTab.Datasets, ProjectTab.Training] as const;
 
@@ -28,8 +29,8 @@ export function ProjectLayout() {
   const matchRoute = useMatchRoute();
   const { data: project, error, isError, isPending, refetch } = useProject(workspaceId, projectId);
   const tab = SECTION_TABS.find((id) => matchRoute({ to: TAB_PATHS[id], fuzzy: true })) ?? ProjectTab.Overview;
-  // One primary action per screen: a section brings its own, so the header's training button shows on the overview only.
-  const training = Boolean(matchRoute({ to: TAB_PATHS[ProjectTab.Overview] }));
+  // The header owns the project's one primary action, in the same place on every tab; the wizard it opens hides it.
+  const training = !matchRoute({ to: NEW_TRAINING_PATH });
 
   if (isError) {
     if (error instanceof ApiError && error.status === 404) return <NotFound />;
@@ -54,7 +55,13 @@ export function ProjectLayout() {
     <Stack gap="6">
       <Box data-testid="project-header">
         {/* With only the menu beside it, the title keeps one row on phones too. */}
-        <Flex direction={training ? { base: 'column', sm: 'row' } : 'row'} align="flex-start" justify="space-between" gap="4">
+        <Flex
+          direction={training ? { base: 'column', sm: 'row' } : 'row'}
+          // Centered beside the title block; stacked on phones, the button lines up at the start instead.
+          align={{ base: 'flex-start', sm: 'center' }}
+          justify="space-between"
+          gap="4"
+        >
           <Flex minW="0" align="flex-start" gap="3">
             <ProjectMark taskType={project.task_type} />
             <Box minW="0">
@@ -72,7 +79,7 @@ export function ProjectLayout() {
           <HStack gap="2" flexShrink={0}>
             {training && (
               <Button asChild variant="solid" size="sm">
-                <Link to="/w/$slug/projects/$projectId/training/new" params={{ slug, projectId }} data-testid="project-new-training">
+                <Link to={NEW_TRAINING_PATH} params={{ slug, projectId }} data-testid="project-new-training">
                   <Plus />
                   {t('projects.detail.newTraining')}
                 </Link>

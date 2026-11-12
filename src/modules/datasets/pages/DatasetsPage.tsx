@@ -1,4 +1,5 @@
-import { Box, Button, EmptyState, Flex, Heading, Skeleton, Stack, Text } from '@chakra-ui/react';
+import type { ReactNode } from 'react';
+import { Box, Button, EmptyState, Heading, Skeleton, Stack, Text } from '@chakra-ui/react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { Database } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
@@ -18,21 +19,22 @@ export function DatasetsPage() {
   const { datasets, error, isError, isPending, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } = useDatasets(projectId);
   const open = (datasetId: string) =>
     void navigate({ to: '/w/$slug/projects/$projectId/datasets/$datasetId', params: { slug, projectId, datasetId } });
-  const create = <CreateDatasetDialog projectId={projectId} disabled={denied} onCreated={open} />;
+  const addCard = (title: string, body: string) => (
+    <AddDatasetCard title={title} body={body}>
+      <CreateDatasetDialog projectId={projectId} disabled={denied} onCreated={open} />
+    </AddDatasetCard>
+  );
 
   return (
     <Stack gap="6">
-      <Flex align="end" justify="space-between" gap="4" wrap="wrap">
-        <Box>
-          <Heading as="h2" textStyle="h2">
-            {t('datasets.title')}
-          </Heading>
-          <Text mt="1" color="fg.muted">
-            {t('datasets.subtitle')}
-          </Text>
-        </Box>
-        {create}
-      </Flex>
+      <Box>
+        <Heading as="h2" textStyle="h2">
+          {t('datasets.title')}
+        </Heading>
+        <Text mt="1" color="fg.muted">
+          {t('datasets.subtitle')}
+        </Text>
+      </Box>
       {denied && (
         <Text color="fg.muted" data-testid="datasets-read-only">
           {t('datasets.readOnly')}
@@ -43,15 +45,7 @@ export function DatasetsPage() {
       ) : isPending ? (
         <Skeleton h="48" />
       ) : !datasets?.length ? (
-        <EmptyState.Root borderWidth="2px" borderColor="border" borderRadius="l3">
-          <EmptyState.Content>
-            <EmptyState.Indicator>
-              <Database />
-            </EmptyState.Indicator>
-            <EmptyState.Title>{t('datasets.empty.title')}</EmptyState.Title>
-            <EmptyState.Description>{t('datasets.empty.body')}</EmptyState.Description>
-          </EmptyState.Content>
-        </EmptyState.Root>
+        addCard(t('datasets.empty.title'), t('datasets.empty.body'))
       ) : (
         <Stack gap="4">
           <DatasetsTable projectId={projectId} slug={slug} datasets={datasets} denied={denied} />
@@ -62,8 +56,31 @@ export function DatasetsPage() {
               </Button>
             </Box>
           )}
+          {addCard(t('datasets.more.title'), t('datasets.more.body'))}
         </Stack>
       )}
     </Stack>
+  );
+}
+
+/** The dashed card that offers a new dataset: the empty state, and the last thing under a list that has some. */
+function AddDatasetCard({ title, body, children }: { title: string; body: string; children: ReactNode }) {
+  return (
+    <EmptyState.Root
+      borderWidth="2px"
+      borderStyle="dashed"
+      borderColor="border.emphasized"
+      borderRadius="l3"
+      data-testid="datasets-add-card"
+    >
+      <EmptyState.Content>
+        <EmptyState.Indicator>
+          <Database />
+        </EmptyState.Indicator>
+        <EmptyState.Title>{title}</EmptyState.Title>
+        <EmptyState.Description>{body}</EmptyState.Description>
+        {children}
+      </EmptyState.Content>
+    </EmptyState.Root>
   );
 }

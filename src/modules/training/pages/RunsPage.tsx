@@ -1,6 +1,6 @@
-import { Alert, Box, Button, EmptyState, Flex, Heading, Link as ChakraLink, Skeleton, Stack, Table, Text } from '@chakra-ui/react';
+import { Alert, Box, Button, EmptyState, Heading, Link as ChakraLink, Skeleton, Stack, Table, Text } from '@chakra-ui/react';
 import { Link, useParams } from '@tanstack/react-router';
-import { Cpu, Plus } from 'pixelarticons/react';
+import { Cpu } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { ACTIVE_TRAINING, TRAINING_RUN_LIMIT, type TrainingRunSummary } from '@/modules/projects';
 import { useWorkspace } from '@/modules/workspaces';
@@ -24,22 +24,14 @@ export function RunsPage() {
 
   return (
     <Stack gap="6">
-      <Flex align="end" justify="space-between" gap="4" wrap="wrap">
-        <Box>
-          <Heading as="h2" textStyle="h2">
-            {t('training.title')}
-          </Heading>
-          <Text mt="1" color="fg.muted">
-            {t('training.list.subtitle')}
-          </Text>
-        </Box>
-        <Button asChild variant="solid">
-          <Link to="/w/$slug/projects/$projectId/training/new" params={{ slug, projectId }} data-testid="training-list-new">
-            <Plus />
-            {t('training.run.new')}
-          </Link>
-        </Button>
-      </Flex>
+      <Box>
+        <Heading as="h2" textStyle="h2">
+          {t('training.title')}
+        </Heading>
+        <Text mt="1" color="fg.muted">
+          {t('training.list.subtitle')}
+        </Text>
+      </Box>
       {isError ? (
         <Alert.Root status="error" colorPalette="danger" data-testid="training-list-load-error">
           <Alert.Indicator />

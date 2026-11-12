@@ -545,6 +545,29 @@ export const slotRecipes = {
       },
       title: { fontWeight: 'medium' },
     },
+    variants: {
+      orientation: {
+        // A vertical step list sits in a card and reads like the sidebar: one full-width row per step, the current one filled.
+        vertical: {
+          list: { flex: '1', alignItems: 'stretch', gap: '1' },
+          item: { flex: 'initial' },
+          separator: { display: 'none' },
+          trigger: {
+            flex: '1',
+            px: '3',
+            py: '2',
+            _hover: { _enabled: { bg: 'selected-bg/50' } },
+            '&[data-incomplete] [data-part=title]': { color: 'fg.muted' },
+            '&[data-current]': {
+              bg: 'selected-bg',
+              // Hover sits in a media query, so it would beat the current fill without this.
+              _hover: { bg: 'selected-bg' },
+              '& [data-part=title]': { fontWeight: 'semibold' },
+            },
+          },
+        },
+      },
+    },
   }),
   accordion: defineSlotRecipe({
     slots: ['root', 'item', 'itemTrigger', 'itemContent', 'itemIndicator', 'itemBody'],

@@ -87,10 +87,12 @@ test('new training opens the training wizard', async ({ page }) => {
   await expect(page.getByTestId('project-tab-training')).toHaveAttribute('aria-selected', 'true');
 });
 
-test('new training shows only on the overview', async ({ page }) => {
+test('new training stays in the header on every tab', async ({ page }) => {
   await page.goto(`${BASE}/datasets`);
-  await expect(page.getByTestId('datasets-create-open')).toBeVisible();
-  await expect(page.getByTestId('project-new-training')).toHaveCount(0);
+  await expect(page.getByTestId('project-new-training')).toBeVisible();
+  await page.getByTestId('project-tab-training').click();
+  await expect(page).toHaveURL(`${BASE}/training`);
+  await expect(page.getByTestId('project-new-training')).toBeVisible();
 });
 
 test('the breadcrumb ends at the project and leads back to the list', async ({ page }) => {

@@ -126,7 +126,8 @@ function Outcome({ run, report, projectId }: { run: TrainingRun; report: RunRepo
   const { slug } = useWorkspace();
   const newTraining = (key: string) => (
     <Box>
-      <Button asChild variant="solid">
+      {/* Outline: the project header holds the screen's one solid "New training". */}
+      <Button asChild>
         <Link to="/w/$slug/projects/$projectId/training/new" params={{ slug, projectId }} data-testid="training-run-new">
           {t(key)}
         </Link>

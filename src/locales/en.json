@@ -520,6 +520,10 @@
       "title": "No datasets yet",
       "body": "Create a dataset, then import a file or a Hugging Face dataset into it."
     },
+    "more": {
+      "title": "Add more training data",
+      "body": "Create another dataset, then import a file or a Hugging Face dataset into it."
+    },
     "column": {
       "name": "Name",
       "task": "Task",

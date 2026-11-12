@@ -206,9 +206,9 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
   return (
     <Grid minW="0" alignItems="start" gap="5" templateColumns={{ xl: '220px minmax(0, 1fr) 300px' }}>
       {vertical && (
-        <Box as="nav" aria-label={t('training.new.steps')} data-testid="training-steps">
-          {steps}
-        </Box>
+        <Card.Root as="nav" size="sm" aria-label={t('training.new.steps')} data-testid="training-steps">
+          <Card.Body p="2">{steps}</Card.Body>
+        </Card.Root>
       )}
 
       <Card.Root minW="0">

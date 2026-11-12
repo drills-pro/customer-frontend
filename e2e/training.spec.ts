@@ -196,7 +196,7 @@ test('a queued run can be cancelled', async ({ page, api }) => {
   await expect(page.getByTestId('training-stop-dialog')).toBeHidden();
   await expect(page.getByTestId('training-status')).toHaveAttribute('data-status', 'cancelled');
   await expect(page.getByTestId('training-run-ended')).toBeVisible();
-  await expect(page.getByTestId('training-run-new')).toBeVisible();
+  await expect(page.getByTestId('project-new-training')).toBeVisible();
 });
 
 test('an unknown run shows not found', async ({ page }) => {
@@ -286,7 +286,7 @@ test('a failed run says why, from its report', async ({ page, api }) => {
   });
   await page.goto(`${BASE}/training/${r.id}`);
   await expect(page.getByTestId('training-run-failed')).toHaveAttribute('data-code', 'oom');
-  await expect(page.getByTestId('training-run-new')).toBeVisible();
+  await expect(page.getByTestId('project-new-training')).toBeVisible();
 });
 
 test('a cancel the server cannot do leaves the run and says so', async ({ page, api }) => {

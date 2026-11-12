@@ -1,4 +1,4 @@
-import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { client, unwrap, type Schemas } from '@/shared/api/client';
 
 export type Me = Schemas['Me'];
@@ -9,6 +9,20 @@ export const meQuery = queryOptions({ queryKey: meKey, queryFn: () => unwrap(cli
 
 /** The signed-in user and their workspaces. Routes under the app layout have loaded it already. */
 export const useMe = () => useSuspenseQuery(meQuery).data;
+
+/** Mail the user a verification link. 409: the email is verified already (the token is older); 429: one was just sent. */
+export const sendVerificationEmail = () => unwrap(client.POST('/v1/me/email-verification'));
+
+const VERIFY_POLL_MS = 5000;
+/** The email's state now, which can be newer than the token: polled while the verify step waits for the link to be opened. */
+export const useEmailVerified = (enabled: boolean) =>
+  useQuery({
+    queryKey: [...meKey, 'email-verification'],
+    queryFn: () => unwrap(client.GET('/v1/me/email-verification')),
+    enabled,
+    refetchInterval: VERIFY_POLL_MS,
+    select: (s) => s.verified,
+  }).data === true;
 
 export const workspaceKey = (id: string) => ['workspace', id] as const;
 export const workspaceQuery = (id: string) =>

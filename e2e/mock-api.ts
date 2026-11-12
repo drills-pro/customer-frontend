@@ -102,6 +102,8 @@ export interface PreviewRow {
 /** What the fake backend knows. Each test gets its own copy and may change it before it navigates. */
 export interface ApiState {
   emailVerified: boolean;
+  /** How many verification mails were asked for (POST /v1/me/email-verification). */
+  verificationMails: number;
   workspaces: Workspace[];
   members: Member[];
   invitations: Invitation[];
@@ -154,6 +156,7 @@ const workspace = (id: string, name: string, slug: string, role: Role): Workspac
 
 export const newState = (): ApiState => ({
   emailVerified: true,
+  verificationMails: 0,
   workspaces: [workspace(ACME, 'Acme Vision', ACME_SLUG, 'owner'), workspace(SIDE, 'Side Project', SIDE_SLUG, 'member')],
   members: [{ user_sub: 'me', role: 'owner', created_at: '2026-10-01T00:00:00Z', email: 'dev@example.com', display_name: 'Dev User' }],
   invitations: [],
@@ -281,6 +284,12 @@ export async function installApi(page: Page, state: ApiState) {
           capabilities: capabilities(w.role),
         })),
       });
+    }
+    if (path === '/v1/me/email-verification') {
+      if (method === 'GET') return json(route, 200, { verified: state.emailVerified });
+      if (state.emailVerified) return json(route, 409, { code: 'email_already_verified' });
+      state.verificationMails += 1;
+      return json(route, 204);
     }
     if (path === '/v1/tenants' && method === 'POST') {
       const w = workspace(crypto.randomUUID(), body.name, body.slug, 'owner');

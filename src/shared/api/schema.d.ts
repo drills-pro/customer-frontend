@@ -767,12 +767,44 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/me/email-verification': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Email Verification Status
+     * @description Live from Zitadel, for the SPA to poll while the user opens the mail.
+     */
+    get: operations['email_verification_status_v1_me_email_verification_get'];
+    put?: never;
+    /**
+     * Send Email Verification
+     * @description Zitadel mails the caller a verification link, unless the email is verified already (409 email_already_verified).
+     */
+    post: operations['send_email_verification_v1_me_email_verification_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/me': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
+    };
+    /** EmailVerificationStatus */
+    EmailVerificationStatus: {
+      /**
+       * Verified
+       * @description Zitadel's current answer, which may be newer than the caller's token
+       */
+      verified: boolean;
     };
     /** Me */
     get: operations['me_v1_me_get'];
@@ -4305,6 +4337,62 @@ export interface operations {
         content: {
           'application/json': unknown;
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  email_verification_status_v1_me_email_verification_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['EmailVerificationStatus'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  send_email_verification_v1_me_email_verification_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {

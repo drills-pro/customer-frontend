@@ -55,7 +55,7 @@ export function RunPage() {
     <Stack gap="6">
       <RunHeader run={run} projectId={projectId} />
       <RunStats run={run} />
-      <Outcome run={run} report={report} projectId={projectId} />
+      <Outcome run={run} report={report} />
       <Tabs.Root value={tab} onValueChange={(e) => setTab(e.value as RunTab)} lazyMount unmountOnExit>
         <Tabs.List aria-label={t('training.run.sections')}>
           <Tabs.Indicator />
@@ -121,19 +121,8 @@ function RunHeader({ run, projectId }: { run: TrainingRun; projectId: string }) 
 }
 
 /** How the run stands, in words: still moving, done (and whether its scores can be trusted), failed and why, or cancelled. */
-function Outcome({ run, report, projectId }: { run: TrainingRun; report: RunReport | null; projectId: string }) {
+function Outcome({ run, report }: { run: TrainingRun; report: RunReport | null }) {
   const { t } = useTranslation();
-  const { slug } = useWorkspace();
-  const newTraining = (key: string) => (
-    <Box>
-      {/* Outline: the project header holds the screen's one solid "New training". */}
-      <Button asChild>
-        <Link to="/w/$slug/projects/$projectId/training/new" params={{ slug, projectId }} data-testid="training-run-new">
-          {t(key)}
-        </Link>
-      </Button>
-    </Box>
-  );
 
   if (statusUi(run.status).poll)
     return (
@@ -163,23 +152,26 @@ function Outcome({ run, report, projectId }: { run: TrainingRun; report: RunRepo
         </Stack>
       );
     }
+    // A new run starts from the project header's "New training", or from Clone to keep this run's settings.
     case TrainingStatus.Failed:
       return (
-        <Stack gap="4">
-          <Alert.Root status="error" colorPalette="danger" data-testid="training-run-failed" data-code={report?.code ?? undefined}>
-            <Alert.Indicator />
-            <Alert.Description>{t(failureKey(report?.code))}</Alert.Description>
-          </Alert.Root>
-          {newTraining('training.run.tryAgain')}
-        </Stack>
+        <Alert.Root status="error" colorPalette="danger" data-testid="training-run-failed" data-code={report?.code ?? undefined}>
+          <Alert.Indicator />
+          <Alert.Description>{t(failureKey(report?.code))}</Alert.Description>
+        </Alert.Root>
       );
-    default:
+    default: {
+      // Gray with the badge's glyph, so the alert and the Cancelled badge read as one status.
+      const { palette, icon: Icon } = statusUi(run.status);
       return (
-        <Stack gap="4" maxW="xl" data-testid="training-run-ended">
-          <Text>{t('training.run.cancelled')}</Text>
-          {newTraining('training.run.new')}
-        </Stack>
+        <Alert.Root status="neutral" colorPalette={palette} data-testid="training-run-ended">
+          <Alert.Indicator>
+            <Icon />
+          </Alert.Indicator>
+          <Alert.Description>{t('training.run.cancelled')}</Alert.Description>
+        </Alert.Root>
       );
+    }
   }
 }
 

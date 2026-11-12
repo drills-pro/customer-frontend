@@ -43,6 +43,8 @@ export const config = defineConfig({
     keyframes: {
       // Entrance for cards and alerts. Timing comes from the bounces.
       'rise-in': { from: { opacity: '0', transform: 'translateY(12px)' }, to: { opacity: '1', transform: 'none' } },
+      // A wizard step entering from the next step's side.
+      'step-in': { from: { opacity: '0', transform: 'translateX(1.5rem)' }, to: { opacity: '1', transform: 'none' } },
       // Rises from a crouch; the bounce easing supplies the landing and rebounds.
       'icon-bounce': {
         from: { transform: 'translateY(8px) scale(0.8, 1.15)' },

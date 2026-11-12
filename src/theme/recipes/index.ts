@@ -259,11 +259,13 @@ export const slotRecipes = {
           trigger: {
             color: 'fg.muted',
             borderTopRadius: 'l2',
-            _hover: { bg: 'bg.subtle', color: 'fg' },
+            _hover: { bg: 'selected-bg/50', color: 'fg' },
             _selected: {
               color: 'fg',
               bg: 'selected-bg',
               fontWeight: 'semibold',
+              // Hover sits in a media query, so it would beat the selected fill without this.
+              _hover: { bg: 'selected-bg' },
             },
           },
         },

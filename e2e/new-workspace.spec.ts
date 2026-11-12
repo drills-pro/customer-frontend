@@ -29,16 +29,15 @@ test('an unverified email starts on the verify step', async ({ page, api }) => {
   await expect(page.getByTestId('wizard-name')).toHaveCount(0);
 });
 
-test('the verify step has the link mailed once on arrival, and resend asks again', async ({ page, api }) => {
+test('the verify step mails nothing by itself; only the resend button does', async ({ page, api }) => {
   api.emailVerified = false;
   await page.goto('/new');
-  await expect(page.getByTestId('wizard-verify-notice')).toHaveAttribute('data-notice', 'sent');
-  expect(api.verificationMails).toBe(1);
-
-  await page.reload(); // the same tab does not mail again: that would replace the link already on its way
-  await expect(page.getByTestId('wizard-verify-notice')).toHaveAttribute('data-notice', 'sent');
-  expect(api.verificationMails).toBe(1);
+  await expect(page.getByTestId('wizard-resend')).toBeVisible();
+  await page.reload(); // a new mail would void the link sent at sign-up, so arriving never sends one
+  await expect(page.getByTestId('wizard-verify-notice')).toHaveCount(0);
+  expect(api.verificationMails).toBe(0);
 
   await page.getByTestId('wizard-resend').click();
-  await expect.poll(() => api.verificationMails).toBe(2);
+  await expect(page.getByTestId('wizard-verify-notice')).toHaveAttribute('data-notice', 'sent');
+  expect(api.verificationMails).toBe(1);
 });

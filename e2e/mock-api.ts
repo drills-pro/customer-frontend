@@ -151,6 +151,8 @@ export interface ApiState {
   mailInvites: boolean;
   /** Tokens `POST /v1/invitations/{token}:accept` accepts, mapped to the workspace they join. */
   acceptable: Record<string, string>;
+  /** Workspaces the user is not in yet: accepting an invite to one moves it into `workspaces` (so /v1/me lists it only after). */
+  invitedTo: Workspace[];
   /** The workspace's one project, PROJECT; any other id answers 404. */
   project: ProjectRec;
   projectMembers: ProjectMemberRec[];
@@ -215,6 +217,7 @@ export const newState = (): ApiState => ({
   invitations: [],
   mailInvites: false,
   acceptable: { good: SIDE },
+  invitedTo: [],
   project: {
     id: PROJECT,
     name: 'Shelf vision',
@@ -423,6 +426,8 @@ export async function installApi(page: Page, state: ApiState) {
     }
     if ((m = path.match(/^\/v1\/invitations\/(.+):accept$/))) {
       const tenantId = state.acceptable[decodeURIComponent(m[1])];
+      const joining = state.invitedTo.findIndex((w) => w.id === tenantId);
+      if (joining >= 0) state.workspaces.push(...state.invitedTo.splice(joining, 1));
       return tenantId ? json(route, 200, { tenant_id: tenantId, role: 'member' }) : json(route, 404, { code: 'not_found' });
     }
     const ds = datasetRoutes(route, state, method, path, req);

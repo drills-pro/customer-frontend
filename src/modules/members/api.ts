@@ -49,10 +49,23 @@ export function useInvite(id: string) {
   });
 }
 
+const postAccept = (token: string) => unwrap(client.POST('/v1/invitations/{token}:accept', { params: { path: { token } } }));
+/** One request per token per page load: a remount (StrictMode, a re-run route) gets the first answer, not a second POST. */
+const accepting = new Map<string, ReturnType<typeof postAccept>>();
+
+/** Accept, then refetch /v1/me (inactive too): the workspace route reads it from the cache and must find the new workspace. */
 export function useAcceptInvitation() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (token: string) => unwrap(client.POST('/v1/invitations/{token}:accept', { params: { path: { token } } })),
-    onSuccess: () => qc.invalidateQueries({ queryKey: meKey }),
+    mutationFn: (token: string) => {
+      let sent = accepting.get(token);
+      if (!sent) {
+        sent = postAccept(token);
+        accepting.set(token, sent);
+        sent.catch(() => accepting.delete(token)); // a failure may be retried
+      }
+      return sent;
+    },
+    onSuccess: () => qc.refetchQueries({ queryKey: meKey, type: 'all' }),
   });
 }

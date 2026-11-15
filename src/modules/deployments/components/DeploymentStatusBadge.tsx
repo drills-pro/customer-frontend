@@ -1,20 +1,15 @@
 import { Badge } from '@chakra-ui/react';
 import { useTranslation } from 'react-i18next';
-import { DeploymentStatus } from '@/modules/projects/constants';
+import { isStatus, statusUi } from '@/modules/deployments/status';
 
-const PALETTE: Record<string, string> = {
-  [DeploymentStatus.Active]: 'success',
-  [DeploymentStatus.Deploying]: 'warning',
-  [DeploymentStatus.Failed]: 'danger',
-  [DeploymentStatus.Deleted]: 'gray',
-};
-
-/** A deployment's status word, colored. Unknown statuses show as they come, in gray. */
+/** Status always shows a glyph and a word. */
 export function DeploymentStatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();
+  const ui = statusUi(status);
   return (
-    <Badge colorPalette={PALETTE[status] ?? 'gray'} variant="subtle" data-testid="deployment-status" data-status={status}>
-      {t(`deployments.status.${status}`, { defaultValue: status })}
+    <Badge colorPalette={ui.palette} variant="subtle" gap="1" data-testid="deployment-status" data-status={status}>
+      <ui.icon width={12} height={12} />
+      {t(isStatus(status) ? `deployments.status.${status}` : 'deployments.status.unknown')}
     </Badge>
   );
 }

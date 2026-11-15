@@ -21,6 +21,7 @@ const STATE_LOOK: Record<StageState, { icon: PixelIcon; palette: string }> = {
 const STAGE_LINKS = {
   data: '/w/$slug/projects/$projectId/datasets',
   train: '/w/$slug/projects/$projectId/training',
+  deploy: '/w/$slug/projects/$projectId/deployments',
 } as const satisfies Partial<Record<StageId, string>>;
 
 /** Data, train, deploy: how far the project has come, from what each part of the API reports. A part that fails to load reads as unavailable. */

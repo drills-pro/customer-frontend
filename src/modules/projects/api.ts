@@ -32,6 +32,8 @@ const projectKey = (workspaceId: string, projectId: string) => [...projectsKey(w
 /** The project's training runs. Exported so the training pages refresh the overview's Train stage when they create or cancel one. */
 export const trainingRunsKey = (workspaceId: string, projectId: string) =>
   [...projectKey(workspaceId, projectId), 'training-runs'] as const;
+/** The project's deployments. Exported so the deployment pages refresh the overview's Deploy stage when one changes. */
+export const deploymentsKey = (workspaceId: string, projectId: string) => [...projectKey(workspaceId, projectId), 'deployments'] as const;
 const tenantHeader = (workspaceId: string) => ({ 'x-tenant-id': workspaceId });
 
 export function useProjects(workspaceId: string) {
@@ -128,9 +130,10 @@ export const trainingRunsQuery = (workspaceId: string, projectId: string) =>
 
 export const useTrainingRuns = (workspaceId: string, projectId: string) => useQuery(trainingRunsQuery(workspaceId, projectId));
 
-export function useDeployments(workspaceId: string, projectId: string) {
-  return useQuery({
-    queryKey: [...projectKey(workspaceId, projectId), 'deployments'],
+/** The project's deployments, as the overview reads them; the deployments page polls the same query. */
+export const deploymentsQuery = (workspaceId: string, projectId: string) =>
+  queryOptions({
+    queryKey: deploymentsKey(workspaceId, projectId),
     queryFn: () =>
       unwrap(
         client.GET('/v1/projects/{project_id}/deployments', {
@@ -138,7 +141,8 @@ export function useDeployments(workspaceId: string, projectId: string) {
         }),
       ),
   });
-}
+
+export const useDeployments = (workspaceId: string, projectId: string) => useQuery(deploymentsQuery(workspaceId, projectId));
 
 /** The first page of the project's datasets, for a count. Its key sits under the dataset list's, so dataset changes refresh it. */
 export function useDatasetCount(workspaceId: string, projectId: string) {

@@ -1,21 +1,22 @@
-import { Alert, Box, Button, EmptyState, Heading, Skeleton, Stack, Table, Text } from '@chakra-ui/react';
+import { Alert, Box, Button, EmptyState, Heading, Link as ChakraLink, Skeleton, Stack, Table, Text } from '@chakra-ui/react';
 import { Link, useParams } from '@tanstack/react-router';
-import { Cpu } from 'pixelarticons/react';
+import { CloudServer } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
-import { useDeployments } from '@/modules/projects/api';
-import type { DeploymentListItem } from '@/modules/projects/api';
+import type { DeploymentListItem } from '@/modules/projects';
 import { useWorkspace } from '@/modules/workspaces';
+import { useDeploymentList } from '@/modules/deployments/api';
 import { DeploymentStatusBadge } from '@/modules/deployments/components/DeploymentStatusBadge';
-import { errorKey } from '@/shared/api/errors';
+import { SHORT_ID_LENGTH } from '@/modules/deployments/constants';
+import { deploymentErrorKey } from '@/modules/deployments/errors';
 
 const FROM = '/app/w/$slug/projects/$projectId/deployments/';
 
-/** The project's deployments, newest first: each is a live endpoint for one trained model, and leads to its page. */
+/** The project's endpoints, newest first, each leading to its page. A deploying one moves to active by itself. */
 export function DeploymentsPage() {
   const { t } = useTranslation();
   const { id: workspaceId, slug } = useWorkspace();
   const { projectId } = useParams({ from: FROM });
-  const { data: deployments, error, isError, isPending, refetch } = useDeployments(workspaceId, projectId);
+  const { data: deployments, error, isError, isPending, refetch } = useDeploymentList(workspaceId, projectId);
 
   return (
     <Stack gap="6">
@@ -24,15 +25,15 @@ export function DeploymentsPage() {
           {t('deployments.title')}
         </Heading>
         <Text mt="1" color="fg.muted">
-          {t('deployments.subtitle')}
+          {t('deployments.list.subtitle')}
         </Text>
       </Box>
       {isError ? (
         <Alert.Root status="error" colorPalette="danger" data-testid="deployments-load-error">
           <Alert.Indicator />
           <Alert.Content gap="3">
-            <Alert.Title>{t('deployments.loadFailed')}</Alert.Title>
-            <Alert.Description>{t(errorKey(error))}</Alert.Description>
+            <Alert.Title>{t('deployments.list.loadFailed')}</Alert.Title>
+            <Alert.Description>{t(deploymentErrorKey(error))}</Alert.Description>
             <Box>
               <Button size="sm" onClick={() => void refetch()}>
                 {t('deployments.retry')}
@@ -53,10 +54,15 @@ export function DeploymentsPage() {
         >
           <EmptyState.Content>
             <EmptyState.Indicator>
-              <Cpu />
+              <CloudServer />
             </EmptyState.Indicator>
-            <EmptyState.Title>{t('deployments.empty.title')}</EmptyState.Title>
-            <EmptyState.Description>{t('deployments.empty.body')}</EmptyState.Description>
+            <EmptyState.Title>{t('deployments.list.empty.title')}</EmptyState.Title>
+            <EmptyState.Description>{t('deployments.list.empty.body')}</EmptyState.Description>
+            <Button asChild size="sm">
+              <Link to="/w/$slug/projects/$projectId/training" params={{ slug, projectId }} data-testid="deployments-empty-runs">
+                {t('deployments.list.empty.action')}
+              </Link>
+            </Button>
           </EmptyState.Content>
         </EmptyState.Root>
       ) : (
@@ -69,34 +75,36 @@ export function DeploymentsPage() {
 function DeploymentsTable({ deployments, slug, projectId }: { deployments: DeploymentListItem[]; slug: string; projectId: string }) {
   const { t, i18n } = useTranslation();
   const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium', timeStyle: 'short' });
+  const newestFirst = [...deployments].sort((a, b) => b.created_at.localeCompare(a.created_at));
+
   return (
     <Table.ScrollArea borderWidth="1px" borderColor="border" borderRadius="l3" bg="surface-raised">
       <Table.Root variant="data">
         <Table.Header>
           <Table.Row>
-            <Table.ColumnHeader>{t('deployments.col.endpoint')}</Table.ColumnHeader>
-            <Table.ColumnHeader>{t('deployments.col.status')}</Table.ColumnHeader>
-            <Table.ColumnHeader>{t('deployments.col.created')}</Table.ColumnHeader>
+            <Table.ColumnHeader>{t('deployments.list.col.deployment')}</Table.ColumnHeader>
+            <Table.ColumnHeader>{t('deployments.list.col.status')}</Table.ColumnHeader>
+            <Table.ColumnHeader>{t('deployments.list.col.id')}</Table.ColumnHeader>
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {deployments.map((d) => (
-            <Table.Row key={d.id} data-testid="deployment-row" data-deployment={d.id}>
+          {newestFirst.map((d) => (
+            <Table.Row key={d.id} data-testid="deployments-row" data-deployment={d.id}>
               <Table.Cell>
-                <Link
-                  to="/w/$slug/projects/$projectId/deployments/$deploymentId"
-                  params={{ slug, projectId, deploymentId: d.id }}
-                  data-testid="deployment-link"
-                >
-                  <Text as="span" fontFamily="mono" color="brand-text" fontWeight="medium">
-                    {d.route_prefix}
-                  </Text>
-                </Link>
+                <ChakraLink asChild fontWeight="medium" color="brand-text">
+                  <Link to="/w/$slug/projects/$projectId/deployments/$deploymentId" params={{ slug, projectId, deploymentId: d.id }}>
+                    {date.format(new Date(d.created_at))}
+                  </Link>
+                </ChakraLink>
               </Table.Cell>
               <Table.Cell>
                 <DeploymentStatusBadge status={d.status} />
               </Table.Cell>
-              <Table.Cell>{date.format(new Date(d.created_at))}</Table.Cell>
+              <Table.Cell>
+                <Text as="span" textStyle="mono-sm" color="fg.muted">
+                  {d.id.slice(0, SHORT_ID_LENGTH)}
+                </Text>
+              </Table.Cell>
             </Table.Row>
           ))}
         </Table.Body>

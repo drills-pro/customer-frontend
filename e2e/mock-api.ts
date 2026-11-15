@@ -134,6 +134,17 @@ export interface DeploymentRec {
   status: string;
   route_prefix: string;
   created_at: string;
+  project_id: string;
+  training_run_id: string;
+  rate_limit_per_minute: number;
+  idempotency_key: string;
+}
+export interface TestCallRec {
+  id: number;
+  request: unknown;
+  response: unknown;
+  latency_ms: number | null;
+  created_at: string;
 }
 export interface PreviewRow {
   data: Record<string, unknown>;
@@ -158,6 +169,12 @@ export interface ApiState {
   projectMembers: ProjectMemberRec[];
   runs: RunRec[];
   deployments: DeploymentRec[];
+  /** A deploy without acknowledge_risk=true answers 409 deploy_risk_unacknowledged (the run has no test split). */
+  deployRisk: boolean;
+  /** The Idempotency-Key and acknowledge_risk of each deploy that reached the backend, in order. */
+  deployCalls: { key: string; acknowledge: boolean }[];
+  /** The body of each test call, newest first, as core-api lists them. */
+  testCalls: TestCallRec[];
   /** The training-runs list answers 500. */
   failRuns: boolean;
   /** What the training-presets list answers with: the project's task type's presets. */
@@ -234,6 +251,9 @@ export const newState = (): ApiState => ({
   projectMembers: [{ user_sub: 'me', roles: ['project_admin'], created_at: '2026-10-02T00:00:00Z' }],
   runs: [],
   deployments: [],
+  deployRisk: false,
+  deployCalls: [],
+  testCalls: [],
   failRuns: false,
   presets: [preset('small', 10, 32), preset('medium', 20, 16)],
   failPresets: null,
@@ -476,11 +496,110 @@ export const run = (state: ApiState, status: string, patch: Partial<RunRec> = {}
   state.runs.push(r);
   return r;
 };
-export const deployment = (state: ApiState, status: string): DeploymentRec => {
-  const d: DeploymentRec = { id: crypto.randomUUID(), status, route_prefix: '/p', created_at: NOW };
+export const deployment = (state: ApiState, status: string, trainingRunId: string = crypto.randomUUID()): DeploymentRec => {
+  const d: DeploymentRec = {
+    id: crypto.randomUUID(),
+    status,
+    route_prefix: '/p',
+    created_at: NOW,
+    project_id: PROJECT,
+    training_run_id: trainingRunId,
+    rate_limit_per_minute: 60,
+    idempotency_key: crypto.randomUUID(),
+  };
   state.deployments.push(d);
   return d;
 };
+/** The predict key a fresh deployment answers with, once. */
+export const PREDICT_KEY = 'pk_e2e_once';
+export const DEPLOYMENT_SCHEMA = {
+  task_type: 'tabular-classification',
+  model_id: 'dddddddd-0000-4000-8000-000000000004',
+  model_revision: '3',
+  input: { text: 'string' },
+  output: { predictions: [{ class: 'string', probability: 'number' }] },
+  snippets: { curl: 'curl -X POST', python: 'import requests', javascript: 'await fetch' },
+};
+export const TEST_RESPONSE = { predictions: [{ class: 'cat', probability: 0.9 }] };
+const listItem = ({ id, status, route_prefix, created_at }: DeploymentRec) => ({ id, status, route_prefix, created_at });
+/** DeploymentDetail: everything but the key the mock replays creates by. */
+const detail = (d: DeploymentRec) => ({
+  ...listItem(d),
+  project_id: d.project_id,
+  training_run_id: d.training_run_id,
+  rate_limit_per_minute: d.rate_limit_per_minute,
+});
+
+/** Deploying a run (replayed by Idempotency-Key), one deployment and its moves, schema and test calls, and a run's lineage.
+ * Returns undefined for any other path. */
+function deploymentRoutes(route: Route, state: ApiState, method: string, path: string, req: ReturnType<Route['request']>) {
+  const lineage = path.match(new RegExp(`^/v1/projects/${PROJECT}/training-runs/([^/]+)/lineage$`));
+  if (lineage) {
+    const r = state.runs.find((x) => x.id === lineage[1]);
+    if (!r) return problem(route, 404, 'not_found');
+    const d = state.deployments.find((x) => x.training_run_id === r.id && x.status !== 'deleted');
+    return json(route, 200, {
+      training_run: r,
+      dataset_version: null,
+      model_version: null,
+      deployment: d ? { id: d.id, status: d.status, route_prefix: d.route_prefix } : null,
+    });
+  }
+  if (path === `/v1/projects/${PROJECT}/deployments`) {
+    if (method === 'GET') return json(route, 200, state.deployments.filter((d) => d.status !== 'deleted').map(listItem));
+    const params = new URL(req.url()).searchParams;
+    const key = req.headers()['idempotency-key'] ?? '';
+    const acknowledge = params.get('acknowledge_risk') === 'true';
+    state.deployCalls.push({ key, acknowledge });
+    if (state.deployRisk && !acknowledge) return problem(route, 409, 'deploy_risk_unacknowledged');
+    const same = state.deployments.find((d) => d.idempotency_key === key);
+    const d = same ?? deployment(state, 'deploying', params.get('training_run_id') ?? '');
+    d.idempotency_key = key;
+    return json(route, 202, {
+      ...listItem(d),
+      rate_limit_per_minute: d.rate_limit_per_minute,
+      plan_tier: 'free',
+      predict_key: PREDICT_KEY,
+    });
+  }
+  const m = path.match(new RegExp(`^/v1/projects/${PROJECT}/deployments/([^/]+)(/stop|/start|/schema|/test|/test-calls)?$`));
+  if (!m) return undefined;
+  const d = state.deployments.find((x) => x.id === m[1] && x.status !== 'deleted');
+  if (!d) return problem(route, 404, 'not_found');
+  switch (m[2] ?? '') {
+    case '':
+      if (method === 'DELETE') {
+        d.status = 'deleted';
+        return json(route, 204);
+      }
+      return json(route, 200, detail(d));
+    case '/stop':
+      if (d.status !== 'active') return problem(route, 409, 'invalid_deployment_transition');
+      d.status = 'stopped';
+      return json(route, 200, detail(d));
+    case '/start':
+      if (d.status !== 'stopped') return problem(route, 409, 'invalid_deployment_transition');
+      d.status = 'active';
+      return json(route, 200, detail(d));
+    case '/schema':
+      return json(route, 200, DEPLOYMENT_SCHEMA);
+    case '/test': {
+      if (d.status === 'stopped') return problem(route, 409, 'deployment_stopped');
+      const call = {
+        id: state.testCalls.length + 1,
+        request: req.postDataJSON(),
+        response: TEST_RESPONSE,
+        latency_ms: 12,
+        created_at: NOW,
+      };
+      state.testCalls.unshift(call);
+      return json(route, 200, { response: call.response, latency_ms: call.latency_ms });
+    }
+    case '/test-calls':
+      return json(route, 200, state.testCalls);
+  }
+  return undefined;
+}
 
 /** One deployment and its call schema (what POST /v1/predict takes and returns). Returns undefined for any other path. */
 function deploymentRoutes(route: Route, state: ApiState, method: string, path: string) {
@@ -507,7 +626,7 @@ function projectRoutes(route: Route, state: ApiState, method: string, path: stri
     const { id, name, status, team_id, task_type, created_at } = state.project;
     return json(route, 200, paginate([{ id, name, status, team_id, task_type, created_at }], req.url(), state.pageSize));
   }
-  const dr = deploymentRoutes(route, state, method, path);
+  const dr = deploymentRoutes(route, state, method, path, req);
   if (dr) return dr;
   const tr = trainingRoutes(route, state, method, path, req);
   if (tr) return tr;
@@ -524,8 +643,6 @@ function projectRoutes(route: Route, state: ApiState, method: string, path: stri
       return json(route, 200, state.projectMembers);
     case '/training-runs':
       return state.failRuns ? problem(route, 500, 'internal') : json(route, 200, state.runs);
-    case '/deployments':
-      return json(route, 200, state.deployments);
   }
   return undefined;
 }

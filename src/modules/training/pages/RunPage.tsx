@@ -3,6 +3,7 @@ import { Alert, Box, Button, Flex, Heading, HStack, Skeleton, Stack, Tabs, Text 
 import { Link, useParams } from '@tanstack/react-router';
 import { Copy } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
+import { DeployRunButton } from '@/modules/deployments';
 import { TrainingStatus } from '@/modules/projects';
 import { useWorkspace } from '@/modules/workspaces';
 import { NotFound } from '@/shared/ui/NotFound';
@@ -116,6 +117,7 @@ function RunHeader({ run, projectId }: { run: TrainingRun; projectId: string }) 
             {t('training.run.clone')}
           </Link>
         </Button>
+        {run.status === TrainingStatus.Succeeded && <DeployRunButton projectId={projectId} runId={run.id} />}
         {statusUi(run.status).cancel && <StopRunDialog projectId={projectId} runId={run.id} />}
       </HStack>
     </Flex>

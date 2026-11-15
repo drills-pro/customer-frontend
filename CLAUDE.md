@@ -37,7 +37,7 @@ For anything the specs do not cover, verify UI in a browser. Check size, spacing
 
 Feature modules under `src/modules/`, shared plumbing under `src/shared/`. Import across folders with the `@/` alias (`@/shared/ui/Splash`); `../` imports
 are banned (`pnpm lint:project`), `./x` stays for the same folder. Dependencies point one way: `shared` imports no module; `auth` imports shared only;
-`workspaces` imports auth and shared; `members` may import workspaces, auth and shared; `projects` may also import members (the team card reads the member list); `datasets` may also import projects (its routes hang under the project route); `training` may import datasets, projects, workspaces, auth and shared (not members), and nothing but the router imports it. `src/router.tsx`, `src/root-route.tsx` and `src/main.tsx` may import
+`workspaces` imports auth and shared; `members` may import workspaces, auth and shared; `projects` may also import members (the team card reads the member list); `datasets` may also import projects (its routes hang under the project route); `models` and `deployments` may each import projects, workspaces, auth and shared; `training` may import models, deployments, datasets, projects, workspaces, auth and shared (not members), and nothing but the router imports it. `src/router.tsx`, `src/root-route.tsx` and `src/main.tsx` may import
 any module. Another module is imported only through its `index.ts` (`@/modules/workspaces`), never by deep path; inside its own module a file may use deep
 `@/modules/<name>/...` paths.
 
@@ -57,6 +57,14 @@ any module. Another module is imported only through its `index.ts` (`@/modules/w
   scores, confusion matrix, near duplicates, failure code), `format.ts` (run durations), `errors.ts`, `routes.tsx` (`/w/$slug/projects/$projectId/training`, the runs
   list and the project's Training tab, with `.../training/new`, a step wizard with a vertical step list at `xl` and `?clone=<run>` to start from a run, and
   `.../training/$runId`, the run page: stats and progress bar, Clone, Stop behind a confirm dialog, and Metrics, Logs and Config tabs), `pages/`, `components/`.
+- `src/modules/deployments/`: `constants.ts` (tabs, snippet languages, problem codes), `status.ts` (deployment status to UI table: palette, glyph, polling, which of Stop,
+  Start and Test apply), `api.ts` (list and one deployment polled while deploying, create with an `Idempotency-Key` per attempt and `acknowledge_risk`, stop, start,
+  delete, schema, test calls, a run's lineage), `errors.ts`, `routes.tsx` (`/w/$slug/projects/$projectId/deployments`, the project's Deployments tab, and
+  `.../deployments/$deploymentId`: Stop or Start, Delete behind a confirm, and Integration and Test tabs), `pages/`, `components/` (`DeployRunButton`, shown on a
+  succeeded run's page: deploys behind a dialog, asks to accept the risk for a run with no test split, and shows the new key once). `DeploymentStatus` itself lives in
+  `projects/constants.ts`, since the overview's pipeline reads it too.
+- `src/modules/models/`: `api.ts` (the project's registered model versions, publish, stage moves, register a run's model), `routes.tsx`
+  (`/w/$slug/projects/$projectId/models`, the project's Models tab), `pages/`. The run page's Register model card (`training/components/RunModel.tsx`) uses it.
 - Routes live in each module's `routes.tsx` (path, guards, loaders, `component: SomePage`) and are assembled into the tree in `src/router.tsx`; `src/root-route.tsx` is the root.
   A route that is a level of the hierarchy sets `staticData: { crumb }` (`textCrumb('key')` or a small component that reads its params and the cached
   query, see `src/shared/ui/crumbs.tsx`); the shell breadcrumb renders the matched crumbs, so pages have no "Back to ..." links. Pages that sit under

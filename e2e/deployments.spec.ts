@@ -45,12 +45,8 @@ test('deploys a finished run, shows the key once, then the run links to its depl
 
   await page.getByTestId('deploy-open').click();
   await expect(page).toHaveURL(DEPLOYMENT_URL);
-  await expect(page.getByTestId('deployment-status')).toHaveAttribute('data-status', 'deploying');
-  await expect(page.getByTestId('deployment-working')).toBeVisible();
-
-  // Once it is live, the page moves by itself.
-  api.deployments[0].status = 'active';
-  await expect(page.getByTestId('deployment-status')).toHaveAttribute('data-status', 'active', { timeout: 10_000 });
+  // A deployment is live as soon as it exists.
+  await expect(page.getByTestId('deployment-status')).toHaveAttribute('data-status', 'active');
 
   await page.getByTestId('deployment-run-link').click();
   await expect(page.getByTestId('training-run-deployment')).toBeVisible();
@@ -71,6 +67,24 @@ test('a run without a test split deploys only after the risk is accepted, with a
   await expect(page.getByTestId('deploy-created')).toBeVisible();
   expect(api.deployCalls.map((c) => c.acknowledge)).toEqual([false, true]);
   expect(api.deployCalls[0].key).not.toBe(api.deployCalls[1].key);
+});
+
+for (const status of ['failed', 'deleted']) {
+  test(`a run whose deployment is ${status} can be deployed again`, async ({ page, api }) => {
+    const r = run(api, 'succeeded');
+    deployment(api, status, r.id);
+    await page.goto(`${BASE}/training/${r.id}`);
+    await expect(page.getByTestId('training-run-deploy')).toBeVisible();
+    await expect(page.getByTestId('training-run-deployment')).toHaveCount(0);
+  });
+}
+
+test('a deployment left starting moves to live by itself', async ({ page, api }) => {
+  const d = deployment(api, 'deploying');
+  await page.goto(`${LIST}/${d.id}`);
+  await expect(page.getByTestId('deployment-working')).toBeVisible();
+  d.status = 'active';
+  await expect(page.getByTestId('deployment-status')).toHaveAttribute('data-status', 'active', { timeout: 10_000 });
 });
 
 test('a run still training offers no deploy', async ({ page, api }) => {

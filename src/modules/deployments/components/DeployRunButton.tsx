@@ -9,9 +9,10 @@ import { useCreateDeployment, useRunLineage, type DeploymentCreated } from '@/mo
 import { deploymentErrorKey, isRisk } from '@/modules/deployments/errors';
 
 const DEPLOYMENT_PATH = '/w/$slug/projects/$projectId/deployments/$deploymentId';
+const REDEPLOYABLE: readonly string[] = [DeploymentStatus.Deleted, DeploymentStatus.Failed];
 
-/** On a finished run: deploy its model, or open the deployment it already has. The dialog asks first; a run with no test split
- * needs the person to accept that its scores were not checked on held-out data. The new endpoint's key is shown once. */
+/** On a finished run: deploy its model, or open the deployment it already has. The dialog asks first; a run with no test split, or
+ * one scored below the task's quality floor, needs the person to accept that risk. The new endpoint's key is shown once. */
 export function DeployRunButton({ projectId, runId }: { projectId: string; runId: string }) {
   const { t } = useTranslation();
   const { id: workspaceId, slug } = useWorkspace();
@@ -22,8 +23,9 @@ export function DeployRunButton({ projectId, runId }: { projectId: string; runId
   const [key, setKey] = useState(() => crypto.randomUUID());
   const [acknowledged, setAcknowledged] = useState(false);
   const [created, setCreated] = useState<DeploymentCreated | null>(null);
-  const live = lineage.data?.deployment;
-  const existing = live && live.status !== DeploymentStatus.Deleted ? live : null;
+  // Lineage answers the run's newest deployment in any status; a deleted or failed one can be deployed again.
+  const newest = lineage.data?.deployment;
+  const existing = newest && !REDEPLOYABLE.includes(newest.status) ? newest : null;
 
   const reset = () => {
     create.reset();

@@ -537,7 +537,8 @@ function deploymentRoutes(route: Route, state: ApiState, method: string, path: s
   if (lineage) {
     const r = state.runs.find((x) => x.id === lineage[1]);
     if (!r) return problem(route, 404, 'not_found');
-    const d = state.deployments.find((x) => x.training_run_id === r.id && x.status !== 'deleted');
+    // core-api answers the run's newest deployment whatever its status, deleted and failed included.
+    const d = state.deployments.findLast((x) => x.training_run_id === r.id);
     return json(route, 200, {
       training_run: r,
       dataset_version: null,
@@ -553,7 +554,7 @@ function deploymentRoutes(route: Route, state: ApiState, method: string, path: s
     state.deployCalls.push({ key, acknowledge });
     if (state.deployRisk && !acknowledge) return problem(route, 409, 'deploy_risk_unacknowledged');
     const same = state.deployments.find((d) => d.idempotency_key === key);
-    const d = same ?? deployment(state, 'deploying', params.get('training_run_id') ?? '');
+    const d = same ?? deployment(state, 'active', params.get('training_run_id') ?? '');
     d.idempotency_key = key;
     return json(route, 202, {
       ...listItem(d),

@@ -10,14 +10,21 @@ import { useCreateRun, usePresets, useRunOnce, type TrainingRun } from '@/module
 import { DataStep, type DataChoice } from '@/modules/training/components/DataStep';
 import { ModelStep, usePresetDetails, usePresetLabel, usePresetResources } from '@/modules/training/components/ModelStep';
 import { SettingsStep } from '@/modules/training/components/SettingsStep';
-import { BLOCKING_CODES, DEFAULT_PRESET, step as stepIndex, STEPS, type Hyperparameter } from '@/modules/training/constants';
+import {
+  BLOCKING_CODES,
+  DEFAULT_PRESET,
+  shownHyperparameters,
+  step as stepIndex,
+  STEPS,
+  type Hyperparameter,
+} from '@/modules/training/constants';
 import { blockingCode, createErrorKey, isNotFound, trainingErrorKey } from '@/modules/training/errors';
 import {
   cloneValues,
   defaultsFor,
   fieldErrors,
   initialValues,
-  shownLimits,
+  rangesFor,
   toRunBody,
   type Preset,
   type RunFormValues,
@@ -136,7 +143,7 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
   const [step, setStep] = useState(DATA);
   const [data, setData] = useState<DataChoice | null>(() => cloneData(clone));
   const [values, setValues] = useState<RunFormValues>(() =>
-    cloneValues(clone, presets, presets.find((p) => p.name === DEFAULT_PRESET) ?? presets[0]),
+    cloneValues(clone, presets, presets.find((p) => p.name === DEFAULT_PRESET) ?? presets[0], task),
   );
   const [error, setError] = useState<string | null>(null);
   const attempt = useRef<Attempt | null>(null);
@@ -151,15 +158,14 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
   };
   const choosePreset = (name: string) => {
     const next = presets.find((p) => p.name === name);
-    if (next && name !== values.preset) setValues((v) => ({ ...v, preset: name, hyperparameters: defaultsFor(next) }));
+    if (next && name !== values.preset) setValues((v) => ({ ...v, preset: name, hyperparameters: defaultsFor(next, task) }));
   };
   const setHyperparameter = (name: Hyperparameter, value: string) =>
     setValues((v) => ({ ...v, hyperparameters: { ...v.hyperparameters, [name]: value } }));
 
   async function start() {
-    if (!data?.versionId || !values.preset || !valid.every(Boolean)) return;
-    if (!preset) return;
-    const body = toRunBody({ ...values, versionId: data.versionId, preset: values.preset }, task, preset);
+    if (!data?.versionId || !preset || !valid.every(Boolean)) return;
+    const body = toRunBody({ ...values, versionId: data.versionId, preset }, task);
     const signature = JSON.stringify(body);
     const a = attempt.current?.signature === signature ? attempt.current : { key: crypto.randomUUID(), signature };
     attempt.current = a;
@@ -178,7 +184,7 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
     { id: 'version', label: t('training.data.versionLabel'), value: version, edit: DATA },
     { id: 'preset', label: t('training.model.label'), value: preset ? presetLabel(preset.name) : EMPTY, edit: MODEL },
     { id: 'method', label: t('training.model.details'), value: preset ? presetDetails(preset).join(', ') : EMPTY, edit: MODEL },
-    ...(preset ? shownLimits(task, preset) : []).map(([h]) => ({
+    ...shownHyperparameters(task, preset && rangesFor(preset, task)).map((h) => ({
       id: h,
       label: t(`training.settings.${h}.label`),
       value: values.hyperparameters[h] || EMPTY,
@@ -220,7 +226,7 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
               errors={errors}
               setHyperparameter={setHyperparameter}
               setSeed={(seed) => setValues((v) => ({ ...v, seed }))}
-              reset={() => setValues((v) => ({ ...v, hyperparameters: defaultsFor(preset), seed: initialValues(preset).seed }))}
+              reset={() => setValues((v) => ({ ...v, hyperparameters: defaultsFor(preset, task), seed: initialValues(preset, task).seed }))}
             />
           )}
           {step === REVIEW && (

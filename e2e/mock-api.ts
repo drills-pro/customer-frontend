@@ -112,7 +112,8 @@ export interface PresetRec {
   memory_bytes: number;
   gpu: number;
   max_runtime_s: number;
-  hyperparameters: Record<'epochs' | 'batch_size' | 'image_size', { default: number; min: number; max: number }>;
+  /** Bounds for a task from before bundles; the default values alone for a task trained by a bundle (as production sends). */
+  hyperparameters: Record<'epochs' | 'batch_size' | 'image_size', { default: number; min: number; max: number } | number>;
   vram_gb: number | null;
   lr_schedule: 'constant' | 'cosine';
   warmup_fraction: number;
@@ -279,7 +280,17 @@ export const newState = (): ApiState => ({
 
 const NOW = '2026-10-20T10:00:00Z';
 const presetDefaults = (state: ApiState, name: string): Record<string, number> =>
-  Object.fromEntries(Object.entries(state.presets.find((p) => p.name === name)?.hyperparameters ?? {}).map(([k, v]) => [k, v.default]));
+  Object.fromEntries(
+    Object.entries(state.presets.find((p) => p.name === name)?.hyperparameters ?? {}).map(([k, v]) => [
+      k,
+      typeof v === 'number' ? v : v.default,
+    ]),
+  );
+
+/** A preset of a task trained by a bundle: the same preset, its hyperparameters the default values only. */
+export function bundlePreset(name: string, epochs: number, batch: number): PresetRec {
+  return { ...preset(name, epochs, batch), hyperparameters: { epochs, batch_size: batch, image_size: 224 } };
+}
 
 function preset(name: string, epochs: number, batch: number): PresetRec {
   return {

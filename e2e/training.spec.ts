@@ -1,7 +1,8 @@
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
+import { BUNDLE_BOUNDS } from '@/modules/training/constants';
 import { crumbTo } from './crumbs';
-import { ACME_SLUG, PROJECT, dataset, importOf, progressOf, run, versionOf, type ApiState } from './mock-api';
+import { ACME_SLUG, PROJECT, bundlePreset, dataset, importOf, progressOf, run, versionOf, type ApiState } from './mock-api';
 
 const BASE = `/w/${ACME_SLUG}/projects/${PROJECT}`;
 const NEW = `${BASE}/training/new`;
@@ -111,6 +112,32 @@ test('settings stay inside the preset bounds; a bad seed blocks the next step; r
   await expect(field(page, 'epochs')).toHaveValue('10');
   await expect(field(page, 'seed')).toHaveValue('42');
   await expect(next(page)).toBeEnabled();
+});
+
+test("a bundle task's settings come from the selected model, bounded by its manifest", async ({ page, api }) => {
+  withVersion(api);
+  api.presets = [bundlePreset('small', 30, 16), bundlePreset('medium', 40, 8)];
+  await page.goto(NEW);
+  await expect(page.getByTestId('training-versions')).toBeVisible();
+  await next(page).click();
+  await next(page).click();
+  await expect(shown(page, 'epochs')).toHaveText('30'); // lint-ok: a number, not copy
+  await expect(shown(page, 'batch_size')).toHaveText('16'); // lint-ok: a number, not copy
+  await expect(next(page)).toBeEnabled();
+  // End is the manifest's maximum, not a bound the preset sends.
+  await page.getByTestId('training-epochs').locator('[data-part="thumb"]').press('End');
+  await expect(field(page, 'epochs')).toHaveValue(String(BUNDLE_BOUNDS.epochs.max));
+
+  // Another model brings its own defaults.
+  await page.getByTestId('training-back').click();
+  await page.getByTestId('training-preset-medium').click();
+  await next(page).click();
+  await expect(shown(page, 'epochs')).toHaveText('40'); // lint-ok: a number, not copy
+  await expect(shown(page, 'batch_size')).toHaveText('8'); // lint-ok: a number, not copy
+  await next(page).click();
+  await page.getByTestId('training-start').click();
+  await expect(page).toHaveURL(RUN_URL);
+  expect(api.runBodies[0]).toMatchObject({ preset: 'medium', hyperparameters: { epochs: 40, batch_size: 8, image_size: 224 } });
 });
 
 test('a text project has no image size and does not send one', async ({ page, api }) => {

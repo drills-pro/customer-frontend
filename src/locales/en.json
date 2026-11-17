@@ -817,7 +817,8 @@
       "advanced": "Advanced",
       "error": {
         "required": "Enter a number.",
-        "range": "Enter a whole number from {{min}} to {{max}}."
+        "range": "Enter a whole number from {{min}} to {{max}}.",
+        "step": "Enter a multiple of {{step}} from {{min}} to {{max}}."
       },
       "method": {
         "title": "Set by the model",

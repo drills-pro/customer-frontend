@@ -10,8 +10,28 @@ export const HYPERPARAMETERS = ['epochs', 'batch_size', 'image_size'] as const;
 export type Hyperparameter = (typeof HYPERPARAMETERS)[number];
 /** Tasks that train on text, where an image size means nothing: the form hides it and the body leaves it out. */
 export const NO_IMAGE_SIZE: readonly TaskType[] = ['text-classification'];
-export const shownHyperparameters = (task: TaskType): readonly Hyperparameter[] =>
-  NO_IMAGE_SIZE.includes(task) ? HYPERPARAMETERS.filter((h) => h !== 'image_size') : HYPERPARAMETERS;
+/** The hyperparameters the form shows for a task, narrowed to those the preset offers when it is given. */
+export const shownHyperparameters = (task: TaskType, offered?: Partial<Record<Hyperparameter, unknown>>): readonly Hyperparameter[] =>
+  HYPERPARAMETERS.filter((h) => !(h === 'image_size' && NO_IMAGE_SIZE.includes(task)) && (!offered || offered[h] !== undefined));
+
+/** What a hyperparameter may be: a whole number in [min, max] that is a multiple of `step`. */
+export interface Bounds {
+  min: number;
+  max: number;
+  step: number;
+}
+/** A task trained by a bundle sends each preset's default values only; the bounds are in the bundle's JSON Schema, which the API
+ * does not send. These mirror `task-bundles/tasks/<task>/manifest.json` (`hyperparameters.properties`): keep them in step. */
+export const BUNDLE_BOUNDS: Record<Hyperparameter, Bounds> = {
+  epochs: { min: 1, max: 500, step: 1 },
+  batch_size: { min: 1, max: 512, step: 1 },
+  image_size: { min: 32, max: 1536, step: 1 },
+};
+/** Where a task's manifest bounds a hyperparameter differently from `BUNDLE_BOUNDS`. */
+export const TASK_BOUNDS: Partial<Record<TaskType, Partial<Record<Hyperparameter, Bounds>>>> = {
+  // RT-DETR downsamples by 32, so the image side is a multiple of 32 (`multipleOf` in its manifest).
+  'object-detection': { image_size: { min: 128, max: 1536, step: 32 } },
+};
 
 /** Seed bounds and default, as core-api (DEFAULT_SEED in job_spec.py, SEED_MAX in training/constants.py). */
 export const DEFAULT_SEED = 42;

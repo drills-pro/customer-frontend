@@ -2,9 +2,9 @@ import { Box, Button, Collapsible, DataList, Field, Flex, Heading, NumberInput, 
 import { ChevronDown, Reload } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import type { TaskType } from '@/modules/projects';
-import { SEED_MAX, type Hyperparameter } from '@/modules/training/constants';
+import { SEED_MAX, shownHyperparameters, type Hyperparameter } from '@/modules/training/constants';
 import { usePresetDetails } from '@/modules/training/components/ModelStep';
-import { shownLimits, type FieldErrors, type Preset, type RunFormValues, type SettingsField } from '@/modules/training/run-form';
+import { rangesFor, type FieldErrors, type Preset, type RunFormValues, type SettingsField } from '@/modules/training/run-form';
 import { StepHeading } from '@/shared/ui/wizard';
 
 /** Plain digits: grouping would put separators into the value the form checks and sends. */
@@ -25,14 +25,18 @@ interface Props {
 /** The preset's hyperparameters on sliders held to its bounds, what the preset fixes for itself, and the seed under Advanced. */
 export function SettingsStep({ task, preset, values, errors, setHyperparameter, setSeed, reset }: Props) {
   const { t } = useTranslation();
-  const errorText = (field: SettingsField, min: number, max: number) =>
-    errors[field] && t(`training.settings.error.${errors[field]}`, { min, max });
+  const errorText = (field: SettingsField, min: number, max: number, step = 1) =>
+    errors[field] && t(`training.settings.error.${errors[field]}`, { min, max, step });
+  const ranges = rangesFor(preset, task);
 
   return (
     <Stack as="section" gap="6">
       <StepHeading title={t('training.settings.title')} description={t('training.settings.description')} />
       <Stack gap="6">
-        {shownLimits(task, preset).map(([h, { min, max, default: fallback }]) => {
+        {shownHyperparameters(task, ranges).map((h) => {
+          const range = ranges[h];
+          if (!range) return null;
+          const { min, max, step, default: fallback } = range;
           const typed = Number(values.hyperparameters[h]);
           const value = Number.isFinite(typed) ? Math.min(max, Math.max(min, typed)) : fallback;
           const label = t(`training.settings.${h}.label`);
@@ -51,7 +55,7 @@ export function SettingsStep({ task, preset, values, errors, setHyperparameter, 
                 size="sm"
                 min={min}
                 max={max}
-                step={1}
+                step={step}
                 value={[value]}
                 aria-label={[label]}
                 onValueChange={(e) => setHyperparameter(h, String(e.value[0]))}
@@ -69,7 +73,7 @@ export function SettingsStep({ task, preset, values, errors, setHyperparameter, 
                 <Text as="span">{max}</Text>
               </Flex>
               <Text mt="1" textStyle="body-sm" color={errors[h] ? 'fg.error' : 'fg.muted'}>
-                {errors[h] ? errorText(h, min, max) : t(`training.settings.${h}.help`, { value: fallback, min, max })}
+                {errors[h] ? errorText(h, min, max, step) : t(`training.settings.${h}.help`, { value: fallback, min, max })}
               </Text>
             </Box>
           );

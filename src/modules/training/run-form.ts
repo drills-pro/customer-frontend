@@ -1,9 +1,25 @@
 import type { TaskType } from '@/modules/projects';
 import type { Schemas } from '@/shared/api/client';
-import { DEFAULT_SEED, HYPERPARAMETERS, SEED_MAX, shownHyperparameters, type Hyperparameter } from '@/modules/training/constants';
+import {
+  BUNDLE_BOUNDS,
+  DEFAULT_SEED,
+  HYPERPARAMETERS,
+  SEED_MAX,
+  TASK_BOUNDS,
+  shownHyperparameters,
+  type Bounds,
+  type Hyperparameter,
+} from '@/modules/training/constants';
 
 export type Preset = Schemas['PresetSummary'];
 export type RunCreate = Schemas['TrainingRunCreate'];
+
+/** One hyperparameter of the selected preset: its default and what a run may set it to. */
+export interface Range extends Bounds {
+  default: number;
+}
+/** The hyperparameters a preset offers; one it does not offer is absent. */
+export type Ranges = Partial<Record<Hyperparameter, Range>>;
 
 /** Number fields are kept as typed, so a half-typed value is not lost; they are read when checked and sent. */
 export interface RunFormValues {
@@ -13,79 +29,77 @@ export interface RunFormValues {
   seed: string;
 }
 
-export type Limit = Schemas['HyperparameterRange'];
+const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+const isWhole = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v);
 
-const isLimit = (v: unknown): v is Limit =>
-  typeof v === 'object' &&
-  v !== null &&
-  typeof (v as Limit).min === 'number' &&
-  typeof (v as Limit).max === 'number' &&
-  typeof (v as Limit).default === 'number';
+/** A preset's hyperparameters, whichever shape core-api sends: `{default, min, max}` for a task from before bundles, or the default
+ * value alone for a task trained by a bundle, bounded by the task's manifest (`TASK_BOUNDS`, else `BUNDLE_BOUNDS`). */
+export function rangesFor(preset: Preset, task: TaskType): Ranges {
+  const given: unknown = preset.hyperparameters;
+  if (!isRecord(given)) return {};
+  const ranges: Ranges = {};
+  for (const h of HYPERPARAMETERS) {
+    const v = given[h];
+    if (isWhole(v)) ranges[h] = { default: v, ...(TASK_BOUNDS[task]?.[h] ?? BUNDLE_BOUNDS[h]) };
+    else if (isRecord(v) && isWhole(v.default) && isWhole(v.min) && isWhole(v.max))
+      ranges[h] = { default: v.default, min: v.min, max: v.max, step: 1 };
+  }
+  return ranges;
+}
 
-/** The bounds a preset puts on one hyperparameter, or undefined when the task's bundle defines it another way (a tabular preset
- * has none of epochs, batch size or image size; its own fields are not offered yet). */
-export const limitOf = (preset: Preset, h: Hyperparameter): Limit | undefined => {
-  const v: unknown = preset.hyperparameters[h];
-  return isLimit(v) ? v : undefined;
+/** A preset's defaults, as the form shows them; one the preset does not offer is empty. */
+export const defaultsFor = (preset: Preset, task: TaskType): Record<Hyperparameter, string> => {
+  const ranges = rangesFor(preset, task);
+  return Object.fromEntries(HYPERPARAMETERS.map((h) => [h, ranges[h] ? String(ranges[h].default) : ''])) as Record<Hyperparameter, string>;
 };
 
-/** The shown hyperparameters this preset bounds, with their bounds. */
-export const shownLimits = (task: TaskType, preset: Preset): [Hyperparameter, Limit][] =>
-  shownHyperparameters(task).flatMap((h): [Hyperparameter, Limit][] => {
-    const limit = limitOf(preset, h);
-    return limit ? [[h, limit]] : [];
-  });
-
-/** A preset's defaults, as the form shows them. */
-export const defaultsFor = (preset: Preset): Record<Hyperparameter, string> =>
-  Object.fromEntries(HYPERPARAMETERS.map((h) => [h, String(limitOf(preset, h)?.default ?? '')])) as Record<Hyperparameter, string>;
-
-export const initialValues = (preset: Preset | undefined): RunFormValues => ({
+export const initialValues = (preset: Preset | undefined, task: TaskType): RunFormValues => ({
   versionId: null,
   preset: preset?.name ?? null,
-  hyperparameters: preset ? defaultsFor(preset) : { epochs: '', batch_size: '', image_size: '' },
+  hyperparameters: preset ? defaultsFor(preset, task) : { epochs: '', batch_size: '', image_size: '' },
   seed: String(DEFAULT_SEED),
 });
 
-export type FieldError = 'required' | 'range';
+export type FieldError = 'required' | 'range' | 'step';
 export type SettingsField = Hyperparameter | 'seed';
 export type FieldErrors = Partial<Record<SettingsField, FieldError>>;
 
 const INTEGER = /^\d+$/;
-/** A whole number in [min, max], or why not. */
-function check(value: string, min: number, max: number): FieldError | undefined {
+/** A whole number in [min, max] that is a multiple of `step`, or why not. */
+function check(value: string, { min, max, step }: Bounds): FieldError | undefined {
   const text = value.trim();
   if (!text) return 'required';
   if (!INTEGER.test(text)) return 'range';
   const n = Number(text);
-  return n < min || n > max ? 'range' : undefined;
+  if (n < min || n > max) return 'range';
+  return n % step === 0 ? undefined : 'step';
 }
 
-/** What the API would refuse on the Settings step, found before the request. Only the fields the task shows are checked. */
+/** What the API would refuse on the Settings step, found before the request. Only the fields the task and preset show are checked. */
 export function fieldErrors(v: RunFormValues, preset: Preset, task: TaskType): FieldErrors {
   const errors: FieldErrors = {};
-  for (const [h, { min, max }] of shownLimits(task, preset)) {
-    const error = check(v.hyperparameters[h], min, max);
+  const ranges = rangesFor(preset, task);
+  for (const h of shownHyperparameters(task, ranges)) {
+    const range = ranges[h];
+    const error = range && check(v.hyperparameters[h], range);
     if (error) errors[h] = error;
   }
-  const seed = check(v.seed, 0, SEED_MAX);
+  const seed = check(v.seed, { min: 0, max: SEED_MAX, step: 1 });
   if (seed) errors.seed = seed;
   return errors;
 }
 
-const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
-
-/** A run's settings as form values. core-api keeps the resolved hyperparameters in `config`; a value that is missing, not a whole
- * number or outside the preset's bounds falls back to the preset's default. */
-export function configHyperparameters(config: unknown, preset: Preset): Record<Hyperparameter, string> {
-  const defaults = defaultsFor(preset);
+/** A run's settings as form values. core-api keeps the resolved hyperparameters in `config`; a value that is missing or that the
+ * preset's bounds refuse falls back to the preset's default. */
+export function configHyperparameters(config: unknown, preset: Preset, task: TaskType): Record<Hyperparameter, string> {
+  const defaults = defaultsFor(preset, task);
   if (!isRecord(config)) return defaults;
+  const ranges = rangesFor(preset, task);
   return Object.fromEntries(
     HYPERPARAMETERS.map((h) => {
       const v = config[h];
-      const limit = limitOf(preset, h);
-      const inBounds = limit && typeof v === 'number' && Number.isInteger(v) && v >= limit.min && v <= limit.max;
-      return [h, inBounds ? String(v) : defaults[h]];
+      const range = ranges[h];
+      return [h, range && isWhole(v) && !check(String(v), range) ? String(v) : defaults[h]];
     }),
   ) as Record<Hyperparameter, string>;
 }
@@ -96,16 +110,19 @@ export function cloneValues(
   run: { preset: string | null; config: unknown } | undefined,
   presets: Preset[],
   fallback: Preset,
+  task: TaskType,
 ): RunFormValues {
   const preset = presets.find((p) => p.name === run?.preset);
-  if (!run || !preset) return initialValues(fallback);
-  return { ...initialValues(preset), hyperparameters: configHyperparameters(run.config, preset) };
+  if (!run || !preset) return initialValues(fallback, task);
+  return { ...initialValues(preset, task), hyperparameters: configHyperparameters(run.config, preset, task) };
 }
 
-/** The create request: the shown hyperparameters as numbers; image size stays out for text tasks, and a preset that bounds none of
- * them sends none (core-api then uses the preset's own values). */
-export function toRunBody(v: RunFormValues & { versionId: string; preset: string }, task: TaskType, preset: Preset): RunCreate {
+/** The create request: the shown hyperparameters as numbers; image size stays out for text tasks and any the preset does not offer. */
+export function toRunBody(
+  v: Omit<RunFormValues, 'versionId' | 'preset'> & { versionId: string; preset: Preset },
+  task: TaskType,
+): RunCreate {
   const hyperparameters: Schemas['HyperparameterOverrides'] = {};
-  for (const [h] of shownLimits(task, preset)) hyperparameters[h] = Number(v.hyperparameters[h].trim());
-  return { dataset_version_id: v.versionId, preset: v.preset, hyperparameters, seed: Number(v.seed.trim()) };
+  for (const h of shownHyperparameters(task, rangesFor(v.preset, task))) hyperparameters[h] = Number(v.hyperparameters[h].trim());
+  return { dataset_version_id: v.versionId, preset: v.preset.name, hyperparameters, seed: Number(v.seed.trim()) };
 }

@@ -4,7 +4,9 @@ import { manager } from '@/shared/auth/manager';
 import { ErrorScreen } from '@/shared/ui/ErrorScreen';
 import { callbackRoute, loginRoute, signupRoute } from '@/modules/auth';
 import { datasetsRoute } from '@/modules/datasets';
+import { deploymentRoutes } from '@/modules/deployments/routes';
 import { membersRoute, inviteRoute } from '@/modules/members';
+import { modelRoutes } from '@/modules/models/routes';
 import { projectsRoute } from '@/modules/projects';
 import { trainingRoutes } from '@/modules/training';
 import { appRoute, homeRoute, newRoute, overviewRoute, settingsRoute, workspaceRoute } from '@/modules/workspaces';
@@ -19,7 +21,12 @@ const routeTree = rootRoute.addChildren([
     homeRoute,
     newRoute,
     inviteRoute,
-    workspaceRoute.addChildren([overviewRoute, projectsRoute(datasetsRoute, ...trainingRoutes), membersRoute, settingsRoute]),
+    workspaceRoute.addChildren([
+      overviewRoute,
+      projectsRoute(datasetsRoute, ...trainingRoutes, ...modelRoutes, ...deploymentRoutes),
+      membersRoute,
+      settingsRoute,
+    ]),
     showcaseRoute.addChildren([showcaseHomeRoute, showcasePageRoute]),
   ]),
 ]);

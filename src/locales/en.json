@@ -365,7 +365,9 @@
       "tab": {
         "overview": "Overview",
         "datasets": "Datasets",
-        "training": "Training"
+        "training": "Training",
+        "models": "Models",
+        "deployments": "Deployments"
       },
       "newTraining": "New training"
     },
@@ -919,7 +921,32 @@
       "config": {
         "title": "Saved configuration"
       },
-      "noScores": "Scores appear here after the first epoch."
+      "noScores": "Scores appear here after the first epoch.",
+      "model": {
+        "title": "Model",
+        "help": "Register this run's model under a name, then deploy it to get a live endpoint.",
+        "name": "Model name",
+        "namePlaceholder": "for example, invoice-classifier",
+        "register": "Register model",
+        "registered": "Registered. The model is in the Models tab.",
+        "acknowledge": "I understand this run has no held-out test split, so its scores are not a reliable estimate.",
+        "deploy": "Deploy"
+      },
+      "card": {
+        "title": "Model card",
+        "baseModel": "Base model",
+        "none": "None",
+        "testSplit": "Held-out test split",
+        "yes": "Yes",
+        "no": "No",
+        "nearDuplicates": "Near-duplicate images"
+      },
+      "lineage": {
+        "title": "Lineage",
+        "run": "Training run",
+        "noModel": "No model yet",
+        "noDeployment": "Not deployed"
+      }
     },
     "toast": {
       "cancelFailed": "Could not cancel the run"
@@ -956,6 +983,75 @@
       "minutes_one": "{{count}} min",
       "minutes_other": "{{count}} min",
       "underMinute": "Under a minute"
+    }
+  },
+  "models": {
+    "title": "Models",
+    "subtitle": "Model versions registered from this project's training runs. Publish them or move them between stages.",
+    "loadFailed": "Could not load the models",
+    "retry": "Try again",
+    "empty": {
+      "title": "No models yet",
+      "body": "Register a finished training run to add its model here."
+    },
+    "col": {
+      "model": "Model",
+      "stage": "Stage",
+      "publish": "Publish",
+      "created": "Registered"
+    },
+    "version": "Version {{version}}",
+    "stage": {
+      "None": "No stage",
+      "Staging": "Staging",
+      "Production": "Production",
+      "Archived": "Archived"
+    },
+    "publish": {
+      "on": "Publish",
+      "off": "Unpublish"
+    }
+  },
+  "deployments": {
+    "title": "Deployments",
+    "subtitle": "Live endpoints serving a trained model. Each one takes requests at its own address.",
+    "loadFailed": "Could not load the deployments",
+    "retry": "Try again",
+    "empty": {
+      "title": "No deployments yet",
+      "body": "Deploy a finished training run from its page to serve it here."
+    },
+    "col": {
+      "endpoint": "Endpoint",
+      "status": "Status",
+      "created": "Created"
+    },
+    "status": {
+      "deploying": "Deploying",
+      "active": "Live",
+      "failed": "Failed",
+      "deleted": "Deleted"
+    },
+    "detail": {
+      "title": "Deployment",
+      "loadFailed": "Could not load this deployment",
+      "createdOn": "Created {{date}}",
+      "rate": "{{count}} requests per minute",
+      "fromRun": "Training run",
+      "stop": "Stop",
+      "start": "Start",
+      "delete": "Delete",
+      "confirmDelete": "Confirm delete",
+      "notLive": "This deployment is not serving requests right now.",
+      "shape": "Request and response",
+      "input": "Input",
+      "output": "Output",
+      "call": "How to call it",
+      "snippet": {
+        "curl": "curl",
+        "python": "Python",
+        "javascript": "JavaScript"
+      }
     }
   }
 }

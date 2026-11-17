@@ -51,7 +51,14 @@ export const TrainingStatus = {
   Cancelled: 'cancelled',
 } as const;
 export type TrainingStatus = (typeof TrainingStatus)[keyof typeof TrainingStatus];
-export const DeploymentStatus = { Deploying: 'deploying', Active: 'active', Failed: 'failed', Deleted: 'deleted' } as const;
+export const DeploymentStatus = {
+  Deploying: 'deploying',
+  Active: 'active',
+  Stopped: 'stopped',
+  Failed: 'failed',
+  Deleted: 'deleted',
+} as const;
+export type DeploymentStatus = (typeof DeploymentStatus)[keyof typeof DeploymentStatus];
 /** The overview reads one page of runs: the API's largest. A full page reads as "N+". */
 export const TRAINING_RUN_LIMIT = 200;
 /** Runs still on their way to a result. */

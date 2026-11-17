@@ -145,6 +145,7 @@ function SelectedPreset({ preset, icon: Icon }: { preset: Preset; icon: PixelIco
             {t(`training.preset.${preset.name}.description`)}
           </Text>
         )}
+        {/* A preset with no base model trains from scratch (a tabular bundle's), so there is no repo to name. */}
         {preset.base_model && (
           <Text mt="1" textStyle="mono-sm" fontFamily="mono" color="fg.muted" wordBreak="break-all">
             {preset.base_model.license

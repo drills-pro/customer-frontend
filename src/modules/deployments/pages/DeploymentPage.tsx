@@ -1,42 +1,36 @@
 import { useState } from 'react';
-import { Alert, Box, Button, Flex, Heading, HStack, Skeleton, Stack, Tabs, Text } from '@chakra-ui/react';
+import { Alert, Box, Button, Flex, Heading, HStack, Link as ChakraLink, Skeleton, Stack, Tabs, Text } from '@chakra-ui/react';
 import { Link, useParams } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
+import { DeploymentStatus } from '@/modules/projects';
 import { useWorkspace } from '@/modules/workspaces';
 import { NotFound } from '@/shared/ui/NotFound';
-import { errorKey } from '@/shared/api/errors';
-import { ApiError } from '@/shared/api/client';
-import { cfg } from '@/config';
-import { buildCall, type CallExample } from '@/modules/deployments/call';
+import { useDeployment, type Deployment } from '@/modules/deployments/api';
+import { DeploymentActions } from '@/modules/deployments/components/DeploymentActions';
 import { DeploymentStatusBadge } from '@/modules/deployments/components/DeploymentStatusBadge';
-import {
-  useDeleteDeployment,
-  useDeployment,
-  useDeploymentSchema,
-  useStartDeployment,
-  useStopDeployment,
-  type DeploymentDetail,
-} from '@/modules/deployments/api';
-import { DeploymentStatus } from '@/modules/projects/constants';
+import { IntegrationTab } from '@/modules/deployments/components/IntegrationTab';
+import { TestTab } from '@/modules/deployments/components/TestTab';
+import { DEPLOYMENT_TABS, SHORT_ID_LENGTH, type DeploymentTab } from '@/modules/deployments/constants';
+import { deploymentErrorKey, isNotFound } from '@/modules/deployments/errors';
+import { statusUi } from '@/modules/deployments/status';
 
 const FROM = '/app/w/$slug/projects/$projectId/deployments/$deploymentId';
-const SNIPPETS = ['curl', 'python', 'javascript'] as const;
-type Snippet = (typeof SNIPPETS)[number];
 
-/** One deployment: its endpoint and status, the controls that change it, and how to call it. */
+/** One endpoint: where it stands, its actions, how to call it and a place to try it. */
 export function DeploymentPage() {
   const { t } = useTranslation();
   const { projectId, deploymentId } = useParams({ from: FROM });
   const { data: deployment, error, isError, isPending, refetch } = useDeployment(projectId, deploymentId);
+  const [tab, setTab] = useState<DeploymentTab>('integration');
 
   if (isError) {
-    if (error instanceof ApiError && error.status === 404) return <NotFound />;
+    if (isNotFound(error)) return <NotFound />;
     return (
       <Alert.Root status="error" colorPalette="danger" data-testid="deployment-load-error">
         <Alert.Indicator />
         <Alert.Content gap="3">
           <Alert.Title>{t('deployments.detail.loadFailed')}</Alert.Title>
-          <Alert.Description>{t(errorKey(error))}</Alert.Description>
+          <Alert.Description>{t(deploymentErrorKey(error))}</Alert.Description>
           <Box>
             <Button size="sm" onClick={() => void refetch()}>
               {t('deployments.retry')}
@@ -47,224 +41,88 @@ export function DeploymentPage() {
     );
   }
   if (isPending) return <Skeleton h="48" />;
+  // A deleted deployment leaves the list; its page reads as gone too.
+  if (deployment.status === DeploymentStatus.Deleted) return <NotFound />;
 
   return (
     <Stack gap="6">
-      <DeploymentHeader deployment={deployment} projectId={projectId} />
-      <DeploymentCall projectId={projectId} deploymentId={deployment.id} live={deployment.status === DeploymentStatus.Active} />
-    </Stack>
-  );
-}
-
-function DeploymentHeader({ deployment, projectId }: { deployment: DeploymentDetail; projectId: string }) {
-  const { t, i18n } = useTranslation();
-  const { slug } = useWorkspace();
-  const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium', timeStyle: 'short' });
-  const start = useStartDeployment(projectId);
-  const stop = useStopDeployment(projectId);
-  const remove = useDeleteDeployment(projectId);
-  const [confirming, setConfirming] = useState(false);
-  const busy = start.isPending || stop.isPending || remove.isPending;
-  const failure = start.error ?? stop.error ?? remove.error;
-  const deleted = deployment.status === DeploymentStatus.Deleted;
-
-  return (
-    <Stack gap="3">
-      <Flex wrap="wrap" align="flex-start" justify="space-between" gap="3">
-        <Box minW="0">
-          <Flex align="center" gap="3" wrap="wrap">
-            <Heading as="h2" textStyle="h2" fontFamily="mono" truncate>
-              {deployment.route_prefix}
-            </Heading>
-            <DeploymentStatusBadge status={deployment.status} />
-          </Flex>
-          <HStack mt="1" columnGap="4" rowGap="1" wrap="wrap" color="fg.muted">
-            <Text>{t('deployments.detail.createdOn', { date: date.format(new Date(deployment.created_at)) })}</Text>
-            <Text>{t('deployments.detail.rate', { count: deployment.rate_limit_per_minute })}</Text>
-            <Link to="/w/$slug/projects/$projectId/training/$runId" params={{ slug, projectId, runId: deployment.training_run_id }}>
-              <Text as="span" color="brand-text">
-                {t('deployments.detail.fromRun')}
-              </Text>
-            </Link>
-          </HStack>
-        </Box>
-        {!deleted && (
-          <HStack gap="2" flexShrink={0} wrap="wrap">
-            {deployment.status === DeploymentStatus.Active && (
-              <Button size="sm" variant="outline" disabled={busy} onClick={() => stop.mutate(deployment.id)} data-testid="deployment-stop">
-                {t('deployments.detail.stop')}
-              </Button>
-            )}
-            {deployment.status === DeploymentStatus.Failed && (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={busy}
-                onClick={() => start.mutate(deployment.id)}
-                data-testid="deployment-start"
-              >
-                {t('deployments.detail.start')}
-              </Button>
-            )}
-            {confirming ? (
-              <Button
-                size="sm"
-                colorPalette="danger"
-                disabled={busy}
-                onClick={() => remove.mutate(deployment.id, { onSuccess: () => setConfirming(false) })}
-                data-testid="deployment-delete-confirm"
-              >
-                {t('deployments.detail.confirmDelete')}
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                variant="ghost"
-                colorPalette="danger"
-                disabled={busy}
-                onClick={() => setConfirming(true)}
-                data-testid="deployment-delete"
-              >
-                {t('deployments.detail.delete')}
-              </Button>
-            )}
-          </HStack>
-        )}
-      </Flex>
-      {failure && (
-        <Text color="fg.error" textStyle="body-sm" role="alert" data-testid="deployment-action-error">
-          {t(errorKey(failure))}
-        </Text>
-      )}
-    </Stack>
-  );
-}
-
-/** How to call the endpoint: the request and response shape, then a snippet per language. A stopped deployment answers nothing. */
-function DeploymentCall({ projectId, deploymentId, live }: { projectId: string; deploymentId: string; live: boolean }) {
-  const { t } = useTranslation();
-  const schema = useDeploymentSchema(projectId, deploymentId);
-  const [snippet, setSnippet] = useState<Snippet>('curl');
-
-  if (schema.isError) {
-    return (
-      <Text color="fg.error" textStyle="body-sm" role="alert">
-        {t(errorKey(schema.error))}
-      </Text>
-    );
-  }
-  if (schema.isPending) return <Skeleton h="32" />;
-
-  const example = buildCall(cfg.apiUrl, projectId, schema.data);
-  return (
-    <Stack gap="5">
-      {!live && (
-        <Text color="fg.muted" textStyle="body-sm" data-testid="deployment-not-live">
-          {t('deployments.detail.notLive')}
-        </Text>
-      )}
-      <Box>
-        <Heading as="h3" textStyle="body" fontWeight="semibold">
-          {t('deployments.detail.endpoint')}
-        </Heading>
-        <Box
-          mt="3"
-          p="3"
-          borderWidth="1px"
-          borderColor="border"
-          borderRadius="l2"
-          bg="surface-raised"
-          fontFamily="mono"
-          textStyle="mono-sm"
-          overflowX="auto"
-          data-testid="deployment-endpoint"
-          data-endpoint={example.endpoint}
-        >
-          POST {example.endpoint}
-        </Box>
-      </Box>
-      <CallSnippets example={example} snippet={snippet} onSnippet={setSnippet} />
-      <Stack gap="4" data-testid="deployment-example">
-        <Heading as="h3" textStyle="body" fontWeight="semibold">
-          {t('deployments.detail.example')}
-        </Heading>
-        <Flex gap="4" wrap="wrap">
-          <JsonBlock label={t('deployments.detail.request')} value={example.request} testId="deployment-example-request" />
-          <JsonBlock label={t('deployments.detail.response')} value={example.response} testId="deployment-example-response" />
-        </Flex>
-      </Stack>
-      <Box>
-        <Heading as="h3" textStyle="body" fontWeight="semibold">
-          {t('deployments.detail.shape')}
-        </Heading>
-        <Flex mt="3" gap="4" wrap="wrap">
-          <JsonBlock label={t('deployments.detail.input')} value={schema.data.input} testId="deployment-input" />
-          <JsonBlock label={t('deployments.detail.output')} value={schema.data.output} testId="deployment-output" />
-        </Flex>
-      </Box>
-    </Stack>
-  );
-}
-
-function CallSnippets({ example, snippet, onSnippet }: { example: CallExample; snippet: Snippet; onSnippet: (s: Snippet) => void }) {
-  const { t } = useTranslation();
-  return (
-    <Box>
-      <Heading as="h3" textStyle="body" fontWeight="semibold">
-        {t('deployments.detail.call')}
-      </Heading>
-      <Tabs.Root value={snippet} onValueChange={(e) => onSnippet(e.value as Snippet)} lazyMount mt="3">
-        <Tabs.List aria-label={t('deployments.detail.call')}>
+      <Header deployment={deployment} />
+      <Outcome deployment={deployment} />
+      <Tabs.Root value={tab} onValueChange={(e) => setTab(e.value as DeploymentTab)} lazyMount unmountOnExit>
+        <Tabs.List aria-label={t('deployments.detail.sections')}>
           <Tabs.Indicator />
-          {SNIPPETS.map((id) => (
-            <Tabs.Trigger key={id} value={id} data-testid={`deployment-snippet-${id}`}>
-              {t(`deployments.detail.snippet.${id}`)}
+          {DEPLOYMENT_TABS.map((id) => (
+            <Tabs.Trigger key={id} value={id} data-testid={`deployment-tab-${id}`}>
+              {t(`deployments.detail.tab.${id}`)}
             </Tabs.Trigger>
           ))}
         </Tabs.List>
-        <Tabs.Content value={snippet} pt="3">
-          <Box
-            as="pre"
-            p="4"
-            borderWidth="1px"
-            borderColor="border"
-            borderRadius="l2"
-            bg="surface-raised"
-            overflowX="auto"
-            fontFamily="mono"
-            textStyle="mono-sm"
-            data-testid="deployment-snippet"
-            data-language={snippet}
-            data-endpoint={example.endpoint}
-          >
-            {example[snippet]}
-          </Box>
+        <Tabs.Content value="integration" pt="5">
+          <IntegrationTab deployment={deployment} />
+        </Tabs.Content>
+        <Tabs.Content value="test" pt="5">
+          <TestTab deployment={deployment} />
         </Tabs.Content>
       </Tabs.Root>
-    </Box>
+    </Stack>
   );
 }
 
-function JsonBlock({ label, value, testId }: { label: string; value: unknown; testId: string }) {
+function Header({ deployment }: { deployment: Deployment }) {
+  const { t, i18n } = useTranslation();
+  const { slug } = useWorkspace();
+  const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium', timeStyle: 'short' });
   return (
-    <Box flex="1" minW="16rem" maxW="100%">
-      <Text textStyle="body-sm" fontWeight="semibold" mb="2">
-        {label}
-      </Text>
-      <Box
-        as="pre"
-        p="3"
-        borderWidth="1px"
-        borderColor="border"
-        borderRadius="l2"
-        bg="surface-raised"
-        overflowX="auto"
-        fontFamily="mono"
-        textStyle="mono-sm"
-        data-testid={testId}
-      >
-        {JSON.stringify(value, null, 2)}
+    <Flex wrap="wrap" align="flex-start" justify="space-between" gap="3">
+      <Box minW="0">
+        <Flex align="center" gap="3" wrap="wrap">
+          <Heading as="h2" textStyle="h2">
+            {t('deployments.detail.title')}
+          </Heading>
+          <DeploymentStatusBadge status={deployment.status} />
+        </Flex>
+        <HStack mt="1" columnGap="4" rowGap="1" wrap="wrap" color="fg.muted">
+          <Text fontFamily="mono">{t('deployments.detail.id', { id: deployment.id.slice(0, SHORT_ID_LENGTH) })}</Text>
+          <ChakraLink asChild color="brand-text">
+            <Link
+              to="/w/$slug/projects/$projectId/training/$runId"
+              params={{ slug, projectId: deployment.project_id, runId: deployment.training_run_id }}
+              data-testid="deployment-run-link"
+            >
+              {t('deployments.detail.fromRun', { id: deployment.training_run_id.slice(0, SHORT_ID_LENGTH) })}
+            </Link>
+          </ChakraLink>
+          <Text>{t('deployments.detail.createdOn', { date: date.format(new Date(deployment.created_at)) })}</Text>
+          <Text>{t('deployments.detail.rateLimit', { count: deployment.rate_limit_per_minute })}</Text>
+        </HStack>
       </Box>
-    </Box>
+      <DeploymentActions deployment={deployment} />
+    </Flex>
   );
+}
+
+/** How the endpoint stands, in words, when that is not plain serving. */
+function Outcome({ deployment }: { deployment: Deployment }) {
+  const { t } = useTranslation();
+  if (statusUi(deployment.status).poll)
+    return (
+      <Text color="fg.muted" role="status" data-testid="deployment-working">
+        {t('deployments.detail.working')}
+      </Text>
+    );
+  if (deployment.status === DeploymentStatus.Failed)
+    return (
+      <Alert.Root status="error" colorPalette="danger" data-testid="deployment-failed">
+        <Alert.Indicator />
+        <Alert.Description>{t('deployments.detail.failed')}</Alert.Description>
+      </Alert.Root>
+    );
+  if (deployment.status === DeploymentStatus.Stopped)
+    return (
+      <Alert.Root status="info" colorPalette="info" data-testid="deployment-stopped">
+        <Alert.Indicator />
+        <Alert.Description>{t('deployments.detail.stopped')}</Alert.Description>
+      </Alert.Root>
+    );
+  return null;
 }

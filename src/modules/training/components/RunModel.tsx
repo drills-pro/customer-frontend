@@ -1,32 +1,15 @@
 import { useState } from 'react';
-import { Alert, Box, Button, Checkbox, Field, Flex, Heading, HStack, Input, Skeleton, Stack, Text } from '@chakra-ui/react';
-import { useNavigate } from '@tanstack/react-router';
+import { Alert, Box, Button, Field, Flex, Heading, HStack, Input, Skeleton, Stack, Text } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useWorkspace } from '@/modules/workspaces';
+import { useRunLineage } from '@/modules/deployments';
+import { useRegisterModel } from '@/modules/models';
 import { client, unwrap } from '@/shared/api/client';
 import { errorKey } from '@/shared/api/errors';
-import { useCreateDeployment } from '@/modules/deployments/api';
-import { useRegisterModel } from '@/modules/models/api';
 import { MetricsCard } from '@/modules/training/components/MetricsCard';
 import { numericEntries } from '@/modules/training/report';
 
-const lineageKey = (projectId: string, runId: string) => ['project', projectId, 'training', 'run', runId, 'lineage'] as const;
 const cardKey = (projectId: string, runId: string) => ['project', projectId, 'training', 'run', runId, 'card'] as const;
-
-/** Where a run's data, model and deployment come from. Read once a run has succeeded. */
-export function useRunLineage(projectId: string, runId: string, enabled: boolean) {
-  return useQuery({
-    queryKey: lineageKey(projectId, runId),
-    queryFn: () =>
-      unwrap(
-        client.GET('/v1/projects/{project_id}/training-runs/{run_id}/lineage', {
-          params: { path: { project_id: projectId, run_id: runId } },
-        }),
-      ),
-    enabled,
-  });
-}
 
 /** The model card: what the model was trained from, its base, and whether it has a held-out test split. */
 export function useModelCard(projectId: string, runId: string, enabled: boolean) {
@@ -40,18 +23,11 @@ export function useModelCard(projectId: string, runId: string, enabled: boolean)
   });
 }
 
-/** Register the run's model under a name, then deploy it. A run without a held-out test split needs the risk acknowledged. */
+/** Register the run's model under a name. Deploying is the header's Deploy button (`DeployRunButton`), which asks about the risk. */
 export function RunModelActions({ projectId, runId }: { projectId: string; runId: string }) {
   const { t } = useTranslation();
-  const { slug } = useWorkspace();
-  const navigate = useNavigate();
-  const lineage = useRunLineage(projectId, runId, true);
   const register = useRegisterModel(projectId);
-  const deploy = useCreateDeployment(projectId);
   const [name, setName] = useState('');
-  const [acknowledged, setAcknowledged] = useState(false);
-  const noTestSplit = lineage.data ? !lineage.data.training_run.has_test_split : false;
-  const deployBlocked = noTestSplit && !acknowledged;
   const trimmed = name.trim();
 
   return (
@@ -94,44 +70,6 @@ export function RunModelActions({ projectId, runId }: { projectId: string; runId
             {t(errorKey(register.error))}
           </Text>
         )}
-        {noTestSplit && (
-          <Checkbox.Root
-            checked={acknowledged}
-            onCheckedChange={(e) => setAcknowledged(e.checked === true)}
-            size="sm"
-            data-testid="run-model-acknowledge"
-          >
-            <Checkbox.HiddenInput />
-            <Checkbox.Control />
-            <Checkbox.Label>{t('training.run.model.acknowledge')}</Checkbox.Label>
-          </Checkbox.Root>
-        )}
-        <Flex gap="3" align="center" wrap="wrap">
-          <Button
-            size="sm"
-            disabled={deployBlocked || deploy.isPending}
-            onClick={() =>
-              deploy.mutate(
-                { runId, acknowledgeRisk: acknowledged },
-                {
-                  onSuccess: (created) =>
-                    void navigate({
-                      to: '/w/$slug/projects/$projectId/deployments/$deploymentId',
-                      params: { slug, projectId, deploymentId: created.id },
-                    }),
-                },
-              )
-            }
-            data-testid="run-model-deploy"
-          >
-            {t('training.run.model.deploy')}
-          </Button>
-          {deploy.isError && (
-            <Text textStyle="body-sm" color="fg.error" role="alert">
-              {t(errorKey(deploy.error))}
-            </Text>
-          )}
-        </Flex>
       </Stack>
     </Box>
   );
@@ -141,7 +79,7 @@ export function RunModelActions({ projectId, runId }: { projectId: string; runId
 export function RunModelCard({ projectId, runId }: { projectId: string; runId: string }) {
   const { t } = useTranslation();
   const card = useModelCard(projectId, runId, true);
-  const lineage = useRunLineage(projectId, runId, true);
+  const lineage = useRunLineage(projectId, runId);
 
   if (card.isError || lineage.isError) {
     return (

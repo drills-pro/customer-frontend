@@ -4,13 +4,13 @@ import { textCrumb } from '@/shared/ui/crumbs';
 import { DeploymentPage } from '@/modules/deployments/pages/DeploymentPage';
 import { DeploymentsPage } from '@/modules/deployments/pages/DeploymentsPage';
 
-/** Parent of the project's deployment pages; renders only its child. */
+/** Parent of every /w/$slug/projects/$projectId/deployments page, so "Deployments" sits in the breadcrumb above each; renders only its child. */
 export const deploymentsLayoutRoute = createRoute({
   getParentRoute: () => projectRoute,
   path: 'deployments',
   staticData: { crumb: textCrumb('deployments.title') },
 });
-export const deploymentsListRoute = createRoute({ getParentRoute: () => deploymentsLayoutRoute, path: '/', component: DeploymentsPage });
+export const deploymentListRoute = createRoute({ getParentRoute: () => deploymentsLayoutRoute, path: '/', component: DeploymentsPage });
 export const deploymentRoute = createRoute({
   getParentRoute: () => deploymentsLayoutRoute,
   path: '$deploymentId',
@@ -18,4 +18,5 @@ export const deploymentRoute = createRoute({
   component: DeploymentPage,
 });
 
-export const deploymentRoutes = [deploymentsLayoutRoute.addChildren([deploymentsListRoute, deploymentRoute])] as const;
+/** The whole subtree, for the router to mount under the project route. */
+export const deploymentsRoutes = [deploymentsLayoutRoute.addChildren([deploymentListRoute, deploymentRoute])] as const;

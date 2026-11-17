@@ -817,7 +817,8 @@
       "advanced": "Advanced",
       "error": {
         "required": "Enter a number.",
-        "range": "Enter a whole number from {{min}} to {{max}}."
+        "range": "Enter a whole number from {{min}} to {{max}}.",
+        "step": "Enter a multiple of {{step}} from {{min}} to {{max}}."
       },
       "method": {
         "title": "Set by the model",
@@ -924,13 +925,11 @@
       "noScores": "Scores appear here after the first epoch.",
       "model": {
         "title": "Model",
-        "help": "Register this run's model under a name, then deploy it to get a live endpoint.",
+        "help": "Register this run's model under a name to list it in the Models tab.",
         "name": "Model name",
         "namePlaceholder": "for example, invoice-classifier",
         "register": "Register model",
-        "registered": "Registered. The model is in the Models tab.",
-        "acknowledge": "I understand this run has no held-out test split, so its scores are not a reliable estimate.",
-        "deploy": "Deploy"
+        "registered": "Registered. The model is in the Models tab."
       },
       "card": {
         "title": "Model card",
@@ -1015,48 +1014,128 @@
   },
   "deployments": {
     "title": "Deployments",
-    "subtitle": "Live endpoints serving a trained model. Each one takes requests at its own address.",
-    "loadFailed": "Could not load the deployments",
     "retry": "Try again",
-    "empty": {
-      "title": "No deployments yet",
-      "body": "Deploy a finished training run from its page to serve it here."
-    },
-    "col": {
-      "endpoint": "Endpoint",
-      "status": "Status",
-      "created": "Created"
-    },
     "status": {
-      "deploying": "Deploying",
+      "deploying": "Starting",
       "active": "Live",
+      "stopped": "Stopped",
       "failed": "Failed",
-      "deleted": "Deleted"
+      "deleted": "Deleted",
+      "unknown": "Unknown"
+    },
+    "list": {
+      "subtitle": "Endpoints that serve this project's trained models.",
+      "loadFailed": "Could not load the deployments",
+      "empty": {
+        "title": "No deployments yet",
+        "body": "Open a finished training run and deploy it to serve predictions from an endpoint.",
+        "action": "View training runs"
+      },
+      "col": {
+        "deployment": "Deployed",
+        "status": "Status",
+        "id": "ID"
+      }
     },
     "detail": {
       "title": "Deployment",
+      "sections": "Deployment sections",
       "loadFailed": "Could not load this deployment",
-      "createdOn": "Created {{date}}",
-      "rate": "{{count}} requests per minute",
-      "fromRun": "Training run",
+      "id": "ID {{id}}",
+      "fromRun": "From run {{id}}",
+      "createdOn": "Deployed {{date}}",
+      "rateLimit_one": "{{count}} request per minute",
+      "rateLimit_other": "{{count}} requests per minute",
+      "working": "Starting the endpoint. This page updates by itself.",
+      "failed": "This deployment could not start. Deploy the run again from its page, or delete this one.",
+      "stopped": "This endpoint is stopped and answers no calls. Start it to serve again with the same key.",
       "stop": "Stop",
       "start": "Start",
-      "delete": "Delete",
-      "confirmDelete": "Confirm delete",
-      "notLive": "This deployment is not serving requests right now.",
-      "shape": "Request and response",
-      "input": "Input",
-      "output": "Output",
-      "call": "How to call it",
-      "snippet": {
-        "curl": "curl",
+      "tab": {
+        "integration": "Integration",
+        "test": "Test"
+      },
+      "delete": {
+        "open": "Delete",
+        "title": "Delete this deployment?",
+        "description": "The endpoint stops answering and its key stops working. This cannot be undone.",
+        "keep": "Keep it",
+        "confirm": "Delete deployment"
+      }
+    },
+    "deploy": {
+      "open": "Deploy",
+      "view": "View deployment",
+      "title": "Deploy this run",
+      "description": "Serve this run's model from an endpoint your apps can call.",
+      "risk": "This run has no score on a held-out test set, or its score is below the recommended minimum. It may do worse on new data than it looks.",
+      "riskAccept": "I understand, deploy anyway",
+      "cancel": "Cancel",
+      "confirm": "Deploy",
+      "doneTitle": "Deployment started",
+      "started": "The endpoint is live. Call it from the deployment's Integration tab.",
+      "keyLabel": "Deployment key",
+      "copyKey": "Copy key",
+      "keyOnce": "Copy this key now. It will not be shown again.",
+      "openDeployment": "Open deployment"
+    },
+    "integration": {
+      "waiting": "Call details appear once the endpoint is live.",
+      "language": "Code language",
+      "lang": {
+        "curl": "cURL",
         "python": "Python",
         "javascript": "JavaScript"
       },
+      "copy": "Copy snippet",
+      "keyHint": "Replace the key placeholder with an API key from your workspace before you run it.",
+      "model": "Model",
+      "task": "Task",
+      "modelId": "Model ID",
+      "revision": "Revision",
+      "input": "Input",
+      "output": "Output",
       "endpoint": "Endpoint",
       "example": "Example",
       "request": "Request",
       "response": "Response"
+    },
+    "test": {
+      "title": "Try it",
+      "notServing": "Start the endpoint to try it.",
+      "body": "Request body",
+      "bodyHelp": "JSON sent to the model as is. No key needed here.",
+      "notJson": "This is not valid JSON.",
+      "notObject": "The body must be a JSON object.",
+      "send": "Send",
+      "response": "Response",
+      "latency": "{{value}} ms",
+      "recent": "Recent calls",
+      "noCalls": "No test calls yet."
+    },
+    "toast": {
+      "stopFailed": "Could not stop the deployment",
+      "startFailed": "Could not start the deployment",
+      "deleted": "Deployment deleted",
+      "deleteFailed": "Could not delete the deployment"
+    },
+    "error": {
+      "notDeployable": "This run has no model to deploy. Only a finished run can be deployed.",
+      "risk": "Confirm that you want to deploy a run that was not tested.",
+      "tooMany": "Your plan's limit of live deployments is reached. Stop or delete one first.",
+      "exists": "This run is already deployed.",
+      "keyReused": "This request was already sent with different details. Close the dialog and try again.",
+      "invalidTransition": "The deployment changed in the meantime. The page now shows where it stands.",
+      "notActive": "The endpoint is not live yet.",
+      "stopped": "The endpoint is stopped. Start it first.",
+      "noModel": "The model for this deployment is not available.",
+      "tooLarge": "The request body is too large.",
+      "notJson": "The request body is not valid JSON.",
+      "notObject": "The request body must be a JSON object.",
+      "rejected": "The model could not read this input. Check the input format.",
+      "upstream": "The model could not answer. Try again in a moment.",
+      "timeout": "The model took too long to answer. Try again.",
+      "rateLimited": "Too many calls right now. Wait a moment and try again."
     }
   }
 }

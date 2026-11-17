@@ -189,8 +189,8 @@ export interface ApiState {
   /** The Idempotency-Key and body of each training-run create that reached the backend, in order. */
   runKeys: string[];
   runBodies: unknown[];
-  /** Every run's log tail. */
-  logs: string;
+  /** The epoch every run is on (training), or null before the first one. */
+  epoch: number | null;
   datasets: DatasetRec[];
   imports: ImportRec[];
   versions: VersionRec[];
@@ -262,7 +262,7 @@ export const newState = (): ApiState => ({
   failCreates: [],
   runKeys: [],
   runBodies: [],
-  logs: '',
+  epoch: null,
   datasets: [],
   imports: [],
   versions: [],
@@ -640,7 +640,7 @@ function projectRoutes(route: Route, state: ApiState, method: string, path: stri
   return undefined;
 }
 
-/** Presets, creating a run (replayed by Idempotency-Key, like core-api), one run, its logs and cancel. Returns undefined for any other path. */
+/** Presets, creating a run (replayed by Idempotency-Key, like core-api), one run, its steps and cancel. Returns undefined for any other path. */
 function trainingRoutes(route: Route, state: ApiState, method: string, path: string, req: ReturnType<Route['request']>) {
   if (path === `/v1/projects/${PROJECT}/training-presets`) {
     return state.failPresets ? problem(route, state.failPresets.status, state.failPresets.code) : json(route, 200, state.presets);
@@ -669,7 +669,7 @@ function trainingRoutes(route: Route, state: ApiState, method: string, path: str
       }),
     );
   }
-  const m = path.match(new RegExp(`^/v1/projects/${PROJECT}/training-runs/([^/]+)(/logs|/cancel|/card)?$`));
+  const m = path.match(new RegExp(`^/v1/projects/${PROJECT}/training-runs/([^/]+)(/steps|/cancel|/card)?$`));
   if (!m) return undefined;
   const r = state.runs.find((x) => x.id === m[1]);
   if (!r) return problem(route, 404, 'not_found');
@@ -687,7 +687,19 @@ function trainingRoutes(route: Route, state: ApiState, method: string, path: str
       model_version: null,
     });
   }
-  if (m[2] === '/logs') return json(route, 200, { status: r.status, logs: state.logs });
+  if (m[2] === '/steps') {
+    const training = r.status === 'running' ? 'active' : r.status === 'submitted' ? 'pending' : 'done';
+    const finished = { succeeded: 'done', failed: 'failed', cancelled: 'cancelled' }[r.status] ?? 'pending';
+    const epoch = state.epoch;
+    return json(route, 200, {
+      status: r.status,
+      steps: [
+        { key: 'queued', state: r.status === 'submitted' ? 'active' : 'done' },
+        { key: 'training', state: training, epoch, epochs: epoch === null ? null : 10 },
+        { key: 'finished', state: finished, failure: r.status === 'failed' ? 'internal' : null },
+      ],
+    });
+  }
   if (m[2] === '/cancel') {
     const fail = state.failCancel;
     state.failCancel = null;

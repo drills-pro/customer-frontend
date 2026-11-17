@@ -81,7 +81,7 @@ export const PERCENT = 100;
 export const MS_PER_SECOND = 1000;
 
 /** The run page's tabs; each id is also its `training.run.tab.*` key. */
-export const RUN_TABS = ['metrics', 'logs', 'config'] as const;
+export const RUN_TABS = ['metrics', 'steps', 'config'] as const;
 export type RunTab = (typeof RUN_TABS)[number];
 /** Characters of a run id shown in the run page's subtitle: enough to tell runs apart, short enough to read. */
 export const SHORT_ID_LENGTH = 8;

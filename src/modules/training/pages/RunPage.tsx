@@ -10,7 +10,6 @@ import { NotFound } from '@/shared/ui/NotFound';
 import { useRun, type TrainingRun } from '@/modules/training/api';
 import { ConfigCard } from '@/modules/training/components/ConfigCard';
 import { ConfusionMatrixCard } from '@/modules/training/components/ConfusionMatrixCard';
-import { LogsCard } from '@/modules/training/components/LogsCard';
 import { MetricCharts } from '@/modules/training/components/MetricCharts';
 import { MetricsCard } from '@/modules/training/components/MetricsCard';
 import { usePresetLabel } from '@/modules/training/components/ModelStep';
@@ -18,6 +17,7 @@ import { RunData } from '@/modules/training/components/RunData';
 import { RunModelActions, RunModelCard } from '@/modules/training/components/RunModel';
 import { RunStats } from '@/modules/training/components/RunStats';
 import { RunStatusBadge } from '@/modules/training/components/RunStatusBadge';
+import { StepsCard } from '@/modules/training/components/StepsCard';
 import { StopRunDialog } from '@/modules/training/components/StopRunDialog';
 import { RUN_TABS, SHORT_ID_LENGTH, type RunTab } from '@/modules/training/constants';
 import { isNotFound, trainingErrorKey } from '@/modules/training/errors';
@@ -71,8 +71,8 @@ export function RunPage() {
         <Tabs.Content value="metrics" pt="5">
           <MetricsTab run={run} report={report} projectId={projectId} />
         </Tabs.Content>
-        <Tabs.Content value="logs" pt="5">
-          <LogsCard projectId={projectId} runId={run.id} status={run.status} tall />
+        <Tabs.Content value="steps" pt="5">
+          <StepsCard projectId={projectId} runId={run.id} status={run.status} />
         </Tabs.Content>
         <Tabs.Content value="config" pt="5">
           <ConfigCard run={run} projectId={projectId} />
@@ -202,7 +202,6 @@ function MetricsTab({ run, report, projectId }: { run: TrainingRun; report: RunR
           {t('training.run.noScores')}
         </Text>
       )}
-      <LogsCard projectId={projectId} runId={run.id} status={run.status} />
     </Stack>
   );
 }

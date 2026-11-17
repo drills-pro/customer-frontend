@@ -12,7 +12,7 @@ export type TrainingRun = Schemas['TrainingRun'];
 const trainingKey = (projectId: string) => ['project', projectId, 'training'] as const;
 const presetsKey = (projectId: string) => [...trainingKey(projectId), 'presets'] as const;
 export const runKey = (projectId: string, runId: string) => [...trainingKey(projectId), 'run', runId] as const;
-const logsKey = (projectId: string, runId: string) => [...runKey(projectId, runId), 'logs'] as const;
+const stepsKey = (projectId: string, runId: string) => [...runKey(projectId, runId), 'steps'] as const;
 
 const runPath = (projectId: string, runId: string) => ({ path: { project_id: projectId, run_id: runId } });
 
@@ -79,16 +79,16 @@ export function useRunOnce(projectId: string, runId: string | undefined) {
   });
 }
 
-/** The run's log tail. It follows the run's status: polled with it while the run moves, read once more when it settles. */
-export function useRunLogs(projectId: string, runId: string, status: string | undefined) {
+/** The run's steps. It follows the run's status: polled with it while the run moves, read once more when it settles. */
+export function useRunSteps(projectId: string, runId: string, status: string | undefined) {
   const fetches = useRef(0);
   const moving = status !== undefined && statusUi(status).poll;
   return useQuery({
-    // The status is in the key, so a settled run reads its final tail once.
-    queryKey: [...logsKey(projectId, runId), moving ? 'moving' : status],
+    // The status is in the key, so a settled run reads its final steps once.
+    queryKey: [...stepsKey(projectId, runId), moving ? 'moving' : status],
     queryFn: () => {
       fetches.current += 1;
-      return unwrap(client.GET('/v1/projects/{project_id}/training-runs/{run_id}/logs', { params: runPath(projectId, runId) }));
+      return unwrap(client.GET('/v1/projects/{project_id}/training-runs/{run_id}/steps', { params: runPath(projectId, runId) }));
     },
     enabled: status !== undefined,
     retry: false,

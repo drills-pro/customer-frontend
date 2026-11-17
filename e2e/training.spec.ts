@@ -200,16 +200,18 @@ test('a retry of the same request reuses its key; a changed request gets a new o
 test('the run page follows a running run to its result', async ({ page, api }) => {
   await page.clock.install();
   const r = run(api, 'running', { metrics: { accuracy: 0.91, note: 'not a number' } });
-  api.logs = 'epoch 1/10 loss=0.52';
+  api.epoch = 1;
   await page.goto(`${BASE}/training/${r.id}`);
   await expect(page.getByTestId('training-run-working')).toBeVisible();
-  await expect(page.getByTestId('training-logs')).toBeVisible();
+  await page.getByTestId('training-run-tab-steps').click();
+  await expect(page.getByTestId('training-step-training')).toHaveAttribute('data-state', 'active');
 
   r.status = 'succeeded';
   r.completed_at = '2026-10-20T11:00:00Z';
   await page.clock.runFor(3500);
   await expect(page.getByTestId('training-status')).toHaveAttribute('data-status', 'succeeded');
   await expect(page.getByTestId('training-run-succeeded')).toBeVisible();
+  await page.getByTestId('training-run-tab-metrics').click();
   await expect(page.getByTestId('training-metrics').locator('dt')).toHaveCount(1);
   await expect(page.getByTestId('training-run-cancel')).toHaveCount(0);
 });
@@ -217,7 +219,8 @@ test('the run page follows a running run to its result', async ({ page, api }) =
 test('a queued run can be cancelled', async ({ page, api }) => {
   const r = run(api, 'submitted');
   await page.goto(`${BASE}/training/${r.id}`);
-  await expect(page.getByTestId('training-logs-empty')).toBeVisible();
+  await page.getByTestId('training-run-tab-steps').click();
+  await expect(page.getByTestId('training-step-queued')).toHaveAttribute('data-state', 'active');
   await page.getByTestId('training-run-cancel').click();
   await page.getByTestId('training-stop-confirm').click();
   await expect(page.getByTestId('training-stop-dialog')).toBeHidden();
@@ -338,7 +341,7 @@ test('the run page header stops a run only after asking', async ({ page, api }) 
   await expect(page.getByTestId('training-status')).toHaveAttribute('data-status', 'running');
 });
 
-test('the run page tabs show the log and the saved configuration, which downloads', async ({ page, api }) => {
+test('the run page tabs show the steps and the saved configuration, which downloads', async ({ page, api }) => {
   const { d, v } = withVersion(api);
   const r = run(api, 'succeeded', {
     completed_at: '2026-10-20T11:00:00Z',
@@ -346,16 +349,14 @@ test('the run page tabs show the log and the saved configuration, which download
     dataset_version_id: v.id,
     config: { epochs: 7, batch_size: 8, image_size: 224 },
   });
-  api.logs = 'epoch 7/7 loss=0.1';
+  api.epoch = 7;
   await page.goto(`${BASE}/training/${r.id}`);
   await expect(page.getByTestId('training-run-tab-metrics')).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByTestId('training-stat-elapsed')).toBeVisible();
 
-  await page.getByTestId('training-run-tab-logs').click();
-  await expect(page.getByTestId('training-logs')).toBeVisible();
-  const log = page.waitForEvent('download');
-  await page.getByTestId('training-logs-download').click();
-  expect((await log).suggestedFilename()).toMatch(/\.log$/);
+  await page.getByTestId('training-run-tab-steps').click();
+  await expect(page.getByTestId('training-steps')).toBeVisible();
+  await expect(page.getByTestId('training-step-finished')).toHaveAttribute('data-state', 'done');
 
   await page.getByTestId('training-run-tab-config').click();
   await expect(page.getByTestId('training-config-epochs')).toBeVisible();

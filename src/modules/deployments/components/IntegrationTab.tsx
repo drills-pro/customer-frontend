@@ -1,8 +1,24 @@
 import { useState } from 'react';
-import { Alert, Card, Clipboard, DataList, Flex, Grid, IconButton, Skeleton, Stack, Tabs, Text } from '@chakra-ui/react';
+import {
+  Alert,
+  Card,
+  Clipboard,
+  DataList,
+  Flex,
+  Grid,
+  Heading,
+  IconButton,
+  SimpleGrid,
+  Skeleton,
+  Stack,
+  Tabs,
+  Text,
+} from '@chakra-ui/react';
 import { Check, Copy } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
+import { cfg } from '@/config';
 import { useDeploymentSchema, type Deployment } from '@/modules/deployments/api';
+import { buildCall } from '@/modules/deployments/call';
 import { CodeBlock } from '@/modules/deployments/components/CodeBlock';
 import { JSON_INDENT, SNIPPET_LANGS, type SnippetLang } from '@/modules/deployments/constants';
 import { deploymentErrorKey } from '@/modules/deployments/errors';
@@ -31,11 +47,21 @@ export function IntegrationTab({ deployment }: { deployment: Deployment }) {
     );
   if (schema.isPending) return <Skeleton h="64" />;
 
-  const { snippets, input, output, model_id, model_revision, task_type } = schema.data;
-  const code = snippets[lang];
+  const { input, output, model_id, model_revision, task_type } = schema.data;
+  // Built from the API this app talks to (the public one in production), not from the server's own base URL.
+  const example = buildCall(cfg.apiUrl, deployment.project_id, schema.data);
+  const code = example[lang];
   return (
     <Grid gap="6" alignItems="start" templateColumns={{ lg: 'minmax(0, 2fr) minmax(0, 1fr)' }}>
       <Stack gap="3" minW="0">
+        <Card.Root variant="outline" overflow="hidden">
+          <Card.Header pb="3">
+            <Card.Title as="h3" textStyle="body" fontWeight="semibold">
+              {t('deployments.integration.endpoint')}
+            </Card.Title>
+          </Card.Header>
+          <CodeBlock testId="deployment-endpoint" data={{ 'data-endpoint': example.endpoint }}>{`POST ${example.endpoint}`}</CodeBlock>
+        </Card.Root>
         <Card.Root variant="outline" overflow="hidden">
           <Flex wrap="wrap" align="center" gap="3" px="5" py="2" borderBottomWidth="1px" borderColor="border">
             <Tabs.Root size="sm" me="auto" value={lang} onValueChange={(e) => setLang(e.value as SnippetLang)}>
@@ -58,11 +84,22 @@ export function IntegrationTab({ deployment }: { deployment: Deployment }) {
               </Clipboard.Trigger>
             </Clipboard.Root>
           </Flex>
-          <CodeBlock testId="deployment-snippet">{code}</CodeBlock>
+          <CodeBlock testId="deployment-snippet" data={{ 'data-language': lang, 'data-endpoint': example.endpoint }}>
+            {code}
+          </CodeBlock>
         </Card.Root>
         <Text textStyle="body-sm" color="fg.muted">
           {t('deployments.integration.keyHint')}
         </Text>
+        <Stack gap="3" mt="3" data-testid="deployment-example">
+          <Heading as="h3" textStyle="body" fontWeight="semibold">
+            {t('deployments.integration.example')}
+          </Heading>
+          <SimpleGrid gap="3" columns={{ base: 1, md: 2 }}>
+            <Shape title={t('deployments.integration.request')} value={example.request} testId="deployment-example-request" />
+            <Shape title={t('deployments.integration.response')} value={example.response} testId="deployment-example-response" />
+          </SimpleGrid>
+        </Stack>
       </Stack>
       <Stack gap="6" minW="0">
         <Card.Root variant="outline">

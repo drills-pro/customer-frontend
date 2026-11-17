@@ -1094,7 +1094,11 @@
       "modelId": "ID โมเดล",
       "revision": "รุ่น",
       "input": "อินพุต",
-      "output": "เอาต์พุต"
+      "output": "เอาต์พุต",
+      "endpoint": "จุดเชื่อมต่อ",
+      "example": "ตัวอย่าง",
+      "request": "คำขอ",
+      "response": "การตอบกลับ"
     },
     "test": {
       "title": "ลองใช้",

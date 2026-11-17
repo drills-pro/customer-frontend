@@ -6,6 +6,8 @@ import { useRunLineage } from '@/modules/deployments';
 import { useRegisterModel } from '@/modules/models';
 import { client, unwrap } from '@/shared/api/client';
 import { errorKey } from '@/shared/api/errors';
+import { MetricsCard } from '@/modules/training/components/MetricsCard';
+import { numericEntries } from '@/modules/training/report';
 
 const cardKey = (projectId: string, runId: string) => ['project', projectId, 'training', 'run', runId, 'card'] as const;
 

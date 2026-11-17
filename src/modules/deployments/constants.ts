@@ -2,7 +2,7 @@
 export const DEPLOYMENT_TABS = ['integration', 'test'] as const;
 export type DeploymentTab = (typeof DEPLOYMENT_TABS)[number];
 
-/** The call snippets the API renders, in the order the tabs show them; each is also its `deployments.integration.lang.*` key. */
+/** The call snippets `call.ts` builds, in the order the tabs show them; each is also its `deployments.integration.lang.*` key. */
 export const SNIPPET_LANGS = ['curl', 'python', 'javascript'] as const;
 export type SnippetLang = (typeof SNIPPET_LANGS)[number];
 

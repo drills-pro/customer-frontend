@@ -55,7 +55,7 @@ test.describe('run form', () => {
     const v = { ...initialValues(PRESET, TEXT), versionId: 'v1', preset: PRESET };
     v.hyperparameters = { ...v.hyperparameters, image_size: 'not checked' };
     expect(fieldErrors(v, PRESET, TEXT)).toEqual({});
-    expect(toRunBody(v, TEXT, PRESET)).toEqual({
+    expect(toRunBody(v, TEXT)).toEqual({
       dataset_version_id: 'v1',
       preset: 'small',
       hyperparameters: { epochs: 10, batch_size: 32 },
@@ -70,9 +70,9 @@ test.describe('run form', () => {
       name: 'tabular',
       hyperparameters: { target: 'label', n_estimators: 200 } as unknown as Preset['hyperparameters'],
     };
-    const v = { ...initialValues(TABULAR), versionId: 'v1', preset: 'tabular' };
+    const v = { ...initialValues(TABULAR, 'tabular-classification'), versionId: 'v1', preset: TABULAR };
     expect(fieldErrors(v, TABULAR, 'tabular-classification')).toEqual({});
-    expect(toRunBody(v, 'tabular-classification', TABULAR).hyperparameters).toEqual({});
+    expect(toRunBody(v, 'tabular-classification').hyperparameters).toEqual({});
   });
 
   test('the body sends numbers, trimmed', () => {

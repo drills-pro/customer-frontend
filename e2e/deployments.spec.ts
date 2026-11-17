@@ -1,7 +1,8 @@
 import { test, expect } from './fixtures';
-import { ACME_SLUG, PREDICT_KEY, PROJECT, deployment, run } from './mock-api';
+import { ACME_SLUG, API_URL, PREDICT_KEY, PROJECT, deployment, run } from './mock-api';
 
 const BASE = `/w/${ACME_SLUG}/projects/${PROJECT}`;
+const PREDICT = `${API_URL}/v1/predict`;
 const LIST = `${BASE}/deployments`;
 const DEPLOYMENT_URL = new RegExp(`${LIST}/[0-9a-f-]{36}$`);
 
@@ -112,6 +113,31 @@ test('the integration tab shows the snippets and the model', async ({ page, api 
   await page.getByTestId('deployment-snippet-python').click();
   await expect(page.getByTestId('deployment-snippet-python')).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByTestId('deployment-input-shape')).toBeVisible();
+});
+
+test('the endpoint and every snippet call the public API, with a call example', async ({ page, api }) => {
+  const d = deployment(api, 'active');
+  await page.goto(`${LIST}/${d.id}`);
+  await expect(page.getByTestId('deployment-endpoint')).toHaveAttribute('data-endpoint', PREDICT);
+  const snippet = page.getByTestId('deployment-snippet');
+  // curl is the default; the others follow their tab.
+  await expect(snippet).toHaveAttribute('data-language', 'curl');
+  await expect(snippet).toHaveAttribute('data-endpoint', PREDICT);
+  await page.getByTestId('deployment-snippet-python').click();
+  await expect(snippet).toHaveAttribute('data-language', 'python');
+  await expect(snippet).toHaveAttribute('data-endpoint', PREDICT);
+  await page.getByTestId('deployment-snippet-javascript').click();
+  await expect(snippet).toHaveAttribute('data-language', 'javascript');
+  await expect(snippet).toHaveAttribute('data-endpoint', PREDICT);
+  await expect(page.getByTestId('deployment-example-request')).toBeVisible();
+  await expect(page.getByTestId('deployment-example-response')).toBeVisible();
+});
+
+test('a deployment that is not serving yet shows no call', async ({ page, api }) => {
+  const d = deployment(api, 'deploying');
+  await page.goto(`${LIST}/${d.id}`);
+  await expect(page.getByTestId('deployment-integration-waiting')).toBeVisible();
+  await expect(page.getByTestId('deployment-endpoint')).toHaveCount(0);
 });
 
 test('sends a test call and lists it', async ({ page, api }) => {

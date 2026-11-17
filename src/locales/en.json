@@ -1094,7 +1094,11 @@
       "modelId": "Model ID",
       "revision": "Revision",
       "input": "Input",
-      "output": "Output"
+      "output": "Output",
+      "endpoint": "Endpoint",
+      "example": "Example",
+      "request": "Request",
+      "response": "Response"
     },
     "test": {
       "title": "Try it",

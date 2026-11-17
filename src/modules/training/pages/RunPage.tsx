@@ -14,6 +14,7 @@ import { MetricCharts } from '@/modules/training/components/MetricCharts';
 import { MetricsCard } from '@/modules/training/components/MetricsCard';
 import { usePresetLabel } from '@/modules/training/components/ModelStep';
 import { RunData } from '@/modules/training/components/RunData';
+import { RunModelActions, RunModelCard } from '@/modules/training/components/RunModel';
 import { RunStats } from '@/modules/training/components/RunStats';
 import { RunStatusBadge } from '@/modules/training/components/RunStatusBadge';
 import { StopRunDialog } from '@/modules/training/components/StopRunDialog';
@@ -56,6 +57,7 @@ export function RunPage() {
       <RunHeader run={run} projectId={projectId} />
       <RunStats run={run} />
       <Outcome run={run} report={report} />
+      {run.status === TrainingStatus.Succeeded && <RunModelActions projectId={projectId} runId={run.id} />}
       <Tabs.Root value={tab} onValueChange={(e) => setTab(e.value as RunTab)} lazyMount unmountOnExit>
         <Tabs.List aria-label={t('training.run.sections')}>
           <Tabs.Indicator />
@@ -192,6 +194,7 @@ function MetricsTab({ run, report, projectId }: { run: TrainingRun; report: RunR
       )}
       {succeeded && <MetricsCard title={t('training.run.metrics')} metrics={results} testId="training-metrics" />}
       {succeeded && report?.confusionMatrix && <ConfusionMatrixCard matrix={report.confusionMatrix} />}
+      {succeeded && <RunModelCard projectId={projectId} runId={run.id} />}
       {empty && (
         <Text color="fg.muted" data-testid="training-metrics-empty">
           {t('training.run.noScores')}

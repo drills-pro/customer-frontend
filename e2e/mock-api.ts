@@ -482,12 +482,33 @@ export const deployment = (state: ApiState, status: string): DeploymentRec => {
   return d;
 };
 
+/** One deployment and its call schema (what POST /v1/predict takes and returns). Returns undefined for any other path. */
+function deploymentRoutes(route: Route, state: ApiState, method: string, path: string) {
+  const m = path.match(new RegExp(`^/v1/projects/${PROJECT}/deployments/([^/]+)(/schema)?$`));
+  if (!m || method !== 'GET') return undefined;
+  const d = state.deployments.find((x) => x.id === m[1]);
+  if (!d) return problem(route, 404, 'not_found');
+  if (m[2]) {
+    return json(route, 200, {
+      task_type: 'image-classification',
+      model_id: 'model-e2e',
+      model_revision: '3',
+      input: { image: 'string' },
+      output: { predictions: [{ label: 'string', score: 'number' }] },
+      snippets: { curl: '', javascript: '', python: '' },
+    });
+  }
+  return json(route, 200, { ...d, project_id: PROJECT, training_run_id: crypto.randomUUID(), rate_limit_per_minute: 60 });
+}
+
 /** /v1/projects and /v1/projects/{PROJECT} with its members, runs and deployments. Returns undefined when the path is not one of them. */
 function projectRoutes(route: Route, state: ApiState, method: string, path: string, req: ReturnType<Route['request']>) {
   if (path === '/v1/projects' && method === 'GET') {
     const { id, name, status, team_id, task_type, created_at } = state.project;
     return json(route, 200, paginate([{ id, name, status, team_id, task_type, created_at }], req.url(), state.pageSize));
   }
+  const dr = deploymentRoutes(route, state, method, path);
+  if (dr) return dr;
   const tr = trainingRoutes(route, state, method, path, req);
   if (tr) return tr;
   const m = path.match(/^\/v1\/projects\/([^/:]+)(\/[a-z-]+)?$/);

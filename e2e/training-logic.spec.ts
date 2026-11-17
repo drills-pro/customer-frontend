@@ -44,7 +44,7 @@ test.describe('run form', () => {
     const v = { ...initialValues(PRESET), versionId: 'v1', preset: 'small' };
     v.hyperparameters = { ...v.hyperparameters, image_size: 'not checked' };
     expect(fieldErrors(v, PRESET, TEXT)).toEqual({});
-    expect(toRunBody(v, TEXT)).toEqual({
+    expect(toRunBody(v, TEXT, PRESET)).toEqual({
       dataset_version_id: 'v1',
       preset: 'small',
       hyperparameters: { epochs: 10, batch_size: 32 },
@@ -52,10 +52,22 @@ test.describe('run form', () => {
     });
   });
 
+  test('a preset that bounds none of the shown fields checks and sends none of them', () => {
+    // A bundle-defined preset (tabular) has its own fields, not epochs, batch size or image size ranges.
+    const TABULAR: Preset = {
+      ...PRESET,
+      name: 'tabular',
+      hyperparameters: { target: 'label', n_estimators: 200 } as unknown as Preset['hyperparameters'],
+    };
+    const v = { ...initialValues(TABULAR), versionId: 'v1', preset: 'tabular' };
+    expect(fieldErrors(v, TABULAR, 'tabular-classification')).toEqual({});
+    expect(toRunBody(v, 'tabular-classification', TABULAR).hyperparameters).toEqual({});
+  });
+
   test('the body sends numbers, trimmed', () => {
     const v = { ...initialValues(PRESET), versionId: 'v1', preset: 'small', seed: ' 7 ' };
-    expect(toRunBody(v, IMAGE).seed).toBe(7);
-    expect(toRunBody(v, IMAGE).hyperparameters).toEqual({ epochs: 10, batch_size: 32, image_size: 224 });
+    expect(toRunBody(v, IMAGE, PRESET).seed).toBe(7);
+    expect(toRunBody(v, IMAGE, PRESET).hyperparameters).toEqual({ epochs: 10, batch_size: 32, image_size: 224 });
   });
 });
 

@@ -6,6 +6,8 @@ import { useWorkspace } from '@/modules/workspaces';
 import { NotFound } from '@/shared/ui/NotFound';
 import { errorKey } from '@/shared/api/errors';
 import { ApiError } from '@/shared/api/client';
+import { cfg } from '@/config';
+import { buildCall, type CallExample } from '@/modules/deployments/call';
 import { DeploymentStatusBadge } from '@/modules/deployments/components/DeploymentStatusBadge';
 import {
   useDeleteDeployment,
@@ -14,7 +16,6 @@ import {
   useStartDeployment,
   useStopDeployment,
   type DeploymentDetail,
-  type DeploymentSchema,
 } from '@/modules/deployments/api';
 import { DeploymentStatus } from '@/modules/projects/constants';
 
@@ -154,6 +155,7 @@ function DeploymentCall({ projectId, deploymentId, live }: { projectId: string; 
   }
   if (schema.isPending) return <Skeleton h="32" />;
 
+  const example = buildCall(cfg.apiUrl, projectId, schema.data);
   return (
     <Stack gap="5">
       {!live && (
@@ -161,7 +163,36 @@ function DeploymentCall({ projectId, deploymentId, live }: { projectId: string; 
           {t('deployments.detail.notLive')}
         </Text>
       )}
-      <CallSnippets schema={schema.data} snippet={snippet} onSnippet={setSnippet} />
+      <Box>
+        <Heading as="h3" textStyle="body" fontWeight="semibold">
+          {t('deployments.detail.endpoint')}
+        </Heading>
+        <Box
+          mt="3"
+          p="3"
+          borderWidth="1px"
+          borderColor="border"
+          borderRadius="l2"
+          bg="surface-raised"
+          fontFamily="mono"
+          textStyle="mono-sm"
+          overflowX="auto"
+          data-testid="deployment-endpoint"
+          data-endpoint={example.endpoint}
+        >
+          POST {example.endpoint}
+        </Box>
+      </Box>
+      <CallSnippets example={example} snippet={snippet} onSnippet={setSnippet} />
+      <Stack gap="4" data-testid="deployment-example">
+        <Heading as="h3" textStyle="body" fontWeight="semibold">
+          {t('deployments.detail.example')}
+        </Heading>
+        <Flex gap="4" wrap="wrap">
+          <JsonBlock label={t('deployments.detail.request')} value={example.request} testId="deployment-example-request" />
+          <JsonBlock label={t('deployments.detail.response')} value={example.response} testId="deployment-example-response" />
+        </Flex>
+      </Stack>
       <Box>
         <Heading as="h3" textStyle="body" fontWeight="semibold">
           {t('deployments.detail.shape')}
@@ -175,7 +206,7 @@ function DeploymentCall({ projectId, deploymentId, live }: { projectId: string; 
   );
 }
 
-function CallSnippets({ schema, snippet, onSnippet }: { schema: DeploymentSchema; snippet: Snippet; onSnippet: (s: Snippet) => void }) {
+function CallSnippets({ example, snippet, onSnippet }: { example: CallExample; snippet: Snippet; onSnippet: (s: Snippet) => void }) {
   const { t } = useTranslation();
   return (
     <Box>
@@ -191,24 +222,24 @@ function CallSnippets({ schema, snippet, onSnippet }: { schema: DeploymentSchema
             </Tabs.Trigger>
           ))}
         </Tabs.List>
-        {SNIPPETS.map((id) => (
-          <Tabs.Content key={id} value={id} pt="3">
-            <Box
-              as="pre"
-              p="4"
-              borderWidth="1px"
-              borderColor="border"
-              borderRadius="l2"
-              bg="surface-raised"
-              overflowX="auto"
-              fontFamily="mono"
-              textStyle="mono-sm"
-              data-testid="deployment-snippet"
-            >
-              {schema.snippets[id]}
-            </Box>
-          </Tabs.Content>
-        ))}
+        <Tabs.Content value={snippet} pt="3">
+          <Box
+            as="pre"
+            p="4"
+            borderWidth="1px"
+            borderColor="border"
+            borderRadius="l2"
+            bg="surface-raised"
+            overflowX="auto"
+            fontFamily="mono"
+            textStyle="mono-sm"
+            data-testid="deployment-snippet"
+            data-language={snippet}
+            data-endpoint={example.endpoint}
+          >
+            {example[snippet]}
+          </Box>
+        </Tabs.Content>
       </Tabs.Root>
     </Box>
   );

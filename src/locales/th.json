@@ -1051,7 +1051,11 @@
         "curl": "curl",
         "python": "Python",
         "javascript": "JavaScript"
-      }
+      },
+      "endpoint": "จุดเชื่อมต่อ",
+      "example": "ตัวอย่าง",
+      "request": "คำขอ",
+      "response": "การตอบกลับ"
     }
   }
 }

@@ -1051,7 +1051,11 @@
         "curl": "curl",
         "python": "Python",
         "javascript": "JavaScript"
-      }
+      },
+      "endpoint": "Endpoint",
+      "example": "Example",
+      "request": "Request",
+      "response": "Response"
     }
   }
 }

@@ -939,7 +939,8 @@
         "testSplit": "Held-out test split",
         "yes": "Yes",
         "no": "No",
-        "nearDuplicates": "Near-duplicate images"
+        "nearDuplicates": "Near-duplicate images",
+        "metrics": "Metrics"
       },
       "lineage": {
         "title": "Lineage",
@@ -1051,7 +1052,11 @@
         "curl": "curl",
         "python": "Python",
         "javascript": "JavaScript"
-      }
+      },
+      "endpoint": "Endpoint",
+      "example": "Example",
+      "request": "Request",
+      "response": "Response"
     }
   }
 }

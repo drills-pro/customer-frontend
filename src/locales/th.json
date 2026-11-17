@@ -939,7 +939,8 @@
         "testSplit": "ชุดทดสอบที่แยกไว้",
         "yes": "มี",
         "no": "ไม่มี",
-        "nearDuplicates": "รูปภาพที่ซ้ำกันเกือบเหมือน"
+        "nearDuplicates": "รูปภาพที่ซ้ำกันเกือบเหมือน",
+        "metrics": "ตัวชี้วัด"
       },
       "lineage": {
         "title": "ที่มา",
@@ -1051,7 +1052,11 @@
         "curl": "curl",
         "python": "Python",
         "javascript": "JavaScript"
-      }
+      },
+      "endpoint": "จุดเชื่อมต่อ",
+      "example": "ตัวอย่าง",
+      "request": "คำขอ",
+      "response": "การตอบกลับ"
     }
   }
 }

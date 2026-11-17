@@ -8,6 +8,8 @@ import { client, unwrap } from '@/shared/api/client';
 import { errorKey } from '@/shared/api/errors';
 import { useCreateDeployment } from '@/modules/deployments/api';
 import { useRegisterModel } from '@/modules/models/api';
+import { MetricsCard } from '@/modules/training/components/MetricsCard';
+import { numericEntries } from '@/modules/training/report';
 
 const lineageKey = (projectId: string, runId: string) => ['project', projectId, 'training', 'run', runId, 'lineage'] as const;
 const cardKey = (projectId: string, runId: string) => ['project', projectId, 'training', 'run', runId, 'card'] as const;
@@ -168,6 +170,7 @@ export function RunModelCard({ projectId, runId }: { projectId: string; runId: s
           <Row label={t('training.run.card.nearDuplicates')} value={String(info.near_duplicates ?? 0)} />
         </Stack>
       </Box>
+      <MetricsCard title={t('training.run.card.metrics')} metrics={numericEntries(info.metrics)} testId="run-model-metrics" />
       <Box borderWidth="1px" borderColor="border" borderRadius="l3" bg="surface-raised" p="5">
         <Heading as="h3" textStyle="body" fontWeight="semibold">
           {t('training.run.lineage.title')}

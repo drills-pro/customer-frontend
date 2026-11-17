@@ -559,10 +559,50 @@ function trainingRoutes(route: Route, state: ApiState, method: string, path: str
       }),
     );
   }
-  const m = path.match(new RegExp(`^/v1/projects/${PROJECT}/training-runs/([^/]+)(/logs|/cancel)?$`));
+  const m = path.match(new RegExp(`^/v1/projects/${PROJECT}/training-runs/([^/]+)(/logs|/cancel|/card|/lineage)?$`));
   if (!m) return undefined;
   const r = state.runs.find((x) => x.id === m[1]);
   if (!r) return problem(route, 404, 'not_found');
+  if (m[2] === '/card') {
+    return json(route, 200, {
+      training_run_id: r.id,
+      task: 'image-classification',
+      preset: 'small',
+      base_model: { repo_id: 'org/model', revision: 'a'.repeat(40), license: null },
+      near_duplicates: 0,
+      metrics: r.metrics ?? {},
+      dataset_version: null,
+      test_dataset_version: null,
+      has_test_split: true,
+      model_version: null,
+    });
+  }
+  if (m[2] === '/lineage') {
+    return json(route, 200, {
+      training_run: {
+        id: r.id,
+        status: r.status,
+        has_test_split: true,
+        config: {},
+        metrics: r.metrics ?? {},
+        created_at: NOW,
+        task: 'image-classification',
+        preset: 'small',
+        dataset_id: null,
+        dataset_version: null,
+        dataset_version_id: null,
+        test_dataset_id: null,
+        test_dataset_version: null,
+        mlflow_run_id: null,
+        reproduction_group_id: null,
+        near_duplicates: 0,
+        base_model: null,
+      },
+      dataset_version: null,
+      model_version: null,
+      deployment: null,
+    });
+  }
   if (m[2] === '/logs') return json(route, 200, { status: r.status, logs: state.logs });
   if (m[2] === '/cancel') {
     const fail = state.failCancel;

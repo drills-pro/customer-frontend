@@ -2174,7 +2174,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/projects/{project_id}/training-runs/{run_id}/logs': {
+  '/v1/projects/{project_id}/training-runs/{run_id}/steps': {
     parameters: {
       query?: never;
       header?: never;
@@ -2182,10 +2182,10 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get Training Run Logs
-     * @description The end of the job's raw output, for debugging. Results come from the job's report (the run's `report`), not from here.
+     * Get Training Run Steps
+     * @description The run's steps and, if it failed, a failure code: what a customer sees instead of the job's raw log.
      */
-    get: operations['get_training_run_logs_v1_projects__project_id__training_runs__run_id__logs_get'];
+    get: operations['get_training_run_steps_v1_projects__project_id__training_runs__run_id__steps_get'];
     put?: never;
     post?: never;
     delete?: never;
@@ -4809,12 +4809,39 @@ export interface components {
       model_version: components['schemas']['LineageModel'] | null;
       deployment: components['schemas']['RunDeployment'] | null;
     };
-    /** TrainingRunLogs */
-    TrainingRunLogs: {
+    /**
+     * FailureCode
+     * @description The closed set of a failed report's `code`; mirrors ray_core/constants.py FailCode. Anything else reads as internal.
+     * @enum {string}
+     */
+    FailureCode: 'oom' | 'bad_data' | 'unsupported' | 'timeout' | 'internal';
+    /** RunStep */
+    RunStep: {
+      key: components['schemas']['StepKey'];
+      state: components['schemas']['StepState'];
+      /** Epoch */
+      epoch?: number | null;
+      /** Epochs */
+      epochs?: number | null;
+      failure?: components['schemas']['FailureCode'] | null;
+    };
+    /**
+     * StepKey
+     * @description The steps a customer sees for a training run, in order.
+     * @enum {string}
+     */
+    StepKey: 'queued' | 'training' | 'finished';
+    /**
+     * StepState
+     * @enum {string}
+     */
+    StepState: 'pending' | 'active' | 'done' | 'failed' | 'cancelled';
+    /** TrainingRunSteps */
+    TrainingRunSteps: {
       /** Status */
       status: string;
-      /** Logs */
-      logs: string;
+      /** Steps */
+      steps: components['schemas']['RunStep'][];
     };
     /** TrainingRunSummary */
     TrainingRunSummary: {
@@ -10011,7 +10038,7 @@ export interface operations {
       };
     };
   };
-  get_training_run_logs_v1_projects__project_id__training_runs__run_id__logs_get: {
+  get_training_run_steps_v1_projects__project_id__training_runs__run_id__steps_get: {
     parameters: {
       query?: never;
       header?: {
@@ -10032,7 +10059,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['TrainingRunLogs'];
+          'application/json': components['schemas']['TrainingRunSteps'];
         };
       };
       /** @description Validation Error */

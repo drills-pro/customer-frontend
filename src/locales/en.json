@@ -871,11 +871,21 @@
       },
       "workingHelp": "This page updates by itself. You can leave and come back.",
       "succeeded": "Training finished.",
-      "failed": "Training failed. The log below shows the last thing the run did.",
+      "failed": "Training failed. The steps below show where it stopped.",
       "cancelled": "This run was cancelled.",
       "metrics": "Results",
-      "logs": "Log",
-      "noLogs": "The log appears once the run starts.",
+      "steps": {
+        "queued": "Queued",
+        "training": "Training",
+        "finished": "Finished",
+        "state": {
+          "pending": "Waiting",
+          "active": "In progress",
+          "done": "Done",
+          "failed": "Failed",
+          "cancelled": "Cancelled"
+        }
+      },
       "progress": "Epoch {{epoch}} of {{epochs}}",
       "latest": "Latest epoch",
       "failure": {
@@ -900,7 +910,7 @@
       "sections": "Run sections",
       "tab": {
         "metrics": "Metrics",
-        "logs": "Logs",
+        "steps": "Steps",
         "config": "Config"
       },
       "stats": {
@@ -917,7 +927,6 @@
         "keep": "Keep running",
         "confirm": "Stop run"
       },
-      "autoscroll": "Autoscroll",
       "download": "Download",
       "config": {
         "title": "Saved configuration"

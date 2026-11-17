@@ -59,8 +59,7 @@ export const DeploymentStatus = {
   Deleted: 'deleted',
 } as const;
 export type DeploymentStatus = (typeof DeploymentStatus)[keyof typeof DeploymentStatus];
-/** The overview reads one page of runs: the API's largest. A full page reads as "N+". */
-export const TRAINING_RUN_LIMIT = 200;
+export { TRAINING_RUN_LIMIT } from '@/shared/api/overview';
 /** Runs still on their way to a result. */
 export const ACTIVE_TRAINING: readonly string[] = [TrainingStatus.Submitted, TrainingStatus.Running];
 

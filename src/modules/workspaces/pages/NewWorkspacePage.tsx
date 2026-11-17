@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { sendVerificationEmail, useEmailVerified, useMe } from '@/modules/workspaces/api';
 import { ApiError, type Schemas } from '@/shared/api/client';
 import { errorKey } from '@/shared/api/errors';
+import { newIdempotencyKey } from '@/shared/api/idempotency';
 import { useCreateWorkspace } from '@/modules/workspaces/api';
 import { Bit } from '@/brand/Bit';
 import { useAuth } from '@/modules/auth';
@@ -72,8 +73,9 @@ export function NewWorkspacePage() {
   const create = useCreateWorkspace();
   const [step, setStep] = useState(me.email_verified ? 1 : 0);
   const verify = useEmailVerification(step === 0);
+  const key = useRef(newIdempotencyKey());
   const go = (to: number) => {
-    if (to === 2) key.current = crypto.randomUUID(); // a fresh attempt gets a fresh key, else the server would replay the first answer
+    if (to === 2) key.current = newIdempotencyKey(); // a fresh attempt gets a fresh key, else the server would replay the first answer
     setStep(to);
   };
   const [name, setName] = useState('');
@@ -81,7 +83,6 @@ export function NewWorkspacePage() {
   const [slugEdited, setSlugEdited] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<Schemas['TenantCreated'] | null>(null);
-  const key = useRef(crypto.randomUUID());
 
   const trimmed = name.trim();
   const problem = slugProblem(slug);

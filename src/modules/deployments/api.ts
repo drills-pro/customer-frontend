@@ -1,10 +1,10 @@
-import { useRef } from 'react';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
-import { deploymentsKey, deploymentsQuery } from '@/modules/projects';
+import { deploymentsKey, fetchDeployments } from '@/modules/projects';
 import { client, unwrap, type Schemas } from '@/shared/api/client';
-import { pollDelay } from '@/shared/api/poll';
+import { IDEMPOTENCY_HEADER } from '@/shared/api/idempotency';
+import { usePolledQuery } from '@/shared/api/poll';
 import { TEST_CALL_LIMIT } from '@/modules/deployments/constants';
-import { nextDeploymentPoll, statusUi } from '@/modules/deployments/status';
+import { statusUi } from '@/modules/deployments/status';
 
 export type Deployment = Schemas['DeploymentDetail'];
 export type DeploymentCreated = Schemas['DeploymentCreated'];
@@ -26,27 +26,20 @@ const settle = (qc: QueryClient, workspaceId: string, projectId: string, deploym
 
 /** The project's deployments (the overview's query), polled while any of them is still deploying. */
 export function useDeploymentList(workspaceId: string, projectId: string) {
-  return useQuery({
-    ...deploymentsQuery(workspaceId, projectId),
-    staleTime: 0,
-    refetchInterval: (query) =>
-      query.state.data?.some((d) => statusUi(d.status).poll) ? pollDelay(query.state.dataUpdateCount - 1) : false,
+  return usePolledQuery({
+    queryKey: deploymentsKey(workspaceId, projectId),
+    queryFn: () => fetchDeployments(projectId),
+    shouldPoll: (list) => list?.some((d) => statusUi(d.status).poll) ?? false,
   });
 }
 
 /** One deployment, polled while it is deploying. */
 export function useDeployment(projectId: string, deploymentId: string) {
-  const fetches = useRef(0);
-  return useQuery({
+  return usePolledQuery({
     queryKey: deploymentKey(projectId, deploymentId),
-    queryFn: () => {
-      fetches.current += 1;
-      return unwrap(
-        client.GET('/v1/projects/{project_id}/deployments/{deployment_id}', { params: deploymentPath(projectId, deploymentId) }),
-      );
-    },
-    staleTime: 0,
-    refetchInterval: (query) => nextDeploymentPoll(query.state.data?.status, fetches.current - 1),
+    queryFn: () =>
+      unwrap(client.GET('/v1/projects/{project_id}/deployments/{deployment_id}', { params: deploymentPath(projectId, deploymentId) })),
+    shouldPoll: (d) => d !== undefined && statusUi(d.status).poll,
   });
 }
 
@@ -61,7 +54,7 @@ export function useCreateDeployment(workspaceId: string, projectId: string) {
           params: {
             path: { project_id: projectId },
             query: { training_run_id: runId, acknowledge_risk: acknowledgeRisk },
-            header: { 'Idempotency-Key': key },
+            header: { [IDEMPOTENCY_HEADER]: key },
           },
         }),
       ),

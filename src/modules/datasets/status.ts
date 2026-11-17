@@ -1,4 +1,3 @@
-import { pollDelay } from '@/shared/api/poll';
 import { ImportStatus } from '@/modules/datasets/constants';
 
 export type StatusPalette = 'gray' | 'info' | 'warning' | 'success' | 'danger';
@@ -48,7 +47,3 @@ export const STATUS_UI: Record<ImportStatus, StatusUi> = {
   [ImportStatus.Expired]: { palette: 'gray', poll: false, terminal: true, active: false, cancel: false, review: false, report: false },
   [ImportStatus.Discarded]: { palette: 'gray', poll: false, terminal: true, active: false, cancel: false, review: false, report: true },
 };
-
-/** TanStack's `refetchInterval` value for an import: a delay while its status is moving, `false` (stop) otherwise. */
-export const nextPoll = (status: ImportStatus | undefined, answers: number): number | false =>
-  status && STATUS_UI[status].poll ? pollDelay(answers) : false;

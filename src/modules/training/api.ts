@@ -1,11 +1,12 @@
-import { useRef } from 'react';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
-import { ACTIVE_TRAINING, trainingRunsKey, trainingRunsQuery } from '@/modules/projects';
+import { ACTIVE_TRAINING } from '@/modules/projects';
 import { client, unwrap, type Schemas } from '@/shared/api/client';
+import { IDEMPOTENCY_HEADER } from '@/shared/api/idempotency';
+import { fetchTrainingRuns, trainingRunsKey } from '@/shared/api/overview';
 import { isConflict } from '@/modules/training/errors';
 import type { RunCreate } from '@/modules/training/run-form';
-import { nextRunPoll, statusUi } from '@/modules/training/status';
-import { pollDelay } from '@/shared/api/poll';
+import { statusUi } from '@/modules/training/status';
+import { usePolledQuery } from '@/shared/api/poll';
 
 export type TrainingRun = Schemas['TrainingRun'];
 
@@ -32,11 +33,10 @@ const settle = (qc: QueryClient, workspaceId: string, projectId: string, run: Tr
 
 /** The project's runs (the overview's query), polled while any of them is queued or training so their statuses move by themselves. */
 export function useRuns(workspaceId: string, projectId: string) {
-  return useQuery({
-    ...trainingRunsQuery(workspaceId, projectId),
-    staleTime: 0,
-    refetchInterval: (query) =>
-      query.state.data?.some((r) => ACTIVE_TRAINING.includes(r.status)) ? pollDelay(query.state.dataUpdateCount - 1) : false,
+  return usePolledQuery({
+    queryKey: trainingRunsKey(workspaceId, projectId),
+    queryFn: () => fetchTrainingRuns(projectId),
+    shouldPoll: (runs) => runs?.some((r) => ACTIVE_TRAINING.includes(r.status)) ?? false,
   });
 }
 
@@ -47,7 +47,7 @@ export function useCreateRun(workspaceId: string, projectId: string) {
     mutationFn: ({ body, key }: { body: RunCreate; key: string }) =>
       unwrap(
         client.POST('/v1/projects/{project_id}/training-runs', {
-          params: { path: { project_id: projectId }, header: { 'Idempotency-Key': key } },
+          params: { path: { project_id: projectId }, header: { [IDEMPOTENCY_HEADER]: key } },
           body,
         }),
       ),
@@ -55,18 +55,12 @@ export function useCreateRun(workspaceId: string, projectId: string) {
   });
 }
 
-/** One run, polled while its status is moving (see `nextRunPoll`). The interval stops by itself on a settled status and on unmount. */
+/** One run, polled while its status is moving (`STATUS_UI[status].poll`). The interval stops by itself on a settled status and on unmount. */
 export function useRun(projectId: string, runId: string) {
-  // Backoff counts this page's own fetches: the answer seeded by the create call must not make the first poll slow.
-  const fetches = useRef(0);
-  return useQuery({
+  return usePolledQuery({
     queryKey: runKey(projectId, runId),
-    queryFn: () => {
-      fetches.current += 1;
-      return unwrap(client.GET('/v1/projects/{project_id}/training-runs/{run_id}', { params: runPath(projectId, runId) }));
-    },
-    staleTime: 0,
-    refetchInterval: (query) => nextRunPoll(query.state.data?.status, fetches.current - 1),
+    queryFn: () => unwrap(client.GET('/v1/projects/{project_id}/training-runs/{run_id}', { params: runPath(projectId, runId) })),
+    shouldPoll: (run) => run !== undefined && statusUi(run.status).poll,
   });
 }
 
@@ -81,18 +75,14 @@ export function useRunOnce(projectId: string, runId: string | undefined) {
 
 /** The run's steps. It follows the run's status: polled with it while the run moves, read once more when it settles. */
 export function useRunSteps(projectId: string, runId: string, status: string | undefined) {
-  const fetches = useRef(0);
   const moving = status !== undefined && statusUi(status).poll;
-  return useQuery({
+  return usePolledQuery({
     // The status is in the key, so a settled run reads its final steps once.
     queryKey: [...stepsKey(projectId, runId), moving ? 'moving' : status],
-    queryFn: () => {
-      fetches.current += 1;
-      return unwrap(client.GET('/v1/projects/{project_id}/training-runs/{run_id}/steps', { params: runPath(projectId, runId) }));
-    },
+    queryFn: () => unwrap(client.GET('/v1/projects/{project_id}/training-runs/{run_id}/steps', { params: runPath(projectId, runId) })),
     enabled: status !== undefined,
     retry: false,
-    refetchInterval: () => nextRunPoll(status, fetches.current - 1),
+    shouldPoll: () => moving,
   });
 }
 

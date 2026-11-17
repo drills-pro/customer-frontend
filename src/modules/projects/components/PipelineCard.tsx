@@ -3,10 +3,11 @@ import { Badge, Box, Card, Center, Flex, Grid, HStack, Link as ChakraLink, Skele
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, Checkbox, CheckboxOn, Hourglass, Minus } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
-import { useDatasetCount, useDeployments, useTrainingRuns } from '@/modules/projects/api';
+import { useDeployments } from '@/modules/projects/api';
 import { PIPELINE_STAGES, StageState, type StageId } from '@/modules/projects/constants';
 import { dataStage, deployStage, trainStage, type Stage } from '@/modules/projects/pipeline';
 import { useWorkspace } from '@/modules/workspaces';
+import { useDatasetCount, useTrainingRuns } from '@/shared/api/overview';
 import type { PixelIcon } from '@/shared/ui/icons';
 
 /** Status always shows a glyph and a word. */
@@ -28,7 +29,7 @@ const STAGE_LINKS = {
 export function PipelineCard({ projectId }: { projectId: string }) {
   const { t } = useTranslation();
   const { id: workspaceId, slug } = useWorkspace();
-  const datasets = useDatasetCount(workspaceId, projectId);
+  const datasets = useDatasetCount(projectId);
   const runs = useTrainingRuns(workspaceId, projectId);
   const deployments = useDeployments(workspaceId, projectId);
   const stages: Record<StageId, { stage: Stage; loading: boolean }> = {

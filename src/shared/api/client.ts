@@ -15,7 +15,10 @@ export class ApiError extends Error {
   }
 }
 
-/** The active workspace id, sent as X-Tenant-Id (core-api requires it when a user belongs to several workspaces). */
+/** The header core-api reads the active workspace from (it requires one when a user belongs to several workspaces). */
+export const TENANT_HEADER = 'X-Tenant-Id';
+
+/** The active workspace id, sent on every request as TENANT_HEADER. Set by WorkspaceProvider; no API call sets it by hand. */
 let tenantId: string | undefined;
 export const setApiTenant = (id?: string) => {
   tenantId = id;
@@ -26,7 +29,7 @@ client.use({
   async onRequest({ request }) {
     const token = await getToken();
     if (token) request.headers.set('Authorization', `Bearer ${token}`);
-    if (tenantId) request.headers.set('X-Tenant-Id', tenantId);
+    if (tenantId) request.headers.set(TENANT_HEADER, tenantId);
     return request;
   },
 });

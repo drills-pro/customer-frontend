@@ -1,5 +1,5 @@
 import { ApiError } from '@/shared/api/client';
-import { errorKey } from '@/shared/api/errors';
+import { problemErrorKey } from '@/shared/api/errors';
 import { ProblemCode } from '@/modules/datasets/constants';
 
 const BY_CODE: Record<ProblemCode, string> = {
@@ -14,16 +14,13 @@ const BY_CODE: Record<ProblemCode, string> = {
   [ProblemCode.IdempotencyReused]: 'datasets.error.keyReused',
 };
 
-const isCode = (code: string | undefined): code is ProblemCode => code !== undefined && code in BY_CODE;
-
 /** Locale key for a dataset error: the problem `code` first (server text is never shown), then the status, then the app-wide fallbacks. */
-export function datasetErrorKey(e: unknown): string {
-  if (e instanceof ApiError) {
-    if (isCode(e.code)) return BY_CODE[e.code];
-    if (e.status === 429) return BY_CODE[ProblemCode.TooManyImports];
-  }
-  return errorKey(e);
-}
+export const datasetErrorKey = problemErrorKey(BY_CODE, { 429: BY_CODE[ProblemCode.TooManyImports] });
 
 export const isConflict = (e: unknown) => e instanceof ApiError && e.status === 409;
 export const isForbidden = (e: unknown) => e instanceof ApiError && e.status === 403;
+
+/** The import exists but the server gave it no upload link: this attempt cannot upload, so the user starts over. */
+export class UploadLinkLost extends Error {}
+/** The file did not reach storage (the network failed, or the upload was aborted). */
+export class UploadFailed extends Error {}

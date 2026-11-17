@@ -13,9 +13,32 @@ export interface RunFormValues {
   seed: string;
 }
 
+export type Limit = Schemas['HyperparameterRange'];
+
+const isLimit = (v: unknown): v is Limit =>
+  typeof v === 'object' &&
+  v !== null &&
+  typeof (v as Limit).min === 'number' &&
+  typeof (v as Limit).max === 'number' &&
+  typeof (v as Limit).default === 'number';
+
+/** The bounds a preset puts on one hyperparameter, or undefined when the task's bundle defines it another way (a tabular preset
+ * has none of epochs, batch size or image size; its own fields are not offered yet). */
+export const limitOf = (preset: Preset, h: Hyperparameter): Limit | undefined => {
+  const v: unknown = preset.hyperparameters[h];
+  return isLimit(v) ? v : undefined;
+};
+
+/** The shown hyperparameters this preset bounds, with their bounds. */
+export const shownLimits = (task: TaskType, preset: Preset): [Hyperparameter, Limit][] =>
+  shownHyperparameters(task).flatMap((h): [Hyperparameter, Limit][] => {
+    const limit = limitOf(preset, h);
+    return limit ? [[h, limit]] : [];
+  });
+
 /** A preset's defaults, as the form shows them. */
 export const defaultsFor = (preset: Preset): Record<Hyperparameter, string> =>
-  Object.fromEntries(HYPERPARAMETERS.map((h) => [h, String(preset.hyperparameters[h].default)])) as Record<Hyperparameter, string>;
+  Object.fromEntries(HYPERPARAMETERS.map((h) => [h, String(limitOf(preset, h)?.default ?? '')])) as Record<Hyperparameter, string>;
 
 export const initialValues = (preset: Preset | undefined): RunFormValues => ({
   versionId: null,
@@ -41,8 +64,7 @@ function check(value: string, min: number, max: number): FieldError | undefined 
 /** What the API would refuse on the Settings step, found before the request. Only the fields the task shows are checked. */
 export function fieldErrors(v: RunFormValues, preset: Preset, task: TaskType): FieldErrors {
   const errors: FieldErrors = {};
-  for (const h of shownHyperparameters(task)) {
-    const { min, max } = preset.hyperparameters[h];
+  for (const [h, { min, max }] of shownLimits(task, preset)) {
     const error = check(v.hyperparameters[h], min, max);
     if (error) errors[h] = error;
   }
@@ -61,8 +83,9 @@ export function configHyperparameters(config: unknown, preset: Preset): Record<H
   return Object.fromEntries(
     HYPERPARAMETERS.map((h) => {
       const v = config[h];
-      const { min, max } = preset.hyperparameters[h];
-      return [h, typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max ? String(v) : defaults[h]];
+      const limit = limitOf(preset, h);
+      const inBounds = limit && typeof v === 'number' && Number.isInteger(v) && v >= limit.min && v <= limit.max;
+      return [h, inBounds ? String(v) : defaults[h]];
     }),
   ) as Record<Hyperparameter, string>;
 }
@@ -79,9 +102,10 @@ export function cloneValues(
   return { ...initialValues(preset), hyperparameters: configHyperparameters(run.config, preset) };
 }
 
-/** The create request: the shown hyperparameters as numbers; image size stays out for text tasks. */
-export function toRunBody(v: RunFormValues & { versionId: string; preset: string }, task: TaskType): RunCreate {
+/** The create request: the shown hyperparameters as numbers; image size stays out for text tasks, and a preset that bounds none of
+ * them sends none (core-api then uses the preset's own values). */
+export function toRunBody(v: RunFormValues & { versionId: string; preset: string }, task: TaskType, preset: Preset): RunCreate {
   const hyperparameters: Schemas['HyperparameterOverrides'] = {};
-  for (const h of shownHyperparameters(task)) hyperparameters[h] = Number(v.hyperparameters[h].trim());
+  for (const [h] of shownLimits(task, preset)) hyperparameters[h] = Number(v.hyperparameters[h].trim());
   return { dataset_version_id: v.versionId, preset: v.preset, hyperparameters, seed: Number(v.seed.trim()) };
 }

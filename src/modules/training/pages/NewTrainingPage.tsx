@@ -10,20 +10,14 @@ import { useCreateRun, usePresets, useRunOnce, type TrainingRun } from '@/module
 import { DataStep, type DataChoice } from '@/modules/training/components/DataStep';
 import { ModelStep, usePresetDetails, usePresetLabel, usePresetResources } from '@/modules/training/components/ModelStep';
 import { SettingsStep } from '@/modules/training/components/SettingsStep';
-import {
-  BLOCKING_CODES,
-  DEFAULT_PRESET,
-  shownHyperparameters,
-  step as stepIndex,
-  STEPS,
-  type Hyperparameter,
-} from '@/modules/training/constants';
+import { BLOCKING_CODES, DEFAULT_PRESET, step as stepIndex, STEPS, type Hyperparameter } from '@/modules/training/constants';
 import { blockingCode, createErrorKey, isNotFound, trainingErrorKey } from '@/modules/training/errors';
 import {
   cloneValues,
   defaultsFor,
   fieldErrors,
   initialValues,
+  shownLimits,
   toRunBody,
   type Preset,
   type RunFormValues,
@@ -164,7 +158,8 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
 
   async function start() {
     if (!data?.versionId || !values.preset || !valid.every(Boolean)) return;
-    const body = toRunBody({ ...values, versionId: data.versionId, preset: values.preset }, task);
+    if (!preset) return;
+    const body = toRunBody({ ...values, versionId: data.versionId, preset: values.preset }, task, preset);
     const signature = JSON.stringify(body);
     const a = attempt.current?.signature === signature ? attempt.current : { key: crypto.randomUUID(), signature };
     attempt.current = a;
@@ -183,7 +178,7 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
     { id: 'version', label: t('training.data.versionLabel'), value: version, edit: DATA },
     { id: 'preset', label: t('training.model.label'), value: preset ? presetLabel(preset.name) : EMPTY, edit: MODEL },
     { id: 'method', label: t('training.model.details'), value: preset ? presetDetails(preset).join(', ') : EMPTY, edit: MODEL },
-    ...shownHyperparameters(task).map((h) => ({
+    ...(preset ? shownLimits(task, preset) : []).map(([h]) => ({
       id: h,
       label: t(`training.settings.${h}.label`),
       value: values.hyperparameters[h] || EMPTY,

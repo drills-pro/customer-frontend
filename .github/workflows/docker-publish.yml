@@ -56,16 +56,42 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # Pins the new digest in drills-pro/k8s (Flux deploys it). Inlined, not a reusable workflow: a caller in another repo
+  # cannot reach drills-pro/k8s's bump-image.yml from here (the run fails at parse time). Same steps as core-backend's deploy.
   deploy:
     needs: build
     if: github.ref == 'refs/heads/main'
-    permissions:
-      contents: write
-    uses: drills-pro/k8s/.github/workflows/bump-image.yml@main
-    with:
-      app: frontend-user
-      image: ghcr.io/drills-pro/customer-frontend/frontend
-      digest: ${{ needs.build.outputs.digest }}
-      tag: ${{ github.sha }}
-    secrets:
-      repo-token: ${{ secrets.K8S_REPO_PAT }}
+    runs-on: ubuntu-latest
+    concurrency: bump-k8s-frontend-user
+    permissions: {}
+    env:
+      IMAGE: ghcr.io/drills-pro/customer-frontend/frontend
+      DIGEST: ${{ needs.build.outputs.digest }}
+      TAG: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: drills-pro/k8s
+          ref: main
+          token: ${{ secrets.K8S_REPO_PAT }}
+      - name: Set image digest
+        id: set
+        run: |
+          [[ "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "bad digest: $DIGEST"; exit 1; }
+          dir=apps/frontend-user; [ -d "$dir/app" ] && dir="$dir/app"; [ -f apps/frontend-user/image/kustomization.yaml ] && dir=apps/frontend-user/image
+          (cd "$dir" && kustomize edit set image "$IMAGE@$DIGEST")
+          echo "file=$dir/kustomization.yaml" >> "$GITHUB_OUTPUT"
+      - name: Commit and push
+        env:
+          FILE: ${{ steps.set.outputs.file }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "$FILE"
+          git diff --cached --quiet && { echo "$FILE already pins $DIGEST"; exit 0; }
+          git commit -m "chore(frontend-user): bump image to $TAG"
+          for try in 1 2 3; do  # another app's bump may have landed in between
+            git push && exit 0
+            git pull --rebase origin main
+          done
+          exit 1

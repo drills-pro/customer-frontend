@@ -145,11 +145,13 @@ function SelectedPreset({ preset, icon: Icon }: { preset: Preset; icon: PixelIco
             {t(`training.preset.${preset.name}.description`)}
           </Text>
         )}
-        <Text mt="1" textStyle="mono-sm" fontFamily="mono" color="fg.muted" wordBreak="break-all">
-          {preset.base_model.license
-            ? t('training.model.baseModel', { repo: preset.base_model.repo_id, license: preset.base_model.license })
-            : preset.base_model.repo_id}
-        </Text>
+        {preset.base_model && (
+          <Text mt="1" textStyle="mono-sm" fontFamily="mono" color="fg.muted" wordBreak="break-all">
+            {preset.base_model.license
+              ? t('training.model.baseModel', { repo: preset.base_model.repo_id, license: preset.base_model.license })
+              : preset.base_model.repo_id}
+          </Text>
+        )}
         <Flex
           mt="2"
           wrap="wrap"

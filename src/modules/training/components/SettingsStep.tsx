@@ -2,9 +2,9 @@ import { Box, Button, Collapsible, DataList, Field, Flex, Heading, NumberInput, 
 import { ChevronDown, Reload } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import type { TaskType } from '@/modules/projects';
-import { SEED_MAX, shownHyperparameters, type Hyperparameter } from '@/modules/training/constants';
+import { SEED_MAX, type Hyperparameter } from '@/modules/training/constants';
 import { usePresetDetails } from '@/modules/training/components/ModelStep';
-import type { FieldErrors, Preset, RunFormValues, SettingsField } from '@/modules/training/run-form';
+import { shownLimits, type FieldErrors, type Preset, type RunFormValues, type SettingsField } from '@/modules/training/run-form';
 import { StepHeading } from '@/shared/ui/wizard';
 
 /** Plain digits: grouping would put separators into the value the form checks and sends. */
@@ -32,8 +32,7 @@ export function SettingsStep({ task, preset, values, errors, setHyperparameter, 
     <Stack as="section" gap="6">
       <StepHeading title={t('training.settings.title')} description={t('training.settings.description')} />
       <Stack gap="6">
-        {shownHyperparameters(task).map((h) => {
-          const { min, max, default: fallback } = preset.hyperparameters[h];
+        {shownLimits(task, preset).map(([h, { min, max, default: fallback }]) => {
           const typed = Number(values.hyperparameters[h]);
           const value = Number.isFinite(typed) ? Math.min(max, Math.max(min, typed)) : fallback;
           const label = t(`training.settings.${h}.label`);

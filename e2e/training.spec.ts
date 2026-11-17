@@ -439,3 +439,12 @@ test.describe('runs list', () => {
     await expect(page).toHaveURL(`${BASE}/training`);
   });
 });
+
+test('a finished run has a model card with its metrics and its lineage', async ({ page, api }) => {
+  const r = run(api, 'succeeded', { completed_at: '2026-10-20T11:00:00Z', metrics: { top1: 0.92 } });
+  await page.goto(`${BASE}/training/${r.id}`);
+  await expect(page.getByTestId('run-model-card')).toBeVisible();
+  await expect(page.getByTestId('run-model-metrics-top1')).toBeVisible();
+  await expect(page.getByTestId('run-lineage')).toBeVisible();
+  await expect(page.getByTestId('run-model-actions')).toBeVisible();
+});

@@ -939,7 +939,8 @@
         "testSplit": "Held-out test split",
         "yes": "Yes",
         "no": "No",
-        "nearDuplicates": "Near-duplicate images"
+        "nearDuplicates": "Near-duplicate images",
+        "metrics": "Metrics"
       },
       "lineage": {
         "title": "Lineage",

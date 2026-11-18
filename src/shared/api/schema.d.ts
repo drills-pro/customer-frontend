@@ -3616,6 +3616,15 @@ export interface components {
        * Format: uuid
        */
       model_id: string;
+      /**
+       * Training Run Id
+       * Format: uuid
+       */
+      training_run_id: string;
+      /** Publish Metadata */
+      publish_metadata: boolean;
+      /** Publish Artifact */
+      publish_artifact: boolean;
     };
     /** NewApiKey */
     NewApiKey: {
@@ -4158,7 +4167,10 @@ export interface components {
        */
       version_id: string;
     };
-    /** PublishState */
+    /**
+     * PublishState
+     * @description Per-version "exclude" switches: true (the default) lets the project's Sharing level decide, false keeps this one out.
+     */
     PublishState: {
       /**
        * Id

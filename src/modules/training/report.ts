@@ -1,4 +1,7 @@
 import { FAILURE_CODES } from '@/modules/training/constants';
+import { numericEntries } from '@/shared/api/metrics';
+
+export { numericEntries };
 
 /** What a finished run reported (core-api data_plane/train_report.py). The API types `report` as unknown and the job that wrote
  * it is untrusted, so this reads only the named fields, keeps finite numbers only and drops any shape it does not expect. */
@@ -19,12 +22,6 @@ export interface RunReport {
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const isCount = (v: unknown): v is number => isNumber(v) && Number.isInteger(v) && v >= 0;
-
-/** The numeric entries of an object, by name; anything else is left out. */
-export function numericEntries(v: unknown): Record<string, number> {
-  if (!isRecord(v)) return {};
-  return Object.fromEntries(Object.entries(v).filter((entry): entry is [string, number] => isNumber(entry[1])));
-}
 
 /** A square matrix of counts whose size matches its labels, or null. */
 function confusionMatrix(v: unknown): ConfusionMatrix | null {

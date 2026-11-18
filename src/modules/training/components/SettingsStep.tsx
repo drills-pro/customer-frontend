@@ -1,10 +1,7 @@
-import { useState } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
 import {
-  Badge,
   Box,
-  Button,
   Center,
-  Collapsible,
   DataList,
   Field,
   Flex,
@@ -13,146 +10,143 @@ import {
   NumberInput,
   Popover,
   Portal,
+  SegmentGroup,
   Slider,
   Stack,
   Text,
 } from '@chakra-ui/react';
-import { Check, ChevronDown, CircleQuestion, Reload, Sliders } from 'pixelarticons/react';
+import { Check, CircleQuestion } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import type { TaskType } from '@/modules/projects';
-import { ADVANCED_SETTINGS_KEY, SEED_MAX, shownHyperparameters, type Hyperparameter } from '@/modules/training/constants';
+import { SEED_MAX, SETTINGS_MODES, SettingsMode, shownHyperparameters, type Hyperparameter } from '@/modules/training/constants';
 import { usePresetDetails, usePresetLabel } from '@/modules/training/components/ModelStep';
-import { rangesFor, type FieldErrors, type Preset, type Range, type RunFormValues } from '@/modules/training/run-form';
+import {
+  defaultsFor,
+  initialValues,
+  isCustomized,
+  rangesFor,
+  type FieldErrors,
+  type Preset,
+  type Range,
+  type RunFormValues,
+} from '@/modules/training/run-form';
 import { StepHeading } from '@/shared/ui/wizard';
 
 /** Plain digits: grouping would put separators into the value the form checks and sends. */
 const FORMAT = { useGrouping: false } as const;
 /** The preset's training method, in the order `usePresetDetails` returns it; each is also its `training.settings.method.*` key. */
 const METHOD = ['augmentation', 'learningRate', 'earlyStopping'] as const;
-/** What the Advanced section's remembered state is stored as. */
-const OPEN = 'open';
 
-/** Whether this browser left the Advanced section open last time. Storage may be off (a private window); then it starts closed. */
-const rememberedOpen = () => {
-  try {
-    return localStorage.getItem(ADVANCED_SETTINGS_KEY) === OPEN;
-  } catch {
-    return false;
-  }
-};
-const rememberOpen = (open: boolean) => {
-  try {
-    if (open) localStorage.setItem(ADVANCED_SETTINGS_KEY, OPEN);
-    else localStorage.removeItem(ADVANCED_SETTINGS_KEY);
-  } catch {
-    // Not remembered; the section still works.
-  }
-};
+const isMode = (value: string | null): value is SettingsMode => SETTINGS_MODES.includes(value as SettingsMode);
+
+type CustomSettings = Pick<RunFormValues, 'hyperparameters' | 'seed'>;
+
+/** The Settings step's switch. Recommended sets the preset's defaults and keeps the custom values aside, so switching back to Custom
+ * restores them. It starts on Custom only for a clone whose settings differ from the defaults, which Custom has to show. */
+export function useSettingsMode(
+  task: TaskType,
+  preset: Preset | undefined,
+  values: RunFormValues,
+  setValues: Dispatch<SetStateAction<RunFormValues>>,
+) {
+  const [mode, setModeState] = useState<SettingsMode>(() =>
+    preset && isCustomized(values, preset, task) ? SettingsMode.Custom : SettingsMode.Recommended,
+  );
+  const [savedCustomSettings, setSavedCustomSettings] = useState<CustomSettings | null>(null);
+  const setMode = (next: SettingsMode) => {
+    if (!preset || next === mode) return;
+    setModeState(next);
+    if (next === SettingsMode.Recommended) {
+      setSavedCustomSettings({ hyperparameters: values.hyperparameters, seed: values.seed });
+      setValues((v) => ({ ...v, hyperparameters: defaultsFor(preset, task), seed: initialValues(preset, task).seed }));
+    } else if (savedCustomSettings) setValues((v) => ({ ...v, ...savedCustomSettings }));
+  };
+  /** Another preset has other bounds, so custom values kept for the old one are dropped. */
+  const forgetCustomSettings = () => setSavedCustomSettings(null);
+  return { mode, setMode, forgetCustomSettings };
+}
 
 interface Props {
   task: TaskType;
   preset: Preset;
   values: RunFormValues;
   errors: FieldErrors;
-  /** Whether the values differ from the preset's defaults. */
-  customized: boolean;
+  mode: SettingsMode;
+  setMode: (mode: SettingsMode) => void;
   setHyperparameter: (name: Hyperparameter, value: string) => void;
   setSeed: (value: string) => void;
-  reset: () => void;
 }
 
-/** The recommended settings in plain words first, so a first run needs no choices here. Advanced, closed unless the values were
- * changed or this browser left it open, holds every setting with its bounds, the seed and what the preset fixes for itself. */
-export function SettingsStep({ task, preset, values, errors, customized, setHyperparameter, setSeed, reset }: Props) {
+/** Recommended (the preset's settings in plain words, so a first run needs no choices here) or Custom (every setting with its
+ * bounds, the seed and what the preset fixes for itself). Switching is the page's job, so edits survive a trip to Recommended. */
+export function SettingsStep({ task, preset, values, errors, mode, setMode, setHyperparameter, setSeed }: Props) {
   const { t } = useTranslation();
   const ranges = rangesFor(preset, task);
   const shown = shownHyperparameters(task, ranges);
-  const [open] = useState(() => customized || Object.keys(errors).length > 0 || rememberedOpen());
 
   return (
     <Stack as="section" gap="5">
       <StepHeading title={t('training.settings.title')} description={t('training.settings.description')} />
-      <Recommended preset={preset} values={values} shown={shown} customized={customized} reset={reset} />
-      <Collapsible.Root defaultOpen={open} onOpenChange={(e) => rememberOpen(e.open)}>
-        <Collapsible.Trigger asChild>
-          <Button size="sm" variant="ghost" data-testid="training-advanced">
-            {t('training.settings.advanced')}
-            <ChevronDown />
-          </Button>
-        </Collapsible.Trigger>
-        <Collapsible.Content>
-          <Stack mt="3" gap="6">
-            <Text textStyle="body-sm" color="fg.muted">
-              {t('training.settings.advancedDescription')}
-            </Text>
-            {shown.map((h) => {
-              const range = ranges[h];
-              return range ? (
-                <HyperparameterField
-                  key={h}
-                  name={h}
-                  range={range}
-                  value={values.hyperparameters[h]}
-                  errors={errors}
-                  onChange={(value) => setHyperparameter(h, value)}
-                />
-              ) : null;
-            })}
-            <SeedField value={values.seed} errors={errors} onChange={setSeed} />
-            <PresetMethod preset={preset} />
-          </Stack>
-        </Collapsible.Content>
-      </Collapsible.Root>
+      <SegmentGroup.Root
+        value={mode}
+        onValueChange={(e) => isMode(e.value) && setMode(e.value)}
+        aria-label={t('training.settings.mode.label')}
+        alignSelf="flex-start"
+        data-testid="training-mode"
+        data-mode={mode}
+      >
+        <SegmentGroup.Indicator />
+        {SETTINGS_MODES.map((m) => (
+          <SegmentGroup.Item key={m} value={m} data-testid={`training-mode-${m}`}>
+            <SegmentGroup.ItemText>{t(`training.settings.mode.${m}`)}</SegmentGroup.ItemText>
+            <SegmentGroup.ItemHiddenInput />
+          </SegmentGroup.Item>
+        ))}
+      </SegmentGroup.Root>
+      {mode === SettingsMode.Recommended ? (
+        <Recommended preset={preset} values={values} shown={shown} />
+      ) : (
+        <Stack gap="6">
+          <Text textStyle="body-sm" color="fg.muted">
+            {t('training.settings.advancedDescription')}
+          </Text>
+          {shown.map((h) => {
+            const range = ranges[h];
+            return range ? (
+              <HyperparameterField
+                key={h}
+                name={h}
+                range={range}
+                value={values.hyperparameters[h]}
+                errors={errors}
+                onChange={(value) => setHyperparameter(h, value)}
+              />
+            ) : null;
+          })}
+          <SeedField value={values.seed} errors={errors} onChange={setSeed} />
+          <PresetMethod preset={preset} />
+        </Stack>
+      )}
     </Stack>
   );
 }
 
-/** The settings the run will use, under plain names, and whether they are still the recommended ones. */
-function Recommended({
-  preset,
-  values,
-  shown,
-  customized,
-  reset,
-}: {
-  preset: Preset;
-  values: RunFormValues;
-  shown: readonly Hyperparameter[];
-  customized: boolean;
-  reset: () => void;
-}) {
+/** The settings the run will use, under plain names. */
+function Recommended({ preset, values, shown }: { preset: Preset; values: RunFormValues; shown: readonly Hyperparameter[] }) {
   const { t } = useTranslation();
   const label = usePresetLabel();
-  const Icon = customized ? Sliders : Check;
-  const state = customized ? 'custom' : 'recommended';
   return (
-    <Box
-      borderRadius="l3"
-      borderWidth="2px"
-      borderColor="brand.border"
-      bg="brand.subtle"
-      p="5"
-      data-testid="training-settings-recommended"
-      data-customized={String(customized)}
-    >
+    <Box borderRadius="l3" borderWidth="1px" borderColor="border" bg="bg.subtle" p="5" data-testid="training-settings-recommended">
       <Flex align="flex-start" gap="4">
-        <Center boxSize="10" flexShrink={0} borderRadius="l2" bg="brand.solid" color="brand.contrast">
-          <Icon width={20} height={20} />
+        <Center boxSize="10" flexShrink={0} borderRadius="l2" bg="brand.subtle" color="brand.fg">
+          <Check width={20} height={20} />
         </Center>
         <Box minW="0" flex="1">
-          <Flex align="center" gap="2" wrap="wrap">
-            <Heading as="h3" textStyle="body" fontWeight="semibold">
-              {t(`training.settings.${state}.title`)}
-            </Heading>
-            {customized && (
-              <Badge colorPalette="brand" variant="solid" gap="1" data-testid="training-settings-customized">
-                <Sliders width={12} height={12} />
-                {t('training.settings.customized')}
-              </Badge>
-            )}
-          </Flex>
+          <Heading as="h3" textStyle="body" fontWeight="semibold">
+            {t('training.settings.recommended.title')}
+          </Heading>
           <Text mt="1" textStyle="body-sm" color="fg.muted">
-            {t(`training.settings.${state}.body`, { model: label(preset.name) })}
+            {t('training.settings.recommended.body', { model: label(preset.name) })}
           </Text>
           {shown.length > 0 && (
             <DataList.Root mt="3" orientation="horizontal" size="sm">
@@ -166,19 +160,14 @@ function Recommended({
               ))}
             </DataList.Root>
           )}
-          {customized && (
-            <Button mt="3" size="sm" variant="ghost" onClick={reset} data-testid="training-reset">
-              <Reload />
-              {t('training.settings.reset')}
-            </Button>
-          )}
         </Box>
       </Flex>
     </Box>
   );
 }
 
-/** One hyperparameter: its name with what changing it does behind a help button, a number to type and a slider held to its bounds. */
+/** One hyperparameter: its name with what changing it does behind a help button, a number to type, and a slider held to its
+ * bounds with the bounds at its ends. */
 function HyperparameterField({
   name,
   range,
@@ -222,44 +211,44 @@ function HyperparameterField({
           <NumberInput.Input />
         </NumberInput.Root>
       </Flex>
-      <Slider.Root
-        mt="2"
-        w="full"
-        size="sm"
-        min={min}
-        max={max}
-        step={step}
-        value={[position]}
-        aria-label={[label]}
-        onValueChange={(e) => onChange(String(e.value[0]))}
-        data-testid={`training-${name}`}
-      >
-        <Slider.Control>
-          <Slider.Track>
-            <Slider.Range />
-          </Slider.Track>
-          <Slider.Thumbs />
-        </Slider.Control>
-      </Slider.Root>
-      <Flex w="full" justify="space-between" textStyle="body-sm" color="fg.muted">
+      <Flex mt="1" w="full" align="center" gap="3" textStyle="body-sm" color="fg.muted">
         <Text as="span">{min}</Text>
+        <Slider.Root
+          flex="1"
+          size="sm"
+          min={min}
+          max={max}
+          step={step}
+          value={[position]}
+          aria-label={[label]}
+          onValueChange={(e) => onChange(String(e.value[0]))}
+          data-testid={`training-${name}`}
+        >
+          <Slider.Control>
+            <Slider.Track>
+              <Slider.Range />
+            </Slider.Track>
+            <Slider.Thumbs />
+          </Slider.Control>
+        </Slider.Root>
         <Text as="span">{max}</Text>
       </Flex>
       {error ? (
         <Field.ErrorText>{t(`training.settings.error.${error}`, { min, max, step })}</Field.ErrorText>
       ) : (
-        <Field.HelperText>{t(`training.settings.${name}.help`, { value: fallback, min, max })}</Field.HelperText>
+        <Field.HelperText>{t(`training.settings.${name}.help`, { value: fallback })}</Field.HelperText>
       )}
     </Field.Root>
   );
 }
 
 /** A question-mark button beside a setting's name that opens what the setting does. A popover, not a hover tooltip, so it opens
- * by tap and keyboard too. It sits outside the field's label, so pressing it does not focus the input. */
+ * by tap and keyboard too. It sits outside the field's label, so pressing it does not focus the input. It opens to the side, so
+ * it never covers the setting above. */
 function HelpTip({ name, text, testId }: { name: string; text: string; testId: string }) {
   const { t } = useTranslation();
   return (
-    <Popover.Root size="sm" positioning={{ placement: 'top-start' }}>
+    <Popover.Root size="sm" positioning={{ placement: 'right' }}>
       <Popover.Trigger asChild>
         <IconButton
           size="2xs"

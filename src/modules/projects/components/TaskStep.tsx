@@ -28,7 +28,7 @@ export function TaskStep({ task, setTask }: { task: TaskType | null; setTask: (t
               justifyContent="flex-start"
               gap="3"
             >
-              <Center data-task-icon boxSize="9" flexShrink={0} borderRadius="l2" bg="brand.subtle" color="brand.fg">
+              <Center data-task-icon boxSize="9" flexShrink={0} borderRadius="l2" bg="bg.subtle" color="fg.muted">
                 <Icon width={18} height={18} />
               </Center>
               <Box minW="0">

@@ -90,7 +90,7 @@ export function ModelStep({
       >
         <Grid
           display={{ base: 'none', md: 'grid' }}
-          templateColumns="minmax(0, 1fr) 8rem minmax(12rem, .85fr) 2rem"
+          templateColumns="minmax(0, 1fr) 8rem minmax(12rem, .85fr)"
           gap="5"
           alignItems="center"
           px="5"
@@ -105,7 +105,6 @@ export function ModelStep({
           <Text>{t('training.model.label')}</Text>
           <Text>{t('training.resources.runtime')}</Text>
           <Text>{t('training.resources.title')}</Text>
-          <Box />
         </Grid>
         {presets.map((p, index) => {
           const pressed = preset === p.name;
@@ -132,14 +131,17 @@ export function ModelStep({
               <Grid
                 w="full"
                 minW="0"
-                templateColumns={{ base: 'minmax(0, 1fr) auto', md: 'minmax(0, 1fr) 8rem minmax(12rem, .85fr) 2rem' }}
+                templateColumns={{ base: 'minmax(0, 1fr)', md: 'minmax(0, 1fr) 8rem minmax(12rem, .85fr)' }}
                 gap={{ base: '3', md: '5' }}
                 alignItems="center"
                 px="5"
                 py="4"
                 bg={pressed ? 'selected-bg' : 'control-bg'}
                 borderBottomWidth={index === presets.length - 1 ? '0' : '1px'}
-                borderColor={pressed ? 'selected-edge' : 'border'}
+                borderColor="border"
+                outline={pressed ? '2px solid' : undefined}
+                outlineColor="selected-edge"
+                outlineOffset="-2px"
                 _hover={{ bg: pressed ? 'selected-bg' : 'selected-bg/50' }}
               >
                 <Flex minW="0" align="flex-start" gap="3.5">
@@ -147,8 +149,8 @@ export function ModelStep({
                     boxSize="9"
                     flexShrink={0}
                     borderRadius="l2"
-                    bg={pressed ? 'brand.solid' : 'brand.subtle'}
-                    color={pressed ? 'brand.contrast' : 'brand.fg'}
+                    bg={pressed ? 'brand.solid' : 'bg.subtle'}
+                    color={pressed ? 'brand.contrast' : 'fg.muted'}
                   >
                     <Icon width={18} height={18} />
                   </Center>
@@ -158,7 +160,7 @@ export function ModelStep({
                         {label(p.name)}
                       </Text>
                       {p.name === DEFAULT_PRESET && (
-                        <Badge colorPalette="brand" variant="subtle" data-testid="training-preset-recommended">
+                        <Badge colorPalette="gray" variant="subtle" data-testid="training-preset-recommended">
                           {t('training.model.recommended')}
                         </Badge>
                       )}
@@ -195,16 +197,6 @@ export function ModelStep({
                     ))}
                   </Flex>
                 </Box>
-                <Box
-                  gridColumn={{ base: '2', md: 'auto' }}
-                  gridRow={{ base: '1', md: 'auto' }}
-                  justifySelf="center"
-                  alignSelf={{ base: 'start', md: 'center' }}
-                  boxSize="2"
-                  bg="brand.solid"
-                  opacity={pressed ? 1 : 0}
-                  aria-hidden="true"
-                />
               </Grid>
             </Button>
           );

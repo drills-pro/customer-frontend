@@ -3,6 +3,7 @@ import { useParams } from '@tanstack/react-router';
 import { useProjectDetail } from '@/modules/projects/api';
 import { PipelineCard } from '@/modules/projects/components/PipelineCard';
 import { ProjectInfoCard } from '@/modules/projects/components/ProjectInfoCard';
+import { SharingCard } from '@/modules/projects/components/SharingCard';
 import { TeamCard } from '@/modules/projects/components/TeamCard';
 import { useWorkspace } from '@/modules/workspaces';
 
@@ -18,6 +19,7 @@ export function ProjectOverviewPage() {
       <SimpleGrid columns={{ base: 1, lg: 2 }} gap="6" alignItems="start">
         <ProjectInfoCard project={project} />
         <TeamCard project={project} />
+        <SharingCard project={project} />
       </SimpleGrid>
     </Stack>
   );

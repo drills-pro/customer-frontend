@@ -107,3 +107,20 @@ test('the info card carries the project ID', async ({ page }) => {
   await page.goto(BASE);
   await expect(page.getByTestId('project-info').getByRole('button')).toHaveCount(1);
 });
+
+test('sharing: a gallery level applies at once, and private asks first and unpublishes', async ({ page, api }) => {
+  await page.goto(BASE);
+  const card = page.getByTestId('project-sharing');
+  await expect(card).toHaveAttribute('data-sharing', 'private');
+  await page.getByTestId('sharing-gallery_downloads').click();
+  await expect(card).toHaveAttribute('data-sharing', 'gallery_downloads');
+  expect(api.project.sharing).toBe('gallery_downloads');
+
+  await page.getByTestId('sharing-private').click();
+  await page.getByTestId('sharing-private-keep').click();
+  expect(api.project.sharing).toBe('gallery_downloads'); // cancelled: nothing changed
+  await page.getByTestId('sharing-private').click();
+  await page.getByTestId('sharing-private-confirm').click();
+  await expect(card).toHaveAttribute('data-sharing', 'private');
+  expect(api.project.sharing).toBe('private');
+});

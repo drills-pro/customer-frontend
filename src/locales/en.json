@@ -429,6 +429,36 @@
       "model_editor": "Model editor",
       "deployer": "Deployer",
       "viewer": "Viewer"
+    },
+    "sharing": {
+      "title": "Sharing",
+      "exclude": "Models and dataset versions can still be left out one by one from the Models and Datasets pages.",
+      "level": {
+        "private": {
+          "label": "Private",
+          "help": "Only your workspace sees this project. Nothing is public."
+        },
+        "gallery": {
+          "label": "Gallery",
+          "help": "The project's name, task and the details of its models appear in the public gallery. No files can be downloaded."
+        },
+        "gallery_downloads": {
+          "label": "Gallery and downloads",
+          "help": "Everything in Gallery, plus model files and published dataset versions that anyone can download."
+        }
+      },
+      "confirm": {
+        "title": "Make this project private?",
+        "description": "It leaves the public gallery now, and its models and datasets are no longer public. You can share it again at any time.",
+        "keep": "Keep sharing",
+        "confirm": "Make private"
+      },
+      "toast": {
+        "private": "Project is private",
+        "gallery": "Project is in the gallery",
+        "gallery_downloads": "Project is in the gallery with downloads",
+        "failed": "Could not change sharing"
+      }
     }
   },
   "newProject": {
@@ -1017,8 +1047,8 @@
       "Archived": "Archived"
     },
     "publish": {
-      "on": "Publish",
-      "off": "Unpublish"
+      "on": "Include in sharing",
+      "off": "Leave out of sharing"
     }
   },
   "deployments": {

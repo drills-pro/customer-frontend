@@ -36,8 +36,10 @@ export const TASK_BOUNDS: Partial<Record<TaskType, Partial<Record<Hyperparameter
 /** Seed bounds and default, as core-api (DEFAULT_SEED in job_spec.py, SEED_MAX in training/constants.py). */
 export const DEFAULT_SEED = 42;
 export const SEED_MAX = 2 ** 32 - 1;
-/** The preset picked first when the project's task has it. */
+/** The preset picked first when the project's task has it; its tile says it is the recommended one. */
 export const DEFAULT_PRESET = 'small';
+/** Where this browser remembers that the Settings step's Advanced section was left open. */
+export const ADVANCED_SETTINGS_KEY = 'drills-training-advanced';
 /** Preset names the copy knows (`training.preset.<name>.*`); an admin may add others, which show by name. */
 export const KNOWN_PRESETS: readonly string[] = ['small', 'medium', 'large'];
 

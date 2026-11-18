@@ -6,6 +6,7 @@ import {
   configHyperparameters,
   fieldErrors,
   initialValues,
+  isCustomized,
   rangesFor,
   toRunBody,
   type Preset,
@@ -73,6 +74,17 @@ test.describe('run form', () => {
     const v = { ...initialValues(TABULAR, 'tabular-classification'), versionId: 'v1', preset: TABULAR };
     expect(fieldErrors(v, TABULAR, 'tabular-classification')).toEqual({});
     expect(toRunBody(v, 'tabular-classification').hyperparameters).toEqual({});
+  });
+
+  test('settings count as customized once a shown value or the seed differs from the defaults', () => {
+    const v = initialValues(PRESET, IMAGE);
+    expect(isCustomized(v, PRESET, IMAGE)).toBe(false);
+    expect(isCustomized({ ...v, seed: ' 042 ' }, PRESET, IMAGE)).toBe(false);
+    expect(isCustomized({ ...v, seed: '7' }, PRESET, IMAGE)).toBe(true);
+    expect(isCustomized({ ...v, seed: '' }, PRESET, IMAGE)).toBe(true);
+    expect(isCustomized({ ...v, hyperparameters: { ...v.hyperparameters, epochs: '11' } }, PRESET, IMAGE)).toBe(true);
+    // A text task does not show the image size, so changing it changes nothing.
+    expect(isCustomized({ ...v, hyperparameters: { ...v.hyperparameters, image_size: '99' } }, PRESET, TEXT)).toBe(false);
   });
 
   test('the body sends numbers, trimmed', () => {

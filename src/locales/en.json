@@ -825,10 +825,10 @@
     },
     "model": {
       "title": "Model",
-      "description": "Pick a size. Larger models can learn more but take longer to train.",
+      "description": "A bigger model is usually more accurate but takes longer to train. Not sure? Start with the recommended one and compare later.",
       "label": "Model",
       "details": "Training method",
-      "baseModel": "{{repo}} ({{license}} licence)",
+      "baseModel": "{{repo}} ({{license}} license)",
       "augmentation": {
         "none": "No image augmentation",
         "flip": "Flipped images",
@@ -841,7 +841,9 @@
       "lrWarmup": "{{schedule}} after a {{percent}}% warmup",
       "earlyStopping_one": "stops early after {{count}} epoch without improvement",
       "earlyStopping_other": "stops early after {{count}} epochs without improvement",
-      "noEarlyStopping": "runs every epoch"
+      "noEarlyStopping": "runs every epoch",
+      "recommended": "Recommended",
+      "technical": "Technical details"
     },
     "preset": {
       "small": {
@@ -859,25 +861,31 @@
     },
     "settings": {
       "title": "Settings",
-      "description": "The model's defaults suit most data. Change them only if you know you need to.",
+      "description": "Settings that suit most data are ready. You can go straight to the next step.",
       "epochs": {
         "label": "Epochs",
-        "help": "Passes over the data. Default {{value}}, from {{min}} to {{max}}."
+        "help": "Default {{value}}, from {{min}} to {{max}}.",
+        "plain": "Training rounds",
+        "effect": "How many times the model goes over all your data. More rounds can learn more but take longer."
       },
       "batch_size": {
         "label": "Batch size",
-        "help": "Examples per step. Default {{value}}, from {{min}} to {{max}}."
+        "help": "Default {{value}}, from {{min}} to {{max}}.",
+        "plain": "Examples at a time",
+        "effect": "How many examples the model learns from in each step. Larger is faster but needs more memory."
       },
       "image_size": {
         "label": "Image size",
-        "help": "Pixels per side. Default {{value}}, from {{min}} to {{max}}."
+        "help": "Default {{value}}, from {{min}} to {{max}}.",
+        "plain": "Image size (pixels)",
+        "effect": "The side length images are resized to. Larger keeps small details but trains slower."
       },
       "seed": {
         "label": "Seed",
         "help": "The same seed, data and settings give the same result."
       },
       "reset": "Reset to defaults",
-      "advanced": "Advanced",
+      "advanced": "Advanced settings",
       "error": {
         "required": "Enter a number.",
         "range": "Enter a whole number from {{min}} to {{max}}.",
@@ -890,7 +898,18 @@
         "learningRate": "Learning rate",
         "earlyStopping": "Early stopping",
         "rate": "{{rate}}, {{schedule}}"
-      }
+      },
+      "advancedDescription": "For people who know model training. Every value is checked against what this model allows.",
+      "customized": "Customized",
+      "recommended": {
+        "title": "Recommended settings",
+        "body": "Tuned for the {{model}} model. Most projects train well with these."
+      },
+      "custom": {
+        "title": "Your settings",
+        "body": "You changed the recommended settings for the {{model}} model. Reset them any time."
+      },
+      "helpLabel": "What is {{name}}?"
     },
     "review": {
       "title": "Review",
@@ -898,7 +917,8 @@
       "edit": "Edit",
       "editLabel": "Edit {{name}}",
       "note": "The run starts as soon as there is room for it. You can cancel it from its page.",
-      "failed": "The run did not start"
+      "failed": "The run did not start",
+      "recommended": "Recommended"
     },
     "error": {
       "noTask": "This project has no task type, so it cannot train.",

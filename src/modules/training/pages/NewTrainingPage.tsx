@@ -9,7 +9,7 @@ import { useIdempotencyKey } from '@/shared/api/idempotency';
 import { ReviewRows, StepHeading, SummaryCard, WizardBody, WizardSteps, type ReviewRow } from '@/shared/ui/wizard';
 import { useCreateRun, usePresets, useRunOnce, type TrainingRun } from '@/modules/training/api';
 import { DataStep, type DataChoice } from '@/modules/training/components/DataStep';
-import { ModelStep, usePresetDetails, usePresetLabel, usePresetResources } from '@/modules/training/components/ModelStep';
+import { ModelStep, usePresetLabel, usePresetResources } from '@/modules/training/components/ModelStep';
 import { SettingsStep } from '@/modules/training/components/SettingsStep';
 import {
   BLOCKING_CODES,
@@ -25,6 +25,7 @@ import {
   defaultsFor,
   fieldErrors,
   initialValues,
+  isCustomized,
   rangesFor,
   toRunBody,
   type Preset,
@@ -131,7 +132,6 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
   const { t } = useTranslation();
   const navigate = useNavigate();
   const presetLabel = usePresetLabel();
-  const presetDetails = usePresetDetails();
   const presetResources = usePresetResources();
   const create = useCreateRun(workspaceId, projectId);
   // The key is reused by every retry of the same request and replaced as soon as the request changes.
@@ -147,6 +147,7 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
 
   const preset = presets.find((p) => p.name === values.preset);
   const errors = preset ? fieldErrors(values, preset, task) : {};
+  const customized = preset ? isCustomized(values, preset, task) : false;
   const valid = [Boolean(data?.versionId), Boolean(preset), Object.keys(errors).length === 0];
   const go = (to: number) => {
     setError(null);
@@ -177,14 +178,18 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
     { id: 'dataset', label: t('training.data.dataset'), value: data?.datasetName ?? EMPTY, edit: DATA },
     { id: 'version', label: t('training.data.versionLabel'), value: version, edit: DATA },
     { id: 'preset', label: t('training.model.label'), value: preset ? presetLabel(preset.name) : EMPTY, edit: MODEL },
-    { id: 'method', label: t('training.model.details'), value: preset ? presetDetails(preset).join(', ') : EMPTY, edit: MODEL },
-    ...shownHyperparameters(task, preset && rangesFor(preset, task)).map((h) => ({
-      id: h,
-      label: t(`training.settings.${h}.label`),
-      value: values.hyperparameters[h] || EMPTY,
-      edit: SETTINGS,
-    })),
-    { id: 'seed', label: t('training.settings.seed.label'), value: values.seed || EMPTY, edit: SETTINGS },
+    // Recommended settings are one row; changed ones are listed, so the review shows what differs from the model's defaults.
+    ...(customized
+      ? [
+          ...shownHyperparameters(task, preset && rangesFor(preset, task)).map((h) => ({
+            id: h,
+            label: t(`training.settings.${h}.label`),
+            value: values.hyperparameters[h] || EMPTY,
+            edit: SETTINGS,
+          })),
+          { id: 'seed', label: t('training.settings.seed.label'), value: values.seed || EMPTY, edit: SETTINGS },
+        ]
+      : [{ id: 'settings', label: t('training.settings.title'), value: t('training.review.recommended'), edit: SETTINGS }]),
   ];
 
   const steps = (
@@ -218,6 +223,7 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
               preset={preset}
               values={values}
               errors={errors}
+              customized={customized}
               setHyperparameter={setHyperparameter}
               setSeed={(seed) => setValues((v) => ({ ...v, seed }))}
               reset={() => setValues((v) => ({ ...v, hyperparameters: defaultsFor(preset, task), seed: initialValues(preset, task).seed }))}

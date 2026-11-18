@@ -1,5 +1,5 @@
 import { useCallback, useState, type ReactNode } from 'react';
-import { Alert, Box, Button, Card, Grid, Heading, HStack, Skeleton, Stack, Text, useBreakpointValue } from '@chakra-ui/react';
+import { Alert, Box, Button, Card, Grid, Heading, HStack, Skeleton, Stack, Text } from '@chakra-ui/react';
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { ChevronLeft, ChevronRight } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
@@ -10,27 +10,18 @@ import { ReviewRows, StepHeading, SummaryCard, WizardBody, WizardSteps, type Rev
 import { useCreateRun, usePresets, useRunOnce, type TrainingRun } from '@/modules/training/api';
 import { DataStep, type DataChoice } from '@/modules/training/components/DataStep';
 import { ModelStep, usePresetLabel, usePresetResources } from '@/modules/training/components/ModelStep';
-import { SettingsStep } from '@/modules/training/components/SettingsStep';
+import { SettingsStep, useSettingsMode } from '@/modules/training/components/SettingsStep';
 import {
   BLOCKING_CODES,
   DEFAULT_PRESET,
+  SettingsMode,
   shownHyperparameters,
   step as stepIndex,
   STEPS,
   type Hyperparameter,
 } from '@/modules/training/constants';
 import { blockingCode, createErrorKey, isNotFound, trainingErrorKey } from '@/modules/training/errors';
-import {
-  cloneValues,
-  defaultsFor,
-  fieldErrors,
-  initialValues,
-  isCustomized,
-  rangesFor,
-  toRunBody,
-  type Preset,
-  type RunFormValues,
-} from '@/modules/training/run-form';
+import { cloneValues, defaultsFor, fieldErrors, rangesFor, toRunBody, type Preset, type RunFormValues } from '@/modules/training/run-form';
 
 const FROM = '/app/w/$slug/projects/$projectId/training/new';
 const DATA = stepIndex('data');
@@ -136,18 +127,17 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
   const create = useCreateRun(workspaceId, projectId);
   // The key is reused by every retry of the same request and replaced as soon as the request changes.
   const { keyFor } = useIdempotencyKey();
-  const vertical = useBreakpointValue({ base: false, xl: true }) ?? false;
   const [step, setStep] = useState(DATA);
   const [data, setData] = useState<DataChoice | null>(() => cloneData(clone));
   const [values, setValues] = useState<RunFormValues>(() =>
     cloneValues(clone, presets, presets.find((p) => p.name === DEFAULT_PRESET) ?? presets[0], task),
   );
+  const preset = presets.find((p) => p.name === values.preset);
+  const { mode, setMode, forgetCustomSettings } = useSettingsMode(task, preset, values, setValues);
   const [error, setError] = useState<string | null>(null);
   const onData = useCallback((choice: DataChoice) => setData(choice), []);
 
-  const preset = presets.find((p) => p.name === values.preset);
   const errors = preset ? fieldErrors(values, preset, task) : {};
-  const customized = preset ? isCustomized(values, preset, task) : false;
   const valid = [Boolean(data?.versionId), Boolean(preset), Object.keys(errors).length === 0];
   const go = (to: number) => {
     setError(null);
@@ -155,7 +145,9 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
   };
   const choosePreset = (name: string) => {
     const next = presets.find((p) => p.name === name);
-    if (next && name !== values.preset) setValues((v) => ({ ...v, preset: name, hyperparameters: defaultsFor(next, task) }));
+    if (!next || name === values.preset) return;
+    setValues((v) => ({ ...v, preset: name, hyperparameters: defaultsFor(next, task) }));
+    forgetCustomSettings();
   };
   const setHyperparameter = (name: Hyperparameter, value: string) =>
     setValues((v) => ({ ...v, hyperparameters: { ...v.hyperparameters, [name]: value } }));
@@ -178,8 +170,8 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
     { id: 'dataset', label: t('training.data.dataset'), value: data?.datasetName ?? EMPTY, edit: DATA },
     { id: 'version', label: t('training.data.versionLabel'), value: version, edit: DATA },
     { id: 'preset', label: t('training.model.label'), value: preset ? presetLabel(preset.name) : EMPTY, edit: MODEL },
-    // Recommended settings are one row; changed ones are listed, so the review shows what differs from the model's defaults.
-    ...(customized
+    // Recommended is one row; Custom lists every value, so the summary says what the Settings step's switch says.
+    ...(mode === SettingsMode.Custom
       ? [
           ...shownHyperparameters(task, preset && rangesFor(preset, task)).map((h) => ({
             id: h,
@@ -196,7 +188,6 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
     <WizardSteps
       labels={STEPS.map((id) => t(`training.new.step.${id}`))}
       step={step}
-      orientation={vertical ? 'vertical' : 'horizontal'}
       onSelect={(to) => {
         if (to < step) go(to);
       }}
@@ -204,15 +195,11 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
   );
 
   return (
-    <Grid minW="0" alignItems="start" gap="5" templateColumns={{ xl: '220px minmax(0, 1fr) 300px' }}>
-      {vertical && (
-        <Card.Root as="nav" size="sm" aria-label={t('training.new.steps')} data-testid="training-steps">
-          <Card.Body p="2">{steps}</Card.Body>
-        </Card.Root>
-      )}
-
+    <Grid minW="0" alignItems="start" gap="5" templateColumns={{ xl: 'minmax(0, 1fr) 300px' }}>
       <Card.Root minW="0">
-        {!vertical && <Card.Header data-testid="training-steps">{steps}</Card.Header>}
+        <Card.Header as="nav" aria-label={t('training.new.steps')} data-testid="training-steps">
+          {steps}
+        </Card.Header>
 
         <WizardBody step={step}>
           {step === DATA && <DataStep projectId={projectId} slug={slug} choice={data} onChange={onData} />}
@@ -223,10 +210,10 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
               preset={preset}
               values={values}
               errors={errors}
-              customized={customized}
+              mode={mode}
+              setMode={setMode}
               setHyperparameter={setHyperparameter}
               setSeed={(seed) => setValues((v) => ({ ...v, seed }))}
-              reset={() => setValues((v) => ({ ...v, hyperparameters: defaultsFor(preset, task), seed: initialValues(preset, task).seed }))}
             />
           )}
           {step === REVIEW && (
@@ -289,7 +276,7 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
         </Card.Footer>
       </Card.Root>
 
-      <Grid minW="0" gap="4">
+      <Grid minW="0" gap="4" position={{ xl: 'sticky' }} top="6">
         <SummaryCard title={t('training.new.summary')} rows={rows} />
         {preset && <SummaryCard title={t('training.resources.title')} rows={presetResources(preset)} testId="training-resources" />}
       </Grid>

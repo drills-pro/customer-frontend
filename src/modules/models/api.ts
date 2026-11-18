@@ -5,10 +5,14 @@ import { useWorkspace } from '@/modules/workspaces';
 import { client, unwrap, type Schemas } from '@/shared/api/client';
 import { usePolledQuery } from '@/shared/api/poll';
 
-export type ModelVersion = Schemas['ModelVersionItem'];
+type ListedVersion = Schemas['ModelVersionItem'];
+/** Fields the list gained with the run link and the sharing switch. */
+type NewListFields = 'training_run_id' | 'publish_metadata' | 'publish_artifact';
+// shortcut: an API from before those fields leaves them out, so they are optional here; make them required once every API sends them.
+export type ModelVersion = Omit<ListedVersion, NewListFields> & Partial<Pick<ListedVersion, NewListFields>>;
 export type ModelStage = Schemas['ModelStage'];
 
-/** The stages a person sets by hand, in the order the table offers them; each is also its `models.stage.*` key. Production is not one of
+/** The stages a person sets by hand, in the order the table offers them; each is also its `models.move.*` key (the menu item that sets it). Production is not one of
  * them: a version gets there by being promoted, which deploys it (the serving version is never moved down, only replaced). */
 export const MODEL_STAGES: readonly ModelStage[] = ['None', 'Staging', 'Archived'];
 
@@ -19,10 +23,16 @@ export const PromotionStatus = { Pending: 'pending', Failed: 'failed' } as const
 export const isPromoting = (v: ModelVersion) => v.promotion_status === PromotionStatus.Pending;
 /** The version a model's calls are answered with: its one Production version. */
 export const isServing = (v: ModelVersion) => v.stage === 'Production';
+/** Whether the version follows the project's Sharing level (true, the default) or is left out of it (false). Undefined when the API does
+ * not say; then both choices are offered. */
+export const includedInSharing = (v: ModelVersion): boolean | undefined => v.publish_metadata;
+/** The version a model serves now, other than `v`. */
+export const servingOf = (models: readonly ModelVersion[], v: ModelVersion) =>
+  models.find((m) => m.model_id === v.model_id && isServing(m) && m.id !== v.id);
 /** Promoting a version older than the one serving is a rollback. */
 export const isRollback = (models: readonly ModelVersion[], v: ModelVersion) => {
-  const serving = models.find((m) => m.model_id === v.model_id && isServing(m));
-  return serving !== undefined && serving.id !== v.id && new Date(v.created_at) < new Date(serving.created_at);
+  const serving = servingOf(models, v);
+  return serving !== undefined && new Date(v.created_at) < new Date(serving.created_at);
 };
 
 export const modelsKey = (projectId: string) => ['project', projectId, 'models'] as const;

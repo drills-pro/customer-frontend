@@ -119,7 +119,7 @@ function RunsTable({ runs, slug, projectId }: { runs: TrainingRunSummary[]; slug
                 <Table.Cell>
                   {headline ? (
                     <Text as="span">
-                      <Text as="span" fontFamily="mono">
+                      <Text as="span" fontFamily="mono" color="fg.muted">
                         {headline[0]}
                       </Text>{' '}
                       <Text as="span" color="fg" fontWeight="medium">

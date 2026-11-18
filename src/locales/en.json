@@ -864,19 +864,19 @@
       "description": "Settings that suit most data are ready. You can go straight to the next step.",
       "epochs": {
         "label": "Epochs",
-        "help": "Default {{value}}, from {{min}} to {{max}}.",
+        "help": "Default {{value}}.",
         "plain": "Training rounds",
         "effect": "How many times the model goes over all your data. More rounds can learn more but take longer."
       },
       "batch_size": {
         "label": "Batch size",
-        "help": "Default {{value}}, from {{min}} to {{max}}.",
+        "help": "Default {{value}}.",
         "plain": "Examples at a time",
         "effect": "How many examples the model learns from in each step. Larger is faster but needs more memory."
       },
       "image_size": {
         "label": "Image size",
-        "help": "Default {{value}}, from {{min}} to {{max}}.",
+        "help": "Default {{value}}.",
         "plain": "Image size (pixels)",
         "effect": "The side length images are resized to. Larger keeps small details but trains slower."
       },
@@ -884,8 +884,6 @@
         "label": "Seed",
         "help": "The same seed, data and settings give the same result."
       },
-      "reset": "Reset to defaults",
-      "advanced": "Advanced settings",
       "error": {
         "required": "Enter a number.",
         "range": "Enter a whole number from {{min}} to {{max}}.",
@@ -900,16 +898,16 @@
         "rate": "{{rate}}, {{schedule}}"
       },
       "advancedDescription": "For people who know model training. Every value is checked against what this model allows.",
-      "customized": "Customized",
       "recommended": {
         "title": "Recommended settings",
         "body": "Tuned for the {{model}} model. Most projects train well with these."
       },
-      "custom": {
-        "title": "Your settings",
-        "body": "You changed the recommended settings for the {{model}} model. Reset them any time."
-      },
-      "helpLabel": "What is {{name}}?"
+      "helpLabel": "What is {{name}}?",
+      "mode": {
+        "label": "Training settings",
+        "recommended": "Recommended",
+        "custom": "Custom"
+      }
     },
     "review": {
       "title": "Review",
@@ -1060,7 +1058,7 @@
       }
     },
     "resources": {
-      "title": "Resources",
+      "title": "Compute limits",
       "cpu": "CPU",
       "memory": "Memory",
       "gpu": "GPU",
@@ -1088,24 +1086,17 @@
     },
     "col": {
       "model": "Model",
-      "stage": "Stage",
-      "publish": "Publish",
-      "created": "Registered",
-      "serving": "Serving"
+      "score": "Score",
+      "status": "Status",
+      "sharing": "Sharing",
+      "actions": "Actions"
     },
     "version": "Version {{version}}",
-    "stage": {
-      "None": "No stage",
-      "Staging": "Candidate",
-      "Production": "Serving",
-      "Archived": "Archived"
-    },
     "publish": {
       "on": "Include in sharing",
       "off": "Leave out of sharing"
     },
     "serving": {
-      "now": "Answering this model's calls",
       "promote": "Promote to Production",
       "rollback": "Roll back to this version",
       "retry": "Try again",
@@ -1122,6 +1113,35 @@
       "stopped": "This model's endpoint is stopped. Start it first. The current version is still serving.",
       "exists": "This version already has a deployment.",
       "promotionFailed": "The promotion did not finish. The current version is still serving. Try again."
+    },
+    "status": {
+      "serving": "Serving",
+      "deploying": "Deploying",
+      "failed": "Promotion failed",
+      "candidate": "Candidate",
+      "archived": "Archived",
+      "none": "Unassigned"
+    },
+    "sharing": {
+      "included": "In sharing",
+      "leftOut": "Left out"
+    },
+    "move": {
+      "None": "Mark as unassigned",
+      "Staging": "Mark as candidate",
+      "Archived": "Archive"
+    },
+    "menu": "Actions for {{name}}",
+    "confirm": {
+      "title": "Promote {{name}}?",
+      "rollbackTitle": "Roll back to {{name}}?",
+      "body": "{{serving}} is serving now and keeps serving until {{name}} is deployed.",
+      "bodyFirst": "{{name}} will be deployed and start answering this model's calls.",
+      "cancel": "Cancel"
+    },
+    "toast": {
+      "stageFailed": "Could not change the stage",
+      "sharingFailed": "Could not change sharing"
     }
   },
   "deployments": {

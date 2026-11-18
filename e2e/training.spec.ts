@@ -20,10 +20,12 @@ const next = (page: Page) => page.getByTestId('training-next');
 const field = (page: Page, name: string) => page.getByTestId(`training-${name}`).locator('input');
 /** The value a setting slider shows beside its name. */
 const shown = (page: Page, name: string) => page.getByTestId(`training-${name}-value`);
-/** The settings step's plain panel, which says whether the values are still the recommended ones. */
-const recommended = (page: Page) => page.getByTestId('training-settings-recommended');
-/** Opens the settings step's Advanced section, where the sliders, the number fields and the seed are. */
-const advanced = (page: Page) => page.getByTestId('training-advanced').click();
+/** The settings step's Recommended | Custom switch; `data-mode` says which is on. */
+const mode = (page: Page) => page.getByTestId('training-mode');
+/** Switches the settings step to Custom, where the sliders, the number fields and the seed are. */
+const custom = (page: Page) => page.getByTestId('training-mode-custom').click();
+/** Switches the settings step back to Recommended, which sets the preset's defaults. */
+const recommendedMode = (page: Page) => page.getByTestId('training-mode-recommended').click();
 /** Moves a setting slider to its minimum, then `steps` up from there, with the keyboard. */
 async function slide(page: Page, name: string, steps: number) {
   const thumb = page.getByTestId(`training-${name}`).locator('[data-part="thumb"]');
@@ -56,13 +58,13 @@ test('walks data, model, settings and review, then follows the new run', async (
   await next(page).click();
 
   // The new preset's defaults, shown as the recommended settings.
-  await expect(recommended(page)).toHaveAttribute('data-customized', 'false');
-  await expect(field(page, 'epochs')).toHaveValue('20');
+  await expect(mode(page)).toHaveAttribute('data-mode', 'recommended');
+  await expect(shown(page, 'epochs')).toHaveText('20'); // lint-ok: a number, not copy
   await expect(shown(page, 'batch_size')).toHaveText('16'); // lint-ok: a number, not copy
-  await advanced(page);
+  await custom(page);
+  await expect(field(page, 'epochs')).toHaveValue('20');
   await slide(page, 'epochs', 4);
   await expect(field(page, 'epochs')).toHaveValue('5');
-  await expect(recommended(page)).toHaveAttribute('data-customized', 'true');
   await next(page).click();
 
   await page.getByTestId('training-start').click();
@@ -95,17 +97,19 @@ test('a project with no datasets is sent to make one', async ({ page, api }) => 
   await expect(next(page)).toBeDisabled();
 });
 
-test('settings stay inside the preset bounds; a bad seed blocks the next step; reset restores the defaults', async ({ page, api }) => {
+test('settings stay inside the preset bounds; a bad seed blocks the next step; Recommended restores the defaults', async ({
+  page,
+  api,
+}) => {
   withVersion(api);
   await page.goto(NEW);
   await expect(page.getByTestId('training-versions')).toBeVisible();
   await next(page).click();
   await next(page).click();
-  // The sliders, the seed and the preset's method wait under Advanced.
+  // The sliders, the seed and the preset's method wait under Custom.
   await expect(page.getByTestId('training-epochs')).toBeHidden();
   await expect(field(page, 'seed')).toBeHidden();
-  await expect(page.getByTestId('training-reset')).toHaveCount(0);
-  await advanced(page);
+  await custom(page);
   await expect(page.getByTestId('training-method')).toBeVisible();
   await expect(page.getByTestId('training-method-base-model')).toBeVisible();
   // The slider cannot leave the bounds: End is the preset's maximum.
@@ -118,9 +122,8 @@ test('settings stay inside the preset bounds; a bad seed blocks the next step; r
   await expect(next(page)).toBeDisabled();
   await expect(page.getByTestId('training-seed')).toHaveAttribute('data-invalid', '');
 
-  await page.getByTestId('training-reset').click();
-  await expect(field(page, 'epochs')).toHaveValue('10');
-  await expect(field(page, 'seed')).toHaveValue('42');
+  await recommendedMode(page);
+  await expect(shown(page, 'epochs')).toHaveText('10'); // lint-ok: a number, not copy
   await expect(next(page)).toBeEnabled();
 });
 
@@ -135,16 +138,17 @@ test("a bundle task's settings come from the selected model, bounded by its mani
   await expect(shown(page, 'batch_size')).toHaveText('16'); // lint-ok: a number, not copy
   await expect(next(page)).toBeEnabled();
   // End is the manifest's maximum, not a bound the preset sends.
-  await advanced(page);
+  await custom(page);
   await page.getByTestId('training-epochs').locator('[data-part="thumb"]').press('End');
   await expect(field(page, 'epochs')).toHaveValue(String(BUNDLE_BOUNDS.epochs.max));
 
-  // Another model brings its own defaults.
+  // Another model brings its own defaults; Custom stays on.
   await page.getByTestId('training-back').click();
   await page.getByTestId('training-preset-medium').click();
   await next(page).click();
-  await expect(shown(page, 'epochs')).toHaveText('40'); // lint-ok: a number, not copy
-  await expect(shown(page, 'batch_size')).toHaveText('8'); // lint-ok: a number, not copy
+  await expect(mode(page)).toHaveAttribute('data-mode', 'custom');
+  await expect(field(page, 'epochs')).toHaveValue('40');
+  await expect(field(page, 'batch_size')).toHaveValue('8');
   await next(page).click();
   await page.getByTestId('training-start').click();
   await expect(page).toHaveURL(RUN_URL);
@@ -158,7 +162,7 @@ test('a text project has no image size and does not send one', async ({ page, ap
   await expect(page.getByTestId('training-versions')).toBeVisible();
   await next(page).click();
   await next(page).click();
-  await advanced(page);
+  await custom(page);
   await expect(page.getByTestId('training-epochs')).toBeVisible();
   await expect(page.getByTestId('training-image_size')).toHaveCount(0);
   await expect(shown(page, 'image_size')).toHaveCount(0);
@@ -268,14 +272,17 @@ test('the model step shows how the chosen preset trains and what it may use', as
   await expect(page.getByTestId('summary-epochs')).toHaveCount(0);
 });
 
-test('changed settings are listed in the review, and Advanced stays open for this browser', async ({ page, api }) => {
+test('changed settings are listed in the review, survive a trip to Recommended, and a new wizard starts on Recommended', async ({
+  page,
+  api,
+}) => {
   withVersion(api);
   await page.goto(NEW);
   await toReview(page);
   await expect(page.getByTestId('summary-settings')).toBeVisible();
   await page.getByTestId('review-edit-settings').click();
 
-  await advanced(page);
+  await custom(page);
   // What a setting does waits behind its help button.
   await expect(page.getByTestId('training-epochs-help-content')).toBeHidden();
   await page.getByTestId('training-epochs-help').click();
@@ -283,19 +290,31 @@ test('changed settings are listed in the review, and Advanced stays open for thi
   await page.keyboard.press('Escape');
   await page.getByTestId('training-epochs-input').locator('input').fill('12');
   await expect(field(page, 'epochs')).toHaveValue('12');
-  await expect(recommended(page)).toHaveAttribute('data-customized', 'true');
-  await expect(page.getByTestId('training-settings-customized')).toBeVisible();
+  await expect(page.getByTestId('summary-epochs')).toBeVisible();
+
+  // Recommended sets the defaults and the review is one row again; Custom brings the edit back.
+  await recommendedMode(page);
+  await expect(shown(page, 'epochs')).toHaveText('10'); // lint-ok: a number, not copy
+  await expect(page.getByTestId('summary-settings')).toBeVisible();
+  await expect(page.getByTestId('summary-epochs')).toHaveCount(0);
+  await custom(page);
+  await expect(field(page, 'epochs')).toHaveValue('12');
   await next(page).click();
   await expect(page.getByTestId('summary-epochs')).toBeVisible();
   await expect(page.getByTestId('summary-settings')).toHaveCount(0);
 
-  // A new wizard in the same browser opens Advanced by itself.
+  // A new wizard starts on Recommended again.
   await page.goto(NEW);
   await expect(page.getByTestId('training-versions')).toBeVisible();
   await next(page).click();
   await next(page).click();
-  await expect(recommended(page)).toHaveAttribute('data-customized', 'false');
-  await expect(page.getByTestId('training-epochs')).toBeVisible();
+  await expect(mode(page)).toHaveAttribute('data-mode', 'recommended');
+  await expect(page.getByTestId('summary-settings')).toBeVisible();
+
+  // On Custom with the defaults untouched, the summary follows the switch, not the values.
+  await custom(page);
+  await expect(page.getByTestId('summary-epochs')).toBeVisible();
+  await expect(page.getByTestId('summary-settings')).toHaveCount(0);
 });
 
 test('a training run shows its epoch, the latest scores and the chart', async ({ page, api }) => {
@@ -429,8 +448,8 @@ test('clone starts the wizard from the run: its version, preset and settings', a
   await next(page).click();
   await expect(page.getByTestId('training-preset-medium')).toHaveAttribute('aria-pressed', 'true');
   await next(page).click();
-  // The run's own settings are not the recommended ones, so Advanced opens by itself.
-  await expect(recommended(page)).toHaveAttribute('data-customized', 'true');
+  // The run's own settings are not the recommended ones, so Custom is on by itself.
+  await expect(mode(page)).toHaveAttribute('data-mode', 'custom');
   await expect(page.getByTestId('training-epochs')).toBeVisible();
   await expect(field(page, 'epochs')).toHaveValue('7');
   await expect(field(page, 'batch_size')).toHaveValue('8');

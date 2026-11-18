@@ -1,30 +1,26 @@
-import { useState } from 'react';
-import { Alert, Badge, Box, Button, Checkbox, EmptyState, Heading, HStack, Skeleton, Spinner, Stack, Table, Text } from '@chakra-ui/react';
-import { SimpleSelect } from '@/components/simple-select';
-import { useParams } from '@tanstack/react-router';
+import { Alert, Badge, Box, Button, EmptyState, Flex, Heading, Link as ChakraLink, Skeleton, Stack, Table, Text } from '@chakra-ui/react';
+import { Link, useParams } from '@tanstack/react-router';
 import { Cpu } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
+import { useWorkspace } from '@/modules/workspaces';
 import { errorKey } from '@/shared/api/errors';
-import {
-  usePromoteModel,
-  usePublishModel,
-  useModels,
-  isPromoting,
-  isRollback,
-  isServing,
-  MODEL_STAGES,
-  PromotionStatus,
-  type ModelStage,
-  type ModelVersion,
-} from '@/modules/models/api';
-import { modelErrorKey, promotionFailureKey, ProblemCode } from '@/modules/models/errors';
+import { numericEntries } from '@/shared/api/metrics';
+import { useTrainingRuns } from '@/shared/api/overview';
+import { includedInSharing, isPromoting, isServing, useModels, type ModelVersion } from '@/modules/models/api';
+import { PromoteDialog } from '@/modules/models/components/PromoteDialog';
+import { ModelMenu } from '@/modules/models/components/ModelMenu';
+import { promotionFailureKey, ProblemCode } from '@/modules/models/errors';
+import { modelStatus, ModelStatus, STATUS_UI } from '@/modules/models/status';
 
 const FROM = '/app/w/$slug/projects/$projectId/models';
+const EMPTY = '-';
+const FRACTION_DIGITS = 4;
 
-/** The project's registered model versions: which one is serving, promoting another (or rolling back), and whether each is published. */
+/** The project's registered model versions: each one's score and status, whether it is in the project's sharing, and promoting one (or
+ * rolling back) behind a confirm. The run that made a version is a click away, with its metrics, config and data. */
 export function ModelsPage() {
   const { t } = useTranslation();
-  const { projectId } = useParams({ from: FROM });
+  const { slug, projectId } = useParams({ from: FROM });
   const { data: models, error, isError, isPending, refetch } = useModels(projectId);
 
   return (
@@ -63,47 +59,37 @@ export function ModelsPage() {
           </EmptyState.Content>
         </EmptyState.Root>
       ) : (
-        <ModelsTable models={models} projectId={projectId} />
+        <ModelsTable models={models} slug={slug} projectId={projectId} />
       )}
     </Stack>
   );
 }
 
-function ModelsTable({ models, projectId }: { models: ModelVersion[]; projectId: string }) {
-  const { t, i18n } = useTranslation();
-  const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium', timeStyle: 'short' });
+function ModelsTable({ models, slug, projectId }: { models: ModelVersion[]; slug: string; projectId: string }) {
+  const { t } = useTranslation();
+  const { id: workspaceId } = useWorkspace();
+  const runs = useTrainingRuns(workspaceId, projectId);
+  const scoreOf = (m: ModelVersion) => {
+    const run = m.training_run_id ? runs.data?.find((r) => r.id === m.training_run_id) : undefined;
+    return Object.entries(numericEntries(run?.metrics))[0];
+  };
   return (
     <Table.ScrollArea borderWidth="1px" borderColor="border" borderRadius="l3" bg="surface-raised">
       <Table.Root variant="data">
         <Table.Header>
           <Table.Row>
             <Table.ColumnHeader>{t('models.col.model')}</Table.ColumnHeader>
-            <Table.ColumnHeader>{t('models.col.stage')}</Table.ColumnHeader>
-            <Table.ColumnHeader>{t('models.col.serving')}</Table.ColumnHeader>
-            <Table.ColumnHeader>{t('models.col.publish')}</Table.ColumnHeader>
-            <Table.ColumnHeader>{t('models.col.created')}</Table.ColumnHeader>
+            <Table.ColumnHeader>{t('models.col.score')}</Table.ColumnHeader>
+            <Table.ColumnHeader>{t('models.col.status')}</Table.ColumnHeader>
+            <Table.ColumnHeader>{t('models.col.sharing')}</Table.ColumnHeader>
+            <Table.ColumnHeader>
+              <Box srOnly>{t('models.col.actions')}</Box>
+            </Table.ColumnHeader>
           </Table.Row>
         </Table.Header>
         <Table.Body>
           {models.map((m) => (
-            <Table.Row key={m.id} data-testid="model-row" data-model={m.id} data-stage={m.stage} data-promotion={m.promotion_status ?? ''}>
-              <Table.Cell>
-                <Text fontWeight="medium">{m.mlflow_model_name}</Text>
-                <Text textStyle="body-sm" color="fg.muted" fontFamily="mono">
-                  {t('models.version', { version: m.mlflow_version })}
-                </Text>
-              </Table.Cell>
-              <Table.Cell>
-                <StageControl projectId={projectId} version={m} />
-              </Table.Cell>
-              <Table.Cell>
-                <ServingControl projectId={projectId} version={m} models={models} />
-              </Table.Cell>
-              <Table.Cell>
-                <PublishControl projectId={projectId} version={m} />
-              </Table.Cell>
-              <Table.Cell>{date.format(new Date(m.created_at))}</Table.Cell>
-            </Table.Row>
+            <ModelRow key={m.id} version={m} models={models} score={scoreOf(m)} slug={slug} projectId={projectId} />
           ))}
         </Table.Body>
       </Table.Root>
@@ -111,132 +97,107 @@ function ModelsTable({ models, projectId }: { models: ModelVersion[]; projectId:
   );
 }
 
-/** The stage by hand. The serving version has none to set (promote another to replace it), and one being promoted waits for the result. */
-function StageControl({ projectId, version }: { projectId: string; version: ModelVersion }) {
+interface ModelRowProps {
+  version: ModelVersion;
+  /** Every version of the project, to tell a promote from a rollback and to name the one serving. */
+  models: ModelVersion[];
+  /** The run's first metric, if it has one. */
+  score: [string, number] | undefined;
+  slug: string;
+  projectId: string;
+}
+
+function ModelRow({ version: m, models, score, slug, projectId }: ModelRowProps) {
+  const { t, i18n } = useTranslation();
+  const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium' });
+  const number = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: FRACTION_DIGITS });
+  const included = includedInSharing(m);
+  return (
+    <Table.Row data-testid="model-row" data-model={m.id} data-stage={m.stage} data-promotion={m.promotion_status ?? ''}>
+      <Table.Cell>
+        {m.training_run_id ? (
+          <ChakraLink asChild fontWeight="medium" color="brand-text">
+            <Link
+              to="/w/$slug/projects/$projectId/training/$runId"
+              params={{ slug, projectId, runId: m.training_run_id }}
+              data-testid="model-run-link"
+            >
+              {m.mlflow_model_name}
+            </Link>
+          </ChakraLink>
+        ) : (
+          <Text fontWeight="medium">{m.mlflow_model_name}</Text>
+        )}
+        <Text mt="0.5" textStyle="body-sm" color="fg.muted">
+          {t('models.version', { version: m.mlflow_version })} · {date.format(new Date(m.created_at))}
+        </Text>
+      </Table.Cell>
+      <Table.Cell data-testid="model-score">
+        {score ? (
+          <Text as="span">
+            <Text as="span" fontFamily="mono" color="fg.muted">
+              {score[0]}
+            </Text>{' '}
+            <Text as="span" fontWeight="semibold">
+              {number.format(score[1])}
+            </Text>
+          </Text>
+        ) : (
+          EMPTY
+        )}
+      </Table.Cell>
+      <Table.Cell>
+        <StatusCell version={m} />
+      </Table.Cell>
+      <Table.Cell>
+        {included === undefined ? (
+          EMPTY
+        ) : (
+          <Badge colorPalette={included ? 'info' : 'gray'} variant="subtle" data-testid="model-shared" data-shared={String(included)}>
+            {t(included ? 'models.sharing.included' : 'models.sharing.leftOut')}
+          </Badge>
+        )}
+      </Table.Cell>
+      <Table.Cell>
+        <Flex justify="flex-end" align="center" gap="2">
+          {!isServing(m) && !isPromoting(m) && <PromoteDialog projectId={projectId} version={m} models={models} />}
+          <ModelMenu projectId={projectId} version={m} />
+        </Flex>
+      </Table.Cell>
+    </Table.Row>
+  );
+}
+
+/** One badge for what the version is doing, with a glyph and a word; a failed promotion also says why (never the server's text). */
+function StatusCell({ version }: { version: ModelVersion }) {
   const { t } = useTranslation();
-  const promote = usePromoteModel(projectId);
-  if (isServing(version))
-    return (
-      <Badge colorPalette="success" data-testid="model-serving">
-        {t('models.stage.Production')}
+  const status = modelStatus(version);
+  const ui = STATUS_UI[status];
+  const risk = version.promotion_error_code === ProblemCode.DeployRisk;
+  return (
+    // Table cells do not wrap; a reason is a sentence, so this one does.
+    <Stack gap="1" align="flex-start" maxW="xs" whiteSpace="normal">
+      <Badge
+        colorPalette={ui.palette}
+        variant="subtle"
+        gap="1"
+        role={status === ModelStatus.Deploying ? 'status' : undefined}
+        data-testid={
+          status === ModelStatus.Serving ? 'model-serving' : status === ModelStatus.Deploying ? 'model-promoting' : 'model-status'
+        }
+        data-status={status}
+      >
+        <ui.icon width={12} height={12} />
+        {t(`models.status.${status}`)}
       </Badge>
-    );
-  return (
-    <Stack gap="1">
-      <SimpleSelect
-        label={t('models.col.stage')}
-        hideLabel
-        size="sm"
-        width="10rem"
-        disabled={isPromoting(version)}
-        items={MODEL_STAGES.map((stage) => ({ label: t(`models.stage.${stage}`), value: stage }))}
-        value={version.stage}
-        onChange={(stage) => promote.mutate({ versionId: version.id, stage: stage as ModelStage })}
-      />
-      {promote.isError && (
-        <Text textStyle="body-sm" color="fg.error" role="alert">
-          {t(modelErrorKey(promote.error))}
+      {status === ModelStatus.Deploying && (
+        <Text textStyle="body-sm" color="fg.muted">
+          {t('models.serving.deploying')}
         </Text>
       )}
-    </Stack>
-  );
-}
-
-/** Promote to Production (or roll back to an older version): the version is deployed first, and the one serving now keeps serving until
- * that deployment is active. Pending and failed are on the row; a failed one says why and can be tried again. */
-function ServingControl({ projectId, version, models }: { projectId: string; version: ModelVersion; models: ModelVersion[] }) {
-  const { t } = useTranslation();
-  const promote = usePromoteModel(projectId);
-  const [accepted, setAccepted] = useState(false);
-  if (isServing(version))
-    return (
-      <Text color="fg.muted" data-testid="model-serving-note">
-        {t('models.serving.now')}
-      </Text>
-    );
-  if (isPromoting(version))
-    return (
-      <HStack gap="2" role="status" data-testid="model-promoting">
-        <Spinner size="sm" />
-        <Text>{t('models.serving.deploying')}</Text>
-      </HStack>
-    );
-  const rollback = isRollback(models, version);
-  const failed = version.promotion_status === PromotionStatus.Failed;
-  const risk = failed && version.promotion_error_code === ProblemCode.DeployRisk;
-  return (
-    <Stack gap="2">
-      {failed && (
-        <Alert.Root status={risk ? 'warning' : 'error'} colorPalette={risk ? 'warning' : 'danger'} data-testid="model-promotion-failed">
-          <Alert.Indicator />
-          <Alert.Content gap="2">
-            <Alert.Description>{t(promotionFailureKey(version.promotion_error_code))}</Alert.Description>
-            {risk && (
-              <Checkbox.Root
-                size="sm"
-                checked={accepted}
-                onCheckedChange={(e) => setAccepted(e.checked === true)}
-                data-testid="model-promote-risk-accept"
-              >
-                <Checkbox.HiddenInput />
-                <Checkbox.Control />
-                <Checkbox.Label>{t('models.serving.riskAccept')}</Checkbox.Label>
-              </Checkbox.Root>
-            )}
-          </Alert.Content>
-        </Alert.Root>
-      )}
-      <Box>
-        <Button
-          size="xs"
-          variant="outline"
-          loading={promote.isPending}
-          disabled={risk && !accepted}
-          onClick={() => promote.mutate({ versionId: version.id, stage: 'Production', acknowledgeRisk: risk && accepted })}
-          data-testid="model-promote"
-          data-action={rollback ? 'rollback' : 'promote'}
-        >
-          {t(failed ? 'models.serving.retry' : rollback ? 'models.serving.rollback' : 'models.serving.promote')}
-        </Button>
-      </Box>
-      {promote.isError && (
-        <Text textStyle="body-sm" color="fg.error" role="alert">
-          {t(modelErrorKey(promote.error))}
-        </Text>
-      )}
-    </Stack>
-  );
-}
-
-/** The list does not say whether a version is published, so both actions are offered; the API takes either. */
-function PublishControl({ projectId, version }: { projectId: string; version: ModelVersion }) {
-  const { t } = useTranslation();
-  const publish = usePublishModel(projectId);
-  return (
-    <Stack gap="1">
-      <HStack gap="2">
-        <Button
-          size="xs"
-          variant="outline"
-          disabled={publish.isPending}
-          onClick={() => publish.mutate({ versionId: version.id, publish: true })}
-          data-testid="model-publish"
-        >
-          {t('models.publish.on')}
-        </Button>
-        <Button
-          size="xs"
-          variant="ghost"
-          disabled={publish.isPending}
-          onClick={() => publish.mutate({ versionId: version.id, publish: false })}
-          data-testid="model-unpublish"
-        >
-          {t('models.publish.off')}
-        </Button>
-      </HStack>
-      {publish.isError && (
-        <Text textStyle="body-sm" color="fg.error" role="alert">
-          {t(errorKey(publish.error))}
+      {status === ModelStatus.Failed && (
+        <Text textStyle="body-sm" color={risk ? 'fg.warning' : 'fg.error'} data-testid="model-promotion-failed">
+          {t(promotionFailureKey(version.promotion_error_code))}
         </Text>
       )}
     </Stack>

@@ -1,8 +1,8 @@
-import { Box, Button, Center, Flex, Heading, SimpleGrid, Stack, Text } from '@chakra-ui/react';
+import { Badge, Box, Button, Center, Flex, Grid, Stack, Text } from '@chakra-ui/react';
 import { Cpu } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { TASK_ICONS, type TaskType } from '@/modules/projects';
-import { GIB, KNOWN_PRESETS, PERCENT, SECONDS_PER_HOUR } from '@/modules/training/constants';
+import { DEFAULT_PRESET, GIB, KNOWN_PRESETS, PERCENT, SECONDS_PER_HOUR } from '@/modules/training/constants';
 import type { Preset } from '@/modules/training/run-form';
 import type { SummaryRow } from '@/shared/ui/wizard';
 import { StepHeading } from '@/shared/ui/wizard';
@@ -55,10 +55,11 @@ export function usePresetResources() {
   ];
 }
 
-/** The task's icon, so every preset tile and the selected card carry one. */
+/** The task's icon, so every preset row carries one. */
 const taskIcon = (task: TaskType): PixelIcon => (task in TASK_ICONS ? TASK_ICONS[task as keyof typeof TASK_ICONS] : Cpu);
 
-/** The chosen preset in full, above a tile per preset to switch to another. */
+/** Compare the offered presets in one list. Each row is one large selection target and shows the run limit and compute beside the
+ * plain-language description. How a preset trains is on the Settings step; its full resources are in the wizard's aside. */
 export function ModelStep({
   presets,
   task,
@@ -72,105 +73,143 @@ export function ModelStep({
 }) {
   const { t } = useTranslation();
   const label = usePresetLabel();
+  const resources = usePresetResources();
   const Icon = taskIcon(task);
-  const selected = presets.find((p) => p.name === preset);
 
   return (
     <Stack as="section" gap="5">
       <StepHeading title={t('training.model.title')} description={t('training.model.description')} />
-      {selected && <SelectedPreset preset={selected} icon={Icon} />}
-      <SimpleGrid columns={{ base: 2, sm: 3 }} gap="3">
-        {presets.map((p) => {
+      <Stack
+        gap="0"
+        overflow="hidden"
+        borderWidth="1px"
+        borderColor="border"
+        borderRadius="l3"
+        role="group"
+        aria-label={t('training.model.label')}
+      >
+        <Grid
+          display={{ base: 'none', md: 'grid' }}
+          templateColumns="minmax(0, 1fr) 8rem minmax(12rem, .85fr) 2rem"
+          gap="5"
+          alignItems="center"
+          px="5"
+          py="2.5"
+          bg="bg.subtle"
+          borderBottomWidth="1px"
+          borderColor="border"
+          textStyle="label"
+          color="fg.muted"
+          textTransform="uppercase"
+        >
+          <Text>{t('training.model.label')}</Text>
+          <Text>{t('training.resources.runtime')}</Text>
+          <Text>{t('training.resources.title')}</Text>
+          <Box />
+        </Grid>
+        {presets.map((p, index) => {
           const pressed = preset === p.name;
+          const rows = resources(p);
+          const runtime = rows.find((row) => row.id === 'runtime');
+          const compute = rows.filter((row) => row !== runtime);
           return (
             <Button
               key={p.name}
-              variant="option"
+              variant="plain"
               onClick={() => setPreset(p.name)}
               aria-pressed={pressed}
+              w="full"
+              h="auto"
               minW="0"
-              flexDirection="column"
-              justifyContent="flex-start"
-              gap="2.5"
-              py="5"
-              textAlign="center"
+              p="0"
+              borderWidth="0"
+              borderRadius="0"
+              whiteSpace="normal"
+              textAlign="start"
+              fontWeight="normal"
               data-testid={`training-preset-${p.name}`}
             >
-              <Center
-                boxSize="10"
-                borderRadius="l2"
-                bg={pressed ? 'brand.solid' : 'brand.subtle'}
-                color={pressed ? 'brand.contrast' : 'brand.fg'}
+              <Grid
+                w="full"
+                minW="0"
+                templateColumns={{ base: 'minmax(0, 1fr) auto', md: 'minmax(0, 1fr) 8rem minmax(12rem, .85fr) 2rem' }}
+                gap={{ base: '3', md: '5' }}
+                alignItems="center"
+                px="5"
+                py="4"
+                bg={pressed ? 'selected-bg' : 'control-bg'}
+                borderBottomWidth={index === presets.length - 1 ? '0' : '1px'}
+                borderColor={pressed ? 'selected-edge' : 'border'}
+                _hover={{ bg: pressed ? 'selected-bg' : 'selected-bg/50' }}
               >
-                <Icon width={20} height={20} />
-              </Center>
-              <Text maxW="full" textStyle="body-sm" fontWeight="semibold">
-                {label(p.name)}
-              </Text>
+                <Flex minW="0" align="flex-start" gap="3.5">
+                  <Center
+                    boxSize="9"
+                    flexShrink={0}
+                    borderRadius="l2"
+                    bg={pressed ? 'brand.solid' : 'brand.subtle'}
+                    color={pressed ? 'brand.contrast' : 'brand.fg'}
+                  >
+                    <Icon width={18} height={18} />
+                  </Center>
+                  <Box minW="0">
+                    <Flex align="center" gap="2" wrap="wrap">
+                      <Text textStyle="body-sm" fontWeight="semibold">
+                        {label(p.name)}
+                      </Text>
+                      {p.name === DEFAULT_PRESET && (
+                        <Badge colorPalette="brand" variant="subtle" data-testid="training-preset-recommended">
+                          {t('training.model.recommended')}
+                        </Badge>
+                      )}
+                    </Flex>
+                    {KNOWN_PRESETS.includes(p.name) && (
+                      <Text mt="1" textStyle="body-sm" color="fg.muted">
+                        {t(`training.preset.${p.name}.description`)}
+                      </Text>
+                    )}
+                  </Box>
+                </Flex>
+                <Box gridColumn={{ base: '1', md: 'auto' }} pl={{ base: '12.5', md: '0' }}>
+                  <Text display={{ md: 'none' }} textStyle="label" color="fg.muted" textTransform="uppercase">
+                    {t('training.resources.runtime')}
+                  </Text>
+                  <Text mt={{ base: '0.5', md: '0' }} textStyle="body-sm" fontWeight="medium">
+                    {runtime?.value}
+                  </Text>
+                </Box>
+                <Box gridColumn={{ base: '1 / -1', md: 'auto' }} pl={{ base: '12.5', md: '0' }}>
+                  <Text display={{ md: 'none' }} textStyle="label" color="fg.muted" textTransform="uppercase">
+                    {t('training.resources.title')}
+                  </Text>
+                  <Flex mt={{ base: '0.5', md: '0' }} wrap="wrap" columnGap="3" rowGap="1" textStyle="body-sm">
+                    {compute.map((row) => (
+                      <Text as="span" key={row.id}>
+                        <Text as="span" color="fg.muted">
+                          {row.label}{' '}
+                        </Text>
+                        <Text as="span" fontWeight="medium">
+                          {row.value}
+                        </Text>
+                      </Text>
+                    ))}
+                  </Flex>
+                </Box>
+                <Box
+                  gridColumn={{ base: '2', md: 'auto' }}
+                  gridRow={{ base: '1', md: 'auto' }}
+                  justifySelf="center"
+                  alignSelf={{ base: 'start', md: 'center' }}
+                  boxSize="2"
+                  bg="brand.solid"
+                  opacity={pressed ? 1 : 0}
+                  aria-hidden="true"
+                />
+              </Grid>
             </Button>
           );
         })}
-      </SimpleGrid>
+      </Stack>
     </Stack>
-  );
-}
-
-/** The selected preset: what it is, the model it starts from, and how it trains. What it runs on is in the wizard's aside. */
-function SelectedPreset({ preset, icon: Icon }: { preset: Preset; icon: PixelIcon }) {
-  const { t } = useTranslation();
-  const label = usePresetLabel();
-  const details = usePresetDetails();
-  const chips = details(preset);
-  return (
-    <Flex
-      align="center"
-      gap="4"
-      borderRadius="l3"
-      borderWidth="2px"
-      borderColor="brand.border"
-      bg="brand.subtle"
-      p="5"
-      data-testid="training-preset-selected"
-      data-preset={preset.name}
-    >
-      <Center boxSize="14" flexShrink={0} borderRadius="l3" bg="brand.solid" color="brand.contrast">
-        <Icon width={24} height={24} />
-      </Center>
-      <Box minW="0">
-        <Heading as="h3" textStyle="body" fontWeight="semibold">
-          {label(preset.name)}
-        </Heading>
-        {KNOWN_PRESETS.includes(preset.name) && (
-          <Text textStyle="body-sm" color="fg.muted">
-            {t(`training.preset.${preset.name}.description`)}
-          </Text>
-        )}
-        {/* A preset with no base model trains from scratch (a tabular bundle's), so there is no repo to name. */}
-        {preset.base_model && (
-          <Text mt="1" textStyle="mono-sm" fontFamily="mono" color="fg.muted" wordBreak="break-all">
-            {preset.base_model.license
-              ? t('training.model.baseModel', { repo: preset.base_model.repo_id, license: preset.base_model.license })
-              : preset.base_model.repo_id}
-          </Text>
-        )}
-        <Flex
-          mt="2"
-          wrap="wrap"
-          columnGap="3"
-          rowGap="1"
-          textStyle="body-sm"
-          fontWeight="semibold"
-          color="brand-text"
-          data-testid="training-preset-details"
-        >
-          {chips.map((chip, index) => (
-            <Flex as="span" key={chip} align="center" gap="3">
-              {index > 0 && <Box as="span" boxSize="1" flexShrink={0} bg="currentColor" aria-hidden="true" />}
-              {chip}
-            </Flex>
-          ))}
-        </Flex>
-      </Box>
-    </Flex>
   );
 }

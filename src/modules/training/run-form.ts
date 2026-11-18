@@ -89,6 +89,16 @@ export function fieldErrors(v: RunFormValues, preset: Preset, task: TaskType): F
   return errors;
 }
 
+/** Whether the shown settings or the seed differ from the preset's defaults. Values that do not parse count as changed. */
+export function isCustomized(v: RunFormValues, preset: Preset, task: TaskType): boolean {
+  const defaults = defaultsFor(preset, task);
+  const differs = (value: string, fallback: string) => value.trim() === '' || Number(value.trim()) !== Number(fallback);
+  return (
+    shownHyperparameters(task, rangesFor(preset, task)).some((h) => differs(v.hyperparameters[h], defaults[h])) ||
+    differs(v.seed, String(DEFAULT_SEED))
+  );
+}
+
 /** A run's settings as form values. core-api keeps the resolved hyperparameters in `config`; a value that is missing or that the
  * preset's bounds refuse falls back to the preset's default. */
 export function configHyperparameters(config: unknown, preset: Preset, task: TaskType): Record<Hyperparameter, string> {

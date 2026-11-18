@@ -10,10 +10,11 @@ interface Props {
   hideLabel?: boolean;
   size?: 'sm' | 'md';
   width?: string;
+  disabled?: boolean;
 }
 
 /** The themed replacement for a native select: one value, a list of options. */
-export function SimpleSelect({ items, value, onChange, label, hideLabel, size, width }: Props) {
+export function SimpleSelect({ items, value, onChange, label, hideLabel, size, width, disabled }: Props) {
   const collection = useMemo(() => createListCollection({ items }), [items]);
   const text = <Select.Label>{label}</Select.Label>;
   return (
@@ -23,6 +24,7 @@ export function SimpleSelect({ items, value, onChange, label, hideLabel, size, w
       onValueChange={(e) => e.value[0] && onChange(e.value[0])}
       size={size}
       width={width}
+      disabled={disabled}
       positioning={{ sameWidth: true }}
     >
       <Select.HiddenSelect />

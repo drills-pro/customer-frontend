@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { ACME_SLUG, API_URL, PREDICT_KEY, PROJECT, deployment, run } from './mock-api';
+import { ACME_SLUG, API_URL, DEPLOYMENT_SCHEMA, PREDICT_KEY, PROJECT, deployment, run } from './mock-api';
 
 const BASE = `/w/${ACME_SLUG}/projects/${PROJECT}`;
 const PREDICT = `${API_URL}/v1/predict`;
@@ -42,6 +42,9 @@ test('deploys a finished run, shows the key once, then the run links to its depl
   await page.getByTestId('deploy-confirm').click();
   await expect(page.getByTestId('deploy-key')).toHaveValue(PREDICT_KEY);
   expect(api.deployCalls).toHaveLength(1);
+  // The deployment is keyed on the model version the run registered, and serves exactly that one.
+  expect(api.deployCalls[0].versionId).toBe(api.models[0].id);
+  expect(api.deployments[0].model_version_id).toBe(api.models[0].id);
   expect(api.deployments[0].training_run_id).toBe(r.id);
 
   await page.getByTestId('deploy-open').click();
@@ -140,18 +143,25 @@ test('a deployment that is not serving yet shows no call', async ({ page, api })
   await expect(page.getByTestId('deployment-endpoint')).toHaveCount(0);
 });
 
-test('sends a test call and lists it', async ({ page, api }) => {
+test('try it is a real predict call as the signed-in member, counted toward usage, and the log lists it', async ({ page, api }) => {
   const d = deployment(api, 'active');
   await page.goto(`${LIST}/${d.id}`);
   await page.getByTestId('deployment-tab-test').click();
   await expect(page.getByTestId('deployment-test-calls-empty')).toBeVisible();
+  await expect(page.getByTestId('deployment-test-usage')).toBeVisible();
 
   await page.getByTestId('deployment-test-body').fill('[1]');
   await expect(page.getByTestId('deployment-test-send')).toBeDisabled();
   await page.getByTestId('deployment-test-body').fill('{"input": {"text": "hello"}}');
+  // The equivalent call from the person's own code is shown once the body is valid.
+  await expect(page.getByTestId('deployment-test-curl')).toBeVisible();
   await page.getByTestId('deployment-test-send').click();
   await expect(page.getByTestId('deployment-test-result')).toBeVisible();
   await expect(page.getByTestId('deployment-test-call')).toHaveCount(1);
+  // The model and project are named by the headers of POST /v1/predict, from the deployment's schema.
+  expect(api.predictCalls).toEqual([
+    { project: PROJECT, model: DEPLOYMENT_SCHEMA.model_id, revision: DEPLOYMENT_SCHEMA.model_revision, body: { input: { text: 'hello' } } },
+  ]);
   expect(api.testCalls[0].request).toEqual({ input: { text: 'hello' } });
 });
 

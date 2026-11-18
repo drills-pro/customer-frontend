@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Alert, Badge, Button, Card, Field, Flex, Grid, Skeleton, Stack, Text, Textarea } from '@chakra-ui/react';
 import { Send } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
+import { cfg } from '@/config';
 import { useDeploymentSchema, useTestCalls, useTestDeployment, type Deployment, type TestCall } from '@/modules/deployments/api';
+import { buildCall } from '@/modules/deployments/call';
 import { CodeBlock } from '@/modules/deployments/components/CodeBlock';
 import { JSON_INDENT } from '@/modules/deployments/constants';
 import { deploymentErrorKey } from '@/modules/deployments/errors';
@@ -28,7 +30,8 @@ function parseBody(text: string): { body: Record<string, unknown> } | { error: s
   return { body: value as Record<string, unknown> };
 }
 
-/** Try the endpoint from here, signed in (no key needed), and see the latest calls anyone on the project made the same way. */
+/** Try the endpoint from here, signed in (no key needed): a real call to POST /v1/predict that counts toward usage, with the equivalent
+ * curl, and the latest calls anyone on the project made the same way. */
 export function TestTab({ deployment }: { deployment: Deployment }) {
   const { t } = useTranslation();
   const serving = statusUi(deployment.status).test;
@@ -77,15 +80,26 @@ export function TestTab({ deployment }: { deployment: Deployment }) {
               {/* Outline: the project header holds the screen's one solid button. */}
               <Button
                 size="sm"
-                disabled={!serving || invalid}
+                disabled={!serving || invalid || !schema.data}
                 loading={test.isPending}
-                onClick={() => !invalid && test.mutate(parsed.body)}
+                onClick={() => !invalid && schema.data && test.mutate({ model: schema.data, body: parsed.body })}
                 data-testid="deployment-test-send"
               >
                 <Send />
                 {t('deployments.test.send')}
               </Button>
             </Flex>
+            <Text textStyle="body-sm" color="fg.muted" data-testid="deployment-test-usage">
+              {t('deployments.test.usage')}
+            </Text>
+            {schema.data && !invalid && (
+              <Stack gap="2">
+                <Text fontWeight="semibold">{t('deployments.test.equivalent')}</Text>
+                <CodeBlock maxH="48" testId="deployment-test-curl">
+                  {buildCall(cfg.apiUrl, deployment.project_id, schema.data, parsed.body).curl}
+                </CodeBlock>
+              </Stack>
+            )}
             {test.isError && (
               <Alert.Root status="error" colorPalette="danger" data-testid="deployment-test-error">
                 <Alert.Indicator />
@@ -96,9 +110,9 @@ export function TestTab({ deployment }: { deployment: Deployment }) {
               <Stack gap="2" data-testid="deployment-test-result">
                 <Flex align="center" justify="space-between" gap="2">
                   <Text fontWeight="semibold">{t('deployments.test.response')}</Text>
-                  <Latency ms={test.data.latency_ms} />
+                  <Latency ms={test.data.usage.latency_ms ?? null} />
                 </Flex>
-                <CodeBlock>{pretty(test.data.response)}</CodeBlock>
+                <CodeBlock>{pretty(test.data.output)}</CodeBlock>
               </Stack>
             )}
           </Stack>
@@ -155,14 +169,20 @@ function Call({ call }: { call: TestCall }) {
   const { i18n } = useTranslation();
   const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium', timeStyle: 'medium' });
   return (
-    <Stack gap="2" data-testid="deployment-test-call">
+    <Stack gap="2" data-testid="deployment-test-call" data-status={call.status}>
       <Flex align="center" justify="space-between" gap="2">
         <Text textStyle="body-sm" color="fg.muted">
           {date.format(new Date(call.created_at))}
         </Text>
         <Latency ms={call.latency_ms} />
       </Flex>
-      <CodeBlock maxH="40">{pretty(call.response)}</CodeBlock>
+      {call.error ? (
+        <Text textStyle="body-sm" color="fg.error" fontFamily="mono" data-testid="deployment-test-call-error">
+          {call.error.code}
+        </Text>
+      ) : (
+        <CodeBlock maxH="40">{pretty(call.response)}</CodeBlock>
+      )}
     </Stack>
   );
 }

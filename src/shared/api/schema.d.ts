@@ -1298,8 +1298,10 @@ export interface paths {
     put?: never;
     /**
      * Create Deployment
-     * @description Deploy a training run. A run with no test dataset is 409 deploy_risk_unacknowledged until acknowledge_risk=true. Sending the same Idempotency-Key and training_run_id again returns that deployment (without
-     *     the predict key, which is shown once); the same key with another run is 409.
+     * @description Deploy a model version: one deployment serves exactly one. A version whose run has no test dataset is 409 deploy_risk_unacknowledged
+     *     until acknowledge_risk=true. Sending the same Idempotency-Key and version again returns that deployment (without the predict key,
+     *     which is shown once); the same key with another version is 409. `training_run_id` is deprecated (it deploys that run's newest
+     *     version): send exactly one of the two. Promoting a version to Production deploys it too.
      */
     post: operations['create_deployment_v1_projects__project_id__deployments_post'];
     delete?: never;
@@ -1429,23 +1431,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/projects/{project_id}/deployments/{deployment_id}/test': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Test Deployment */
-    post: operations['test_deployment_v1_projects__project_id__deployments__deployment_id__test_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/v1/projects/{project_id}/deployments/{deployment_id}/test-calls': {
     parameters: {
       query?: never;
@@ -1453,7 +1438,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** List Test Calls */
+    /**
+     * List Test Calls
+     * @description The try-it log: this deployment's console predictions (POST /v1/predict from a signed-in member), newest first.
+     */
     get: operations['list_test_calls_v1_projects__project_id__deployments__deployment_id__test_calls_get'];
     put?: never;
     post?: never;
@@ -1660,7 +1648,10 @@ export interface paths {
     put?: never;
     /**
      * Promote Model
-     * @description None (internal) -> Staging (candidate) -> Production (live); promoting an older version to Production is the rollback.
+     * @description None (internal) -> Staging (candidate) is immediate. Production answers 202 with the version pending: it is deployed, and the
+     *     stage flips only when the deployment is active (the version serving until then stays Production). Poll the models list: the
+     *     version either becomes Production (the previous one Staging) or shows promotion_status `failed` with promotion_error, stages
+     *     unchanged. Promoting an older version is a rollback. A run with no test data needs acknowledge_risk=true, as a deploy does.
      */
     post: operations['promote_model_v1_projects__project_id__models__model_version_id__promote_post'];
     delete?: never;
@@ -2936,6 +2927,8 @@ export interface components {
        * Format: date-time
        */
       created_at: string;
+      /** Model Version Id */
+      model_version_id: string | null;
       /**
        * Project Id
        * Format: uuid
@@ -2965,6 +2958,8 @@ export interface components {
        * Format: date-time
        */
       created_at: string;
+      /** Model Version Id */
+      model_version_id: string | null;
     };
     /**
      * DeploymentSchema
@@ -3036,6 +3031,12 @@ export interface components {
      * @enum {string}
      */
     ExecutionProvider: 'CPUExecutionProvider' | 'CUDAExecutionProvider';
+    /**
+     * FailureCode
+     * @description The closed set of a failed report's `code`; mirrors ray_core/constants.py FailCode. Anything else reads as internal.
+     * @enum {string}
+     */
+    FailureCode: 'oom' | 'bad_data' | 'unsupported' | 'timeout' | 'internal';
     /** FileLink */
     FileLink: {
       /** Url */
@@ -3539,6 +3540,11 @@ export interface components {
     };
     /** ModelVersionItem */
     ModelVersionItem: {
+      promotion_status?: components['schemas']['PromotionStatus'] | null;
+      /** Promotion Error */
+      promotion_error?: string | null;
+      /** Promotion Error Code */
+      promotion_error_code?: string | null;
       /**
        * Id
        * Format: uuid
@@ -3995,6 +4001,11 @@ export interface components {
     };
     /** PromotedVersion */
     PromotedVersion: {
+      promotion_status?: components['schemas']['PromotionStatus'] | null;
+      /** Promotion Error */
+      promotion_error?: string | null;
+      /** Promotion Error Code */
+      promotion_error_code?: string | null;
       /**
        * Id
        * Format: uuid
@@ -4008,6 +4019,12 @@ export interface components {
       /** Customer Label */
       customer_label: string;
     };
+    /**
+     * PromotionStatus
+     * @description Mirrors the model_versions.promotion_status CHECK constraint; no status = no promotion in flight.
+     * @enum {string}
+     */
+    PromotionStatus: 'pending' | 'failed';
     /**
      * PublicDataset
      * @description A private dataset of a public project is listed with no name: "exists" is visible, contents are not.
@@ -4129,6 +4146,16 @@ export interface components {
       /** History */
       history: components['schemas']['ProgressPoint'][];
     };
+    /** RunStep */
+    RunStep: {
+      key: components['schemas']['StepKey'];
+      state: components['schemas']['StepState'];
+      /** Epoch */
+      epoch?: number | null;
+      /** Epochs */
+      epochs?: number | null;
+      failure?: components['schemas']['FailureCode'] | null;
+    };
     /**
      * Scope
      * @description What an API key may do (mirrored by api_key_scopes_scope_check). Separate from Action: a key is
@@ -4231,6 +4258,17 @@ export interface components {
     StatusBody: {
       status: components['schemas']['PackageStatus'];
     };
+    /**
+     * StepKey
+     * @description The steps a customer sees for a training run, in order.
+     * @enum {string}
+     */
+    StepKey: 'queued' | 'training' | 'finished';
+    /**
+     * StepState
+     * @enum {string}
+     */
+    StepState: 'pending' | 'active' | 'done' | 'failed' | 'cancelled';
     /** Tables */
     Tables: {
       /** Csv Max Rows */
@@ -4684,14 +4722,19 @@ export interface components {
         [key: string]: number;
       };
     };
-    /** TestCall */
+    /**
+     * TestCall
+     * @description One console prediction of a deployment (source=console): the try-it log is a filtered list of stored predictions.
+     */
     TestCall: {
       /** Id */
-      id: number;
+      id: string;
+      status: components['schemas']['PredictionStatus'];
       /** Request */
       request: unknown;
       /** Response */
       response: unknown;
+      error?: components['schemas']['PredictionError'] | null;
       /** Latency Ms */
       latency_ms: number | null;
       /**
@@ -4699,13 +4742,6 @@ export interface components {
        * Format: date-time
        */
       created_at: string;
-    };
-    /** TestCallResult */
-    TestCallResult: {
-      /** Response */
-      response: unknown;
-      /** Latency Ms */
-      latency_ms: number;
     };
     /**
      * TextPreprocessing
@@ -4818,33 +4854,6 @@ export interface components {
       model_version: components['schemas']['LineageModel'] | null;
       deployment: components['schemas']['RunDeployment'] | null;
     };
-    /**
-     * FailureCode
-     * @description The closed set of a failed report's `code`; mirrors ray_core/constants.py FailCode. Anything else reads as internal.
-     * @enum {string}
-     */
-    FailureCode: 'oom' | 'bad_data' | 'unsupported' | 'timeout' | 'internal';
-    /** RunStep */
-    RunStep: {
-      key: components['schemas']['StepKey'];
-      state: components['schemas']['StepState'];
-      /** Epoch */
-      epoch?: number | null;
-      /** Epochs */
-      epochs?: number | null;
-      failure?: components['schemas']['FailureCode'] | null;
-    };
-    /**
-     * StepKey
-     * @description The steps a customer sees for a training run, in order.
-     * @enum {string}
-     */
-    StepKey: 'queued' | 'training' | 'finished';
-    /**
-     * StepState
-     * @enum {string}
-     */
-    StepState: 'pending' | 'active' | 'done' | 'failed' | 'cancelled';
     /** TrainingRunSteps */
     TrainingRunSteps: {
       /** Status */
@@ -7951,8 +7960,9 @@ export interface operations {
   };
   create_deployment_v1_projects__project_id__deployments_post: {
     parameters: {
-      query: {
-        training_run_id: string;
+      query?: {
+        model_version_id?: string | null;
+        training_run_id?: string | null;
         acknowledge_risk?: boolean;
       };
       header: {
@@ -8233,41 +8243,6 @@ export interface operations {
       };
     };
   };
-  test_deployment_v1_projects__project_id__deployments__deployment_id__test_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        deployment_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['TestCallResult'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
   list_test_calls_v1_projects__project_id__deployments__deployment_id__test_calls_get: {
     parameters: {
       query?: {
@@ -8349,6 +8324,8 @@ export interface operations {
         Accept?: string | null;
         'x-project-id'?: string | null;
         'x-model-id'?: string | null;
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
       };
       path?: never;
       cookie?: never;
@@ -8671,6 +8648,7 @@ export interface operations {
     parameters: {
       query: {
         stage: string;
+        acknowledge_risk?: boolean;
       };
       header?: {
         'x-tenant-id'?: string | null;

@@ -1026,7 +1026,7 @@
   },
   "models": {
     "title": "Models",
-    "subtitle": "Model versions registered from this project's training runs. Publish them or move them between stages.",
+    "subtitle": "Model versions registered from this project's training runs. Promote one to start serving it, or roll back to an older one.",
     "loadFailed": "Could not load the models",
     "retry": "Try again",
     "empty": {
@@ -1037,18 +1037,38 @@
       "model": "Model",
       "stage": "Stage",
       "publish": "Publish",
-      "created": "Registered"
+      "created": "Registered",
+      "serving": "Serving"
     },
     "version": "Version {{version}}",
     "stage": {
       "None": "No stage",
-      "Staging": "Staging",
-      "Production": "Production",
+      "Staging": "Candidate",
+      "Production": "Serving",
       "Archived": "Archived"
     },
     "publish": {
       "on": "Include in sharing",
       "off": "Leave out of sharing"
+    },
+    "serving": {
+      "now": "Answering this model's calls",
+      "promote": "Promote to Production",
+      "rollback": "Roll back to this version",
+      "retry": "Try again",
+      "deploying": "Deploying. The current version keeps serving until this one is ready.",
+      "riskAccept": "I understand, promote anyway"
+    },
+    "error": {
+      "live": "This version is serving. Promote another version to replace it.",
+      "inProgress": "Another version of this model is being promoted. Wait for it to finish.",
+      "notDeployable": "This version has no model to deploy.",
+      "risk": "This run has no score on a held-out test set, or its score is below the recommended minimum. It may do worse on new data than it looks.",
+      "tooMany": "Your plan's limit of live deployments is reached. Stop or delete one first. The current version is still serving.",
+      "noModel": "The model for this version is not available. The current version is still serving.",
+      "stopped": "This model's endpoint is stopped. Start it first. The current version is still serving.",
+      "exists": "This version already has a deployment.",
+      "promotionFailed": "The promotion did not finish. The current version is still serving. Try again."
     }
   },
   "deployments": {
@@ -1105,14 +1125,14 @@
     "deploy": {
       "open": "Deploy",
       "view": "View deployment",
-      "title": "Deploy this run",
+      "title": "Deploy this run's model",
       "description": "Serve this run's model from an endpoint your apps can call.",
       "risk": "This run has no score on a held-out test set, or its score is below the recommended minimum. It may do worse on new data than it looks.",
       "riskAccept": "I understand, deploy anyway",
       "cancel": "Cancel",
       "confirm": "Deploy",
       "doneTitle": "Deployment started",
-      "started": "The endpoint is live. Call it from the deployment's Integration tab.",
+      "started": "The deployment is ready. Call it from the deployment's Integration tab.",
       "keyLabel": "Deployment key",
       "copyKey": "Copy key",
       "keyOnce": "Copy this key now. It will not be shown again.",
@@ -1143,14 +1163,16 @@
       "title": "Try it",
       "notServing": "Start the endpoint to try it.",
       "body": "Request body",
-      "bodyHelp": "JSON sent to the model as is. No key needed here.",
+      "bodyHelp": "JSON sent to the model as is. It is a real call to the model made with your sign-in, so no key is needed here.",
       "notJson": "This is not valid JSON.",
       "notObject": "The body must be a JSON object.",
       "send": "Send",
       "response": "Response",
       "latency": "{{value}} ms",
-      "recent": "Recent calls",
-      "noCalls": "No test calls yet."
+      "recent": "Recent calls from here",
+      "noCalls": "No calls from here yet.",
+      "usage": "This call counts toward your usage, like any other.",
+      "equivalent": "The same call from your own code"
     },
     "toast": {
       "stopFailed": "Could not stop the deployment",
@@ -1162,7 +1184,7 @@
       "notDeployable": "This run has no model to deploy. Only a finished run can be deployed.",
       "risk": "Confirm that you want to deploy a run that was not tested.",
       "tooMany": "Your plan's limit of live deployments is reached. Stop or delete one first.",
-      "exists": "This run is already deployed.",
+      "exists": "This model version is already deployed.",
       "keyReused": "This request was already sent with different details. Close the dialog and try again.",
       "invalidTransition": "The deployment changed in the meantime. The page now shows where it stands.",
       "notActive": "The endpoint is not live yet.",

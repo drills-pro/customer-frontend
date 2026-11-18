@@ -15,8 +15,9 @@ export interface CallExample {
   response: unknown;
 }
 
-/** The public call for a deployment: the same request in curl, Python and JavaScript, built from the API base the app talks to. */
-export function buildCall(apiUrl: string, projectId: string, schema: DeploymentSchema): CallExample {
+/** The public call for a deployment: the same request in curl, Python and JavaScript, built from the API base the app talks to. The
+ * body is `input` when given (what the Test tab sends), else a placeholder per input field. */
+export function buildCall(apiUrl: string, projectId: string, schema: DeploymentSchema, input?: unknown): CallExample {
   const endpoint = `${apiUrl.replace(/\/+$/, '')}/v1/predict`;
   const headers: Record<string, string> = {
     Authorization: `Bearer ${KEY_PLACEHOLDER}`,
@@ -25,7 +26,7 @@ export function buildCall(apiUrl: string, projectId: string, schema: DeploymentS
     'X-Model-Revision': schema.model_revision,
     'Content-Type': 'application/json',
   };
-  const body = { input: Object.fromEntries(Object.keys(schema.input).map((field) => [field, '<your data>'])) };
+  const body = input ?? { input: Object.fromEntries(Object.keys(schema.input).map((field) => [field, '<your data>'])) };
   const request = body;
   const response = {
     id: '<prediction id>',

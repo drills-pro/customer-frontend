@@ -43,17 +43,18 @@ export function useDeployment(projectId: string, deploymentId: string) {
   });
 }
 
-/** Deploy a run. The key is made once per attempt by the caller, so a retry replays the first answer instead of minting a second
- * deployment. `acknowledgeRisk` is sent once the person accepted that a run without a test split has unchecked scores. */
+/** Deploy a model version (one deployment serves exactly one). `runId` is the run it came from, whose lineage is refetched. The key is
+ * made once per attempt by the caller, so a retry replays the first answer instead of minting a second deployment. `acknowledgeRisk` is
+ * sent once the person accepted that a run without a test split has unchecked scores. */
 export function useCreateDeployment(workspaceId: string, projectId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ runId, key, acknowledgeRisk }: { runId: string; key: string; acknowledgeRisk: boolean }) =>
+    mutationFn: ({ versionId, key, acknowledgeRisk }: { versionId: string; runId: string; key: string; acknowledgeRisk: boolean }) =>
       unwrap(
         client.POST('/v1/projects/{project_id}/deployments', {
           params: {
             path: { project_id: projectId },
-            query: { training_run_id: runId, acknowledge_risk: acknowledgeRisk },
+            query: { model_version_id: versionId, acknowledge_risk: acknowledgeRisk },
             header: { [IDEMPOTENCY_HEADER]: key },
           },
         }),
@@ -107,15 +108,18 @@ export function useDeploymentSchema(projectId: string, deploymentId: string, ena
   });
 }
 
-/** The in-app "try it": sends the body as the model's input, with the signed-in session instead of a key. */
+/** The in-app "try it": the real POST /v1/predict, with the signed-in session instead of a key. The call is stored, tagged as made from
+ * the console, and counts toward usage like any other. `model` is what the deployment's schema names (`model_id`, `model_revision`). */
 export function useTestDeployment(projectId: string, deploymentId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: Record<string, unknown>) =>
+    mutationFn: ({ model, body }: { model: Pick<DeploymentSchema, 'model_id' | 'model_revision'>; body: Record<string, unknown> }) =>
       unwrap(
-        client.POST('/v1/projects/{project_id}/deployments/{deployment_id}/test', {
-          params: deploymentPath(projectId, deploymentId),
-          // The API reads any JSON object; the spec leaves the body untyped.
+        client.POST('/v1/predict', {
+          params: {
+            header: { 'X-Model-Id': model.model_id, 'X-Model-Revision': model.model_revision, 'x-project-id': projectId },
+          },
+          // The route reads the JSON body itself; the spec leaves it untyped.
           body: body as never,
         }),
       ),
@@ -123,7 +127,7 @@ export function useTestDeployment(projectId: string, deploymentId: string) {
   });
 }
 
-/** The latest test calls, newest first. */
+/** The latest console predictions of the deployment (the try-it log), newest first. */
 export function useTestCalls(projectId: string, deploymentId: string) {
   return useQuery({
     queryKey: testCallsKey(projectId, deploymentId),

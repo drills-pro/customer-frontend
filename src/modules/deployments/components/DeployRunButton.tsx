@@ -12,7 +12,7 @@ import { newIdempotencyKey } from '@/shared/api/idempotency';
 const DEPLOYMENT_PATH = '/w/$slug/projects/$projectId/deployments/$deploymentId';
 const REDEPLOYABLE: readonly string[] = [DeploymentStatus.Deleted, DeploymentStatus.Failed];
 
-/** On a finished run: deploy its model, or open the deployment it already has. The dialog asks first; a run with no test split, or
+/** On a finished run: deploy its model version, or open the deployment it already has. The dialog asks first; a run with no test split, or
  * one scored below the task's quality floor, needs the person to accept that risk. The new endpoint's key is shown once. */
 export function DeployRunButton({ projectId, runId }: { projectId: string; runId: string }) {
   const { t } = useTranslation();
@@ -26,6 +26,8 @@ export function DeployRunButton({ projectId, runId }: { projectId: string; runId
   const [created, setCreated] = useState<DeploymentCreated | null>(null);
   // Lineage answers the run's newest deployment in any status; a deleted or failed one can be deployed again.
   const newest = lineage.data?.deployment;
+  // A deployment serves one model version: the one this run registered.
+  const versionId = lineage.data?.model_version?.id;
   const existing = newest && !REDEPLOYABLE.includes(newest.status) ? newest : null;
 
   const reset = () => {
@@ -36,7 +38,7 @@ export function DeployRunButton({ projectId, runId }: { projectId: string; runId
   };
   const deploy = () =>
     create.mutate(
-      { runId, key, acknowledgeRisk: acknowledged },
+      { versionId: versionId ?? '', runId, key, acknowledgeRisk: acknowledged },
       {
         onSuccess: setCreated,
         // A refused attempt is over: the next click is a new one.
@@ -56,7 +58,7 @@ export function DeployRunButton({ projectId, runId }: { projectId: string; runId
         </Button>
       ) : (
         // Outline: the project header holds the screen's one solid button.
-        <Button size="sm" onClick={() => setOpen(true)} loading={lineage.isPending} data-testid="training-run-deploy">
+        <Button size="sm" onClick={() => setOpen(true)} loading={lineage.isPending} disabled={!versionId} data-testid="training-run-deploy">
           <Upload />
           {t('deployments.deploy.open')}
         </Button>

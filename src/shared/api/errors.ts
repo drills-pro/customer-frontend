@@ -20,3 +20,18 @@ export function errorKey(e: unknown): string {
       return 'error.generic';
   }
 }
+
+/**
+ * A module's error-to-key mapper: the problem `code` first (its table), then the status fallbacks the module names, then `errorKey`.
+ * The server's text is never shown.
+ */
+export function problemErrorKey<C extends string>(byCode: Record<C, string>, byStatus: Partial<Record<number, string>> = {}) {
+  return (e: unknown): string => {
+    if (e instanceof ApiError) {
+      if (e.code !== undefined && e.code in byCode) return byCode[e.code as C];
+      const fallback = byStatus[e.status];
+      if (fallback !== undefined) return fallback;
+    }
+    return errorKey(e);
+  };
+}

@@ -1,5 +1,6 @@
 import { queryOptions, useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { client, unwrap, type Schemas } from '@/shared/api/client';
+import { IDEMPOTENCY_HEADER } from '@/shared/api/idempotency';
 
 export type Me = Schemas['Me'];
 export type WorkspaceSummary = Schemas['TenantSummary'];
@@ -43,7 +44,7 @@ export function useCreateWorkspace() {
   const refresh = useRefresh();
   return useMutation({
     mutationFn: ({ name, slug, key }: { name: string; slug: string; key: string }) =>
-      unwrap(client.POST('/v1/tenants', { params: { header: { 'Idempotency-Key': key } }, body: { name, slug } })),
+      unwrap(client.POST('/v1/tenants', { params: { header: { [IDEMPOTENCY_HEADER]: key } }, body: { name, slug } })),
     onSuccess: refresh,
   });
 }

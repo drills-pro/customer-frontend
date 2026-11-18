@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { canImport, HF_REPO, HF_REVISION, ImportSource, ImportStatus, isTabular, Split } from '@/modules/datasets/constants';
 import { EMPTY_FORM, formErrors, toImportBody, type ImportFormValues } from '@/modules/datasets/import-form';
-import { nextPoll, STATUS_UI } from '@/modules/datasets/status';
+import { STATUS_UI } from '@/modules/datasets/status';
 import { POLL_BASE_MS, POLL_MAX_MS, pollDelay } from '@/shared/api/poll';
 
 const ALL = Object.values(ImportStatus);
@@ -38,13 +38,8 @@ test.describe('status to UI', () => {
 });
 
 test.describe('polling schedule', () => {
-  test('gives a delay while moving and stops otherwise', () => {
-    for (const s of ALL) {
-      const next = nextPoll(s, 0);
-      if (STATUS_UI[s].poll) expect(next).toBe(POLL_BASE_MS);
-      else expect(next).toBe(false);
-    }
-    expect(nextPoll(undefined, 0)).toBe(false);
+  test('the first poll waits the base delay', () => {
+    expect(pollDelay(0)).toBe(POLL_BASE_MS);
   });
 
   test('backs off and caps', () => {

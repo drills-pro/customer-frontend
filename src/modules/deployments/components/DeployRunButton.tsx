@@ -7,6 +7,7 @@ import { DeploymentStatus } from '@/modules/projects';
 import { useWorkspace } from '@/modules/workspaces';
 import { useCreateDeployment, useRunLineage, type DeploymentCreated } from '@/modules/deployments/api';
 import { deploymentErrorKey, isRisk } from '@/modules/deployments/errors';
+import { newIdempotencyKey } from '@/shared/api/idempotency';
 
 const DEPLOYMENT_PATH = '/w/$slug/projects/$projectId/deployments/$deploymentId';
 const REDEPLOYABLE: readonly string[] = [DeploymentStatus.Deleted, DeploymentStatus.Failed];
@@ -20,7 +21,7 @@ export function DeployRunButton({ projectId, runId }: { projectId: string; runId
   const create = useCreateDeployment(workspaceId, projectId);
   const [open, setOpen] = useState(false);
   // One key per attempt: a double click or a network retry replays the first answer instead of minting a second deployment.
-  const [key, setKey] = useState(() => crypto.randomUUID());
+  const [key, setKey] = useState(newIdempotencyKey);
   const [acknowledged, setAcknowledged] = useState(false);
   const [created, setCreated] = useState<DeploymentCreated | null>(null);
   // Lineage answers the run's newest deployment in any status; a deleted or failed one can be deployed again.
@@ -29,7 +30,7 @@ export function DeployRunButton({ projectId, runId }: { projectId: string; runId
 
   const reset = () => {
     create.reset();
-    setKey(crypto.randomUUID());
+    setKey(newIdempotencyKey());
     setAcknowledged(false);
     setCreated(null);
   };
@@ -39,7 +40,7 @@ export function DeployRunButton({ projectId, runId }: { projectId: string; runId
       {
         onSuccess: setCreated,
         // A refused attempt is over: the next click is a new one.
-        onError: () => setKey(crypto.randomUUID()),
+        onError: () => setKey(newIdempotencyKey()),
       },
     );
   const risk = create.isError && isRisk(create.error);

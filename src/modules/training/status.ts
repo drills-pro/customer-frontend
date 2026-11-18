@@ -1,6 +1,5 @@
 import { CheckboxOn, Clock, Close, Loader, WarningDiamond } from 'pixelarticons/react';
 import { TrainingStatus } from '@/modules/projects';
-import { pollDelay } from '@/shared/api/poll';
 import type { PixelIcon } from '@/shared/ui/icons';
 
 export type StatusPalette = 'gray' | 'info' | 'success' | 'danger';
@@ -26,7 +25,3 @@ export const STATUS_UI: Record<TrainingStatus, StatusUi> = {
 /** The API types `status` as a plain string; an unknown one reads as still moving, so the page keeps asking. */
 export const isStatus = (status: string): status is TrainingStatus => status in STATUS_UI;
 export const statusUi = (status: string): StatusUi => (isStatus(status) ? STATUS_UI[status] : STATUS_UI[TrainingStatus.Running]);
-
-/** TanStack's `refetchInterval` value for a run: a delay while its status is moving, `false` (stop) otherwise. */
-export const nextRunPoll = (status: string | undefined, answers: number): number | false =>
-  status !== undefined && statusUi(status).poll ? pollDelay(answers) : false;

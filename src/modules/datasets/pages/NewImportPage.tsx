@@ -1,31 +1,29 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Alert, Box, Button, Field, FileUpload, Heading, Input, Progress, Skeleton, Stack, Text } from '@chakra-ui/react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { Upload } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { RadioButton, RadioButtonGroup } from '@/components/radio-button-group';
 import { SimpleSelect } from '@/components/simple-select';
-import { useCreateImport, useDataset, useImportAction, useVersions, useWriteDenied, type DatasetImport } from '@/modules/datasets/api';
+import { useDataset, useSubmitImport, useVersions, useWriteDenied, type SubmitStage } from '@/modules/datasets/api';
 import { LoadError } from '@/modules/datasets/components/LoadError';
 import { canImport, HF_DEFAULT_REVISION, IMPORT_SOURCES, ImportSource, isTabular, SPLITS, type Split } from '@/modules/datasets/constants';
-import { datasetErrorKey, isConflict } from '@/modules/datasets/errors';
+import { datasetErrorKey, UploadFailed, UploadLinkLost } from '@/modules/datasets/errors';
 import { EMPTY_FORM, formErrors, toImportBody, type ImportFormValues } from '@/modules/datasets/import-form';
 import { useWorkspace } from '@/modules/workspaces';
-import { putFile } from '@/shared/api/upload';
 
 const FROM = '/app/w/$slug/projects/$projectId/datasets/$datasetId/imports/new';
 const NO_SPLIT = 'none';
 const UPLOAD_ACCEPT = { tabular: '.csv,text/csv', archive: '.zip,application/zip' };
 
-/** One attempt at making an import. The key is reused by every retry of the same request and replaced as soon as the request changes. */
-interface Attempt {
-  key: string;
-  signature: string;
-  created?: DatasetImport;
-  uploaded: boolean;
-}
+type Stage = 'idle' | SubmitStage;
 
-type Stage = 'idle' | 'creating' | 'uploading' | 'starting';
+/** Upload failures have their own copy; every other error is the dataset mapping. */
+function submitErrorKey(e: unknown): string {
+  if (e instanceof UploadLinkLost) return 'datasets.newImport.uploadLinkLost';
+  if (e instanceof UploadFailed) return 'datasets.newImport.uploadFailed';
+  return datasetErrorKey(e);
+}
 
 /** Pick a source, fill in what it needs, then create the import, upload the file when there is one, and start it. */
 export function NewImportPage() {
@@ -36,9 +34,7 @@ export function NewImportPage() {
   const denied = useWriteDenied(projectId);
   const dataset = useDataset(projectId, datasetId);
   const versions = useVersions(projectId, datasetId);
-  const create = useCreateImport(projectId, datasetId);
-  const start = useImportAction(projectId, datasetId, 'start');
-  const cancel = useImportAction(projectId, datasetId, 'cancel');
+  const { submit, reset } = useSubmitImport(projectId, datasetId);
 
   const [values, setValues] = useState<ImportFormValues>(EMPTY_FORM);
   const [file, setFile] = useState<File | null>(null);
@@ -47,9 +43,6 @@ export function NewImportPage() {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
-  const attempt = useRef<Attempt | null>(null);
-  const abort = useRef<AbortController | null>(null);
-  useEffect(() => () => abort.current?.abort(), []);
 
   const shell = (body: ReactNode) => (
     <Stack gap="6">
@@ -97,44 +90,15 @@ export function NewImportPage() {
     setTouched(true);
     if (Object.keys(errors).length || !canImport(task)) return;
     const body = toImportBody(values, task, baseId);
-    const signature = JSON.stringify([body, file?.name, file?.size]);
-    if (attempt.current?.signature !== signature) attempt.current = { key: crypto.randomUUID(), signature, uploaded: false };
-    const a = attempt.current;
     setError(null);
     try {
-      if (!a.created) {
-        setStage('creating');
-        a.created = await create.mutateAsync({ body, key: a.key });
-      }
-      if (values.source === ImportSource.Upload && !a.uploaded && file) {
-        if (!a.created.upload_url) {
-          setError('datasets.newImport.uploadLinkLost');
-          return;
-        }
-        setStage('uploading');
-        setProgress(0);
-        abort.current = new AbortController();
-        try {
-          await putFile(a.created.upload_url, file, setProgress, abort.current.signal);
-        } catch {
-          setError('datasets.newImport.uploadFailed');
-          return;
-        }
-        a.uploaded = true;
-      }
-      setStage('starting');
-      try {
-        await start.mutateAsync(a.created.id);
-      } catch (e) {
-        // Someone else moved it: the import page shows the server's state.
-        if (!isConflict(e)) throw e;
-      }
+      const created = await submit({ body, file, onStage: setStage, onProgress: setProgress });
       await navigate({
         to: '/w/$slug/projects/$projectId/datasets/$datasetId/imports/$importId',
-        params: { slug, projectId, datasetId, importId: a.created.id },
+        params: { slug, projectId, datasetId, importId: created.id },
       });
     } catch (e) {
-      setError(datasetErrorKey(e));
+      setError(submitErrorKey(e));
     } finally {
       setStage('idle');
     }
@@ -142,10 +106,8 @@ export function NewImportPage() {
 
   /** The upload link is gone or dead: cancel the half-made import (best effort) and begin again with a new key. */
   async function startOver() {
-    const created = attempt.current?.created;
-    attempt.current = null;
     setError(null);
-    if (created) await cancel.mutateAsync(created.id).catch(() => undefined);
+    await reset();
   }
 
   const accept = isTabular(task) ? UPLOAD_ACCEPT.tabular : UPLOAD_ACCEPT.archive;

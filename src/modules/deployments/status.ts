@@ -1,6 +1,5 @@
 import { CheckboxOn, Close, Loader, Pause, WarningDiamond } from 'pixelarticons/react';
 import { DeploymentStatus } from '@/modules/projects';
-import { pollDelay } from '@/shared/api/poll';
 import type { PixelIcon } from '@/shared/ui/icons';
 
 interface StatusUi {
@@ -28,7 +27,3 @@ export const STATUS_UI: Record<DeploymentStatus, StatusUi> = {
 /** The API types `status` as a plain string; an unknown one reads as still moving, so the page keeps asking. */
 export const isStatus = (status: string): status is DeploymentStatus => status in STATUS_UI;
 export const statusUi = (status: string): StatusUi => (isStatus(status) ? STATUS_UI[status] : STATUS_UI[DeploymentStatus.Deploying]);
-
-/** TanStack's `refetchInterval` value: a delay while the status is moving, `false` (stop) otherwise. */
-export const nextDeploymentPoll = (status: string | undefined, answers: number): number | false =>
-  status !== undefined && statusUi(status).poll ? pollDelay(answers) : false;

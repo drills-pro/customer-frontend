@@ -58,3 +58,6 @@ export const HF_DEFAULT_REVISION = 'main';
 
 /** A deleted dataset can be restored this long (DATASET_RETENTION_DAYS in core-api). */
 export const RETENTION_DAYS = 7;
+
+/** A 403 on a write latches "read only" for the project; it clears after this long so the next write re-checks the permission. */
+export const WRITE_DENIED_RECHECK_MS = 60_000;

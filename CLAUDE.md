@@ -47,12 +47,12 @@ any module. Another module is imported only through its `index.ts` (`@/modules/w
 - `src/modules/members/`: `api.ts` (members and invitations), `routes.tsx` (`/w/$slug/members`, `/invite/$token`), `pages/`, `components/`.
 - `src/modules/projects/`: `api.ts` (project queries and mutations), `routes.tsx` (`/w/$slug/projects`, `/w/$slug/projects/new`, and `/w/$slug/projects/$projectId`:
   `ProjectLayout` with the header and section tabs around the overview and the datasets pages), `pipeline.ts` (the overview's stage states), `pages/`, `components/`.
-- `src/modules/datasets/`: `constants.ts` (the backend's statuses, sources, splits and problem codes, typed once), `status.ts` (status to UI table and the polling schedule), `api.ts`
-  (`useImport` polls while the status is moving), `import-form.ts` (validation and the create body), `errors.ts` (problem code to locale key), `routes.tsx`
+- `src/modules/datasets/`: `constants.ts` (the backend's statuses, sources, splits and problem codes, typed once), `status.ts` (status to UI table), `api.ts`
+  (`useImport` polls while the status is moving, `useSubmitImport` is the create, upload and start flow behind the new-import page), `import-form.ts` (validation and the create body), `errors.ts` (problem code to locale key), `routes.tsx`
   (`/w/$slug/projects/$projectId/datasets` and its dataset, new-import, import and version pages), `pages/`, `components/`. The file goes to storage
   through `src/shared/api/upload.ts`, not the API.
-- `src/modules/training/`: `constants.ts` (wizard steps, hyperparameters, seed bounds, problem codes), `status.ts` (run status to UI table and the polling schedule),
-  `api.ts` (presets, create with an `Idempotency-Key` per attempt, `useRuns`, `useRun` and `useRunLogs` poll while a run moves, `useRunOnce` for a clone, cancel),
+- `src/modules/training/`: `constants.ts` (wizard steps, hyperparameters, seed bounds, problem codes), `status.ts` (run status to UI table),
+  `api.ts` (presets, create with an `Idempotency-Key` per attempt, `useRuns` and `useRun` poll while a run moves, `useRunOnce` for a clone, cancel; the runs list read is `shared/api/overview.ts`),
   `run-form.ts` (validation against the preset's bounds, the create body, and a clone's values from a run's `config`), `report.ts` (reads the run's untrusted `report`:
   scores, confusion matrix, near duplicates, failure code), `format.ts` (run durations), `errors.ts`, `routes.tsx` (`/w/$slug/projects/$projectId/training`, the runs
   list and the project's Training tab, with `.../training/new`, a step wizard with a vertical step list at `xl` and `?clone=<run>` to start from a run, and
@@ -69,8 +69,10 @@ any module. Another module is imported only through its `index.ts` (`@/modules/w
   A route that is a level of the hierarchy sets `staticData: { crumb }` (`textCrumb('key')` or a small component that reads its params and the cached
   query, see `src/shared/ui/crumbs.tsx`); the shell breadcrumb renders the matched crumbs, so pages have no "Back to ..." links. Pages that sit under
   one record nest under a layout route for it (`$datasetId`), so its crumb is above each of them.
-- `src/shared/api/`: `client.ts` (openapi-fetch typed by `schema.d.ts`, Bearer middleware, `ApiError`, `unwrap`), `query.ts` (QueryClient, global 401 handler),
-  `errors.ts` (status to locale key), `poll.ts` (the backoff shared by pages that follow a server job). `src/shared/auth/manager.ts`: the OIDC `UserManager` (no React), so route guards and the API client can read the token.
+- `src/shared/api/`: `client.ts` (openapi-fetch typed by `schema.d.ts`, Bearer and `X-Tenant-Id` middleware, `ApiError`, `unwrap`), `query.ts` (QueryClient, global 401 handler),
+  `errors.ts` (status to locale key, and `problemErrorKey` for a module's problem codes), `poll.ts` (`usePolledQuery`, the backoff for pages that follow a server job),
+  `paged.ts` (`usePagedList` for infinite lists), `idempotency.ts` (`useIdempotencyKey`, one key per attempt), `overview.ts` (the training-runs and dataset-count reads that
+  the projects overview and the training pages share), `keys.ts` (query keys several modules read). `src/shared/auth/manager.ts`: the OIDC `UserManager` (no React), so route guards and the API client can read the token.
   `src/shared/ui/`: `StateScreen` (one Bit plus text), `Splash`, `NotFound`, `ErrorScreen`, `wizard.tsx` (the step header, sliding body, summary aside and review rows of a create flow).
 - `src/config.ts`: the only place that reads env.
 - `src/i18n.ts`, `src/locales/{en,th}.json`, `src/components/language-switcher.tsx`: react-i18next. `en` is bundled; other languages load lazily.
@@ -78,6 +80,7 @@ any module. Another module is imported only through its `index.ts` (`@/modules/w
 - `src/showcase/`: the component gallery at `/showcase` (lazy, `routes.tsx`), the theme list (`tenants.ts`) and `preview-theme.tsx` (the tenant preview switched in it).
 
 Data rules: `/v1/me` is the workspace list and carries each workspace's `capabilities`; gate UI with `useCan('tenant.admin')`, not roles (the API still decides).
+The active workspace reaches the API only through `WorkspaceProvider` (`setApiTenant`, sent as `X-Tenant-Id` on every request); no API call passes that header by hand.
 The URL carries the workspace slug (`/v1/me` returns it on every workspace); the API is still called by id (`workspace.id`). An old `/w/<uuid>` link redirects to the slug. Mutations that change a workspace invalidate `['me']`. Per-call `mutate(..., { onSuccess })` does
 not run once the page unmounts, so use `mutateAsync` when a refetch can swap the page away. Invitations are mailed by the backend (`email_sent`); with mail off (dev) the response carries the token and the dialog shows the link once.
 

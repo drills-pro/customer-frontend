@@ -5,6 +5,7 @@ src/brand/bit-sprites.js
 tokens/tokens.json
 .agents
 .claude/skills
+.claude/worktrees
 .codegraph
 skills-lock.json
 test-results

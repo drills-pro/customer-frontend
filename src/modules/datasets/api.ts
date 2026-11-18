@@ -1,9 +1,14 @@
-import { useRef } from 'react';
-import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
+import { keepPreviousData, useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { ApiError, client, unwrap, type Schemas } from '@/shared/api/client';
 import { datasetListKey, projectDatasetsKey } from '@/shared/api/keys';
-import { isForbidden } from '@/modules/datasets/errors';
-import { nextPoll } from '@/modules/datasets/status';
+import { IDEMPOTENCY_HEADER, newIdempotencyKey } from '@/shared/api/idempotency';
+import { usePagedList } from '@/shared/api/paged';
+import { usePolledQuery } from '@/shared/api/poll';
+import { putFile } from '@/shared/api/upload';
+import { ImportSource, WRITE_DENIED_RECHECK_MS } from '@/modules/datasets/constants';
+import { isConflict, isForbidden, UploadFailed, UploadLinkLost } from '@/modules/datasets/errors';
+import { STATUS_UI } from '@/modules/datasets/status';
 
 export type DatasetSummary = Schemas['DatasetSummary'];
 export type DatasetVersion = Schemas['DatasetVersion'];
@@ -22,9 +27,14 @@ export const importKey = (projectId: string, datasetId: string, importId: string
 const path = (projectId: string, datasetId: string) => ({ project_id: projectId, dataset_id: datasetId });
 
 const deniedKey = (projectId: string) => [...projectDatasetsKey(projectId), 'write-denied'] as const;
-/** A 403 on any write means this user cannot change the project's datasets: remember it so the pages disable their write actions. */
+/**
+ * A 403 on any write means this user cannot change the project's datasets: remember it so the pages disable their write actions.
+ * The latch clears after WRITE_DENIED_RECHECK_MS, so the next write re-checks the permission.
+ */
 const noteDenied = (qc: QueryClient, projectId: string) => (e: unknown) => {
-  if (isForbidden(e)) qc.setQueryData(deniedKey(projectId), true);
+  if (!isForbidden(e)) return;
+  qc.setQueryData(deniedKey(projectId), true);
+  setTimeout(() => qc.setQueryData(deniedKey(projectId), false), WRITE_DENIED_RECHECK_MS);
 };
 export function useWriteDenied(projectId: string) {
   return useQuery({ queryKey: deniedKey(projectId), queryFn: () => false, initialData: false, staleTime: Infinity, gcTime: Infinity }).data;
@@ -37,16 +47,12 @@ const onImportError = (qc: QueryClient, projectId: string, datasetId: string, im
 };
 
 export function useDatasets(projectId: string) {
-  const query = useInfiniteQuery({
-    queryKey: datasetListKey(projectId),
-    initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
-      unwrap(
-        client.GET('/v1/projects/{project_id}/datasets', { params: { path: { project_id: projectId }, query: { page_token: pageParam } } }),
-      ),
-    getNextPageParam: (page) => page.next_page_token ?? undefined,
-  });
-  return { ...query, datasets: query.data?.pages.flatMap((page) => page.items) };
+  const paged = usePagedList(datasetListKey(projectId), (pageToken) =>
+    unwrap(
+      client.GET('/v1/projects/{project_id}/datasets', { params: { path: { project_id: projectId }, query: { page_token: pageToken } } }),
+    ),
+  );
+  return { ...paged, datasets: paged.items };
 }
 
 export function useDataset(projectId: string, datasetId: string) {
@@ -105,52 +111,39 @@ export const useUnpublishDataset = (projectId: string) =>
   );
 
 export function useVersions(projectId: string, datasetId: string) {
-  const query = useInfiniteQuery({
-    queryKey: versionsKey(projectId, datasetId),
-    initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
-      unwrap(
-        client.GET('/v1/projects/{project_id}/datasets/{dataset_id}/versions', {
-          params: { path: path(projectId, datasetId), query: { page_token: pageParam } },
-        }),
-      ),
-    getNextPageParam: (page) => page.next_page_token ?? undefined,
-  });
-  return { ...query, versions: query.data?.pages.flatMap((page) => page.items) };
+  const paged = usePagedList(versionsKey(projectId, datasetId), (pageToken) =>
+    unwrap(
+      client.GET('/v1/projects/{project_id}/datasets/{dataset_id}/versions', {
+        params: { path: path(projectId, datasetId), query: { page_token: pageToken } },
+      }),
+    ),
+  );
+  return { ...paged, versions: paged.items };
 }
 
 /** Newest first. `pageSize: 1` is the dataset list's "latest import" cell. */
 export function useImports(projectId: string, datasetId: string, pageSize?: number) {
-  const query = useInfiniteQuery({
-    queryKey: importsKey(projectId, datasetId, pageSize),
-    initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
-      unwrap(
-        client.GET('/v1/projects/{project_id}/datasets/{dataset_id}/imports', {
-          params: { path: path(projectId, datasetId), query: { page_token: pageParam, page_size: pageSize } },
-        }),
-      ),
-    getNextPageParam: (page) => page.next_page_token ?? undefined,
-  });
-  return { ...query, imports: query.data?.pages.flatMap((page) => page.items) };
+  const paged = usePagedList(importsKey(projectId, datasetId, pageSize), (pageToken) =>
+    unwrap(
+      client.GET('/v1/projects/{project_id}/datasets/{dataset_id}/imports', {
+        params: { path: path(projectId, datasetId), query: { page_token: pageToken, page_size: pageSize } },
+      }),
+    ),
+  );
+  return { ...paged, imports: paged.items };
 }
 
-/** One import, polled while its status is moving (see `nextPoll`). The interval stops by itself on a settled status and on unmount. */
+/** One import, polled while its status is moving (see `STATUS_UI`). The interval stops by itself on a settled status and on unmount. */
 export function useImport(projectId: string, datasetId: string, importId: string) {
-  // Backoff counts this page's own fetches: answers seeded by the create and start calls must not make the first poll slow.
-  const fetches = useRef(0);
-  return useQuery({
+  return usePolledQuery<DatasetImport>({
     queryKey: importKey(projectId, datasetId, importId),
-    queryFn: () => {
-      fetches.current += 1;
-      return unwrap(
+    queryFn: () =>
+      unwrap(
         client.GET('/v1/projects/{project_id}/datasets/{dataset_id}/imports/{import_id}', {
           params: { path: { ...path(projectId, datasetId), import_id: importId } },
         }),
-      );
-    },
-    staleTime: 0,
-    refetchInterval: (query) => nextPoll(query.state.data?.status, fetches.current - 1),
+      ),
+    shouldPoll: (d) => d !== undefined && STATUS_UI[d.status].poll,
   });
 }
 
@@ -161,7 +154,7 @@ export function useCreateImport(projectId: string, datasetId: string) {
     mutationFn: ({ body, key }: { body: ImportCreate; key: string }) =>
       unwrap(
         client.POST('/v1/projects/{project_id}/datasets/{dataset_id}/imports', {
-          params: { path: path(projectId, datasetId), header: { 'Idempotency-Key': key } },
+          params: { path: path(projectId, datasetId), header: { [IDEMPOTENCY_HEADER]: key } },
           body,
         }),
       ),
@@ -195,6 +188,67 @@ export function useImportAction(projectId: string, datasetId: string, action: Im
     },
     onError: (e, importId) => onImportError(qc, projectId, datasetId, importId)(e),
   });
+}
+
+export type SubmitStage = 'creating' | 'uploading' | 'starting';
+
+interface SubmitArgs {
+  body: ImportCreate;
+  file: File | null;
+  onStage: (stage: SubmitStage) => void;
+  onProgress: (fraction: number) => void;
+}
+
+/**
+ * Create the import, upload its file when there is one, and start it. A retry of the same attempt reuses what already succeeded (the
+ * created import, the uploaded file) and its key, so nothing is made twice. `reset()` cancels the created import (best effort) and
+ * drops the attempt, so the next submit begins again.
+ */
+export function useSubmitImport(projectId: string, datasetId: string) {
+  const create = useCreateImport(projectId, datasetId);
+  const start = useImportAction(projectId, datasetId, 'start');
+  const cancel = useImportAction(projectId, datasetId, 'cancel');
+  /** One attempt at making an import. The key is reused by every retry of the same request and replaced as soon as the request changes. */
+  const attempt = useRef<{ key: string; signature: string; created?: DatasetImport; uploaded: boolean } | null>(null);
+  const abort = useRef<AbortController | null>(null);
+  useEffect(() => () => abort.current?.abort(), []);
+
+  async function submit({ body, file, onStage, onProgress }: SubmitArgs): Promise<DatasetImport> {
+    const signature = JSON.stringify([body, file?.name, file?.size]);
+    if (attempt.current?.signature !== signature) attempt.current = { key: newIdempotencyKey(), signature, uploaded: false };
+    const a = attempt.current;
+    if (!a.created) {
+      onStage('creating');
+      a.created = await create.mutateAsync({ body, key: a.key });
+    }
+    if (body.source === ImportSource.Upload && !a.uploaded && file) {
+      if (!a.created.upload_url) throw new UploadLinkLost();
+      onStage('uploading');
+      onProgress(0);
+      abort.current = new AbortController();
+      await putFile(a.created.upload_url, file, onProgress, abort.current.signal).catch(() => {
+        throw new UploadFailed();
+      });
+      a.uploaded = true;
+    }
+    onStage('starting');
+    try {
+      await start.mutateAsync(a.created.id);
+    } catch (e) {
+      // Someone else moved it: the import page shows the server's state.
+      if (!isConflict(e)) throw e;
+    }
+    return a.created;
+  }
+
+  /** Start over: the attempt is dropped at once; its created import is cancelled best effort, and a failure there is ignored. */
+  async function reset() {
+    const created = attempt.current?.created;
+    attempt.current = null;
+    if (created) await cancel.mutateAsync(created.id).catch(() => undefined);
+  }
+
+  return { submit, reset };
 }
 
 /** Commit makes version N+1 and moves the import to succeeded (or leaves it committing, which the poll follows). */

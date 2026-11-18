@@ -1,10 +1,11 @@
-import { useCallback, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { Alert, Box, Button, Card, Grid, Heading, HStack, Skeleton, Stack, Text, useBreakpointValue } from '@chakra-ui/react';
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { ChevronLeft, ChevronRight } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { useProjectDetail, type TaskType } from '@/modules/projects';
 import { useWorkspace } from '@/modules/workspaces';
+import { useIdempotencyKey } from '@/shared/api/idempotency';
 import { ReviewRows, StepHeading, SummaryCard, WizardBody, WizardSteps, type ReviewRow } from '@/shared/ui/wizard';
 import { useCreateRun, usePresets, useRunOnce, type TrainingRun } from '@/modules/training/api';
 import { DataStep, type DataChoice } from '@/modules/training/components/DataStep';
@@ -36,12 +37,6 @@ const MODEL = stepIndex('model');
 const SETTINGS = stepIndex('settings');
 const REVIEW = stepIndex('review');
 const EMPTY = '-';
-
-/** One attempt at starting a run. The key is reused by every retry of the same request and replaced as soon as the request changes. */
-interface Attempt {
-  key: string;
-  signature: string;
-}
 
 /** Choose the data, the preset and its settings, review, then start the run and follow it on its page. `?clone=<run>` starts from
  * that run's data, preset and settings; a run that is gone just means starting from the defaults. */
@@ -139,6 +134,8 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
   const presetDetails = usePresetDetails();
   const presetResources = usePresetResources();
   const create = useCreateRun(workspaceId, projectId);
+  // The key is reused by every retry of the same request and replaced as soon as the request changes.
+  const { keyFor } = useIdempotencyKey();
   const vertical = useBreakpointValue({ base: false, xl: true }) ?? false;
   const [step, setStep] = useState(DATA);
   const [data, setData] = useState<DataChoice | null>(() => cloneData(clone));
@@ -146,7 +143,6 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
     cloneValues(clone, presets, presets.find((p) => p.name === DEFAULT_PRESET) ?? presets[0], task),
   );
   const [error, setError] = useState<string | null>(null);
-  const attempt = useRef<Attempt | null>(null);
   const onData = useCallback((choice: DataChoice) => setData(choice), []);
 
   const preset = presets.find((p) => p.name === values.preset);
@@ -166,12 +162,10 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
   async function start() {
     if (!data?.versionId || !preset || !valid.every(Boolean)) return;
     const body = toRunBody({ ...values, versionId: data.versionId, preset }, task);
-    const signature = JSON.stringify(body);
-    const a = attempt.current?.signature === signature ? attempt.current : { key: crypto.randomUUID(), signature };
-    attempt.current = a;
+    const key = keyFor(JSON.stringify(body));
     setError(null);
     try {
-      const run = await create.mutateAsync({ body, key: a.key });
+      const run = await create.mutateAsync({ body, key });
       await navigate({ to: '/w/$slug/projects/$projectId/training/$runId', params: { slug, projectId, runId: run.id } });
     } catch (e) {
       setError(createErrorKey(e));

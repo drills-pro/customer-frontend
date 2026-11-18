@@ -37,12 +37,12 @@ For anything the specs do not cover, verify UI in a browser. Check size, spacing
 
 Feature modules under `src/modules/`, shared plumbing under `src/shared/`. Import across folders with the `@/` alias (`@/shared/ui/Splash`); `../` imports
 are banned (`pnpm lint:project`), `./x` stays for the same folder. Dependencies point one way: `shared` imports no module; `auth` imports shared only;
-`workspaces` imports auth and shared; `members` may import workspaces, auth and shared; `projects` may also import members (the team card reads the member list); `datasets` may also import projects (its routes hang under the project route); `models` and `deployments` may each import projects, workspaces, auth and shared; `training` may import models, deployments, datasets, projects, workspaces, auth and shared (not members), and nothing but the router imports it. `src/router.tsx`, `src/root-route.tsx` and `src/main.tsx` may import
+`workspaces` imports auth and shared; `members` may import workspaces, auth and shared; `projects` may also import members (the team card reads the member list); `datasets` may also import projects (its routes hang under the project route); `models` and `deployments` may each import projects, workspaces, auth and shared; `training` may import models, deployments, datasets, projects, workspaces, auth and shared (not members), and nothing but the router imports it; `trash` may import projects, datasets, workspaces, auth and shared, and nothing but the router imports it. `src/router.tsx`, `src/root-route.tsx` and `src/main.tsx` may import
 any module. Another module is imported only through its `index.ts` (`@/modules/workspaces`), never by deep path; inside its own module a file may use deep
 `@/modules/<name>/...` paths.
 
 - `src/modules/auth/`: `context.tsx` (`AuthProvider`, `useAuth`), `routes.tsx` (`/login`, `/signup`, `/auth/callback`), `pages/AuthPages.tsx`.
-- `src/modules/workspaces/`: `api.ts` (`me` and workspace queries and mutations), `context.tsx` (`useWorkspace`, `useCan`), `routes.tsx` (the sign-in guarded
+- `src/modules/workspaces/`: `api.ts` (`me` and workspace queries and mutations, and the ownership offer), `components/OwnershipCard.tsx` (the one transfer flow on the settings page: offer, expiry, Cancel and Resend, Accept and Decline), `context.tsx` (`useWorkspace`, `useCan`), `routes.tsx` (the sign-in guarded
   `app` route, `/`, `/new`, `/w/$slug` with overview and settings), `pages/`, `components/` (`AppShell`, `WorkspaceSwitcher`, `UserMenu`).
 - `src/modules/members/`: `api.ts` (members and invitations), `routes.tsx` (`/w/$slug/members`, `/invite/$token`), `pages/`, `components/`.
 - `src/modules/projects/`: `api.ts` (project queries and mutations), `routes.tsx` (`/w/$slug/projects`, `/w/$slug/projects/new`, and `/w/$slug/projects/$projectId`:
@@ -51,6 +51,7 @@ any module. Another module is imported only through its `index.ts` (`@/modules/w
   (`useImport` polls while the status is moving, `useSubmitImport` is the create, upload and start flow behind the new-import page), `import-form.ts` (validation and the create body), `errors.ts` (problem code to locale key), `routes.tsx`
   (`/w/$slug/projects/$projectId/datasets` and its dataset, new-import, import and version pages), `pages/`, `components/`. The file goes to storage
   through `src/shared/api/upload.ts`, not the API.
+- `src/modules/trash/`: `routes.tsx` (`/w/$slug/trash`), `pages/TrashPage.tsx` (deleted projects and datasets with their restore date, and Restore; reads are `useTrashedProjects` and `useTrashedDatasets`). Deleting a project or dataset moves it here (`DELETE`, then `:restore`); archiving a project only hides it.
 - `src/modules/training/`: `constants.ts` (wizard steps, hyperparameters, seed bounds, problem codes), `status.ts` (run status to UI table),
   `api.ts` (presets, create with an `Idempotency-Key` per attempt, `useRuns` and `useRun` poll while a run moves, `useRunOnce` for a clone, cancel; the runs list read is `shared/api/overview.ts`),
   `run-form.ts` (validation against the preset's bounds, the create body, and a clone's values from a run's `config`), `report.ts` (reads the run's untrusted `report`:

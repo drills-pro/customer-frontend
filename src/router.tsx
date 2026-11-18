@@ -9,6 +9,7 @@ import { membersRoute, inviteRoute } from '@/modules/members';
 import { modelRoutes } from '@/modules/models';
 import { projectsRoute } from '@/modules/projects';
 import { trainingRoutes } from '@/modules/training';
+import { trashRoute } from '@/modules/trash';
 import { appRoute, homeRoute, newRoute, overviewRoute, settingsRoute, workspaceRoute } from '@/modules/workspaces';
 import { rootRoute } from '@/root-route';
 import { showcaseHomeRoute, showcasePageRoute, showcaseRoute } from '@/showcase/routes';
@@ -25,6 +26,7 @@ const routeTree = rootRoute.addChildren([
       overviewRoute,
       projectsRoute(datasetsRoute, ...trainingRoutes, ...modelRoutes, ...deploymentsRoutes),
       membersRoute,
+      trashRoute,
       settingsRoute,
     ]),
     showcaseRoute.addChildren([showcaseHomeRoute, showcasePageRoute]),

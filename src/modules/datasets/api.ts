@@ -16,6 +16,7 @@ export type DatasetImport = Schemas['DatasetImport'];
 export type ImportCreate = Schemas['ImportCreate'];
 export type ImportReport = Schemas['ImportReport'];
 export type DatasetPreview = Schemas['DatasetPreview'];
+export type TrashedDataset = Schemas['TrashedDataset'];
 
 export const datasetKey = (projectId: string, datasetId: string) => [...projectDatasetsKey(projectId), datasetId] as const;
 const versionsKey = (projectId: string, datasetId: string) => [...datasetKey(projectId, datasetId), 'versions'] as const;
@@ -23,6 +24,9 @@ const importsKey = (projectId: string, datasetId: string, pageSize?: number) =>
   [...datasetKey(projectId, datasetId), 'imports', pageSize ?? 'all'] as const;
 export const importKey = (projectId: string, datasetId: string, importId: string) =>
   [...datasetKey(projectId, datasetId), 'import', importId] as const;
+
+/** Deleted datasets of every project the user can see. Not under a project's key, so it has its own prefix to invalidate. */
+const TRASH_KEY = 'datasets-trash';
 
 const path = (projectId: string, datasetId: string) => ({ project_id: projectId, dataset_id: datasetId });
 
@@ -79,6 +83,7 @@ function useDatasetMutation<V>(projectId: string, run: (datasetId: string, vars:
     mutationFn: ({ datasetId, ...vars }: { datasetId: string } & V) => run(datasetId, vars as V),
     onSuccess: (dataset) => {
       qc.setQueryData(datasetKey(projectId, dataset.id), dataset);
+      void qc.invalidateQueries({ queryKey: [TRASH_KEY] });
       return qc.invalidateQueries({ queryKey: datasetListKey(projectId) });
     },
     onError: noteDenied(qc, projectId),
@@ -89,6 +94,26 @@ export const useDeleteDataset = (projectId: string) =>
   useDatasetMutation<object>(projectId, (datasetId) =>
     unwrap(client.DELETE('/v1/projects/{project_id}/datasets/{dataset_id}', { params: { path: path(projectId, datasetId) } })),
   );
+
+export function useTrashedDatasets(workspaceId: string) {
+  const paged = usePagedList([TRASH_KEY, workspaceId], (pageToken) =>
+    unwrap(client.GET('/v1/datasets/trash', { params: { query: { page_token: pageToken } } })),
+  );
+  return { ...paged, datasets: paged.items };
+}
+
+/** Restore from the Trash, where the rows come from several projects: the project is a variable, not a hook argument. */
+export function useRestoreTrashedDataset() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ projectId, datasetId }: { projectId: string; datasetId: string }) =>
+      unwrap(client.POST('/v1/projects/{project_id}/datasets/{dataset_id}:restore', { params: { path: path(projectId, datasetId) } })),
+    onSuccess: (dataset, { projectId }) => {
+      void qc.invalidateQueries({ queryKey: [TRASH_KEY] });
+      return qc.invalidateQueries({ queryKey: projectDatasetsKey(projectId) });
+    },
+  });
+}
 
 export const useRestoreDataset = (projectId: string) =>
   useDatasetMutation<object>(projectId, (datasetId) =>

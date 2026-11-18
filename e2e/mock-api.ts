@@ -41,6 +41,13 @@ export interface DatasetRec {
   deleted_at: string | null;
   published_version_id: string | null;
 }
+export interface OfferRec {
+  from_sub: string;
+  to_sub: string;
+  step_down: boolean;
+  created_at: string;
+  expires_at: string;
+}
 export interface ImportRec {
   id: string;
   dataset_id: string;
@@ -194,6 +201,8 @@ export interface ApiState {
   /** The workspace's one project, PROJECT; any other id answers 404. */
   project: ProjectRec;
   projectMembers: ProjectMemberRec[];
+  /** The workspace's open ownership offer; its `status` is derived from `expires_at` against OFFER_NOW, as the API does. */
+  offer: OfferRec | null;
   runs: RunRec[];
   deployments: DeploymentRec[];
   /** A deploy without acknowledge_risk=true answers 409 deploy_risk_unacknowledged (the run has no test split). */
@@ -282,6 +291,7 @@ export const newState = (): ApiState => ({
     sharing: 'private',
   },
   projectMembers: [{ user_sub: 'me', roles: ['project_admin'], created_at: '2026-10-02T00:00:00Z' }],
+  offer: null,
   runs: [],
   deployments: [],
   deployRisk: false,
@@ -399,7 +409,12 @@ export const REPORT = {
 };
 
 const capabilities = (role: Role) =>
-  role === 'owner' ? ['tenant.admin', 'tenant.member.manage', 'tenant.delete', 'project.list'] : ['project.list'];
+  role === 'owner'
+    ? ['tenant.admin', 'tenant.member.manage', 'tenant.delete', 'tenant.transfer_ownership', 'project.list']
+    : ['project.list'];
+
+export const DELETED_AT = '2026-11-18T00:00:00Z';
+export const RESTORABLE_UNTIL = '2026-12-18T00:00:00Z';
 
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' };
 const json = (route: Route, status: number, body?: unknown) =>
@@ -408,6 +423,40 @@ const json = (route: Route, status: number, body?: unknown) =>
     headers: CORS,
     ...(body === undefined ? {} : { contentType: 'application/json', body: JSON.stringify(body) }),
   });
+
+/** What the API reads as "now" for an offer's expiry (the offer's own dates are set against it by the tests). */
+export const OFFER_NOW = '2026-11-18T00:00:00Z';
+const withStatus = (o: OfferRec) => ({ ...o, status: o.expires_at > OFFER_NOW ? 'pending' : 'expired' });
+
+/** GET, POST, DELETE of the workspace's one ownership offer and its :accept. The API shows an offer only to its two people and owners; the mock to everyone. */
+function offerRoutes(route: Route, state: ApiState, method: string, path: string, body: Record<string, unknown>) {
+  if (path.endsWith(':accept')) {
+    if (!state.offer || state.offer.expires_at <= OFFER_NOW) return json(route, 404, { code: 'not_found' });
+    const me = state.members.find((x) => x.user_sub === 'me');
+    if (me) me.role = 'owner';
+    const w = state.workspaces[0];
+    w.role = 'owner';
+    state.offer = null;
+    return json(route, 200, { user_sub: 'me', role: 'owner' });
+  }
+  if (method === 'POST') {
+    if (state.offer) return json(route, 409, { code: 'ownership_offer_pending' });
+    state.offer = {
+      from_sub: 'me',
+      to_sub: String(body.to_sub),
+      step_down: Boolean(body.step_down),
+      created_at: OFFER_NOW,
+      expires_at: '2026-11-25T00:00:00Z',
+    };
+    return json(route, 201, withStatus(state.offer));
+  }
+  if (!state.offer) return json(route, 404, { code: 'not_found' });
+  if (method === 'DELETE') {
+    state.offer = null;
+    return json(route, 204);
+  }
+  return json(route, 200, withStatus(state.offer));
+}
 
 /** Answer every API call from `state`, so no backend has to run. */
 export async function installApi(page: Page, state: ApiState) {
@@ -466,6 +515,7 @@ export async function installApi(page: Page, state: ApiState) {
       }
       return json(route, 200, w);
     }
+    if (/^\/v1\/tenants\/[^/:]+\/ownership-offer(:accept)?$/.test(path)) return offerRoutes(route, state, method, path, body);
     if (/^\/v1\/tenants\/[^/:]+\/members$/.test(path)) return json(route, 200, state.members);
     if ((m = path.match(/^\/v1\/tenants\/[^/:]+\/members\/(.+)$/))) {
       const sub = decodeURIComponent(m[1]);
@@ -738,11 +788,39 @@ function modelRoutes(route: Route, state: ApiState, method: string, path: string
   return json(route, 200, v);
 }
 
+/** PUT (replace roles) and DELETE of one project member; removing the only project_admin is the 409 `last_project_admin`, as for a non-owner caller. */
+function projectMemberRoute(route: Route, state: ApiState, method: string, sub: string, body: { roles?: string[] }) {
+  const admins = state.projectMembers.filter((x) => x.roles.includes('project_admin'));
+  const person = state.projectMembers.find((x) => x.user_sub === sub);
+  if (method === 'PUT') {
+    const roles = body.roles ?? [];
+    if (person && admins.length === 1 && admins[0] === person && !roles.includes('project_admin'))
+      return problem(route, 409, 'last_project_admin');
+    if (person) person.roles = roles;
+    else state.projectMembers.push({ user_sub: sub, roles, created_at: '2026-10-03T00:00:00Z' });
+    return json(route, 200, { project_id: PROJECT, user_sub: sub, roles });
+  }
+  if (!person) return problem(route, 404, 'not_found');
+  if (admins.length === 1 && admins[0] === person) return problem(route, 409, 'last_project_admin');
+  state.projectMembers = state.projectMembers.filter((x) => x !== person);
+  return json(route, 204);
+}
+
 /** /v1/projects and /v1/projects/{PROJECT} with its members, runs and deployments. Returns undefined when the path is not one of them. */
 function projectRoutes(route: Route, state: ApiState, method: string, path: string, req: ReturnType<Route['request']>) {
   if (path === '/v1/projects' && method === 'GET') {
     const { id, name, status, team_id, task_type, created_at } = state.project;
-    return json(route, 200, paginate([{ id, name, status, team_id, task_type, created_at }], req.url(), state.pageSize));
+    const live = status !== 'pending_delete' ? [{ id, name, status, team_id, task_type, created_at }] : [];
+    return json(route, 200, paginate(live, req.url(), state.pageSize));
+  }
+  if (path === '/v1/projects/trash') {
+    const { id, name, status, created_at } = state.project;
+    const gone = status === 'pending_delete' ? [{ id, name, created_at, deleted_at: DELETED_AT, restorable_until: RESTORABLE_UNTIL }] : [];
+    return json(route, 200, paginate(gone, req.url(), state.pageSize));
+  }
+  if (path === `/v1/projects/${PROJECT}:restore` && method === 'POST') {
+    state.project.status = 'active';
+    return json(route, 200, state.project);
   }
   const mr = modelRoutes(route, state, method, path, req);
   if (mr) return mr;
@@ -750,11 +828,17 @@ function projectRoutes(route: Route, state: ApiState, method: string, path: stri
   if (dr) return dr;
   const tr = trainingRoutes(route, state, method, path, req);
   if (tr) return tr;
+  const pm = path.match(new RegExp(`^/v1/projects/${PROJECT}/members/(.+)$`));
+  if (pm) return projectMemberRoute(route, state, method, decodeURIComponent(pm[1]), (req.postDataJSON() ?? {}) as { roles?: string[] });
   const m = path.match(/^\/v1\/projects\/([^/:]+)(\/[a-z-]+)?$/);
   if (!m) return undefined;
   if (m[1] !== PROJECT) return problem(route, 404, 'not_found');
   switch (m[2] ?? '') {
     case '': {
+      if (method === 'DELETE') {
+        state.project.status = 'pending_delete';
+        return json(route, 202, { id: PROJECT, status: 'pending_delete', deleted_at: DELETED_AT, restorable_until: RESTORABLE_UNTIL });
+      }
       const status = new URL(req.url()).searchParams.get('status');
       if (method === 'PATCH' && status) state.project.status = status as ProjectRec['status'];
       return json(route, 200, state.project);
@@ -846,6 +930,20 @@ function trainingRoutes(route: Route, state: ApiState, method: string, path: str
 
 /** /v1/projects/{PROJECT}/datasets/...: the dataset flows. Returns undefined when the path is not one of them. */
 function datasetRoutes(route: Route, state: ApiState, method: string, path: string, req: ReturnType<Route['request']>) {
+  if (path === '/v1/datasets/trash') {
+    const gone = state.datasets
+      .filter((d) => d.deleted_at)
+      .map((d) => ({
+        id: d.id,
+        name: d.name,
+        created_at: d.created_at,
+        deleted_at: d.deleted_at,
+        project_id: PROJECT,
+        project_name: state.project.name,
+        restorable_until: RESTORABLE_UNTIL,
+      }));
+    return json(route, 200, paginate(gone, req.url(), state.pageSize));
+  }
   const m = path.match(new RegExp(`^/v1/projects/${PROJECT}/datasets(?:/([^/:]+)(:restore|/.*)?)?$`));
   if (!m) return undefined;
   const [, id, rest = ''] = m;
@@ -871,7 +969,7 @@ function datasetRoutes(route: Route, state: ApiState, method: string, path: stri
 
   if (rest === '') {
     if (method === 'DELETE') d.deleted_at = '2026-10-26T00:00:00Z';
-    return json(route, method === 'DELETE' ? 202 : 200, d);
+    return json(route, method === 'DELETE' ? 202 : 200, { ...d, restorable_until: d.deleted_at ? RESTORABLE_UNTIL : null });
   }
   if (rest === ':restore') {
     d.deleted_at = null;

@@ -6,6 +6,7 @@ import { ApiError } from '@/shared/api/client';
 import { errorKey } from '@/shared/api/errors';
 import { useDeleteWorkspace, useRenameWorkspace, useWorkspaceDetail } from '@/modules/workspaces/api';
 import { toaster } from '@/components/toaster';
+import { OwnershipCard } from '@/modules/workspaces/components/OwnershipCard';
 import { useCan, useWorkspace } from '@/modules/workspaces/context';
 
 const NAME_MAX = 100;
@@ -172,6 +173,7 @@ export function SettingsPage() {
         {t('shell.settings')}
       </Heading>
       <General id={id} name={w.name} slug={w.slug} />
+      <OwnershipCard />
       {canDelete && <DangerZone id={id} name={w.name} />}
     </Stack>
   );

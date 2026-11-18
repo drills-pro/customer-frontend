@@ -1,7 +1,7 @@
 import { Fragment, useState, type ComponentType, type ReactNode } from 'react';
 import { Box, Breadcrumb, CloseButton, Drawer, Flex, HStack, IconButton, Portal, Stack } from '@chakra-ui/react';
 import { Link, useMatches } from '@tanstack/react-router';
-import { Briefcase, Layout, Menu, SettingsCog, Users } from 'pixelarticons/react';
+import { Briefcase, Layout, Menu, SettingsCog, Trash, Users } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { AppIcon, Wordmark } from '@/brand/Bit';
 import { LanguageSwitcher } from '@/components/language-switcher';
@@ -19,6 +19,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
     ...(canManage
       ? [{ id: 'members', to: '/w/$slug/members', label: t('shell.members'), icon: <Users width={20} height={20} />, exact: false }]
       : []),
+    { id: 'trash', to: '/w/$slug/trash', label: t('nav.trash'), icon: <Trash width={20} height={20} />, exact: false },
     { id: 'settings', to: '/w/$slug/settings', label: t('shell.settings'), icon: <SettingsCog width={20} height={20} />, exact: false },
   ] as const;
   return (

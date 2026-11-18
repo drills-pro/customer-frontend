@@ -1,5 +1,5 @@
 import { queryOptions, useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
-import { client, unwrap, type Schemas } from '@/shared/api/client';
+import { ApiError, client, unwrap, type Schemas } from '@/shared/api/client';
 import { IDEMPOTENCY_HEADER } from '@/shared/api/idempotency';
 
 export type Me = Schemas['Me'];
@@ -71,5 +71,74 @@ export function useRestoreWorkspace(id: string) {
   return useMutation({
     mutationFn: () => unwrap(client.POST('/v1/tenants/{tenant_id}:restore', { params: { path: { tenant_id: id } } })),
     onSuccess: refresh,
+  });
+}
+
+export type OwnershipOffer = Schemas['OwnershipOffer'];
+const offerKey = (id: string) => [...workspaceKey(id), 'ownership-offer'] as const;
+const offerParams = (id: string) => ({ params: { path: { tenant_id: id } } });
+
+/** The open ownership offer, or null when there is none (the API answers 404 to everyone but the two people involved and the owners). */
+export function useOwnershipOffer(id: string) {
+  return useQuery({
+    queryKey: offerKey(id),
+    queryFn: async () => {
+      try {
+        return await unwrap(client.GET('/v1/tenants/{tenant_id}/ownership-offer', offerParams(id)));
+      } catch (e) {
+        if (e instanceof ApiError && e.status === 404) return null;
+        throw e;
+      }
+    },
+  });
+}
+
+/** Members an owner can offer ownership to. Same key and shape as the members module's list, so both share one cache entry. */
+export function useOfferCandidates(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['workspace', id, 'members'],
+    queryFn: () => unwrap(client.GET('/v1/tenants/{tenant_id}/members', offerParams(id))),
+    enabled,
+  });
+}
+
+type OfferBody = { to_sub: string; step_down: boolean };
+
+export function useOfferOwnership(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: OfferBody) => unwrap(client.POST('/v1/tenants/{tenant_id}/ownership-offer', { ...offerParams(id), body })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: offerKey(id) }),
+  });
+}
+
+/** The offering owner withdraws the offer, or its recipient declines it. */
+export function useCancelOwnershipOffer(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => unwrap(client.DELETE('/v1/tenants/{tenant_id}/ownership-offer', offerParams(id))),
+    onSuccess: () => qc.invalidateQueries({ queryKey: offerKey(id) }),
+  });
+}
+
+/** Resend = withdraw the open (usually expired) offer and send the same one again, which starts a new expiry. */
+export function useResendOwnershipOffer(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: OfferBody) => {
+      await unwrap(client.DELETE('/v1/tenants/{tenant_id}/ownership-offer', offerParams(id)));
+      return unwrap(client.POST('/v1/tenants/{tenant_id}/ownership-offer', { ...offerParams(id), body }));
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: offerKey(id) }),
+  });
+}
+
+/** Accepting changes the user's role here, so /v1/me is refetched with the offer. */
+export function useAcceptOwnershipOffer(id: string) {
+  const refresh = useRefresh(id);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => unwrap(client.POST('/v1/tenants/{tenant_id}/ownership-offer:accept', offerParams(id))),
+    onSuccess: () => Promise.all([refresh(), qc.invalidateQueries({ queryKey: offerKey(id) })]),
   });
 }

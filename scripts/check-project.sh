@@ -33,18 +33,19 @@ if [ -n "$hits" ]; then echo "[internal-names] Locale text must not name backend
 # 7. Imports: the @/ alias, never ../ ; shared knows no module; modules depend one way and meet only through each other's index.
 rule relative "from '\.\./" "Use the @/ alias instead of a parent-relative import." src
 rule shared-modules "@/modules/" "src/shared must not import from modules." src/shared
-for m in auth workspaces members projects datasets training models deployments; do
+for m in auth workspaces members projects datasets training models deployments trash; do
   case $m in
-    auth) banned='workspaces|members|projects|datasets|training|models|deployments' ;;
-    workspaces) banned='members|projects|datasets|training|models|deployments' ;;
-    members) banned='projects|datasets|training|models|deployments' ;;
-    projects) banned='datasets|training|models|deployments' ;;
-    datasets) banned='members|training|models|deployments' ;;
-    training) banned='members' ;;
-    models) banned='members|datasets|training|deployments' ;;
-    deployments) banned='members|datasets|training|models' ;;
+    auth) banned='workspaces|members|projects|datasets|training|models|deployments|trash' ;;
+    workspaces) banned='members|projects|datasets|training|models|deployments|trash' ;;
+    members) banned='projects|datasets|training|models|deployments|trash' ;;
+    projects) banned='datasets|training|models|deployments|trash' ;;
+    datasets) banned='members|training|models|deployments|trash' ;;
+    training) banned='members|trash' ;;
+    models) banned='members|datasets|training|deployments|trash' ;;
+    deployments) banned='members|datasets|training|models|trash' ;;
+    trash) banned='members|training|models|deployments' ;;
   esac
-  for o in auth workspaces members projects datasets training models deployments; do
+  for o in auth workspaces members projects datasets training models deployments trash; do
     [ "$o" = "$m" ] && continue
     rule "deep-$m-$o" "@/modules/$o/" "Import another module through its index: '@/modules/$o'." src/modules/$m
   done

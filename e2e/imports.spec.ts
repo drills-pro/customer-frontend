@@ -27,7 +27,8 @@ test('walks create, upload, start, review, commit, publish', async ({ page, api 
 
   imp.status = 'running';
   await page.clock.runFor(3500);
-  await expect(page.getByTestId('import-status')).toHaveAttribute('data-status', 'running');
+  await expect(page.getByTestId('import-working')).toBeVisible();
+  await expect(page.getByTestId('import-status')).toHaveCount(0); // statuses show only when something failed
 
   imp.status = 'awaiting_review';
   imp.report = REPORT;
@@ -38,6 +39,7 @@ test('walks create, upload, start, review, commit, publish', async ({ page, api 
   await expect(page.getByTestId('preview-row')).toHaveCount(2);
   await expect(page.getByTestId('import-commit')).toBeVisible();
   await expect(page.getByTestId('import-discard')).toBeVisible();
+  await expect(page.getByTestId('import-status')).toHaveCount(0);
   await expect(page.getByTestId('import-cancel')).toHaveCount(0);
 
   await page.getByTestId('import-commit').click();

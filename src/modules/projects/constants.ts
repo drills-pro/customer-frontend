@@ -63,6 +63,9 @@ export { TRAINING_RUN_LIMIT } from '@/shared/api/overview';
 /** Runs still on their way to a result. */
 export const ACTIVE_TRAINING: readonly string[] = [TrainingStatus.Submitted, TrainingStatus.Running];
 
+/** The role that can manage the project's members; the API keeps at least one person in it. */
+export const ADMIN_ROLE = 'project_admin' as const satisfies ProjectRole;
+
 /** Project roles in the order the team card lists them; each is also its `projects.role.*` key. */
 export const PROJECT_ROLES = [
   'project_admin',

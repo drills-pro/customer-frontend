@@ -1,9 +1,11 @@
-import { Avatar, Badge, Box, Card, EmptyState, HStack, Skeleton, Stack, Text } from '@chakra-ui/react';
+import { useState } from 'react';
+import { Avatar, Badge, Box, Card, EmptyState, HStack, IconButton, Skeleton, Stack, Text } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
-import { Users } from 'pixelarticons/react';
+import { Trash, Users } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { useProjectMembers, type ProjectDetail } from '@/modules/projects/api';
-import { PROJECT_ROLES } from '@/modules/projects/constants';
+import { RemoveMemberDialog, type Person } from '@/modules/projects/components/RemoveMemberDialog';
+import { ADMIN_ROLE, PROJECT_ROLES } from '@/modules/projects/constants';
 import { membersQuery } from '@/modules/members';
 import { useCan, useMe, useWorkspace } from '@/modules/workspaces';
 
@@ -21,12 +23,25 @@ export function TeamCard({ project }: { project: ProjectDetail }) {
   const isAdmin = useCan('tenant.admin');
   const { data: members, isPending, isError } = useProjectMembers(workspace.id, project.id);
   const { data: people } = useQuery({ ...membersQuery(workspace.id), enabled: isAdmin });
+  const [removing, setRemoving] = useState<Person | null>(null);
 
   const nameOf = (sub: string) => {
     if (sub === me.sub) return me.name ?? me.email ?? t('projects.overview.team.you');
     const person = people?.find((p) => p.user_sub === sub);
     return person?.display_name ?? person?.email ?? sub.slice(0, SHORT_ID_LENGTH);
   };
+
+  const roster: Person[] = (members ?? []).map((m) => ({ sub: m.user_sub, name: nameOf(m.user_sub), roles: m.roles }));
+  // Who could be made admin first: every workspace member when we may read the list, else the project's own members.
+  const candidates: Person[] = people
+    ? people.map((p) => ({
+        sub: p.user_sub,
+        name: p.display_name ?? p.email ?? p.user_sub,
+        roles: members?.find((m) => m.user_sub === p.user_sub)?.roles ?? [],
+      }))
+    : roster;
+  // Hiding is a courtesy; the API decides. A workspace admin or one of the project's admins may manage the team.
+  const canManage = isAdmin || !!members?.find((m) => m.user_sub === me.sub)?.roles.includes(ADMIN_ROLE);
 
   return (
     <Card.Root variant="outline" data-testid="project-team">
@@ -80,6 +95,18 @@ export function TeamCard({ project }: { project: ProjectDetail }) {
                       ))}
                     </HStack>
                   </Box>
+                  {canManage && (
+                    <IconButton
+                      variant="ghost"
+                      size="xs"
+                      color="fg.muted"
+                      aria-label={t('projects.overview.team.remove.open', { name })}
+                      data-testid={`project-team-remove-${member.user_sub}`}
+                      onClick={() => setRemoving({ sub: member.user_sub, name, roles: member.roles })}
+                    >
+                      <Trash />
+                    </IconButton>
+                  )}
                 </HStack>
               );
             })}
@@ -89,6 +116,13 @@ export function TeamCard({ project }: { project: ProjectDetail }) {
           {t(`newProject.visibilityHelp.${project.visibility}`, { workspace: workspace.name })}
         </Text>
       </Card.Body>
+      <RemoveMemberDialog
+        workspaceId={workspace.id}
+        projectId={project.id}
+        target={removing}
+        candidates={candidates}
+        onClose={() => setRemoving(null)}
+      />
     </Card.Root>
   );
 }

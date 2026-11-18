@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useImports } from '@/modules/datasets/api';
 import { ImportStatusBadge } from '@/modules/datasets/components/ImportStatusBadge';
 import { LoadError } from '@/modules/datasets/components/LoadError';
+import { ImportStatus } from '@/modules/datasets/constants';
 
 /** Imports, newest first, each with a link to its page. */
 export function ImportsTab({
@@ -51,9 +52,7 @@ export function ImportsTab({
           <Table.Body>
             {imports.map((i) => (
               <Table.Row key={i.id} data-testid="import-row">
-                <Table.Cell>
-                  <ImportStatusBadge status={i.status} />
-                </Table.Cell>
+                <Table.Cell>{i.status === ImportStatus.Failed ? <ImportStatusBadge status={i.status} /> : '-'}</Table.Cell>
                 <Table.Cell>{t(`datasets.source.${i.source}`)}</Table.Cell>
                 <Table.Cell>{when(i.created_at)}</Table.Cell>
                 <Table.Cell textAlign="end">

@@ -20,5 +20,5 @@ export function useWorkspace(): WorkspaceSummary {
 }
 
 /** Capability strings come from /v1/me (e.g. 'tenant.admin'). Hiding is a courtesy; the API still decides. */
-export const useCan = (capability: 'tenant.admin' | 'tenant.member.manage' | 'tenant.delete') =>
+export const useCan = (capability: 'tenant.admin' | 'tenant.member.manage' | 'tenant.delete' | 'tenant.transfer_ownership') =>
   useWorkspace().capabilities.includes(capability);

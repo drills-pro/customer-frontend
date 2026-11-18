@@ -839,6 +839,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/projects/trash': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Trash */
+    get: operations['list_trash_v1_projects_trash_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/projects/{project_id}': {
     parameters: {
       query?: never;
@@ -1278,6 +1295,23 @@ export interface paths {
     };
     /** Preview Import */
     get: operations['preview_import_v1_projects__project_id__datasets__dataset_id__imports__import_id__preview_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/datasets/trash': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Trash */
+    get: operations['list_trash_v1_datasets_trash_get'];
     put?: never;
     post?: never;
     delete?: never;
@@ -2846,6 +2880,11 @@ export interface components {
       published_version_id: string | null;
       /** Data Categories */
       data_categories: components['schemas']['DataCategory'][];
+      /**
+       * Restorable Until
+       * @description When a deleted dataset is purged for good; None while it is live.
+       */
+      readonly restorable_until: string | null;
     };
     /** DatasetVersion */
     DatasetVersion: {
@@ -2884,6 +2923,16 @@ export interface components {
        */
       id: string;
       status: components['schemas']['ProjectStatus'];
+      /**
+       * Deleted At
+       * Format: date-time
+       */
+      deleted_at: string;
+      /**
+       * Restorable Until
+       * Format: date-time
+       */
+      readonly restorable_until: string;
     };
     /**
      * DeployStrategy
@@ -3596,6 +3645,12 @@ export interface components {
       /** Items */
       items: components['schemas']['JobEvent'][];
     };
+    /**
+     * OfferStatus
+     * @description Derived from expires_at, never stored: an expired offer stays readable until it is cancelled or replaced.
+     * @enum {string}
+     */
+    OfferStatus: 'pending' | 'expired';
     /** OrgOwner */
     OrgOwner: {
       /** User Id */
@@ -3628,6 +3683,7 @@ export interface components {
        * Format: date-time
        */
       expires_at: string;
+      readonly status: components['schemas']['OfferStatus'];
     };
     /** OwnershipOfferBody */
     OwnershipOfferBody: {
@@ -3690,6 +3746,20 @@ export interface components {
     Page_TenantAuditEntry_: {
       /** Items */
       items: components['schemas']['TenantAuditEntry'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
+    /** Page[TrashedDataset] */
+    Page_TrashedDataset_: {
+      /** Items */
+      items: components['schemas']['TrashedDataset'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
+    /** Page[TrashedProject] */
+    Page_TrashedProject_: {
+      /** Items */
+      items: components['schemas']['TrashedProject'][];
       /** Next Page Token */
       next_page_token?: string | null;
     };
@@ -4891,6 +4961,59 @@ export interface components {
       created_at: string;
       /** Completed At */
       completed_at: string | null;
+    };
+    /**
+     * TrashedDataset
+     * @description A deleted dataset in the Trash, with the project it came from.
+     */
+    TrashedDataset: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Name */
+      name: string;
+      /**
+       * Project Id
+       * Format: uuid
+       */
+      project_id: string;
+      /** Project Name */
+      project_name: string;
+      /**
+       * Deleted At
+       * Format: date-time
+       */
+      deleted_at: string;
+      /**
+       * Restorable Until
+       * Format: date-time
+       */
+      readonly restorable_until: string;
+    };
+    /**
+     * TrashedProject
+     * @description A project in the Trash: restorable until `restorable_until`.
+     */
+    TrashedProject: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Name */
+      name: string;
+      /**
+       * Deleted At
+       * Format: date-time
+       */
+      deleted_at: string;
+      /**
+       * Restorable Until
+       * Format: date-time
+       */
+      readonly restorable_until: string;
     };
     /** UsageEvent */
     UsageEvent: {
@@ -6760,6 +6883,41 @@ export interface operations {
       };
     };
   };
+  list_trash_v1_projects_trash_get: {
+    parameters: {
+      query?: {
+        page_size?: number;
+        page_token?: string | null;
+      };
+      header?: {
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Page_TrashedProject_'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   get_project_v1_projects__project_id__get: {
     parameters: {
       query?: never;
@@ -7911,6 +8069,41 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['DatasetPreview'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_trash_v1_datasets_trash_get: {
+    parameters: {
+      query?: {
+        page_size?: number;
+        page_token?: string | null;
+      };
+      header?: {
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Page_TrashedDataset_'];
         };
       };
       /** @description Validation Error */

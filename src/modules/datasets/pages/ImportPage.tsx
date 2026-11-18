@@ -49,7 +49,7 @@ export function ImportPage() {
           <Heading as="h2" textStyle="h2">
             {t('datasets.import.title')}
           </Heading>
-          <ImportStatusBadge status={item.status} />
+          {item.status === ImportStatus.Failed && <ImportStatusBadge status={item.status} />}
         </Flex>
         <HStack mt="1" gap="4" wrap="wrap" color="fg.muted">
           <Text>{t(`datasets.source.${item.source}`)}</Text>
@@ -92,6 +92,7 @@ function ImportBody({
   const [limit, setLimit] = useState(DEFAULT_PREVIEW_LIMIT);
   const preview = useImportPreview(projectId, datasetId, item.id, limit, ui.review);
   const { versions } = useVersions(projectId, datasetId);
+  const nextNumber = versions ? (versions[0]?.number ?? 0) + 1 : null;
   const made = item.status === ImportStatus.Succeeded ? versions?.find((v) => v.import_id === item.id) : undefined;
   const writeLocked = denied || Boolean(dataset.data?.deleted_at);
   const busy = cancel.isPending || discard.isPending || commit.isPending;
@@ -187,7 +188,7 @@ function ImportBody({
                 })
               }
             >
-              {t('datasets.import.commit')}
+              {nextNumber === null ? t('datasets.import.commit') : t('datasets.import.commitVersion', { number: nextNumber })}
             </Button>
             <Button
               loading={discard.isPending}

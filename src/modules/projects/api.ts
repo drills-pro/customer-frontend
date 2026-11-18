@@ -11,6 +11,7 @@ export type ProjectDetail = Schemas['ProjectDetail'];
 export type DefaultAccess = Schemas['DefaultAccess'];
 export type ProjectRole = Schemas['Role'];
 export type ProjectMember = Schemas['app__modules__user__projects__schemas__Member'];
+export type TrashedProject = Schemas['TrashedProject'];
 export type TrainingRunSummary = Schemas['TrainingRunSummary'];
 export type DeploymentListItem = Schemas['DeploymentListItem'];
 
@@ -103,9 +104,11 @@ export const useProject = (workspaceId: string, projectId: string) => useQuery(p
 /** For pages under the project layout, which renders them only once the project has loaded. */
 export const useProjectDetail = (workspaceId: string, projectId: string) => useSuspenseQuery(projectQuery(workspaceId, projectId)).data;
 
+const projectMembersKey = (workspaceId: string, projectId: string) => [...projectKey(workspaceId, projectId), 'members'] as const;
+
 export function useProjectMembers(workspaceId: string, projectId: string) {
   return useQuery({
-    queryKey: [...projectKey(workspaceId, projectId), 'members'],
+    queryKey: projectMembersKey(workspaceId, projectId),
     queryFn: () => unwrap(client.GET('/v1/projects/{project_id}/members', { params: { path: { project_id: projectId } } })),
   });
 }
@@ -116,3 +119,53 @@ export const fetchDeployments = (projectId: string) =>
 
 export const useDeployments = (workspaceId: string, projectId: string) =>
   useQuery({ queryKey: deploymentsKey(workspaceId, projectId), queryFn: () => fetchDeployments(projectId) });
+
+/** Deleted projects still inside their restore window. Under `projectsKey`, so a delete or restore refreshes the list and the Trash together. */
+export function useTrashedProjects(workspaceId: string) {
+  const paged = usePagedList([...projectsKey(workspaceId), 'trash'], (pageToken) =>
+    unwrap(client.GET('/v1/projects/trash', { params: { query: { page_token: pageToken } } })),
+  );
+  return { ...paged, projects: paged.items };
+}
+
+export function useDeleteProject(workspaceId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (projectId: string) => unwrap(client.DELETE('/v1/projects/{project_id}', { params: { path: { project_id: projectId } } })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: projectsKey(workspaceId) }),
+  });
+}
+
+export function useRestoreProject(workspaceId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (projectId: string) =>
+      unwrap(client.POST('/v1/projects/{project_id}:restore', { params: { path: { project_id: projectId } } })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: projectsKey(workspaceId) }),
+  });
+}
+
+/** Replace the person's roles on the project with exactly these. */
+export function useSetProjectMemberRoles(workspaceId: string, projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ sub, roles }: { sub: string; roles: ProjectRole[] }) =>
+      unwrap(
+        client.PUT('/v1/projects/{project_id}/members/{user_sub}', {
+          params: { path: { project_id: projectId, user_sub: sub } },
+          body: { roles },
+        }),
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: projectMembersKey(workspaceId, projectId) }),
+  });
+}
+
+/** 409 `last_project_admin` when the person is the project's only admin (a workspace owner or admin may still do it). */
+export function useRemoveProjectMember(workspaceId: string, projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (sub: string) =>
+      unwrap(client.DELETE('/v1/projects/{project_id}/members/{user_sub}', { params: { path: { project_id: projectId, user_sub: sub } } })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: projectMembersKey(workspaceId, projectId) }),
+  });
+}

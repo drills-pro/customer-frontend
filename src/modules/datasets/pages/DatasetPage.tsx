@@ -7,14 +7,13 @@ import { DatasetMenu } from '@/modules/datasets/components/DatasetMenu';
 import { ImportsTab } from '@/modules/datasets/components/ImportsTab';
 import { LoadError } from '@/modules/datasets/components/LoadError';
 import { VersionsTab } from '@/modules/datasets/components/VersionsTab';
-import { canImport, RETENTION_DAYS } from '@/modules/datasets/constants';
+import { canImport } from '@/modules/datasets/constants';
 import { taskLabel } from '@/modules/datasets/format';
 import { DATASET_TABS } from '@/modules/datasets/tabs';
 import { useWorkspace } from '@/modules/workspaces';
 import { ApiError } from '@/shared/api/client';
 import { NotFound } from '@/shared/ui/NotFound';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 const FROM = '/app/w/$slug/projects/$projectId/datasets/$datasetId/';
 
 /** One dataset: its versions and its imports, and the way to start a new import. */
@@ -39,7 +38,7 @@ export function DatasetPage() {
   const importable = canImport(dataset.task_type);
   const blocked = importable ? null : dataset.task_type === null ? 'datasets.import.noTask' : 'datasets.import.unsupportedTask';
   const importsDisabled = deleted || denied || !importable;
-  const restorableUntil = dataset.deleted_at ? date.format(new Date(new Date(dataset.deleted_at).getTime() + RETENTION_DAYS * DAY_MS)) : '';
+  const restorableUntil = dataset.restorable_until ? date.format(new Date(dataset.restorable_until)) : '';
   // The header holds the screen's primary action; the empty state repeats it as a secondary one.
   const newImport = (testId: string, variant: 'solid' | 'outline') => (
     <Button asChild variant={variant}>

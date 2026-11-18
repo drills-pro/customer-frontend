@@ -4,12 +4,11 @@ import { MoreVertical, Trash, Undo } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { toaster } from '@/components/toaster';
 import { useDeleteDataset, useRestoreDataset, type DatasetSummary } from '@/modules/datasets/api';
-import { RETENTION_DAYS } from '@/modules/datasets/constants';
 import { datasetErrorKey } from '@/modules/datasets/errors';
 
-/** Delete (after a confirmation, with an Undo toast for the 7-day window) or restore. `disabled` is the write-denied state. */
+/** Move to the Trash (after a confirmation, with an Undo toast for the restore window) or restore. `disabled` is the write-denied state. */
 export function DatasetMenu({ projectId, dataset, disabled }: { projectId: string; dataset: DatasetSummary; disabled?: boolean }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [confirming, setConfirming] = useState(false);
   const del = useDeleteDataset(projectId);
   const restore = useRestoreDataset(projectId);
@@ -27,11 +26,14 @@ export function DatasetMenu({ projectId, dataset, disabled }: { projectId: strin
   };
   const doDelete = async () => {
     try {
-      await del.mutateAsync({ datasetId: dataset.id });
+      const result = await del.mutateAsync({ datasetId: dataset.id });
       setConfirming(false);
+      const until = result.restorable_until
+        ? new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium' }).format(new Date(result.restorable_until))
+        : '';
       toaster.create({
         type: 'success',
-        title: t('datasets.toast.deleted', { name: dataset.name }),
+        title: t('datasets.toast.deleted', { name: dataset.name, date: until }),
         action: { label: t('datasets.undo'), onClick: () => void doRestore() },
       });
     } catch (e) {
@@ -85,7 +87,7 @@ export function DatasetMenu({ projectId, dataset, disabled }: { projectId: strin
                 <Dialog.Title>{t('datasets.delete.title', { name: dataset.name })}</Dialog.Title>
               </Dialog.Header>
               <Dialog.Body>
-                <Text>{t('datasets.delete.body', { days: RETENTION_DAYS })}</Text>
+                <Text>{t('datasets.delete.body')}</Text>
               </Dialog.Body>
               <Dialog.Footer>
                 <Dialog.ActionTrigger asChild>

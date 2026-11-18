@@ -45,7 +45,8 @@
     "data": "Data display",
     "charts": "Charts",
     "motion": "Motion",
-    "brand": "Brand"
+    "brand": "Brand",
+    "trash": "Trash"
   },
   "workspace": {
     "title": "Create a workspace",
@@ -346,14 +347,22 @@
     },
     "menu": {
       "archive": "Archive project",
-      "unarchive": "Unarchive project"
+      "unarchive": "Unarchive project",
+      "archiveHint": "Hides it from the list",
+      "unarchiveHint": "Shows it in the list again",
+      "trash": "Move to Trash",
+      "trashHint": "Restorable for a limited time"
     },
     "toast": {
       "copied": "Project ID copied",
       "copyFailed": "Could not copy the project ID",
       "archived": "{{name}} archived",
       "unarchived": "{{name}} unarchived",
-      "updateFailed": "Could not update the project"
+      "updateFailed": "Could not update the project",
+      "trashed": "{{name}} moved to the Trash, restorable until {{date}}",
+      "deleteFailed": "Could not move the project to the Trash",
+      "restored": "{{name}} was restored",
+      "restoreFailed": "Could not restore the project"
     },
     "noMatch": {
       "title": "No matching projects",
@@ -419,7 +428,22 @@
         "title": "Team",
         "you": "You",
         "empty": "No one has been added to this project yet.",
-        "loadFailed": "Could not load the team."
+        "loadFailed": "Could not load the team.",
+        "removed": "{{name}} was removed from the project",
+        "remove": {
+          "open": "Remove {{name}} from the project",
+          "title": "Remove {{name}} from this project?",
+          "body": "They lose the access they were given on this project. Workspace-wide access is not affected.",
+          "confirm": "Remove",
+          "cancel": "Cancel",
+          "close": "Close"
+        },
+        "lastAdmin": {
+          "rule": "A project always needs at least one project admin, and {{name}} is the only one. Make someone else an admin first.",
+          "pick": "Make this person a project admin",
+          "nobody": "There is nobody else to make admin. Invite someone to the workspace first.",
+          "confirm": "Make {{admin}} admin and remove {{name}}"
+        }
       }
     },
     "role": {
@@ -459,7 +483,15 @@
         "gallery_downloads": "Project is in the gallery with downloads",
         "failed": "Could not change sharing"
       }
-    }
+    },
+    "delete": {
+      "title": "Move {{name}} to the Trash?",
+      "body": "The project disappears from your list and waits in the Trash, where you can restore it until its restore date. To only hide it, archive it instead.",
+      "confirm": "Move to Trash",
+      "cancel": "Cancel",
+      "close": "Close"
+    },
+    "undo": "Undo"
   },
   "newProject": {
     "title": "Create a project",
@@ -576,23 +608,23 @@
       "submit": "Create"
     },
     "delete": {
-      "action": "Delete dataset",
-      "title": "Delete {{name}}?",
-      "body": "The dataset and its versions are hidden now and removed after {{days}} days. Until then you can restore it.",
-      "confirm": "Delete"
+      "action": "Move to Trash",
+      "title": "Move {{name}} to the Trash?",
+      "body": "The dataset and its versions are hidden now and wait in the Trash, where you can restore them until their restore date.",
+      "confirm": "Move to Trash"
     },
     "toast": {
-      "deleted": "{{name}} was deleted",
+      "deleted": "{{name}} moved to the Trash, restorable until {{date}}",
       "deleteFailed": "Could not delete the dataset",
       "restored": "{{name}} was restored",
       "restoreFailed": "Could not restore the dataset",
       "published": "Version {{number}} is published",
       "unpublished": "The dataset is no longer published",
       "publishFailed": "Could not change what is published",
-      "committed": "Version {{number}} was created",
-      "commitFailed": "Could not commit the import",
+      "committed": "Added as version {{number}}",
+      "commitFailed": "Could not add the version",
       "discardFailed": "Could not discard the import",
-      "cancelFailed": "Could not cancel the import"
+      "cancelFailed": "Could not discard the import"
     },
     "tab": {
       "versions": "Versions",
@@ -651,23 +683,24 @@
         "running": "Checking your data"
       },
       "workingHelp": "This page updates by itself. You can leave and come back.",
-      "awaitingUpload": "This import is still waiting for its file. Cancel it and start a new import to upload again.",
+      "awaitingUpload": "This import is still waiting for its file. Discard it and start a new import to upload again.",
       "committing": "Saving the new version",
-      "review": "Review the result, then commit it as a new version or discard it.",
-      "reviewUntil": "Review the result, then commit it as a new version or discard it. It expires on {{date}}.",
+      "review": "Check the result, then add it as a new version or discard it.",
+      "reviewUntil": "Check the result, then add it as a new version or discard it. It expires on {{date}}.",
       "previewTitle": "Preview of the result",
-      "commit": "Commit",
+      "commit": "Add as new version",
       "discard": "Discard",
-      "cancel": "Cancel import",
-      "succeeded": "The import was committed as a new version.",
-      "succeededVersion": "The import was committed as version {{number}}.",
+      "cancel": "Discard",
+      "succeeded": "Added as a new version.",
+      "succeededVersion": "Added as version {{number}}.",
       "viewVersions": "View versions",
       "failed": "The import failed, so no version was made. These are the reasons.",
       "ended": {
-        "cancelled": "This import was cancelled.",
-        "expired": "This import expired before it was committed.",
+        "cancelled": "This import was discarded.",
+        "expired": "This import was discarded after it timed out.",
         "discarded": "This import was discarded."
-      }
+      },
+      "commitVersion": "Add as version {{number}}"
     },
     "newImport": {
       "title": "New import",
@@ -1197,6 +1230,56 @@
       "upstream": "The model could not answer. Try again in a moment.",
       "timeout": "The model took too long to answer. Try again.",
       "rateLimited": "Too many calls right now. Wait a moment and try again."
+    }
+  },
+  "trash": {
+    "title": "Trash",
+    "subtitle": "Deleted projects and datasets wait here until their restore date, then they are removed for good. Archived projects are not here: archiving only hides a project.",
+    "projects": "Projects",
+    "datasets": "Datasets",
+    "until": "Restorable until {{date}}",
+    "inProject": "From {{name}}",
+    "restore": "Restore",
+    "restored": "{{name}} was restored",
+    "restoreFailed": "Could not restore it",
+    "loadFailed": "Could not load the Trash",
+    "retry": "Try again",
+    "empty": {
+      "title": "The Trash is empty",
+      "body": "Deleted projects and datasets show up here, with the date you can restore them until."
+    }
+  },
+  "ownership": {
+    "title": "Ownership",
+    "body": "Hand this workspace to another member. They get an offer and become an owner once they accept. The offer expires after 7 days.",
+    "someone": "another member",
+    "pending": "Ownership offered to {{name}}. They have until {{date}} to accept.",
+    "expired": "The offer to {{name}} expired on {{date}}. Resend it to give them another 7 days.",
+    "stepDownNote": "You become an admin when they accept.",
+    "toMe": {
+      "pending": "An owner offered you ownership of this workspace. Accept before {{date}}.",
+      "expired": "The ownership offer you received expired on {{date}}. Ask the owner to send it again.",
+      "stepDown": "They become an admin when you accept."
+    },
+    "open": "Transfer ownership",
+    "resend": "Resend offer",
+    "cancel": "Cancel offer",
+    "accept": "Accept ownership",
+    "decline": "Decline",
+    "dismiss": "Dismiss",
+    "accepted": "You are now an owner",
+    "acceptFailed": "Could not accept ownership",
+    "resent": "Offer sent again",
+    "resendFailed": "Could not resend the offer",
+    "cancelFailed": "Could not cancel the offer",
+    "dialog": {
+      "title": "Transfer ownership",
+      "body": "Choose who should become an owner. Nothing changes until they accept.",
+      "to": "Offer ownership to",
+      "nobody": "There is nobody else in this workspace yet. Invite someone first.",
+      "stepDown": "Step down to admin once they accept",
+      "send": "Send offer",
+      "close": "Close"
     }
   }
 }

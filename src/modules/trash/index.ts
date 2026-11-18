@@ -1,0 +1,1 @@
+export { trashRoute } from './routes';

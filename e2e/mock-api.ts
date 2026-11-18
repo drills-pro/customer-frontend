@@ -71,7 +71,7 @@ export interface ProjectRec {
   settings: Record<string, unknown>;
   visibility: 'internal' | 'private';
   default_access: 'read' | 'edit';
-  publish_project_metadata: boolean;
+  sharing: 'private' | 'gallery' | 'gallery_downloads';
 }
 export interface ProjectMemberRec {
   user_sub: string;
@@ -247,7 +247,7 @@ export const newState = (): ApiState => ({
     settings: {},
     visibility: 'internal',
     default_access: 'read',
-    publish_project_metadata: false,
+    sharing: 'private',
   },
   projectMembers: [{ user_sub: 'me', roles: ['project_admin'], created_at: '2026-10-02T00:00:00Z' }],
   runs: [],
@@ -631,6 +631,12 @@ function projectRoutes(route: Route, state: ApiState, method: string, path: stri
       const status = new URL(req.url()).searchParams.get('status');
       if (method === 'PATCH' && status) state.project.status = status as ProjectRec['status'];
       return json(route, 200, state.project);
+    }
+    case '/sharing': {
+      const { sharing } = JSON.parse(req.postData() ?? '{}');
+      state.project.sharing = sharing;
+      if (sharing !== 'private') state.project.visibility = 'internal';
+      return json(route, 200, { id: PROJECT, sharing, visibility: state.project.visibility });
     }
     case '/members':
       return json(route, 200, state.projectMembers);

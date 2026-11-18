@@ -892,7 +892,7 @@ export interface paths {
     patch: operations['update_visibility_v1_projects__project_id__visibility_patch'];
     trace?: never;
   };
-  '/v1/projects/{project_id}/publish': {
+  '/v1/projects/{project_id}/sharing': {
     parameters: {
       query?: never;
       header?: never;
@@ -900,13 +900,13 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    put?: never;
+    /** Update Sharing */
+    put: operations['update_sharing_v1_projects__project_id__sharing_put'];
     post?: never;
     delete?: never;
     options?: never;
     head?: never;
-    /** Update Publish */
-    patch: operations['update_publish_v1_projects__project_id__publish_patch'];
+    patch?: never;
     trace?: never;
   };
   '/v1/projects/{project_id}:restore': {
@@ -3923,8 +3923,7 @@ export interface components {
       };
       visibility: components['schemas']['Visibility'];
       default_access: components['schemas']['DefaultAccess'];
-      /** Publish Project Metadata */
-      publish_project_metadata: boolean;
+      sharing: components['schemas']['Sharing'];
     };
     /** ProjectSettings */
     ProjectSettings: {
@@ -4072,16 +4071,6 @@ export interface components {
        */
       version_id: string;
     };
-    /** PublishResult */
-    PublishResult: {
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /** Publish Project Metadata */
-      publish_project_metadata: boolean;
-    };
     /** PublishState */
     PublishState: {
       /**
@@ -4175,6 +4164,26 @@ export interface components {
      * @enum {string}
      */
     Severity: 'error' | 'warning';
+    /**
+     * Sharing
+     * @description Mirrors the projects.sharing CHECK constraint: what the project shows in the public gallery.
+     * @enum {string}
+     */
+    Sharing: 'private' | 'gallery' | 'gallery_downloads';
+    /** SharingChange */
+    SharingChange: {
+      sharing: components['schemas']['Sharing'];
+    };
+    /** SharingResult */
+    SharingResult: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      sharing: components['schemas']['Sharing'];
+      visibility: components['schemas']['Visibility'];
+    };
     /**
      * SmokeStatus
      * @description Mirrors the job_packages_smoke_status_check constraint: how a package's smoke job went.
@@ -4962,6 +4971,7 @@ export interface components {
       id: string;
       visibility: components['schemas']['Visibility'];
       default_access: components['schemas']['DefaultAccess'];
+      sharing: components['schemas']['Sharing'];
     };
     /** Webhook */
     Webhook: {
@@ -6922,11 +6932,9 @@ export interface operations {
       };
     };
   };
-  update_publish_v1_projects__project_id__publish_patch: {
+  update_sharing_v1_projects__project_id__sharing_put: {
     parameters: {
-      query: {
-        publish_project_metadata: boolean;
-      };
+      query?: never;
       header?: {
         'x-tenant-id'?: string | null;
         'x-user-id'?: string | null;
@@ -6936,7 +6944,11 @@ export interface operations {
       };
       cookie?: never;
     };
-    requestBody?: never;
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SharingChange'];
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {
@@ -6944,7 +6956,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['PublishResult'];
+          'application/json': components['schemas']['SharingResult'];
         };
       };
       /** @description Validation Error */

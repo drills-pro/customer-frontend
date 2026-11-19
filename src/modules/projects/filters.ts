@@ -1,4 +1,4 @@
-import { LEGACY_TASK_TYPE, TASK_TYPES, type ProjectStatus, type ProjectSummary } from '@/modules/projects/api';
+import { LEGACY_TASK_TYPE, TASK_TYPES, type ProjectListItem, type ProjectStatus, type ProjectSummary } from '@/modules/projects/api';
 
 /** Each id is also its `projects.view.*` key. */
 export const VIEWS = ['grid', 'list'] as const;
@@ -27,7 +27,7 @@ export interface ProjectFiltersState {
 export const DEFAULT_FILTERS: ProjectFiltersState = { query: '', task: ALL, status: ALL, sort: 'newest', view: 'grid' };
 
 /** The loaded projects the filters let through, in the chosen order. */
-export function visibleProjects(projects: ProjectSummary[], filters: ProjectFiltersState): ProjectSummary[] {
+export function visibleProjects(projects: ProjectListItem[], filters: ProjectFiltersState): ProjectListItem[] {
   const query = filters.query.trim().toLowerCase();
   return projects
     .filter(

@@ -256,7 +256,12 @@
       "status": "Status",
       "created": "Created",
       "id": "Project ID",
-      "actions": "Actions"
+      "actions": "Actions",
+      "menu": "Columns",
+      "datasets": "Datasets",
+      "models": "Models",
+      "deployments": "Deployments",
+      "reset": "Reset to default"
     },
     "status": {
       "active": "Active",

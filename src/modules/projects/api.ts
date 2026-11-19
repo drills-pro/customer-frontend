@@ -3,6 +3,9 @@ import { client, unwrap, type Schemas } from '@/shared/api/client';
 import { usePagedList } from '@/shared/api/paged';
 
 export type ProjectSummary = Schemas['ProjectSummary'];
+type Count = 'datasets' | 'models' | 'deployments';
+// shortcut: production does not send the counts yet, so they are optional; make this Schemas['ProjectListItem'] once it does.
+export type ProjectListItem = Omit<Schemas['ProjectListItem'], Count> & Partial<Pick<Schemas['ProjectListItem'], Count>>;
 export type ProjectStatus = Schemas['ProjectStatus'];
 export type Visibility = Schemas['Visibility'];
 export type Sharing = Schemas['Sharing'];

@@ -1,15 +1,15 @@
 import type { ReactNode } from 'react';
-import { Box, Card, Flex, HStack, Link as ChakraLink, Text } from '@chakra-ui/react';
+import { Box, Card, Flex, HStack, Link as ChakraLink, SimpleGrid, Stat, Text } from '@chakra-ui/react';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import type { ProjectSummary } from '@/modules/projects/api';
-import { CopyId } from '@/modules/projects/components/CopyId';
+import type { ProjectListItem } from '@/modules/projects/api';
+import { COUNT_COLUMNS, countText } from '@/modules/projects/columns';
 import { ProjectMark } from '@/modules/projects/components/ProjectMark';
 import { StatusBadge } from '@/modules/projects/components/StatusBadge';
 import { useWorkspace } from '@/modules/workspaces';
 
-/** One project in the grid; `menu` is its actions. */
-export function ProjectCard({ project, created, menu }: { project: ProjectSummary; created: string; menu: ReactNode }) {
+/** One project in the grid: its status, how many datasets, models and deployments it has. `menu` is its actions. */
+export function ProjectCard({ project, created, menu }: { project: ProjectListItem; created: string; menu: ReactNode }) {
   const { t } = useTranslation();
   const { slug } = useWorkspace();
   return (
@@ -33,11 +33,18 @@ export function ProjectCard({ project, created, menu }: { project: ProjectSummar
       <HStack px="5" pt="4">
         <StatusBadge status={project.status} />
       </HStack>
-      <Flex mt="4" align="center" justify="space-between" gap="3" borderTopWidth="1px" borderColor="border" px="5" py="3">
-        <Box minW="0" flex="1">
-          <CopyId id={project.id} />
-        </Box>
-        <Text textStyle="body-sm" color="fg.muted" whiteSpace="nowrap">
+      <SimpleGrid columns={3} gap="3" mx="5" mt="4" py="4" borderTopWidth="1px" borderColor="border">
+        {COUNT_COLUMNS.map((c) => (
+          <Stat.Root key={c} gap="0.5">
+            <Stat.ValueText textStyle="h3" data-testid={`project-card-count-${c}`}>
+              {countText(project[c])}
+            </Stat.ValueText>
+            <Stat.Label>{t(`projects.column.${c}`)}</Stat.Label>
+          </Stat.Root>
+        ))}
+      </SimpleGrid>
+      <Flex mt="auto" mx="5" align="center" gap="3" borderTopWidth="1px" borderColor="border" py="3">
+        <Text textStyle="body-sm" color="fg.muted" truncate>
           {t('projects.createdOn', { date: created })}
         </Text>
       </Flex>

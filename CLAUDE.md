@@ -46,7 +46,7 @@ any module. Another module is imported only through its `index.ts` (`@/modules/w
   `app` route, `/`, `/new`, `/w/$slug` with overview and settings), `pages/`, `components/` (`AppShell`, `WorkspaceSwitcher`, `UserMenu`).
 - `src/modules/members/`: `api.ts` (members and invitations), `routes.tsx` (`/w/$slug/members`, `/invite/$token`), `pages/`, `components/`.
 - `src/modules/projects/`: `api.ts` (project queries and mutations), `routes.tsx` (`/w/$slug/projects`, `/w/$slug/projects/new`, and `/w/$slug/projects/$projectId`:
-  `ProjectLayout` with the header and section tabs around the overview and the datasets pages), `pipeline.ts` (the overview's stage states), `pages/`, `components/`.
+  `ProjectLayout` with the header and section tabs around the overview and the datasets pages), `pipeline.ts` (the overview's stage states), `columns.ts` (the list view's columns: which show by default, the header's Columns menu choice saved per browser, and the dataset, model and deployment counts the list returns), `pages/`, `components/`.
 - `src/modules/datasets/`: `constants.ts` (the backend's statuses, sources, splits and problem codes, typed once), `status.ts` (status to UI table), `api.ts`
   (`useImport` polls while the status is moving, `useSubmitImport` is the create, upload and start flow behind the new-import page), `import-form.ts` (validation and the create body), `errors.ts` (problem code to locale key), `routes.tsx`
   (`/w/$slug/projects/$projectId/datasets` and its dataset, new-import, import and version pages), `pages/`, `components/`. The file goes to storage

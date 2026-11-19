@@ -5,11 +5,15 @@ import { useWorkspace } from '@/modules/workspaces';
 import { client, unwrap, type Schemas } from '@/shared/api/client';
 import { usePolledQuery } from '@/shared/api/poll';
 
-type ListedVersion = Schemas['ModelVersionItem'];
-/** Fields the list gained with the run link and the sharing switch. */
-type NewListFields = 'training_run_id' | 'publish_metadata' | 'publish_artifact';
-// shortcut: an API from before those fields leaves them out, so they are optional here; make them required once every API sends them.
-export type ModelVersion = Omit<ListedVersion, NewListFields> & Partial<Pick<ListedVersion, NewListFields>>;
+/** Fields the list gains with the run link and the sharing switch. */
+interface NewListFields {
+  training_run_id: string;
+  publish_metadata: boolean;
+  publish_artifact: boolean;
+}
+// shortcut: the API does not send these yet (the core-api change is unpushed), so they are declared here and optional; take them from
+// the schema once it has them.
+export type ModelVersion = Schemas['ModelVersionItem'] & Partial<NewListFields>;
 export type ModelStage = Schemas['ModelStage'];
 
 /** The stages a person sets by hand, in the order the table offers them; each is also its `models.move.*` key (the menu item that sets it). Production is not one of

@@ -828,7 +828,12 @@ function projectMemberRoute(route: Route, state: ApiState, method: string, sub: 
 function projectRoutes(route: Route, state: ApiState, method: string, path: string, req: ReturnType<Route['request']>) {
   if (path === '/v1/projects' && method === 'GET') {
     const { id, name, status, team_id, task_type, created_at } = state.project;
-    const live = status !== 'pending_delete' ? [{ id, name, status, team_id, task_type, created_at }] : [];
+    const counts = {
+      datasets: state.datasets.filter((d) => !d.deleted_at).length,
+      models: state.models.length,
+      deployments: state.deployments.filter((d) => d.status !== 'deleted').length,
+    };
+    const live = status !== 'pending_delete' ? [{ id, name, status, team_id, task_type, created_at, ...counts }] : [];
     return json(route, 200, paginate(live, req.url(), state.pageSize));
   }
   if (path === '/v1/projects/trash') {

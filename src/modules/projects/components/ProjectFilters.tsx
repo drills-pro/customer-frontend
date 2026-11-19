@@ -77,7 +77,7 @@ export function ProjectFilters({
         {VIEWS.map((v) => {
           const Icon = VIEW_ICONS[v];
           return (
-            <RadioButton key={v} value={v} size="sm" px="2.5" aria-label={t(`projects.view.${v}`)}>
+            <RadioButton key={v} value={v} size="sm" px="2.5" aria-label={t(`projects.view.${v}`)} data-testid={`projects-view-${v}`}>
               <Icon />
             </RadioButton>
           );

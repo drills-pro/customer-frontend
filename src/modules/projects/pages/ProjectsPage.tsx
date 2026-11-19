@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router';
 import { Briefcase, Plus, Search } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { useProjects, type ProjectSummary } from '@/modules/projects/api';
+import { useProjectColumns } from '@/modules/projects/columns';
 import { ProjectCard } from '@/modules/projects/components/ProjectCard';
 import { ProjectFilters } from '@/modules/projects/components/ProjectFilters';
 import { ProjectMenu } from '@/modules/projects/components/ProjectMenu';
@@ -43,6 +44,7 @@ function ProjectList({ workspaceId, slug }: { workspaceId: string; slug: string 
   const { t, i18n } = useTranslation();
   const { projects, error, isError, isPending, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } = useProjects(workspaceId);
   const [filters, setFilters] = useState<ProjectFiltersState>(DEFAULT_FILTERS);
+  const columns = useProjectColumns();
   const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium' });
   const created = (iso: string) => date.format(new Date(iso));
   const menu = (project: ProjectSummary) => <ProjectMenu project={project} workspaceId={workspaceId} />;
@@ -125,7 +127,7 @@ function ProjectList({ workspaceId, slug }: { workspaceId: string; slug: string 
           </Button>
         </SimpleGrid>
       ) : (
-        <ProjectsTable projects={visible} created={created} menu={menu} />
+        <ProjectsTable projects={visible} columns={columns} created={created} menu={menu} />
       )}
       {hasNextPage && (
         <Box>

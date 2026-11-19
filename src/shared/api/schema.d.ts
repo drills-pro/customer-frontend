@@ -3616,15 +3616,6 @@ export interface components {
        * Format: uuid
        */
       model_id: string;
-      /**
-       * Training Run Id
-       * Format: uuid
-       */
-      training_run_id: string;
-      /** Publish Metadata */
-      publish_metadata: boolean;
-      /** Publish Artifact */
-      publish_artifact: boolean;
     };
     /** NewApiKey */
     NewApiKey: {
@@ -3744,10 +3735,10 @@ export interface components {
       /** Next Page Token */
       next_page_token?: string | null;
     };
-    /** Page[ProjectSummary] */
-    Page_ProjectSummary_: {
+    /** Page[ProjectListItem] */
+    Page_ProjectListItem_: {
       /** Items */
-      items: components['schemas']['ProjectSummary'][];
+      items: components['schemas']['ProjectListItem'][];
       /** Next Page Token */
       next_page_token?: string | null;
     };
@@ -4009,6 +4000,34 @@ export interface components {
       visibility: components['schemas']['Visibility'];
       default_access: components['schemas']['DefaultAccess'];
       sharing: components['schemas']['Sharing'];
+    };
+    /**
+     * ProjectListItem
+     * @description A row of GET /v1/projects: the summary plus what the project card counts (live rows only).
+     */
+    ProjectListItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Name */
+      name: string;
+      status: components['schemas']['ProjectStatus'];
+      /** Team Id */
+      team_id: string | null;
+      task_type: components['schemas']['TaskType'];
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Datasets */
+      datasets: number;
+      /** Models */
+      models: number;
+      /** Deployments */
+      deployments: number;
     };
     /** ProjectSettings */
     ProjectSettings: {
@@ -6845,7 +6864,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['Page_ProjectSummary_'];
+          'application/json': components['schemas']['Page_ProjectListItem_'];
         };
       };
       /** @description Validation Error */

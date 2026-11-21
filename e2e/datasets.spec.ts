@@ -4,11 +4,10 @@ import { ACME_SLUG, PROJECT, dataset, importOf, versionOf } from './mock-api';
 
 const BASE = `/w/${ACME_SLUG}/projects/${PROJECT}/datasets`;
 
-test('lists datasets with their published version and latest import', async ({ page, api }) => {
+test('lists datasets with their latest import', async ({ page, api }) => {
   const a = dataset(api, { name: 'alpha' });
   const imp = importOf(api, a.id, { status: 'succeeded' });
-  const v = versionOf(api, a.id, imp.id);
-  a.published_version_id = v.id;
+  versionOf(api, a.id, imp.id);
   dataset(api, { name: 'beta', task_type: null });
   await page.goto(BASE);
   await expect(page.getByTestId('dataset-row')).toHaveCount(2);
@@ -89,17 +88,11 @@ test('a dataset whose project has no task type cannot import', async ({ page, ap
   await expect(page.getByTestId('import-submit')).toHaveCount(0);
 });
 
-test('versions publish and unpublish, and open a preview', async ({ page, api }) => {
+test('a version opens a preview', async ({ page, api }) => {
   const d = dataset(api);
   const imp = importOf(api, d.id, { status: 'succeeded' });
-  const v = versionOf(api, d.id, imp.id);
+  versionOf(api, d.id, imp.id);
   await page.goto(`${BASE}/${d.id}`);
-  await page.getByTestId('version-publish').click();
-  await expect(page.getByTestId('version-published')).toBeVisible();
-  expect(api.datasets[0].published_version_id).toBe(v.id);
-  await page.getByTestId('version-unpublish').click();
-  await expect(page.getByTestId('version-published')).toHaveCount(0);
-
   await page.getByTestId('version-preview-link').click();
   await expect(page.getByTestId('preview-row')).toHaveCount(2);
 });

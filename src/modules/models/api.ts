@@ -5,11 +5,9 @@ import { useWorkspace } from '@/modules/workspaces';
 import { client, unwrap, type Schemas } from '@/shared/api/client';
 import { usePolledQuery } from '@/shared/api/poll';
 
-/** Fields the list gains with the run link and the sharing switch. */
+/** Field the list gains with the run link. */
 interface NewListFields {
   training_run_id: string;
-  publish_metadata: boolean;
-  publish_artifact: boolean;
 }
 // shortcut: the API does not send these yet (the core-api change is unpushed), so they are declared here and optional; take them from
 // the schema once it has them.
@@ -27,9 +25,6 @@ export const PromotionStatus = { Pending: 'pending', Failed: 'failed' } as const
 export const isPromoting = (v: ModelVersion) => v.promotion_status === PromotionStatus.Pending;
 /** The version a model's calls are answered with: its one Production version. */
 export const isServing = (v: ModelVersion) => v.stage === 'Production';
-/** Whether the version follows the project's Sharing level (true, the default) or is left out of it (false). Undefined when the API does
- * not say; then both choices are offered. */
-export const includedInSharing = (v: ModelVersion): boolean | undefined => v.publish_metadata;
 /** The version a model serves now, other than `v`. */
 export const servingOf = (models: readonly ModelVersion[], v: ModelVersion) =>
   models.find((m) => m.model_id === v.model_id && isServing(m) && m.id !== v.id);
@@ -58,21 +53,6 @@ export function useModels(projectId: string) {
       return models;
     },
     shouldPoll: (models) => models?.some(isPromoting) ?? false,
-  });
-}
-
-/** Whether the version is listed for others to see, and whether its metadata and artifact are published with it. */
-export function usePublishModel(projectId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ versionId, publish }: { versionId: string; publish: boolean }) =>
-      unwrap(
-        client.PATCH('/v1/projects/{project_id}/models/{model_version_id}/publish', {
-          params: { path: { project_id: projectId, model_version_id: versionId } },
-          body: { publish_metadata: publish, publish_artifact: publish },
-        }),
-      ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: modelsKey(projectId) }),
   });
 }
 

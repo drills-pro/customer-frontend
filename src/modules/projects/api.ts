@@ -8,7 +8,6 @@ type Count = 'datasets' | 'models' | 'deployments';
 export type ProjectListItem = Omit<Schemas['ProjectListItem'], Count> & Partial<Pick<Schemas['ProjectListItem'], Count>>;
 export type ProjectStatus = Schemas['ProjectStatus'];
 export type Visibility = Schemas['Visibility'];
-export type Sharing = Schemas['Sharing'];
 export type TaskType = Schemas['TaskType'];
 export type ProjectDetail = Schemas['ProjectDetail'];
 export type DefaultAccess = Schemas['DefaultAccess'];
@@ -30,10 +29,6 @@ export const VISIBILITIES = ['internal', 'private'] as const satisfies readonly 
 /** Every workspace member can open the project, with its `default_access`. */
 export const VISIBILITY_INTERNAL = 'internal' as const satisfies Visibility;
 export const DEFAULT_VISIBILITY: Visibility = VISIBILITY_INTERNAL;
-
-/** What the project shows in the public gallery, from least to most; each id is also its `projects.sharing.level.*` key. */
-export const SHARING_LEVELS = ['private', 'gallery', 'gallery_downloads'] as const satisfies readonly Sharing[];
-export const SHARING_PRIVATE = 'private' as const satisfies Sharing;
 
 export const projectsKey = (workspaceId: string) => ['workspace', workspaceId, 'projects'] as const;
 /** Under `projectsKey`, so the list's invalidations (archive, restore) refresh the open project too. */
@@ -69,16 +64,6 @@ export function useSetProjectVisibility(workspaceId: string) {
           },
         }),
       ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: projectsKey(workspaceId) }),
-  });
-}
-
-/** Setting a gallery level also makes the project internal, and Private takes it out of the gallery, so the project is read again. */
-export function useSetProjectSharing(workspaceId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ projectId, sharing }: { projectId: string; sharing: Sharing }) =>
-      unwrap(client.PUT('/v1/projects/{project_id}/sharing', { params: { path: { project_id: projectId } }, body: { sharing } })),
     onSuccess: () => qc.invalidateQueries({ queryKey: projectsKey(workspaceId) }),
   });
 }

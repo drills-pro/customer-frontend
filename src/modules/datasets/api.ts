@@ -76,7 +76,7 @@ export function useCreateDataset(projectId: string) {
   });
 }
 
-/** Delete, restore, publish and unpublish all answer with the dataset, so one place keeps the caches in step. */
+/** Delete and restore both answer with the dataset, so one place keeps the caches in step. */
 function useDatasetMutation<V>(projectId: string, run: (datasetId: string, vars: V) => Promise<DatasetSummary>) {
   const qc = useQueryClient();
   return useMutation({
@@ -118,21 +118,6 @@ export function useRestoreTrashedDataset() {
 export const useRestoreDataset = (projectId: string) =>
   useDatasetMutation<object>(projectId, (datasetId) =>
     unwrap(client.POST('/v1/projects/{project_id}/datasets/{dataset_id}:restore', { params: { path: path(projectId, datasetId) } })),
-  );
-
-export const usePublishVersion = (projectId: string) =>
-  useDatasetMutation<{ versionId: string }>(projectId, (datasetId, { versionId }) =>
-    unwrap(
-      client.PUT('/v1/projects/{project_id}/datasets/{dataset_id}/published', {
-        params: { path: path(projectId, datasetId) },
-        body: { version_id: versionId },
-      }),
-    ),
-  );
-
-export const useUnpublishDataset = (projectId: string) =>
-  useDatasetMutation<object>(projectId, (datasetId) =>
-    unwrap(client.DELETE('/v1/projects/{project_id}/datasets/{dataset_id}/published', { params: { path: path(projectId, datasetId) } })),
   );
 
 export function useVersions(projectId: string, datasetId: string) {

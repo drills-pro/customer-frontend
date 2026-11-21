@@ -909,23 +909,6 @@ export interface paths {
     patch: operations['update_visibility_v1_projects__project_id__visibility_patch'];
     trace?: never;
   };
-  '/v1/projects/{project_id}/sharing': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Update Sharing */
-    put: operations['update_sharing_v1_projects__project_id__sharing_put'];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/v1/projects/{project_id}:restore': {
     parameters: {
       query?: never;
@@ -1109,24 +1092,6 @@ export interface paths {
     /** Restore Dataset */
     post: operations['restore_dataset_v1_projects__project_id__datasets__dataset_id__restore_post'];
     delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/published': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Publish Version */
-    put: operations['publish_version_v1_projects__project_id__datasets__dataset_id__published_put'];
-    post?: never;
-    /** Unpublish Dataset */
-    delete: operations['unpublish_dataset_v1_projects__project_id__datasets__dataset_id__published_delete'];
     options?: never;
     head?: never;
     patch?: never;
@@ -1694,23 +1659,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/projects/{project_id}/models/{model_version_id}/publish': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Publish Model */
-    patch: operations['publish_model_v1_projects__project_id__models__model_version_id__publish_patch'];
-    trace?: never;
-  };
   '/v1/projects/{project_id}/models/{model_version_id}/download/{file}': {
     parameters: {
       query?: never;
@@ -1819,57 +1767,6 @@ export interface paths {
      * @description Takes effect on the key's next request. Revoking twice keeps the first revocation time.
      */
     delete: operations['revoke_api_key_v1_projects__project_id__api_keys__key_id__delete'];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/public/projects': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List Public Projects */
-    get: operations['list_public_projects_v1_public_projects_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/public/projects/{project_id}/datasets': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List Public Project Datasets */
-    get: operations['list_public_project_datasets_v1_public_projects__project_id__datasets_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/public/projects/{project_id}/models': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List Public Project Models */
-    get: operations['list_public_project_models_v1_public_projects__project_id__models_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -2569,13 +2466,6 @@ export interface components {
       /** Zitadel Org Id */
       zitadel_org_id?: string | null;
     };
-    /** Body_publish_model_v1_projects__project_id__models__model_version_id__publish_patch */
-    Body_publish_model_v1_projects__project_id__models__model_version_id__publish_patch: {
-      /** Publish Metadata */
-      publish_metadata?: boolean | null;
-      /** Publish Artifact */
-      publish_artifact?: boolean | null;
-    };
     /** Body_set_tenant_status_v1_admin_tenants__tenant_id__status_post */
     Body_set_tenant_status_v1_admin_tenants__tenant_id__status_post: {
       /** Status */
@@ -2757,8 +2647,6 @@ export interface components {
       created_at: string;
       visibility: components['schemas']['Visibility'];
       default_access: components['schemas']['DefaultAccess'];
-      /** Gallery Published */
-      gallery_published: boolean;
     };
     /** CreatedTenant */
     CreatedTenant: {
@@ -2876,8 +2764,6 @@ export interface components {
       created_at: string;
       /** Deleted At */
       deleted_at: string | null;
-      /** Published Version Id */
-      published_version_id: string | null;
       /** Data Categories */
       data_categories: components['schemas']['DataCategory'][];
       /**
@@ -3999,7 +3885,6 @@ export interface components {
       };
       visibility: components['schemas']['Visibility'];
       default_access: components['schemas']['DefaultAccess'];
-      sharing: components['schemas']['Sharing'];
     };
     /**
      * ProjectListItem
@@ -4123,84 +4008,6 @@ export interface components {
      * @enum {string}
      */
     PromotionStatus: 'pending' | 'failed';
-    /**
-     * PublicDataset
-     * @description A private dataset of a public project is listed with no name: "exists" is visible, contents are not.
-     */
-    PublicDataset: {
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /** Name */
-      name: string | null;
-      /** Published */
-      published: boolean;
-      /** Version Number */
-      version_number: number | null;
-      /** Stats */
-      stats: unknown;
-    };
-    /**
-     * PublicModel
-     * @description Likewise: an unpublished model's name and version are null.
-     */
-    PublicModel: {
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /** Mlflow Model Name */
-      mlflow_model_name: string | null;
-      /** Mlflow Version */
-      mlflow_version: string | null;
-      /** Publish Metadata */
-      publish_metadata: boolean;
-      /** Publish Artifact */
-      publish_artifact: boolean;
-    };
-    /** PublicProject */
-    PublicProject: {
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /** Name */
-      name: string | null;
-      /** Task Type */
-      task_type: string | null;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-    };
-    /** PublishRequest */
-    PublishRequest: {
-      /**
-       * Version Id
-       * Format: uuid
-       */
-      version_id: string;
-    };
-    /**
-     * PublishState
-     * @description Per-version "exclude" switches: true (the default) lets the project's Sharing level decide, false keeps this one out.
-     */
-    PublishState: {
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /** Publish Metadata */
-      publish_metadata: boolean;
-      /** Publish Artifact */
-      publish_artifact: boolean;
-    };
     /** RegisterBody */
     RegisterBody: {
       /** S3 Key */
@@ -4292,26 +4099,6 @@ export interface components {
      * @enum {string}
      */
     Severity: 'error' | 'warning';
-    /**
-     * Sharing
-     * @description Mirrors the projects.sharing CHECK constraint: what the project shows in the public gallery.
-     * @enum {string}
-     */
-    Sharing: 'private' | 'gallery' | 'gallery_downloads';
-    /** SharingChange */
-    SharingChange: {
-      sharing: components['schemas']['Sharing'];
-    };
-    /** SharingResult */
-    SharingResult: {
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      sharing: components['schemas']['Sharing'];
-      visibility: components['schemas']['Visibility'];
-    };
     /**
      * SmokeStatus
      * @description Mirrors the job_packages_smoke_status_check constraint: how a package's smoke job went.
@@ -5134,7 +4921,6 @@ export interface components {
       id: string;
       visibility: components['schemas']['Visibility'];
       default_access: components['schemas']['DefaultAccess'];
-      sharing: components['schemas']['Sharing'];
     };
     /** Webhook */
     Webhook: {
@@ -7130,44 +6916,6 @@ export interface operations {
       };
     };
   };
-  update_sharing_v1_projects__project_id__sharing_put: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['SharingChange'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['SharingResult'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
   restore_project_v1_projects__project_id__restore_post: {
     parameters: {
       query?: never;
@@ -7596,80 +7344,6 @@ export interface operations {
     };
   };
   restore_dataset_v1_projects__project_id__datasets__dataset_id__restore_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['DatasetSummary'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  publish_version_v1_projects__project_id__datasets__dataset_id__published_put: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['PublishRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['DatasetSummary'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  unpublish_dataset_v1_projects__project_id__datasets__dataset_id__published_delete: {
     parameters: {
       query?: never;
       header?: {
@@ -8906,45 +8580,6 @@ export interface operations {
       };
     };
   };
-  publish_model_v1_projects__project_id__models__model_version_id__publish_patch: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        model_version_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: {
-      content: {
-        'application/json': components['schemas']['Body_publish_model_v1_projects__project_id__models__model_version_id__publish_patch'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['PublishState'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
   download_model_file_v1_projects__project_id__models__model_version_id__download__file__get: {
     parameters: {
       query?: never;
@@ -9215,100 +8850,6 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_public_projects_v1_public_projects_get: {
-    parameters: {
-      query?: {
-        limit?: number;
-        offset?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['PublicProject'][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_public_project_datasets_v1_public_projects__project_id__datasets_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['PublicDataset'][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_public_project_models_v1_public_projects__project_id__models_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['PublicModel'][];
-        };
       };
       /** @description Validation Error */
       422: {

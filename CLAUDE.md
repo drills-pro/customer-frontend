@@ -65,7 +65,7 @@ any module. Another module is imported only through its `index.ts` (`@/modules/w
   succeeded run's page: deploys behind a dialog, asks to accept the risk for a run with no test split, and shows the new key once). `DeploymentStatus` itself lives in
   `projects/constants.ts`, since the overview's pipeline reads it too.
 - `src/modules/models/`: `api.ts` (the project's registered model versions, publish, stage moves, register a run's model), `routes.tsx`
-  (`/w/$slug/projects/$projectId/models`, the project's Models tab: score from the run, one status badge, sharing, Promote behind a confirm), `status.ts` (stage and promotion to one status), `components/` (`PromoteDialog`, `ModelMenu` with the stage moves and sharing), `pages/`. The run page's Register model card (`training/components/RunModel.tsx`) uses it.
+  (`/w/$slug/projects/$projectId/models`, the project's Models tab: score from the run, one status badge, Promote behind a confirm), `status.ts` (stage and promotion to one status), `components/` (`PromoteDialog`, `ModelMenu` with the stage moves), `pages/`. The run page's Register model card (`training/components/RunModel.tsx`) uses it.
 - Routes live in each module's `routes.tsx` (path, guards, loaders, `component: SomePage`) and are assembled into the tree in `src/router.tsx`; `src/root-route.tsx` is the root.
   A route that is a level of the hierarchy sets `staticData: { crumb }` (`textCrumb('key')` or a small component that reads its params and the cached
   query, see `src/shared/ui/crumbs.tsx`); the shell breadcrumb renders the matched crumbs, so pages have no "Back to ..." links. Pages that sit under

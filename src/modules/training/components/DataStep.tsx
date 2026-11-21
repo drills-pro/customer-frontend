@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
-import { Alert, Badge, Box, Button, Center, Flex, Heading, SimpleGrid, Skeleton, Stack, Text } from '@chakra-ui/react';
+import { Alert, Box, Button, Center, Flex, Heading, SimpleGrid, Skeleton, Stack, Text } from '@chakra-ui/react';
 import { Link } from '@tanstack/react-router';
 import { Database } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
@@ -51,7 +51,7 @@ function OptionCard({
   );
 }
 
-/** Pick one of the project's datasets, then one of its versions. The chosen dataset (else the first) and its published (else newest)
+/** Pick one of the project's datasets, then one of its versions. The chosen dataset (else the first) and its newest
  * version come preselected. */
 export function DataStep({ projectId, slug, choice, onChange }: Props) {
   const { t, i18n } = useTranslation();
@@ -165,9 +165,8 @@ function VersionPicker({
   useEffect(() => {
     if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-  // Newest first; the published version is the dataset's chosen one, so it comes preselected when there is one.
-  const preferred = versions?.find((v) => v.id === dataset.published_version_id) ?? versions?.[0];
-  const current = versions?.find((v) => v.id === choice?.versionId) ?? preferred;
+  // Newest first, so the first one comes preselected.
+  const current = versions?.find((v) => v.id === choice?.versionId) ?? versions?.[0];
   useEffect(() => {
     if (current && (current.id !== choice?.versionId || current.number !== choice.versionNumber))
       onChange({ datasetId: dataset.id, datasetName: dataset.name, versionId: current.id, versionNumber: current.number });
@@ -241,11 +240,6 @@ function VersionPicker({
                   <Text textStyle="body-sm" fontWeight="semibold">
                     {t('training.data.version', { number: v.number })}
                   </Text>
-                  {v.id === dataset.published_version_id && (
-                    <Badge colorPalette="success" variant="subtle">
-                      {t('training.data.published')}
-                    </Badge>
-                  )}
                 </Flex>
                 {meta.length > 0 && (
                   <Text textStyle="body-sm" color="fg.muted">

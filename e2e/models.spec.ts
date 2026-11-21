@@ -81,9 +81,7 @@ test('the serving version has no promote and no stage to set by hand', async ({ 
   await page.goto(MODELS);
   await expect(row(page, v1.id).getByTestId('model-serving')).toBeVisible();
   await expect(row(page, v1.id).getByTestId('model-promote')).toHaveCount(0);
-  await menu(page, v1.id);
-  await expect(page.getByTestId('model-unshare')).toBeVisible();
-  await expect(page.getByTestId('model-stage-Archived')).toHaveCount(0);
+  await expect(row(page, v1.id).getByTestId('model-menu')).toHaveCount(0); // nothing left to offer
 });
 
 test('a stage is set from the row menu', async ({ page, api }) => {
@@ -98,23 +96,6 @@ test('a stage is set from the row menu', async ({ page, api }) => {
   expect(api.promoteCalls).toEqual([{ versionId: v1.id, stage: 'Archived', acknowledge: false }]);
 });
 
-test('a version is left out of sharing and brought back from the row menu, and its badge says which', async ({ page, api }) => {
-  const v1 = model(api, 'Staging');
-  await page.goto(MODELS);
-  await expect(row(page, v1.id).getByTestId('model-shared')).toHaveAttribute('data-shared', 'true');
-  await menu(page, v1.id);
-  await expect(page.getByTestId('model-share')).toHaveCount(0);
-  await page.getByTestId('model-unshare').click();
-  await expect(row(page, v1.id).getByTestId('model-shared')).toHaveAttribute('data-shared', 'false');
-  await menu(page, v1.id);
-  await page.getByTestId('model-share').click();
-  await expect(row(page, v1.id).getByTestId('model-shared')).toHaveAttribute('data-shared', 'true');
-  expect(api.publishCalls).toEqual([
-    { versionId: v1.id, publish_metadata: false, publish_artifact: false },
-    { versionId: v1.id, publish_metadata: true, publish_artifact: true },
-  ]);
-});
-
 test("a version shows its run's score and links to the run", async ({ page, api }) => {
   const r = run(api, 'succeeded', { metrics: { accuracy: 0.91 } });
   const v1 = model(api, 'Staging', { training_run_id: r.id });
@@ -124,16 +105,9 @@ test("a version shows its run's score and links to the run", async ({ page, api 
   await expect(page).toHaveURL(new RegExp(`/training/${r.id}$`));
 });
 
-test('an API that does not send the run or the sharing switch still lists the version and offers both sharing choices', async ({
-  page,
-  api,
-}) => {
-  const v1 = model(api, 'Staging', { training_run_id: undefined, publish_metadata: undefined, publish_artifact: undefined });
+test('an API that does not send the run still lists the version', async ({ page, api }) => {
+  const v1 = model(api, 'Staging', { training_run_id: undefined });
   await page.goto(MODELS);
   await expect(row(page, v1.id)).toBeVisible();
   await expect(row(page, v1.id).getByTestId('model-run-link')).toHaveCount(0);
-  await expect(row(page, v1.id).getByTestId('model-shared')).toHaveCount(0);
-  await menu(page, v1.id);
-  await expect(page.getByTestId('model-share')).toBeVisible();
-  await expect(page.getByTestId('model-unshare')).toBeVisible();
 });

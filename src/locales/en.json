@@ -292,7 +292,8 @@
         "label": "Image segmentation"
       },
       "tabular-regression": {
-        "label": "Tabular regression"
+        "label": "Tabular regression",
+        "description": "Predict a number from rows of a spreadsheet or table."
       },
       "token-classification": {
         "label": "Token classification"

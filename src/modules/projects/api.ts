@@ -22,6 +22,7 @@ export const TASK_TYPES = [
   'image-classification',
   'object-detection',
   'tabular-classification',
+  'tabular-regression',
   'text-classification',
 ] as const satisfies readonly TaskType[];
 export const LEGACY_TASK_TYPE = 'legacy_untyped' as const;

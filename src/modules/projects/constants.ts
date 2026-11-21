@@ -1,4 +1,4 @@
-import { AiScan, Grid2x3, Image, TextStartT } from 'pixelarticons/react';
+import { AiScan, Analytics, Grid2x3, Image, TextStartT } from 'pixelarticons/react';
 import type { ProjectRole, TASK_TYPES } from '@/modules/projects/api';
 import type { PixelIcon } from '@/shared/ui/icons';
 
@@ -14,6 +14,7 @@ export const TASK_ICONS: Record<(typeof TASK_TYPES)[number], PixelIcon> = {
   'image-classification': Image,
   'object-detection': AiScan,
   'tabular-classification': Grid2x3,
+  'tabular-regression': Analytics,
   'text-classification': TextStartT,
 };
 

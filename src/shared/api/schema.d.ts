@@ -280,7 +280,7 @@ export interface paths {
      *     Addressed by one of its versions - the id the listing already handed
      *     out - rather than by (project, name), so the caller has no second key
      *     to spell and nothing to escape. An id that names no version answers
-     *     with an empty list, the same as a model whose project was deleted.
+     *     with an empty page, the same as a model whose project was deleted.
      */
     get: operations['list_model_versions_v1_admin_models__version_id__versions_get'];
     put?: never;
@@ -909,6 +909,23 @@ export interface paths {
     patch: operations['update_visibility_v1_projects__project_id__visibility_patch'];
     trace?: never;
   };
+  '/v1/projects/{project_id}/sharing': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Update Sharing */
+    put: operations['update_sharing_v1_projects__project_id__sharing_put'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/projects/{project_id}:restore': {
     parameters: {
       query?: never;
@@ -1092,6 +1109,24 @@ export interface paths {
     /** Restore Dataset */
     post: operations['restore_dataset_v1_projects__project_id__datasets__dataset_id__restore_post'];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/datasets/{dataset_id}/published': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Publish Version */
+    put: operations['publish_version_v1_projects__project_id__datasets__dataset_id__published_put'];
+    post?: never;
+    /** Unpublish Dataset */
+    delete: operations['unpublish_dataset_v1_projects__project_id__datasets__dataset_id__published_delete'];
     options?: never;
     head?: never;
     patch?: never;
@@ -1659,6 +1694,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/projects/{project_id}/models/{model_version_id}/publish': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Publish Model */
+    patch: operations['publish_model_v1_projects__project_id__models__model_version_id__publish_patch'];
+    trace?: never;
+  };
   '/v1/projects/{project_id}/models/{model_version_id}/download/{file}': {
     parameters: {
       query?: never;
@@ -1767,6 +1819,57 @@ export interface paths {
      * @description Takes effect on the key's next request. Revoking twice keeps the first revocation time.
      */
     delete: operations['revoke_api_key_v1_projects__project_id__api_keys__key_id__delete'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/public/projects': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Public Projects */
+    get: operations['list_public_projects_v1_public_projects_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/public/projects/{project_id}/datasets': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Public Project Datasets */
+    get: operations['list_public_project_datasets_v1_public_projects__project_id__datasets_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/public/projects/{project_id}/models': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Public Project Models */
+    get: operations['list_public_project_models_v1_public_projects__project_id__models_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -2466,6 +2569,13 @@ export interface components {
       /** Zitadel Org Id */
       zitadel_org_id?: string | null;
     };
+    /** Body_publish_model_v1_projects__project_id__models__model_version_id__publish_patch */
+    Body_publish_model_v1_projects__project_id__models__model_version_id__publish_patch: {
+      /** Publish Metadata */
+      publish_metadata?: boolean | null;
+      /** Publish Artifact */
+      publish_artifact?: boolean | null;
+    };
     /** Body_set_tenant_status_v1_admin_tenants__tenant_id__status_post */
     Body_set_tenant_status_v1_admin_tenants__tenant_id__status_post: {
       /** Status */
@@ -2647,6 +2757,8 @@ export interface components {
       created_at: string;
       visibility: components['schemas']['Visibility'];
       default_access: components['schemas']['DefaultAccess'];
+      /** Gallery Published */
+      gallery_published: boolean;
     };
     /** CreatedTenant */
     CreatedTenant: {
@@ -2764,6 +2876,8 @@ export interface components {
       created_at: string;
       /** Deleted At */
       deleted_at: string | null;
+      /** Published Version Id */
+      published_version_id: string | null;
       /** Data Categories */
       data_categories: components['schemas']['DataCategory'][];
       /**
@@ -3593,6 +3707,34 @@ export interface components {
      * @enum {string}
      */
     PackageStatus: 'candidate' | 'stable' | 'retired';
+    /** Page[ActivityItem] */
+    Page_ActivityItem_: {
+      /** Items */
+      items: components['schemas']['ActivityItem'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
+    /** Page[AdminAuditEntry] */
+    Page_AdminAuditEntry_: {
+      /** Items */
+      items: components['schemas']['AdminAuditEntry'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
+    /** Page[AdminModelVersion] */
+    Page_AdminModelVersion_: {
+      /** Items */
+      items: components['schemas']['AdminModelVersion'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
+    /** Page[AdminModel] */
+    Page_AdminModel_: {
+      /** Items */
+      items: components['schemas']['AdminModel'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
     /** Page[AuditEntry] */
     Page_AuditEntry_: {
       /** Items */
@@ -3628,10 +3770,31 @@ export interface components {
       /** Next Page Token */
       next_page_token?: string | null;
     };
+    /** Page[Team] */
+    Page_Team_: {
+      /** Items */
+      items: components['schemas']['Team'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
     /** Page[TenantAuditEntry] */
     Page_TenantAuditEntry_: {
       /** Items */
       items: components['schemas']['TenantAuditEntry'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
+    /** Page[TenantListItem] */
+    Page_TenantListItem_: {
+      /** Items */
+      items: components['schemas']['TenantListItem'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
+    /** Page[TrainingRunSummary] */
+    Page_TrainingRunSummary_: {
+      /** Items */
+      items: components['schemas']['TrainingRunSummary'][];
       /** Next Page Token */
       next_page_token?: string | null;
     };
@@ -3646,6 +3809,13 @@ export interface components {
     Page_TrashedProject_: {
       /** Items */
       items: components['schemas']['TrashedProject'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
+    /** Page[UsageEvent] */
+    Page_UsageEvent_: {
+      /** Items */
+      items: components['schemas']['UsageEvent'][];
       /** Next Page Token */
       next_page_token?: string | null;
     };
@@ -3885,6 +4055,7 @@ export interface components {
       };
       visibility: components['schemas']['Visibility'];
       default_access: components['schemas']['DefaultAccess'];
+      sharing: components['schemas']['Sharing'];
     };
     /**
      * ProjectListItem
@@ -4008,6 +4179,84 @@ export interface components {
      * @enum {string}
      */
     PromotionStatus: 'pending' | 'failed';
+    /**
+     * PublicDataset
+     * @description A private dataset of a public project is listed with no name: "exists" is visible, contents are not.
+     */
+    PublicDataset: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Name */
+      name: string | null;
+      /** Published */
+      published: boolean;
+      /** Version Number */
+      version_number: number | null;
+      /** Stats */
+      stats: unknown;
+    };
+    /**
+     * PublicModel
+     * @description Likewise: an unpublished model's name and version are null.
+     */
+    PublicModel: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Mlflow Model Name */
+      mlflow_model_name: string | null;
+      /** Mlflow Version */
+      mlflow_version: string | null;
+      /** Publish Metadata */
+      publish_metadata: boolean;
+      /** Publish Artifact */
+      publish_artifact: boolean;
+    };
+    /** PublicProject */
+    PublicProject: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Name */
+      name: string | null;
+      /** Task Type */
+      task_type: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /** PublishRequest */
+    PublishRequest: {
+      /**
+       * Version Id
+       * Format: uuid
+       */
+      version_id: string;
+    };
+    /**
+     * PublishState
+     * @description Per-version "exclude" switches: true (the default) lets the project's Sharing level decide, false keeps this one out.
+     */
+    PublishState: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Publish Metadata */
+      publish_metadata: boolean;
+      /** Publish Artifact */
+      publish_artifact: boolean;
+    };
     /** RegisterBody */
     RegisterBody: {
       /** S3 Key */
@@ -4099,6 +4348,26 @@ export interface components {
      * @enum {string}
      */
     Severity: 'error' | 'warning';
+    /**
+     * Sharing
+     * @description Mirrors the projects.sharing CHECK constraint: what the project shows in the public gallery.
+     * @enum {string}
+     */
+    Sharing: 'private' | 'gallery' | 'gallery_downloads';
+    /** SharingChange */
+    SharingChange: {
+      sharing: components['schemas']['Sharing'];
+    };
+    /** SharingResult */
+    SharingResult: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      sharing: components['schemas']['Sharing'];
+      visibility: components['schemas']['Visibility'];
+    };
     /**
      * SmokeStatus
      * @description Mirrors the job_packages_smoke_status_check constraint: how a package's smoke job went.
@@ -4921,6 +5190,7 @@ export interface components {
       id: string;
       visibility: components['schemas']['Visibility'];
       default_access: components['schemas']['DefaultAccess'];
+      sharing: components['schemas']['Sharing'];
     };
     /** Webhook */
     Webhook: {
@@ -5039,8 +5309,8 @@ export interface operations {
         entity_type?: string | null;
         /** @description only the last N days */
         days?: number | null;
-        limit?: number;
-        offset?: number;
+        page_size?: number;
+        page_token?: string | null;
       };
       header?: {
         'x-admin-user'?: string | null;
@@ -5056,7 +5326,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['ActivityItem'][];
+          'application/json': components['schemas']['Page_ActivityItem_'];
         };
       };
       /** @description Validation Error */
@@ -5107,8 +5377,8 @@ export interface operations {
         entity_type?: components['schemas']['AdminAuditEntity'] | null;
         /** @description the admin's subject, exactly */
         actor?: string | null;
-        limit?: number;
-        offset?: number;
+        page_size?: number;
+        page_token?: string | null;
       };
       header?: {
         'x-admin-user'?: string | null;
@@ -5124,7 +5394,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['AdminAuditEntry'][];
+          'application/json': components['schemas']['Page_AdminAuditEntry_'];
         };
       };
       /** @description Validation Error */
@@ -5562,8 +5832,8 @@ export interface operations {
         visibility?: string | null;
         /** @description deployed | deploying | stopped | not_deployed */
         status?: string | null;
-        limit?: number;
-        offset?: number;
+        page_size?: number;
+        page_token?: string | null;
       };
       header?: {
         'x-admin-user'?: string | null;
@@ -5579,7 +5849,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['AdminModel'][];
+          'application/json': components['schemas']['Page_AdminModel_'];
         };
       };
       /** @description Validation Error */
@@ -5596,8 +5866,8 @@ export interface operations {
   list_model_versions_v1_admin_models__version_id__versions_get: {
     parameters: {
       query?: {
-        limit?: number;
-        offset?: number;
+        page_size?: number;
+        page_token?: string | null;
       };
       header?: {
         'x-admin-user'?: string | null;
@@ -5615,7 +5885,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['AdminModelVersion'][];
+          'application/json': components['schemas']['Page_AdminModelVersion_'];
         };
       };
       /** @description Validation Error */
@@ -6289,8 +6559,8 @@ export interface operations {
         plan_tier?: string | null;
         /** @description active | suspended | unknown */
         status?: string | null;
-        limit?: number;
-        offset?: number;
+        page_size?: number;
+        page_token?: string | null;
       };
       header?: {
         'x-admin-user'?: string | null;
@@ -6306,7 +6576,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['TenantListItem'][];
+          'application/json': components['schemas']['Page_TenantListItem_'];
         };
       };
       /** @description Validation Error */
@@ -6916,6 +7186,44 @@ export interface operations {
       };
     };
   };
+  update_sharing_v1_projects__project_id__sharing_put: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SharingChange'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SharingResult'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   restore_project_v1_projects__project_id__restore_post: {
     parameters: {
       query?: never;
@@ -7344,6 +7652,80 @@ export interface operations {
     };
   };
   restore_dataset_v1_projects__project_id__datasets__dataset_id__restore_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path: {
+        project_id: string;
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DatasetSummary'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  publish_version_v1_projects__project_id__datasets__dataset_id__published_put: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path: {
+        project_id: string;
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PublishRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DatasetSummary'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  unpublish_dataset_v1_projects__project_id__datasets__dataset_id__published_delete: {
     parameters: {
       query?: never;
       header?: {
@@ -8580,6 +8962,45 @@ export interface operations {
       };
     };
   };
+  publish_model_v1_projects__project_id__models__model_version_id__publish_patch: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path: {
+        project_id: string;
+        model_version_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['Body_publish_model_v1_projects__project_id__models__model_version_id__publish_patch'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PublishState'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   download_model_file_v1_projects__project_id__models__model_version_id__download__file__get: {
     parameters: {
       query?: never;
@@ -8862,11 +9283,105 @@ export interface operations {
       };
     };
   };
-  list_teams_v1_teams_get: {
+  list_public_projects_v1_public_projects_get: {
     parameters: {
       query?: {
         limit?: number;
         offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PublicProject'][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_public_project_datasets_v1_public_projects__project_id__datasets_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PublicDataset'][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_public_project_models_v1_public_projects__project_id__models_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PublicModel'][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_teams_v1_teams_get: {
+    parameters: {
+      query?: {
+        page_size?: number;
+        page_token?: string | null;
       };
       header?: {
         'x-tenant-id'?: string | null;
@@ -8883,7 +9398,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['Team'][];
+          'application/json': components['schemas']['Page_Team_'];
         };
       };
       /** @description Validation Error */
@@ -9685,8 +10200,8 @@ export interface operations {
   list_training_runs_v1_projects__project_id__training_runs_get: {
     parameters: {
       query?: {
-        limit?: number;
-        offset?: number;
+        page_size?: number;
+        page_token?: string | null;
       };
       header?: {
         'x-tenant-id'?: string | null;
@@ -9705,7 +10220,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['TrainingRunSummary'][];
+          'application/json': components['schemas']['Page_TrainingRunSummary_'];
         };
       };
       /** @description Validation Error */
@@ -9866,8 +10381,8 @@ export interface operations {
   project_usage_v1_projects__project_id__usage_get: {
     parameters: {
       query?: {
-        limit?: number;
-        offset?: number;
+        page_size?: number;
+        page_token?: string | null;
       };
       header?: {
         'x-tenant-id'?: string | null;
@@ -9886,7 +10401,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['UsageEvent'][];
+          'application/json': components['schemas']['Page_UsageEvent_'];
         };
       };
       /** @description Validation Error */

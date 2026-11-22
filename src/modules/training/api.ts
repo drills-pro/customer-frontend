@@ -36,7 +36,7 @@ export function useRuns(workspaceId: string, projectId: string) {
   return usePolledQuery({
     queryKey: trainingRunsKey(workspaceId, projectId),
     queryFn: () => fetchTrainingRuns(projectId),
-    shouldPoll: (runs) => runs?.some((r) => ACTIVE_TRAINING.includes(r.status)) ?? false,
+    shouldPoll: (page) => page?.items.some((r) => ACTIVE_TRAINING.includes(r.status)) ?? false,
   });
 }
 

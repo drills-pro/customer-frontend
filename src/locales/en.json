@@ -460,36 +460,6 @@
       "deployer": "Deployer",
       "viewer": "Viewer"
     },
-    "sharing": {
-      "title": "Sharing",
-      "exclude": "Models and dataset versions can still be left out one by one from the Models and Datasets pages.",
-      "level": {
-        "private": {
-          "label": "Private",
-          "help": "Only your workspace sees this project. Nothing is public."
-        },
-        "gallery": {
-          "label": "Gallery",
-          "help": "The project's name, task and the details of its models appear in the public gallery. No files can be downloaded."
-        },
-        "gallery_downloads": {
-          "label": "Gallery and downloads",
-          "help": "Everything in Gallery, plus model files and published dataset versions that anyone can download."
-        }
-      },
-      "confirm": {
-        "title": "Make this project private?",
-        "description": "It leaves the public gallery now, and its models and datasets are no longer public. You can share it again at any time.",
-        "keep": "Keep sharing",
-        "confirm": "Make private"
-      },
-      "toast": {
-        "private": "Project is private",
-        "gallery": "Project is in the gallery",
-        "gallery_downloads": "Project is in the gallery with downloads",
-        "failed": "Could not change sharing"
-      }
-    },
     "delete": {
       "title": "Move {{name}} to the Trash?",
       "body": "The project disappears from your list and waits in the Trash, where you can restore it until its restore date. To only hide it, archive it instead.",
@@ -564,7 +534,7 @@
   },
   "datasets": {
     "title": "Datasets",
-    "subtitle": "The data this project trains on. Each import adds a version you can review, publish and preview.",
+    "subtitle": "The data this project trains on. Each import adds a version you can review and preview.",
     "cancel": "Cancel",
     "close": "Close",
     "retry": "Try again",
@@ -575,8 +545,6 @@
     "loadOneFailed": "Could not load this dataset",
     "readOnly": "Your role cannot change datasets in this project, so editing is turned off.",
     "noTask": "No task type",
-    "notPublished": "Not published",
-    "published": "Published",
     "deleted": "Pending deletion",
     "deletedNotice": "This dataset is pending deletion. You can restore it until {{date}}.",
     "versionNumber": "Version {{number}}",
@@ -597,7 +565,6 @@
     "column": {
       "name": "Name",
       "task": "Task",
-      "published": "Published",
       "latestImport": "Latest import",
       "actions": "Actions",
       "version": "Version",
@@ -624,9 +591,6 @@
       "deleteFailed": "Could not delete the dataset",
       "restored": "{{name}} was restored",
       "restoreFailed": "Could not restore the dataset",
-      "published": "Version {{number}} is published",
-      "unpublished": "The dataset is no longer published",
-      "publishFailed": "Could not change what is published",
       "committed": "Added as version {{number}}",
       "commitFailed": "Could not add the version",
       "discardFailed": "Could not discard the import",
@@ -639,8 +603,6 @@
     "versions": {
       "loadFailed": "Could not load the versions",
       "preview": "Preview",
-      "publish": "Publish",
-      "unpublish": "Unpublish",
       "empty": {
         "title": "No versions yet",
         "body": "A version appears when you commit an import."
@@ -821,13 +783,12 @@
       "goToDataset": "Open dataset",
       "versionLabel": "Version",
       "version": "Version {{number}}",
-      "versionHelp": "The published version is picked first.",
+      "versionHelp": "The newest version is picked first.",
       "createdOn": "Created {{date}}",
       "items_one": "{{value}} item",
       "items_other": "{{value}} items",
       "classes_one": "{{count}} class",
-      "classes_other": "{{count}} classes",
-      "published": "Published"
+      "classes_other": "{{count}} classes"
     },
     "model": {
       "title": "Model",
@@ -1094,14 +1055,9 @@
       "model": "Model",
       "score": "Score",
       "status": "Status",
-      "sharing": "Sharing",
       "actions": "Actions"
     },
     "version": "Version {{version}}",
-    "publish": {
-      "on": "Include in sharing",
-      "off": "Leave out of sharing"
-    },
     "serving": {
       "promote": "Promote to Production",
       "rollback": "Roll back to this version",
@@ -1128,10 +1084,6 @@
       "archived": "Archived",
       "none": "Unassigned"
     },
-    "sharing": {
-      "included": "In sharing",
-      "leftOut": "Left out"
-    },
     "move": {
       "None": "Mark as unassigned",
       "Staging": "Mark as candidate",
@@ -1146,8 +1098,7 @@
       "cancel": "Cancel"
     },
     "toast": {
-      "stageFailed": "Could not change the stage",
-      "sharingFailed": "Could not change sharing"
+      "stageFailed": "Could not change the stage"
     }
   },
   "deployments": {

@@ -39,7 +39,6 @@ export interface DatasetRec {
   task_type: string | null;
   created_at: string;
   deleted_at: string | null;
-  published_version_id: string | null;
 }
 export interface OfferRec {
   from_sub: string;
@@ -78,7 +77,6 @@ export interface ProjectRec {
   settings: Record<string, unknown>;
   visibility: 'internal' | 'private';
   default_access: 'read' | 'edit';
-  sharing: 'private' | 'gallery' | 'gallery_downloads';
 }
 export interface ProjectMemberRec {
   user_sub: string;
@@ -172,9 +170,6 @@ export interface ModelRec {
   promotion_status: 'pending' | 'failed' | null;
   promotion_error: string | null;
   promotion_error_code: string | null;
-  /** Left out when a test plays an API from before these fields. */
-  publish_metadata?: boolean;
-  publish_artifact?: boolean;
 }
 /** What reached POST /v1/predict: the headers that name the model and project, and the body. */
 export interface PredictCallRec {
@@ -220,8 +215,6 @@ export interface ApiState {
   models: ModelRec[];
   /** Each promote request that reached the backend: the version, the stage and acknowledge_risk. */
   promoteCalls: { versionId: string; stage: string; acknowledge: boolean }[];
-  /** Each PATCH of a version's publish switches: the version and the body. */
-  publishCalls: { versionId: string; publish_metadata: boolean; publish_artifact: boolean }[];
   /** The training-runs list answers 500. */
   failRuns: boolean;
   /** What the training-presets list answers with: the project's task type's presets. */
@@ -293,7 +286,6 @@ export const newState = (): ApiState => ({
     settings: {},
     visibility: 'internal',
     default_access: 'read',
-    sharing: 'private',
   },
   projectMembers: [{ user_sub: 'me', roles: ['project_admin'], created_at: '2026-10-02T00:00:00Z' }],
   offer: null,
@@ -305,7 +297,6 @@ export const newState = (): ApiState => ({
   predictCalls: [],
   models: [],
   promoteCalls: [],
-  publishCalls: [],
   failRuns: false,
   presets: [preset('small', 10, 32), preset('medium', 20, 16)],
   failPresets: null,
@@ -371,7 +362,6 @@ export const dataset = (state: ApiState, patch: Partial<DatasetRec> = {}): Datas
     task_type: 'tabular-classification',
     created_at: NOW,
     deleted_at: null,
-    published_version_id: null,
     ...patch,
   };
   state.datasets.push(d);
@@ -632,9 +622,6 @@ export const model = (state: ApiState, stage: ModelRec['stage'] = 'None', patch:
     promotion_status: null,
     promotion_error: null,
     promotion_error_code: null,
-    // core-api's default: the project's Sharing level decides.
-    publish_metadata: true,
-    publish_artifact: true,
     ...patch,
   };
   state.models.push(m);
@@ -777,19 +764,10 @@ function predictRoute(route: Route, state: ApiState, req: ReturnType<Route['requ
   });
 }
 
-/** The model versions list, the publish switches and a promote: Production answers 202 with the version pending, and the test settles it (`settlePromotion`)
+/** The model versions list and a promote: Production answers 202 with the version pending, and the test settles it (`settlePromotion`)
  * or fails it. Returns undefined for any other path. */
 function modelRoutes(route: Route, state: ApiState, method: string, path: string, req: ReturnType<Route['request']>) {
   if (path === `/v1/projects/${PROJECT}/models` && method === 'GET') return json(route, 200, [...state.models].reverse());
-  const pub = path.match(new RegExp(`^/v1/projects/${PROJECT}/models/([^/]+)/publish$`));
-  if (pub && method === 'PATCH') {
-    const v = state.models.find((x) => x.id === pub[1]);
-    if (!v) return problem(route, 404, 'not_found');
-    const body = req.postDataJSON() as { publish_metadata: boolean; publish_artifact: boolean };
-    state.publishCalls.push({ versionId: v.id, ...body });
-    Object.assign(v, body);
-    return json(route, 200, { id: v.id, publish_metadata: v.publish_metadata, publish_artifact: v.publish_artifact });
-  }
   const m = path.match(new RegExp(`^/v1/projects/${PROJECT}/models/([^/]+)/promote$`));
   if (!m) return undefined;
   const v = state.models.find((x) => x.id === m[1]);
@@ -865,12 +843,6 @@ function projectRoutes(route: Route, state: ApiState, method: string, path: stri
       const status = new URL(req.url()).searchParams.get('status');
       if (method === 'PATCH' && status) state.project.status = status as ProjectRec['status'];
       return json(route, 200, state.project);
-    }
-    case '/sharing': {
-      const { sharing } = JSON.parse(req.postData() ?? '{}');
-      state.project.sharing = sharing;
-      if (sharing !== 'private') state.project.visibility = 'internal';
-      return json(route, 200, { id: PROJECT, sharing, visibility: state.project.visibility });
     }
     case '/members':
       return json(route, 200, state.projectMembers);
@@ -996,10 +968,6 @@ function datasetRoutes(route: Route, state: ApiState, method: string, path: stri
   }
   if (rest === ':restore') {
     d.deleted_at = null;
-    return json(route, 200, d);
-  }
-  if (rest === '/published') {
-    d.published_version_id = method === 'PUT' ? String(body.version_id) : null;
     return json(route, 200, d);
   }
   if (rest === '/versions') {

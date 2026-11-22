@@ -10,7 +10,7 @@ async function fillUpload(page: Page) {
   await page.getByTestId('import-target').fill('y');
 }
 
-test('walks create, upload, start, review, commit, publish', async ({ page, api }) => {
+test('walks create, upload, start, review, commit', async ({ page, api }) => {
   await page.clock.install();
   const d = dataset(api);
   await page.goto(`${BASE}/${d.id}/imports/new`);
@@ -46,8 +46,6 @@ test('walks create, upload, start, review, commit, publish', async ({ page, api 
   await expect(page.getByTestId('import-succeeded')).toBeVisible();
   await page.getByTestId('import-view-versions').click();
   await expect(page.getByTestId('version-row')).toHaveCount(1);
-  await page.getByTestId('version-publish').click();
-  await expect(page.getByTestId('version-published')).toBeVisible();
 });
 
 test('polling follows a moving import and stops on a settled one', async ({ page, api }) => {

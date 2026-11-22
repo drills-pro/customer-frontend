@@ -280,7 +280,7 @@ export interface paths {
      *     Addressed by one of its versions - the id the listing already handed
      *     out - rather than by (project, name), so the caller has no second key
      *     to spell and nothing to escape. An id that names no version answers
-     *     with an empty list, the same as a model whose project was deleted.
+     *     with an empty page, the same as a model whose project was deleted.
      */
     get: operations['list_model_versions_v1_admin_models__version_id__versions_get'];
     put?: never;
@@ -3707,6 +3707,34 @@ export interface components {
      * @enum {string}
      */
     PackageStatus: 'candidate' | 'stable' | 'retired';
+    /** Page[ActivityItem] */
+    Page_ActivityItem_: {
+      /** Items */
+      items: components['schemas']['ActivityItem'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
+    /** Page[AdminAuditEntry] */
+    Page_AdminAuditEntry_: {
+      /** Items */
+      items: components['schemas']['AdminAuditEntry'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
+    /** Page[AdminModelVersion] */
+    Page_AdminModelVersion_: {
+      /** Items */
+      items: components['schemas']['AdminModelVersion'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
+    /** Page[AdminModel] */
+    Page_AdminModel_: {
+      /** Items */
+      items: components['schemas']['AdminModel'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
     /** Page[AuditEntry] */
     Page_AuditEntry_: {
       /** Items */
@@ -3742,10 +3770,31 @@ export interface components {
       /** Next Page Token */
       next_page_token?: string | null;
     };
+    /** Page[Team] */
+    Page_Team_: {
+      /** Items */
+      items: components['schemas']['Team'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
     /** Page[TenantAuditEntry] */
     Page_TenantAuditEntry_: {
       /** Items */
       items: components['schemas']['TenantAuditEntry'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
+    /** Page[TenantListItem] */
+    Page_TenantListItem_: {
+      /** Items */
+      items: components['schemas']['TenantListItem'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
+    /** Page[TrainingRunSummary] */
+    Page_TrainingRunSummary_: {
+      /** Items */
+      items: components['schemas']['TrainingRunSummary'][];
       /** Next Page Token */
       next_page_token?: string | null;
     };
@@ -3760,6 +3809,13 @@ export interface components {
     Page_TrashedProject_: {
       /** Items */
       items: components['schemas']['TrashedProject'][];
+      /** Next Page Token */
+      next_page_token?: string | null;
+    };
+    /** Page[UsageEvent] */
+    Page_UsageEvent_: {
+      /** Items */
+      items: components['schemas']['UsageEvent'][];
       /** Next Page Token */
       next_page_token?: string | null;
     };
@@ -5253,8 +5309,8 @@ export interface operations {
         entity_type?: string | null;
         /** @description only the last N days */
         days?: number | null;
-        limit?: number;
-        offset?: number;
+        page_size?: number;
+        page_token?: string | null;
       };
       header?: {
         'x-admin-user'?: string | null;
@@ -5270,7 +5326,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['ActivityItem'][];
+          'application/json': components['schemas']['Page_ActivityItem_'];
         };
       };
       /** @description Validation Error */
@@ -5321,8 +5377,8 @@ export interface operations {
         entity_type?: components['schemas']['AdminAuditEntity'] | null;
         /** @description the admin's subject, exactly */
         actor?: string | null;
-        limit?: number;
-        offset?: number;
+        page_size?: number;
+        page_token?: string | null;
       };
       header?: {
         'x-admin-user'?: string | null;
@@ -5338,7 +5394,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['AdminAuditEntry'][];
+          'application/json': components['schemas']['Page_AdminAuditEntry_'];
         };
       };
       /** @description Validation Error */
@@ -5776,8 +5832,8 @@ export interface operations {
         visibility?: string | null;
         /** @description deployed | deploying | stopped | not_deployed */
         status?: string | null;
-        limit?: number;
-        offset?: number;
+        page_size?: number;
+        page_token?: string | null;
       };
       header?: {
         'x-admin-user'?: string | null;
@@ -5793,7 +5849,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['AdminModel'][];
+          'application/json': components['schemas']['Page_AdminModel_'];
         };
       };
       /** @description Validation Error */
@@ -5810,8 +5866,8 @@ export interface operations {
   list_model_versions_v1_admin_models__version_id__versions_get: {
     parameters: {
       query?: {
-        limit?: number;
-        offset?: number;
+        page_size?: number;
+        page_token?: string | null;
       };
       header?: {
         'x-admin-user'?: string | null;
@@ -5829,7 +5885,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['AdminModelVersion'][];
+          'application/json': components['schemas']['Page_AdminModelVersion_'];
         };
       };
       /** @description Validation Error */
@@ -6503,8 +6559,8 @@ export interface operations {
         plan_tier?: string | null;
         /** @description active | suspended | unknown */
         status?: string | null;
-        limit?: number;
-        offset?: number;
+        page_size?: number;
+        page_token?: string | null;
       };
       header?: {
         'x-admin-user'?: string | null;
@@ -6520,7 +6576,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['TenantListItem'][];
+          'application/json': components['schemas']['Page_TenantListItem_'];
         };
       };
       /** @description Validation Error */
@@ -9324,8 +9380,8 @@ export interface operations {
   list_teams_v1_teams_get: {
     parameters: {
       query?: {
-        limit?: number;
-        offset?: number;
+        page_size?: number;
+        page_token?: string | null;
       };
       header?: {
         'x-tenant-id'?: string | null;
@@ -9342,7 +9398,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['Team'][];
+          'application/json': components['schemas']['Page_Team_'];
         };
       };
       /** @description Validation Error */
@@ -10144,8 +10200,8 @@ export interface operations {
   list_training_runs_v1_projects__project_id__training_runs_get: {
     parameters: {
       query?: {
-        limit?: number;
-        offset?: number;
+        page_size?: number;
+        page_token?: string | null;
       };
       header?: {
         'x-tenant-id'?: string | null;
@@ -10164,7 +10220,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['TrainingRunSummary'][];
+          'application/json': components['schemas']['Page_TrainingRunSummary_'];
         };
       };
       /** @description Validation Error */
@@ -10325,8 +10381,8 @@ export interface operations {
   project_usage_v1_projects__project_id__usage_get: {
     parameters: {
       query?: {
-        limit?: number;
-        offset?: number;
+        page_size?: number;
+        page_token?: string | null;
       };
       header?: {
         'x-tenant-id'?: string | null;
@@ -10345,7 +10401,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['UsageEvent'][];
+          'application/json': components['schemas']['Page_UsageEvent_'];
         };
       };
       /** @description Validation Error */

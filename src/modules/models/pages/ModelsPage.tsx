@@ -6,7 +6,7 @@ import { useWorkspace } from '@/modules/workspaces';
 import { errorKey } from '@/shared/api/errors';
 import { numericEntries } from '@/shared/api/metrics';
 import { useTrainingRuns } from '@/shared/api/overview';
-import { includedInSharing, isPromoting, isServing, useModels, type ModelVersion } from '@/modules/models/api';
+import { isPromoting, isServing, useModels, type ModelVersion } from '@/modules/models/api';
 import { PromoteDialog } from '@/modules/models/components/PromoteDialog';
 import { ModelMenu } from '@/modules/models/components/ModelMenu';
 import { promotionFailureKey, ProblemCode } from '@/modules/models/errors';
@@ -16,7 +16,7 @@ const FROM = '/app/w/$slug/projects/$projectId/models';
 const EMPTY = '-';
 const FRACTION_DIGITS = 4;
 
-/** The project's registered model versions: each one's score and status, whether it is in the project's sharing, and promoting one (or
+/** The project's registered model versions: each one's score and status, and promoting one (or
  * rolling back) behind a confirm. The run that made a version is a click away, with its metrics, config and data. */
 export function ModelsPage() {
   const { t } = useTranslation();
@@ -70,7 +70,7 @@ function ModelsTable({ models, slug, projectId }: { models: ModelVersion[]; slug
   const { id: workspaceId } = useWorkspace();
   const runs = useTrainingRuns(workspaceId, projectId);
   const scoreOf = (m: ModelVersion) => {
-    const run = m.training_run_id ? runs.data?.find((r) => r.id === m.training_run_id) : undefined;
+    const run = m.training_run_id ? runs.data?.items.find((r) => r.id === m.training_run_id) : undefined;
     return Object.entries(numericEntries(run?.metrics))[0];
   };
   return (
@@ -81,7 +81,6 @@ function ModelsTable({ models, slug, projectId }: { models: ModelVersion[]; slug
             <Table.ColumnHeader>{t('models.col.model')}</Table.ColumnHeader>
             <Table.ColumnHeader>{t('models.col.score')}</Table.ColumnHeader>
             <Table.ColumnHeader>{t('models.col.status')}</Table.ColumnHeader>
-            <Table.ColumnHeader>{t('models.col.sharing')}</Table.ColumnHeader>
             <Table.ColumnHeader>
               <Box srOnly>{t('models.col.actions')}</Box>
             </Table.ColumnHeader>
@@ -111,7 +110,6 @@ function ModelRow({ version: m, models, score, slug, projectId }: ModelRowProps)
   const { t, i18n } = useTranslation();
   const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium' });
   const number = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: FRACTION_DIGITS });
-  const included = includedInSharing(m);
   return (
     <Table.Row data-testid="model-row" data-model={m.id} data-stage={m.stage} data-promotion={m.promotion_status ?? ''}>
       <Table.Cell>
@@ -148,15 +146,6 @@ function ModelRow({ version: m, models, score, slug, projectId }: ModelRowProps)
       </Table.Cell>
       <Table.Cell>
         <StatusCell version={m} />
-      </Table.Cell>
-      <Table.Cell>
-        {included === undefined ? (
-          EMPTY
-        ) : (
-          <Badge colorPalette={included ? 'info' : 'gray'} variant="subtle" data-testid="model-shared" data-shared={String(included)}>
-            {t(included ? 'models.sharing.included' : 'models.sharing.leftOut')}
-          </Badge>
-        )}
       </Table.Cell>
       <Table.Cell>
         <Flex justify="flex-end" align="center" gap="2">

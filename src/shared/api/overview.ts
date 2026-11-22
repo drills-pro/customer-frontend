@@ -16,7 +16,7 @@ export const trainingRunsKey = (workspaceId: string, projectId: string) =>
 export const fetchTrainingRuns = (projectId: string) =>
   unwrap(
     client.GET('/v1/projects/{project_id}/training-runs', {
-      params: { path: { project_id: projectId }, query: { limit: TRAINING_RUN_LIMIT } },
+      params: { path: { project_id: projectId }, query: { page_size: TRAINING_RUN_LIMIT } },
     }),
   );
 

@@ -1,5 +1,5 @@
 import type { DeploymentListItem, TrainingRunSummary } from '@/modules/projects/api';
-import { ACTIVE_TRAINING, DeploymentStatus, StageState, TRAINING_RUN_LIMIT, TrainingStatus } from '@/modules/projects/constants';
+import { ACTIVE_TRAINING, DeploymentStatus, StageState, TrainingStatus } from '@/modules/projects/constants';
 
 /** What a stage card shows: `count` is null while loading or when the stage cannot be read. */
 export interface Stage {
@@ -26,11 +26,16 @@ export function dataStage(page: { count: number; more: boolean } | undefined, fa
 }
 
 /** Done once a run succeeded; in progress while one is queued or running. */
-export function trainStage(runs: TrainingRunSummary[] | undefined, failed: boolean): Stage {
+export function trainStage(runs: { items: TrainingRunSummary[]; next_page_token?: string | null } | undefined, failed: boolean): Stage {
   if (!runs) return unknownStage(failed);
-  const inProgress = runs.filter((r) => ACTIVE_TRAINING.includes(r.status)).length;
-  const succeeded = runs.some((r) => r.status === TrainingStatus.Succeeded);
-  return { state: pick(succeeded, inProgress > 0), count: runs.length, more: runs.length >= TRAINING_RUN_LIMIT, inProgress };
+  const inProgress = runs.items.filter((r) => ACTIVE_TRAINING.includes(r.status)).length;
+  const succeeded = runs.items.some((r) => r.status === TrainingStatus.Succeeded);
+  return {
+    state: pick(succeeded, inProgress > 0),
+    count: runs.items.length,
+    more: Boolean(runs.next_page_token),
+    inProgress,
+  };
 }
 
 /** Counts live endpoints; one still deploying makes the stage in progress. */

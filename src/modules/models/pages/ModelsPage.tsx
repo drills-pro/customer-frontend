@@ -70,7 +70,7 @@ function ModelsTable({ models, slug, projectId }: { models: ModelVersion[]; slug
   const { id: workspaceId } = useWorkspace();
   const runs = useTrainingRuns(workspaceId, projectId);
   const scoreOf = (m: ModelVersion) => {
-    const run = m.training_run_id ? runs.data?.find((r) => r.id === m.training_run_id) : undefined;
+    const run = m.training_run_id ? runs.data?.items.find((r) => r.id === m.training_run_id) : undefined;
     return Object.entries(numericEntries(run?.metrics))[0];
   };
   return (

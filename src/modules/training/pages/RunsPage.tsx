@@ -20,7 +20,8 @@ export function RunsPage() {
   const { t } = useTranslation();
   const { id: workspaceId, slug } = useWorkspace();
   const { projectId } = useParams({ from: FROM });
-  const { data: runs, error, isError, isPending, refetch } = useRuns(workspaceId, projectId);
+  const { data, error, isError, isPending, refetch } = useRuns(workspaceId, projectId);
+  const runs = data?.items ?? [];
 
   return (
     <Stack gap="6">
@@ -67,7 +68,7 @@ export function RunsPage() {
       ) : (
         <Stack gap="3">
           <RunsTable runs={runs} slug={slug} projectId={projectId} />
-          {runs.length >= TRAINING_RUN_LIMIT && (
+          {data?.next_page_token && (
             <Text textStyle="body-sm" color="fg.muted" data-testid="training-list-more">
               {t('training.list.more', { count: TRAINING_RUN_LIMIT })}
             </Text>

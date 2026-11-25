@@ -5,17 +5,13 @@ import { useMutation } from '@tanstack/react-query';
 import { Check } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { toaster } from '@/components/toaster';
-import { sendVerificationEmail, slugAvailable, useCreateWorkspace, useEmailVerified, useMe } from '@/modules/workspaces/api';
+import { sendVerificationEmail, useCreateWorkspace, useEmailVerified, useMe } from '@/modules/workspaces/api';
 import { ApiError } from '@/shared/api/client';
 import { errorKey } from '@/shared/api/errors';
 import { newIdempotencyKey } from '@/shared/api/idempotency';
 import { Bit } from '@/brand/Bit';
 import { useAuth } from '@/modules/auth';
 
-// Mirrors core-api's TenantSlug (3-40 chars, lowercase words joined by single hyphens); the server stays the authority.
-const SLUG_MIN = 3;
-const SLUG_MAX = 40;
-const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const NAME_MAX = 100;
 const VERIFY = 0;
 const DETAILS = 1;
@@ -53,27 +49,7 @@ function useEmailVerification(active: boolean) {
   return { notice, sending, resend: () => send(), continueIn };
 }
 
-const slugify = (name: string) =>
-  name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, SLUG_MAX)
-    .replace(/-+$/, '');
-
-function slugProblem(slug: string): 'short' | 'format' | null {
-  if (slug.length < SLUG_MIN) return 'short';
-  return SLUG_PATTERN.test(slug) && slug.length <= SLUG_MAX ? null : 'format';
-}
-
-const SUFFIX_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
-/** The handle with a random 5-character ending, for when the name's own handle is taken. Stays within SLUG_MAX. */
-function withSuffix(slug: string) {
-  const tail = Array.from(crypto.getRandomValues(new Uint8Array(5)), (b) => SUFFIX_CHARS[b % SUFFIX_CHARS.length]).join('');
-  return `${slug.slice(0, SLUG_MAX - 6).replace(/-+$/, '')}-${tail}`;
-}
-
-/** Name and handle on one screen; Create checks the handle and creates the workspace, then opens it. A taken handle gets an ending. */
+/** Name the workspace; Create makes it and opens it. The handle is made from the name by the server. */
 export function NewWorkspacePage() {
   const { t } = useTranslation();
   const me = useMe();
@@ -85,43 +61,25 @@ export function NewWorkspacePage() {
   // One key per attempt: a double click or a retry replays the first answer instead of making a second workspace.
   const key = useRef(newIdempotencyKey());
   const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
-  const [slugEdited, setSlugEdited] = useState(false);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const trimmed = name.trim();
-  const problem = slugProblem(slug);
-  const detailsOk = trimmed.length > 0 && problem === null;
-
-  const onName = (v: string) => {
-    setName(v);
-    if (!slugEdited) setSlug(slugify(v));
-  };
-  const onSlug = (v: string) => {
-    setSlugEdited(true);
-    setSlug(v.toLowerCase());
-  };
+  const detailsOk = trimmed.length > 0;
 
   async function submit() {
     setError(null);
     setChecking(true);
-    // A failed check keeps the typed handle: the create still reports a real problem.
-    const free = await slugAvailable(slug).catch(() => true);
-    setChecking(false);
-    const handle = free ? slug : withSuffix(slug);
     try {
-      const made = await create.mutateAsync({ name: trimmed, slug: handle, key: key.current });
-      toaster.create({
-        type: 'success',
-        title: t('workspace.done.title', { name: made.name }),
-        description: handle === slug ? undefined : t('workspace.review.suffixed', { from: slug }),
-      });
+      const made = await create.mutateAsync({ name: trimmed, key: key.current });
+      toaster.create({ type: 'success', title: t('workspace.done.title', { name: made.name }) });
       void navigate({ to: '/w/$slug', params: { slug: made.slug } });
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) return; // the query client already sent the user to sign in
       key.current = newIdempotencyKey(); // a refused attempt is over: the next click is a new one
       setError(t(e instanceof ApiError && e.status === 409 ? 'workspace.error.conflict' : errorKey(e)));
+    } finally {
+      setChecking(false);
     }
   }
   const busy = create.isPending || checking;
@@ -190,22 +148,8 @@ export function NewWorkspacePage() {
             <Stack gap="5" maxW="md">
               <Field.Root required invalid={name.length > 0 && !trimmed}>
                 <Field.Label>{t('workspace.details.name')}</Field.Label>
-                <Input data-testid="wizard-name" value={name} maxLength={NAME_MAX} onChange={(e) => onName(e.target.value)} />
+                <Input data-testid="wizard-name" value={name} maxLength={NAME_MAX} onChange={(e) => setName(e.target.value)} />
                 <Field.HelperText>{t('workspace.details.nameHelp')}</Field.HelperText>
-              </Field.Root>
-              <Field.Root required invalid={slug.length > 0 && problem !== null}>
-                <Field.Label>{t('workspace.details.slug')}</Field.Label>
-                <Input
-                  data-testid="wizard-slug"
-                  value={slug}
-                  fontFamily="mono"
-                  maxLength={SLUG_MAX}
-                  onChange={(e) => onSlug(e.target.value)}
-                />
-                <Field.ErrorText>
-                  {problem && t(`workspace.details.slugError.${problem}`, { min: SLUG_MIN, max: SLUG_MAX })}
-                </Field.ErrorText>
-                <Field.HelperText>{t('workspace.details.slugHelp')}</Field.HelperText>
               </Field.Root>
               {error && (
                 <Alert.Root status="error" colorPalette="danger">

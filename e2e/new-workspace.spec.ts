@@ -7,10 +7,9 @@ test('the wizard creates a workspace and opens it', async ({ page, api }) => {
   await expect(page.getByTestId('wizard-create')).toBeDisabled();
 
   await page.getByTestId('wizard-name').fill('My Team');
-  await expect(page.getByTestId('wizard-slug')).toHaveValue('my-team');
   await page.getByTestId('wizard-create').click();
 
-  // One step: the workspace is made and opened, with no review or done screen in between.
+  // One step: the name is all it takes; the handle is made from it, and the workspace opens.
   await expect.poll(() => api.workspaces.length).toBe(1);
   expect(api.workspaces[0].slug).toBe('my-team');
   await expect(page).toHaveURL('/w/my-team');

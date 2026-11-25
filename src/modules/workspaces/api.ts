@@ -43,8 +43,9 @@ function useRefresh(id?: string) {
 export function useCreateWorkspace() {
   const refresh = useRefresh();
   return useMutation({
-    mutationFn: ({ name, slug, key }: { name: string; slug: string; key: string }) =>
-      unwrap(client.POST('/v1/tenants', { params: { header: { [IDEMPOTENCY_HEADER]: key } }, body: { name, slug } })),
+    // The name is all the user gives: the server makes the handle from it, and adds an ending when the handle is taken.
+    mutationFn: ({ name, key }: { name: string; key: string }) =>
+      unwrap(client.POST('/v1/tenants', { params: { header: { [IDEMPOTENCY_HEADER]: key } }, body: { name } })),
     onSuccess: refresh,
   });
 }

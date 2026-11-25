@@ -320,7 +320,20 @@ const presetDefaults = (state: ApiState, name: string): Record<string, number> =
     ]),
   );
 
+/** The handle core-api makes from a name: its own slug, or the same with a random ending when another workspace has it. */
+function handleFor(name: string, state: ApiState): string {
+  const base =
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'workspace';
+  if (!state.workspaces.some((w) => w.slug === base)) return base;
+  const ending = Math.random().toString(36).slice(2, 7).padEnd(5, 'x');
+  return `${base}-${ending}`;
+}
+
 /** A preset of a task trained by a bundle: the same preset, its hyperparameters the default values only. */
+
 export function bundlePreset(name: string, epochs: number, batch: number): PresetRec {
   return { ...preset(name, epochs, batch), hyperparameters: { epochs, batch_size: batch, image_size: 224 } };
 }
@@ -485,7 +498,7 @@ export async function installApi(page: Page, state: ApiState) {
       return json(route, 200, { slug, available: !state.workspaces.some((w) => w.slug === slug) });
     }
     if (path === '/v1/tenants' && method === 'POST') {
-      const w = workspace(crypto.randomUUID(), body.name, body.slug, 'owner');
+      const w = workspace(crypto.randomUUID(), body.name, handleFor(body.name, state), 'owner');
       state.workspaces.push(w);
       return json(route, 201, { id: w.id, name: w.name, slug: w.slug, role: w.role });
     }

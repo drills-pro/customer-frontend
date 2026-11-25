@@ -81,6 +81,7 @@
       }
     },
     "review": {
+      "suffixed": "{{from}} is taken, so we added a short ending to the handle.",
       "owner": "You will be the Owner of this workspace and can invite members afterwards.",
       "create": "Create workspace"
     },

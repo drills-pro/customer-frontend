@@ -489,6 +489,10 @@ export async function installApi(page: Page, state: ApiState) {
       state.verificationMails += 1;
       return json(route, 204);
     }
+    if (path === '/v1/me/tenant-slug-available') {
+      const slug = new URL(route.request().url()).searchParams.get('slug') ?? '';
+      return json(route, 200, { slug, available: !state.workspaces.some((w) => w.slug === slug) });
+    }
     if (path === '/v1/tenants' && method === 'POST') {
       const w = workspace(crypto.randomUUID(), body.name, body.slug, 'owner');
       state.workspaces.push(w);

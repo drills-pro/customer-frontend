@@ -4,7 +4,7 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { Check } from 'pixelarticons/react';
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { sendVerificationEmail, useEmailVerified, useMe } from '@/modules/workspaces/api';
+import { sendVerificationEmail, slugAvailable, useEmailVerified, useMe } from '@/modules/workspaces/api';
 import { ApiError, type Schemas } from '@/shared/api/client';
 import { errorKey } from '@/shared/api/errors';
 import { newIdempotencyKey } from '@/shared/api/idempotency';
@@ -65,6 +65,13 @@ function slugProblem(slug: string): 'short' | 'format' | null {
   return SLUG_PATTERN.test(slug) && slug.length <= SLUG_MAX ? null : 'format';
 }
 
+const SUFFIX_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
+/** The handle with a random 5-character ending, for when the name's own handle is taken. Stays within SLUG_MAX. */
+function withSuffix(slug: string) {
+  const tail = Array.from(crypto.getRandomValues(new Uint8Array(5)), (b) => SUFFIX_CHARS[b % SUFFIX_CHARS.length]).join('');
+  return `${slug.slice(0, SLUG_MAX - 6).replace(/-+$/, '')}-${tail}`;
+}
+
 /** Four-step "new workspace" wizard: verify email, name and handle, review, done. */
 export function NewWorkspacePage() {
   const { t } = useTranslation();
@@ -81,6 +88,8 @@ export function NewWorkspacePage() {
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [slugEdited, setSlugEdited] = useState(false);
+  const [handle, setHandle] = useState(''); // the handle to create: the typed slug, or the suffixed one when it is taken
+  const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<Schemas['TenantCreated'] | null>(null);
 
@@ -97,10 +106,20 @@ export function NewWorkspacePage() {
     setSlug(v.toLowerCase());
   };
 
+  // Leaving the details step checks the typed handle. A taken one gets a suffix, so the review shows the handle that will be created.
+  // If the check itself fails, keep the typed one: the create still reports a real problem.
+  async function reviewHandle() {
+    setChecking(true);
+    const free = await slugAvailable(slug).catch(() => true);
+    setChecking(false);
+    setHandle(free ? slug : withSuffix(slug));
+    go(2);
+  }
+
   function submit() {
     setError(null);
     create.mutate(
-      { name: trimmed, slug, key: key.current },
+      { name: trimmed, slug: handle, key: key.current },
       {
         onSuccess: (made) => {
           setCreated(made);
@@ -215,8 +234,13 @@ export function NewWorkspacePage() {
                 <Text textStyle="label" color="fg.muted" textTransform="uppercase">
                   {t('workspace.details.slug')}
                 </Text>
-                <Text fontFamily="mono">{slug}</Text>
+                <Text fontFamily="mono">{handle}</Text>
               </Stack>
+              {handle !== slug && (
+                <Text color="fg.muted" data-testid="wizard-suffixed">
+                  {t('workspace.review.suffixed', { from: slug })}
+                </Text>
+              )}
               <Text color="fg.muted">{t('workspace.review.owner')}</Text>
               {error && (
                 <Alert.Root status="error" colorPalette="danger">
@@ -266,7 +290,7 @@ export function NewWorkspacePage() {
               </Button>
             )}
             {step === 1 && (
-              <Button onClick={() => go(2)} disabled={!detailsOk} data-testid="wizard-next">
+              <Button onClick={reviewHandle} loading={checking} disabled={!detailsOk} data-testid="wizard-next">
                 {t('workspace.next')}
               </Button>
             )}

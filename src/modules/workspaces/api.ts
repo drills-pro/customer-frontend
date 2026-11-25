@@ -49,6 +49,10 @@ export function useCreateWorkspace() {
   });
 }
 
+/** Whether a handle is free. One indexed lookup on the server, so asking before every create is cheap. */
+export const slugAvailable = (slug: string) =>
+  unwrap(client.GET('/v1/me/tenant-slug-available', { params: { query: { slug } } })).then((r) => r.available);
+
 export function useRenameWorkspace(id: string) {
   const refresh = useRefresh(id);
   return useMutation({

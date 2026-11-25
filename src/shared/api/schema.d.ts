@@ -1617,6 +1617,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/me/tenant-slug-available': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Tenant Slug Available
+     * @description Whether a workspace handle is free: one indexed lookup. The create still decides if another request takes it first.
+     */
+    get: operations['tenant_slug_available_v1_me_tenant_slug_available_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/tenants': {
     parameters: {
       query?: never;
@@ -3054,6 +3074,11 @@ export interface components {
      * @enum {string}
      */
     DownloadFile: 'model.onnx' | 'model.json';
+    /** SlugAvailability */
+    SlugAvailability: {
+      slug: string;
+      available: boolean;
+    };
     /** EmailVerificationStatus */
     EmailVerificationStatus: {
       /**
@@ -8778,6 +8803,37 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['EmailVerificationStatus'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  tenant_slug_available_v1_me_tenant_slug_available_get: {
+    parameters: {
+      query: {
+        slug: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SlugAvailability'];
         };
       };
       /** @description Validation Error */

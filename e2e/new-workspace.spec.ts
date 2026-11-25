@@ -21,6 +21,19 @@ test('the wizard creates a workspace and opens it', async ({ page, api }) => {
   await expect(page).toHaveURL(`/w/${api.workspaces[0].slug}`);
 });
 
+test('a taken handle gets a short ending instead of an error', async ({ page, api }) => {
+  const taken = api.workspaces[0];
+  await page.goto('/new');
+  await page.getByTestId('wizard-name').fill(taken.name);
+  await page.getByTestId('wizard-next').click();
+
+  await expect(page.getByTestId('wizard-suffixed')).toBeVisible();
+  await page.getByTestId('wizard-create').click();
+
+  await expect(page.getByTestId('wizard-step')).toHaveAttribute('data-step', 'done');
+  expect(api.workspaces.at(-1)?.slug).toMatch(new RegExp(`^${taken.slug}-[a-z0-9]{5}$`));
+});
+
 test('an unverified email starts on the verify step', async ({ page, api }) => {
   api.emailVerified = false;
   await page.goto('/new');

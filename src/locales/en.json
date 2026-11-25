@@ -578,6 +578,9 @@
       "open": "Create dataset",
       "title": "Create a dataset",
       "name": "Name",
+      "later": "Add data later",
+      "dataTitle": "Add the data",
+      "dataHelp": "{{name}} is made. Add its first data now, or later from the dataset.",
       "nameHelp": "You can tell datasets apart by this name.",
       "submit": "Create"
     },

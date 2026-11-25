@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useProjectDetail, type TaskType } from '@/modules/projects';
 import { useWorkspace } from '@/modules/workspaces';
 import { useIdempotencyKey } from '@/shared/api/idempotency';
-import { ReviewRows, StepHeading, SummaryCard, WizardBody, WizardSteps, type ReviewRow } from '@/shared/ui/wizard';
+import { SummaryCard, WizardBody, WizardSteps, type SummaryRow } from '@/shared/ui/wizard';
 import { useCreateRun, usePresets, useRunOnce, type TrainingRun } from '@/modules/training/api';
 import { DataStep, type DataChoice } from '@/modules/training/components/DataStep';
 import { ModelStep, usePresetLabel, usePresetResources } from '@/modules/training/components/ModelStep';
@@ -25,9 +25,7 @@ import { cloneValues, defaultsFor, fieldErrors, rangesFor, toRunBody, type Prese
 
 const FROM = '/app/w/$slug/projects/$projectId/training/new';
 const DATA = stepIndex('data');
-const MODEL = stepIndex('model');
 const SETTINGS = stepIndex('settings');
-const REVIEW = stepIndex('review');
 const EMPTY = '-';
 
 /** Choose the data, the preset and its settings, review, then start the run and follow it on its page. `?clone=<run>` starts from
@@ -138,7 +136,8 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
   const onData = useCallback((choice: DataChoice) => setData(choice), []);
 
   const errors = preset ? fieldErrors(values, preset, task) : {};
-  const valid = [Boolean(data?.versionId), Boolean(preset), Object.keys(errors).length === 0];
+  // The first screen needs a dataset version and a preset; the second needs settings that pass their bounds.
+  const valid = [Boolean(data?.versionId) && Boolean(preset), Boolean(preset) && Object.keys(errors).length === 0];
   const go = (to: number) => {
     setError(null);
     setStep(to);
@@ -166,10 +165,10 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
   }
 
   const version = typeof data?.versionNumber === 'number' ? t('training.data.version', { number: data.versionNumber }) : EMPTY;
-  const rows: ReviewRow[] = [
-    { id: 'dataset', label: t('training.data.dataset'), value: data?.datasetName ?? EMPTY, edit: DATA },
-    { id: 'version', label: t('training.data.versionLabel'), value: version, edit: DATA },
-    { id: 'preset', label: t('training.model.label'), value: preset ? presetLabel(preset.name) : EMPTY, edit: MODEL },
+  const rows: SummaryRow[] = [
+    { id: 'dataset', label: t('training.data.dataset'), value: data?.datasetName ?? EMPTY },
+    { id: 'version', label: t('training.data.versionLabel'), value: version },
+    { id: 'preset', label: t('training.model.label'), value: preset ? presetLabel(preset.name) : EMPTY },
     // Recommended is one row; Custom lists every value, so the summary says what the Settings step's switch says.
     ...(mode === SettingsMode.Custom
       ? [
@@ -177,11 +176,10 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
             id: h,
             label: t(`training.settings.${h}.label`),
             value: values.hyperparameters[h] || EMPTY,
-            edit: SETTINGS,
           })),
-          { id: 'seed', label: t('training.settings.seed.label'), value: values.seed || EMPTY, edit: SETTINGS },
+          { id: 'seed', label: t('training.settings.seed.label'), value: values.seed || EMPTY },
         ]
-      : [{ id: 'settings', label: t('training.settings.title'), value: t('training.review.recommended'), edit: SETTINGS }]),
+      : [{ id: 'settings', label: t('training.settings.title'), value: t('training.review.recommended') }]),
   ];
 
   const steps = (
@@ -202,8 +200,12 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
         </Card.Header>
 
         <WizardBody step={step}>
-          {step === DATA && <DataStep projectId={projectId} slug={slug} choice={data} onChange={onData} />}
-          {step === MODEL && <ModelStep presets={presets} task={task} preset={values.preset} setPreset={choosePreset} />}
+          {step === DATA && (
+            <Stack gap="8">
+              <DataStep projectId={projectId} slug={slug} choice={data} onChange={onData} />
+              <ModelStep presets={presets} task={task} preset={values.preset} setPreset={choosePreset} />
+            </Stack>
+          )}
           {step === SETTINGS && preset && (
             <SettingsStep
               task={task}
@@ -216,28 +218,14 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
               setSeed={(seed) => setValues((v) => ({ ...v, seed }))}
             />
           )}
-          {step === REVIEW && (
-            <Stack as="section" gap="5">
-              <StepHeading title={t('training.review.title')} description={t('training.review.description')} />
-              <ReviewRows
-                rows={rows}
-                onEdit={go}
-                editText={t('training.review.edit')}
-                editLabel={(name) => t('training.review.editLabel', { name })}
-              />
-              <Text textStyle="body-sm" color="fg.muted">
-                {t('training.review.note')}
-              </Text>
-              {error && (
-                <Alert.Root status="error" colorPalette="danger" data-testid="training-error">
-                  <Alert.Indicator />
-                  <Alert.Content>
-                    <Alert.Title>{t('training.review.failed')}</Alert.Title>
-                    <Alert.Description>{t(error)}</Alert.Description>
-                  </Alert.Content>
-                </Alert.Root>
-              )}
-            </Stack>
+          {step === SETTINGS && error && (
+            <Alert.Root status="error" colorPalette="danger" data-testid="training-error">
+              <Alert.Indicator />
+              <Alert.Content>
+                <Alert.Title>{t('training.review.failed')}</Alert.Title>
+                <Alert.Description>{t(error)}</Alert.Description>
+              </Alert.Content>
+            </Alert.Root>
           )}
         </WizardBody>
 
@@ -254,13 +242,13 @@ function TrainingForm({ workspaceId, slug, projectId, task, presets, clone }: Fo
                 {t('training.new.back')}
               </Button>
             )}
-            {step < REVIEW && (
-              <Button variant="solid" onClick={() => go(step + 1)} disabled={!valid[step]} data-testid="training-next">
+            {step === DATA && (
+              <Button variant="solid" onClick={() => go(SETTINGS)} disabled={!valid[DATA]} data-testid="training-next">
                 {t('training.new.next')}
                 <ChevronRight />
               </Button>
             )}
-            {step === REVIEW && (
+            {step === SETTINGS && (
               <Button
                 variant="solid"
                 onClick={() => void start()}

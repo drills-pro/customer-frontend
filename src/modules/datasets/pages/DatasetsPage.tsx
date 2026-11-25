@@ -1,32 +1,49 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Box, Button, EmptyState, Heading, Skeleton, Stack, Text } from '@chakra-ui/react';
 import { useNavigate, useParams } from '@tanstack/react-router';
-import { Database } from 'pixelarticons/react';
+import { Database, Plus } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { useDatasets, useWriteDenied } from '@/modules/datasets/api';
 import { CreateDatasetDialog } from '@/modules/datasets/components/CreateDatasetDialog';
 import { DatasetsTable } from '@/modules/datasets/components/DatasetsTable';
 import { LoadError } from '@/modules/datasets/components/LoadError';
+import { useProjectDetail } from '@/modules/projects';
 import { useWorkspace } from '@/modules/workspaces';
 
 /** The datasets of one project. */
 export function DatasetsPage() {
   const { t } = useTranslation();
-  const { slug } = useWorkspace();
+  const workspace = useWorkspace();
+  const { slug } = workspace;
   const { projectId } = useParams({ from: '/app/w/$slug/projects/$projectId/datasets/' });
+  const project = useProjectDetail(workspace.id, projectId);
   const navigate = useNavigate();
   const denied = useWriteDenied(projectId);
   const { datasets, error, isError, isPending, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } = useDatasets(projectId);
   const open = (datasetId: string) =>
     void navigate({ to: '/w/$slug/projects/$projectId/datasets/$datasetId', params: { slug, projectId, datasetId } });
+  // The dialog lives here, not in the card: creating the first dataset swaps the empty card for the list, and a dialog inside
+  // the card would unmount mid-create.
+  const [creating, setCreating] = useState(false);
   const addCard = (title: string, body: string) => (
     <AddDatasetCard title={title} body={body}>
-      <CreateDatasetDialog projectId={projectId} disabled={denied} onCreated={open} />
+      <Button disabled={denied} onClick={() => setCreating(true)} data-testid="datasets-create-open">
+        <Plus />
+        {t('datasets.create.open')}
+      </Button>
     </AddDatasetCard>
   );
 
   return (
     <Stack gap="6">
+      <CreateDatasetDialog
+        projectId={projectId}
+        slug={slug}
+        task={project.task_type}
+        open={creating}
+        onOpenChange={setCreating}
+        onCreated={open}
+      />
       <Box>
         <Heading as="h2" textStyle="h2">
           {t('datasets.title')}

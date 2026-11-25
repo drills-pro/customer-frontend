@@ -1,7 +1,7 @@
 import type { TaskType } from '@/modules/projects';
 
-/** The new-training wizard's steps; each id is also its `training.new.step.*` key. */
-export const STEPS = ['data', 'model', 'settings', 'review'] as const;
+/** The new-training wizard's steps: the data and the model on one screen, then the settings, which start the run. Each id is also its `training.new.step.*` key. */
+export const STEPS = ['data', 'settings'] as const;
 export type StepId = (typeof STEPS)[number];
 export const step = (id: StepId) => STEPS.indexOf(id);
 

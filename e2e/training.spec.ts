@@ -16,7 +16,8 @@ function withVersion(api: ApiState) {
   return { d, v };
 }
 
-const next = (page: Page) => page.getByTestId('training-next');
+/** The button that moves on: Next from the data-and-model screen, Start on the settings screen. */
+const next = (page: Page) => page.getByTestId('training-next').or(page.getByTestId('training-start'));
 const field = (page: Page, name: string) => page.getByTestId(`training-${name}`).locator('input');
 /** The value a setting slider shows beside its name. */
 const shown = (page: Page, name: string) => page.getByTestId(`training-${name}-value`);
@@ -36,22 +37,20 @@ async function slide(page: Page, name: string, steps: number) {
 }
 
 /** From the data step, with its defaults, to the review step. */
-async function toReview(page: Page) {
+async function toSettings(page: Page) {
   await expect(page.getByTestId('training-versions')).toBeVisible();
-  await next(page).click();
-  await next(page).click();
-  await next(page).click();
+  await page.getByTestId('training-next').click();
   await expect(page.getByTestId('training-start')).toBeVisible();
 }
 
-test('walks data, model, settings and review, then follows the new run', async ({ page, api }) => {
+test('walks the data and model, then the settings, then follows the new run', async ({ page, api }) => {
   const { v } = withVersion(api);
   await page.goto(NEW);
   // The first dataset and its newest version come preselected.
   await expect(page.getByTestId(`training-version-${v.id}`)).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByTestId('summary-version')).toBeVisible();
-  await next(page).click();
 
+  // The data and the model share one screen.
   await expect(page.getByTestId('training-preset-small')).toHaveAttribute('aria-pressed', 'true');
   await page.getByTestId('training-preset-medium').click();
   await expect(page.getByTestId('training-preset-medium')).toHaveAttribute('aria-pressed', 'true');
@@ -65,7 +64,6 @@ test('walks data, model, settings and review, then follows the new run', async (
   await expect(field(page, 'epochs')).toHaveValue('20');
   await slide(page, 'epochs', 4);
   await expect(field(page, 'epochs')).toHaveValue('5');
-  await next(page).click();
 
   await page.getByTestId('training-start').click();
   await expect(page).toHaveURL(RUN_URL);
@@ -104,8 +102,7 @@ test('settings stay inside the preset bounds; a bad seed blocks the next step; R
   withVersion(api);
   await page.goto(NEW);
   await expect(page.getByTestId('training-versions')).toBeVisible();
-  await next(page).click();
-  await next(page).click();
+  await page.getByTestId('training-next').click();
   // The sliders, the seed and the preset's method wait under Custom.
   await expect(page.getByTestId('training-epochs')).toBeHidden();
   await expect(field(page, 'seed')).toBeHidden();
@@ -132,8 +129,7 @@ test("a bundle task's settings come from the selected model, bounded by its mani
   api.presets = [bundlePreset('small', 30, 16), bundlePreset('medium', 40, 8)];
   await page.goto(NEW);
   await expect(page.getByTestId('training-versions')).toBeVisible();
-  await next(page).click();
-  await next(page).click();
+  await page.getByTestId('training-next').click();
   await expect(shown(page, 'epochs')).toHaveText('30'); // lint-ok: a number, not copy
   await expect(shown(page, 'batch_size')).toHaveText('16'); // lint-ok: a number, not copy
   await expect(next(page)).toBeEnabled();
@@ -149,7 +145,6 @@ test("a bundle task's settings come from the selected model, bounded by its mani
   await expect(mode(page)).toHaveAttribute('data-mode', 'custom');
   await expect(field(page, 'epochs')).toHaveValue('40');
   await expect(field(page, 'batch_size')).toHaveValue('8');
-  await next(page).click();
   await page.getByTestId('training-start').click();
   await expect(page).toHaveURL(RUN_URL);
   expect(api.runBodies[0]).toMatchObject({ preset: 'medium', hyperparameters: { epochs: 40, batch_size: 8, image_size: 224 } });
@@ -161,12 +156,10 @@ test('a text project has no image size and does not send one', async ({ page, ap
   await page.goto(NEW);
   await expect(page.getByTestId('training-versions')).toBeVisible();
   await next(page).click();
-  await next(page).click();
   await custom(page);
   await expect(page.getByTestId('training-epochs')).toBeVisible();
   await expect(page.getByTestId('training-image_size')).toHaveCount(0);
   await expect(shown(page, 'image_size')).toHaveCount(0);
-  await next(page).click();
   await page.getByTestId('training-start').click();
   await expect(page).toHaveURL(RUN_URL);
   expect(api.runBodies[0]).toMatchObject({ hyperparameters: { epochs: 10, batch_size: 32 } });
@@ -195,7 +188,7 @@ test('a retry of the same request reuses its key; a changed request gets a new o
     { status: 429, code: 'too_many_training_runs' },
   ];
   await page.goto(NEW);
-  await toReview(page);
+  await toSettings(page);
 
   await page.getByTestId('training-start').click();
   await expect(page.getByTestId('training-error')).toBeVisible();
@@ -204,10 +197,9 @@ test('a retry of the same request reuses its key; a changed request gets a new o
   expect(api.runKeys[1]).toBe(api.runKeys[0]);
   await expect(page.getByTestId('training-error')).toBeVisible();
 
-  await page.getByTestId('review-edit-preset').click();
+  await page.getByTestId('training-back').click();
   await page.getByTestId('training-preset-medium').click();
-  await next(page).click();
-  await next(page).click();
+  await page.getByTestId('training-next').click();
   await page.getByTestId('training-start').click();
   await expect(page).toHaveURL(RUN_URL);
   expect(api.runKeys).toHaveLength(3);
@@ -257,7 +249,6 @@ test('the model step shows how the chosen preset trains and what it may use', as
   api.presets[0].gpu = 1;
   await page.goto(NEW);
   await expect(page.getByTestId('training-versions')).toBeVisible();
-  await next(page).click();
   await expect(page.getByTestId('training-preset-small')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByTestId('training-preset-small').getByTestId('training-preset-recommended')).toBeVisible();
   // The aside lists the preset's resources, the GPU's memory included.
@@ -266,9 +257,8 @@ test('the model step shows how the chosen preset trains and what it may use', as
   await expect(page.getByTestId('training-preset-medium')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByTestId('training-resources').getByTestId('summary-vram')).toHaveCount(0);
   await next(page).click();
-  await next(page).click();
-  // Untouched settings are one row in the review.
-  await expect(page.getByTestId('review-edit-settings')).toBeVisible();
+  // Untouched settings are one row in the summary.
+  await expect(page.getByTestId('summary-settings')).toBeVisible();
   await expect(page.getByTestId('summary-epochs')).toHaveCount(0);
 });
 
@@ -278,9 +268,8 @@ test('changed settings are listed in the review, survive a trip to Recommended, 
 }) => {
   withVersion(api);
   await page.goto(NEW);
-  await toReview(page);
+  await toSettings(page);
   await expect(page.getByTestId('summary-settings')).toBeVisible();
-  await page.getByTestId('review-edit-settings').click();
 
   await custom(page);
   // What a setting does waits behind its help button.
@@ -299,14 +288,12 @@ test('changed settings are listed in the review, survive a trip to Recommended, 
   await expect(page.getByTestId('summary-epochs')).toHaveCount(0);
   await custom(page);
   await expect(field(page, 'epochs')).toHaveValue('12');
-  await next(page).click();
   await expect(page.getByTestId('summary-epochs')).toBeVisible();
   await expect(page.getByTestId('summary-settings')).toHaveCount(0);
 
   // A new wizard starts on Recommended again.
   await page.goto(NEW);
   await expect(page.getByTestId('training-versions')).toBeVisible();
-  await next(page).click();
   await next(page).click();
   await expect(mode(page)).toHaveAttribute('data-mode', 'recommended');
   await expect(page.getByTestId('summary-settings')).toBeVisible();
@@ -445,7 +432,6 @@ test('clone starts the wizard from the run: its version, preset and settings', a
   // Not the newest version, which a fresh wizard would pick.
   await expect(page.getByTestId(`training-version-${older.id}`)).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByTestId(`training-version-${newer.id}`)).toHaveAttribute('aria-pressed', 'false');
-  await next(page).click();
   await expect(page.getByTestId('training-preset-medium')).toHaveAttribute('aria-pressed', 'true');
   await next(page).click();
   // The run's own settings are not the recommended ones, so Custom is on by itself.
@@ -453,7 +439,6 @@ test('clone starts the wizard from the run: its version, preset and settings', a
   await expect(page.getByTestId('training-epochs')).toBeVisible();
   await expect(field(page, 'epochs')).toHaveValue('7');
   await expect(field(page, 'batch_size')).toHaveValue('8');
-  await next(page).click();
   await page.getByTestId('training-start').click();
   await expect(page).toHaveURL(RUN_URL);
   expect(api.runBodies.at(-1)).toEqual({
@@ -468,7 +453,6 @@ test('a clone of a run that is gone starts from the defaults', async ({ page, ap
   const { v } = withVersion(api);
   await page.goto(`${NEW}?clone=${crypto.randomUUID()}`);
   await expect(page.getByTestId(`training-version-${v.id}`)).toHaveAttribute('aria-pressed', 'true');
-  await next(page).click();
   await expect(page.getByTestId('training-preset-small')).toHaveAttribute('aria-pressed', 'true');
 });
 
@@ -483,9 +467,7 @@ test('the data step picks between datasets as cards, and the step list goes back
   await expect(page.getByTestId(`training-version-${ov.id}`)).toHaveAttribute('aria-pressed', 'true');
 
   await next(page).click();
-  await next(page).click();
-  // A step not reached yet cannot be opened; a passed one can.
-  await expect(page.getByTestId('wizard-step-trigger-3')).toBeDisabled();
+  // The settings step has been reached; the data step, passed, can be opened again.
   await page.getByTestId('wizard-step-trigger-0').click();
   await expect(page.getByTestId('training-datasets')).toBeVisible();
   await expect(page.getByTestId(`training-dataset-${other.id}`)).toHaveAttribute('aria-pressed', 'true');

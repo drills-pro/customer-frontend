@@ -30,11 +30,13 @@ test('loads the next page by cursor', async ({ page, api }) => {
   await expect(page.getByTestId('datasets-load-more')).toHaveCount(0);
 });
 
-test('creates a dataset and opens it', async ({ page, api }) => {
+test('names a dataset, adds its data in the same dialog, or opens it later', async ({ page, api }) => {
   await page.goto(BASE);
   await page.getByTestId('datasets-create-open').click();
   await page.getByTestId('datasets-create-name').fill('fresh');
   await page.getByTestId('datasets-create-submit').click();
+  await expect(page.getByTestId('datasets-create-data')).toBeVisible();
+  await page.getByTestId('datasets-create-later').click();
   await expect(page.getByTestId('dataset-name')).toBeVisible();
   expect(api.datasets.map((d) => d.name)).toEqual(['fresh']);
 });
@@ -46,6 +48,8 @@ test('a project with datasets can add another from the card under the list', asy
   await page.getByTestId('datasets-add-card').getByTestId('datasets-create-open').click();
   await page.getByTestId('datasets-create-name').fill('second');
   await page.getByTestId('datasets-create-submit').click();
+  await expect(page.getByTestId('datasets-create-data')).toBeVisible();
+  await page.getByTestId('datasets-create-later').click();
   await expect(page.getByTestId('dataset-name')).toBeVisible();
   expect(api.datasets.map((d) => d.name).sort()).toEqual(['first', 'second']);
 });

@@ -1027,7 +1027,6 @@
       "promote": "Promote to Production",
       "rollback": "Roll back to this version",
       "retry": "Try again",
-      "deploying": "Deploying. The current version keeps serving until this one is ready.",
       "riskAccept": "I understand, promote anyway"
     },
     "error": {
@@ -1043,7 +1042,6 @@
     },
     "status": {
       "serving": "Serving",
-      "deploying": "Deploying",
       "failed": "Promotion failed",
       "candidate": "Candidate",
       "archived": "Archived",
@@ -1070,10 +1068,8 @@
     "title": "Deployments",
     "retry": "Try again",
     "status": {
-      "deploying": "Starting",
       "active": "Live",
       "stopped": "Stopped",
-      "failed": "Failed",
       "deleted": "Deleted",
       "unknown": "Unknown"
     },
@@ -1100,8 +1096,6 @@
       "createdOn": "Deployed {{date}}",
       "rateLimit_one": "{{count}} request per minute",
       "rateLimit_other": "{{count}} requests per minute",
-      "working": "Starting the endpoint. This page updates by itself.",
-      "failed": "This deployment could not start. Deploy the run again from its page, or delete this one.",
       "stopped": "This endpoint is stopped and answers no calls. Start it to serve again with the same key.",
       "stop": "Stop",
       "start": "Start",

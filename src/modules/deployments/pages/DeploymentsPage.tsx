@@ -11,7 +11,7 @@ import { deploymentErrorKey } from '@/modules/deployments/errors';
 
 const FROM = '/app/w/$slug/projects/$projectId/deployments/';
 
-/** The project's endpoints, newest first, each leading to its page. A deploying one moves to active by itself. */
+/** The project's endpoints, newest first, each leading to its page. */
 export function DeploymentsPage() {
   const { t } = useTranslation();
   const { id: workspaceId, slug } = useWorkspace();

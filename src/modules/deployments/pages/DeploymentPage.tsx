@@ -12,7 +12,6 @@ import { IntegrationTab } from '@/modules/deployments/components/IntegrationTab'
 import { TestTab } from '@/modules/deployments/components/TestTab';
 import { DEPLOYMENT_TABS, SHORT_ID_LENGTH, type DeploymentTab } from '@/modules/deployments/constants';
 import { deploymentErrorKey, isNotFound } from '@/modules/deployments/errors';
-import { statusUi } from '@/modules/deployments/status';
 
 const FROM = '/app/w/$slug/projects/$projectId/deployments/$deploymentId';
 
@@ -104,19 +103,6 @@ function Header({ deployment }: { deployment: Deployment }) {
 /** How the endpoint stands, in words, when that is not plain serving. */
 function Outcome({ deployment }: { deployment: Deployment }) {
   const { t } = useTranslation();
-  if (statusUi(deployment.status).poll)
-    return (
-      <Text color="fg.muted" role="status" data-testid="deployment-working">
-        {t('deployments.detail.working')}
-      </Text>
-    );
-  if (deployment.status === DeploymentStatus.Failed)
-    return (
-      <Alert.Root status="error" colorPalette="danger" data-testid="deployment-failed">
-        <Alert.Indicator />
-        <Alert.Description>{t('deployments.detail.failed')}</Alert.Description>
-      </Alert.Root>
-    );
   if (deployment.status === DeploymentStatus.Stopped)
     return (
       <Alert.Root status="info" colorPalette="info" data-testid="deployment-stopped">

@@ -27,7 +27,7 @@ import { statusUi } from '@/modules/deployments/status';
 /** How to call the endpoint: the model it serves, ready-to-paste snippets, and the shape of what goes in and comes out. */
 export function IntegrationTab({ deployment }: { deployment: Deployment }) {
   const { t } = useTranslation();
-  // The schema needs the served model, which a deploying or failed deployment may not have yet.
+  // The schema needs the served model, which a stopped or deleted deployment may not have.
   const ready = statusUi(deployment.status).test || statusUi(deployment.status).start;
   const schema = useDeploymentSchema(deployment.project_id, deployment.id, ready);
   const [lang, setLang] = useState<SnippetLang>(SNIPPET_LANGS[0]);

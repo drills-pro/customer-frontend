@@ -84,22 +84,12 @@ test('a run without a test split deploys only after the risk is accepted, with a
   expect(api.deployCalls[0].key).not.toBe(api.deployCalls[1].key);
 });
 
-for (const status of ['failed', 'deleted']) {
-  test(`a run whose deployment is ${status} can be deployed again`, async ({ page, api }) => {
-    const r = run(api, 'succeeded');
-    deployment(api, status, r.id);
-    await page.goto(`${BASE}/training/${r.id}`);
-    await expect(page.getByTestId('training-run-deploy')).toBeVisible();
-    await expect(page.getByTestId('training-run-deployment')).toHaveCount(0);
-  });
-}
-
-test('a deployment left starting moves to live by itself', async ({ page, api }) => {
-  const d = deployment(api, 'deploying');
-  await page.goto(`${LIST}/${d.id}`);
-  await expect(page.getByTestId('deployment-working')).toBeVisible();
-  d.status = 'active';
-  await expect(page.getByTestId('deployment-status')).toHaveAttribute('data-status', 'active', { timeout: 10_000 });
+test('a run whose deployment is deleted can be deployed again', async ({ page, api }) => {
+  const r = run(api, 'succeeded');
+  deployment(api, 'deleted', r.id);
+  await page.goto(`${BASE}/training/${r.id}`);
+  await expect(page.getByTestId('training-run-deploy')).toBeVisible();
+  await expect(page.getByTestId('training-run-deployment')).toHaveCount(0);
 });
 
 test('a run still training offers no deploy', async ({ page, api }) => {
@@ -145,13 +135,6 @@ test('the endpoint and every snippet call the public API, with a call example', 
   await expect(snippet).toHaveAttribute('data-endpoint', PREDICT);
   await expect(page.getByTestId('deployment-example-request')).toBeVisible();
   await expect(page.getByTestId('deployment-example-response')).toBeVisible();
-});
-
-test('a deployment that is not serving yet shows no call', async ({ page, api }) => {
-  const d = deployment(api, 'deploying');
-  await page.goto(`${LIST}/${d.id}`);
-  await expect(page.getByTestId('deployment-integration-waiting')).toBeVisible();
-  await expect(page.getByTestId('deployment-endpoint')).toHaveCount(0);
 });
 
 test('try it is a real predict call as the signed-in member, counted toward usage, and the log lists it', async ({ page, api }) => {

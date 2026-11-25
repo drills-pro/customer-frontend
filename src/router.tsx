@@ -9,7 +9,7 @@ import { membersRoute, inviteRoute } from '@/modules/members';
 import { projectsRoute } from '@/modules/projects';
 import { trainingRoutes } from '@/modules/training';
 import { trashRoute } from '@/modules/trash';
-import { appRoute, homeRoute, newRoute, overviewRoute, settingsRoute, workspaceRoute } from '@/modules/workspaces';
+import { apiKeysRoute, appRoute, homeRoute, newRoute, overviewRoute, settingsRoute, workspaceRoute } from '@/modules/workspaces';
 import { rootRoute } from '@/root-route';
 import { showcaseHomeRoute, showcasePageRoute, showcaseRoute } from '@/showcase/routes';
 
@@ -27,6 +27,7 @@ const routeTree = rootRoute.addChildren([
       membersRoute,
       trashRoute,
       settingsRoute,
+      apiKeysRoute,
     ]),
     showcaseRoute.addChildren([showcaseHomeRoute, showcasePageRoute]),
   ]),

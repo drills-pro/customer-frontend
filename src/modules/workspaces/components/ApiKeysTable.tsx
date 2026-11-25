@@ -1,14 +1,13 @@
 import { useState } from 'react';
-import { Alert, Badge, Button, Card, CloseButton, Dialog, Heading, Portal, Table, Text } from '@chakra-ui/react';
+import { Alert, Badge, Button, CloseButton, Dialog, Portal, Table, Text } from '@chakra-ui/react';
 import { Check, Minus } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '@/shared/api/client';
 import { errorKey } from '@/shared/api/errors';
 import { type ApiKey, useApiKeys, useRevokeApiKey, useWorkspaceProjects } from '@/modules/workspaces/api';
-import { CreateKeyDialog } from '@/modules/workspaces/components/CreateKeyDialog';
 
-/** The workspace's API keys: who they work in, when they were used, and revoke. Shown to the workspace's admins and owners. */
-export function ApiKeysCard({ workspaceId }: { workspaceId: string }) {
+/** The workspace's API keys: who they work in, when they were used, and revoke. */
+export function ApiKeysTable({ workspaceId }: { workspaceId: string }) {
   const { t, i18n } = useTranslation();
   const keys = useApiKeys(workspaceId);
   const projects = useWorkspaceProjects(workspaceId, true);
@@ -16,45 +15,36 @@ export function ApiKeysCard({ workspaceId }: { workspaceId: string }) {
   const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium', timeStyle: 'short' });
   const when = (iso: string | null | undefined) => (iso ? date.format(new Date(iso)) : t('apiKeys.never'));
 
+  if (keys.isError)
+    return (
+      <Alert.Root status="error" colorPalette="danger">
+        <Alert.Indicator />
+        <Alert.Description>{t(errorKey(keys.error))}</Alert.Description>
+      </Alert.Root>
+    );
+  if (keys.data?.length === 0)
+    return (
+      <Text color="fg.muted" data-testid="keys-empty">
+        {t('apiKeys.empty')}
+      </Text>
+    );
   return (
-    <Card.Root data-testid="keys-card">
-      <Card.Header>
-        <Heading as="h2" textStyle="h2">
-          {t('apiKeys.title')}
-        </Heading>
-        <Text color="fg.muted">{t('apiKeys.subtitle')}</Text>
-      </Card.Header>
-      <Card.Body gap="4">
-        <CreateKeyDialog workspaceId={workspaceId} />
-        {keys.isError ? (
-          <Alert.Root status="error" colorPalette="danger">
-            <Alert.Indicator />
-            <Alert.Description>{t(errorKey(keys.error))}</Alert.Description>
-          </Alert.Root>
-        ) : keys.data?.length === 0 ? (
-          <Text color="fg.muted" data-testid="keys-empty">
-            {t('apiKeys.empty')}
-          </Text>
-        ) : (
-          <Table.Root size="sm" data-testid="keys-table">
-            <Table.Header>
-              <Table.Row>
-                <Table.ColumnHeader>{t('apiKeys.col.name')}</Table.ColumnHeader>
-                <Table.ColumnHeader>{t('apiKeys.col.projects')}</Table.ColumnHeader>
-                <Table.ColumnHeader>{t('apiKeys.col.lastUsed')}</Table.ColumnHeader>
-                <Table.ColumnHeader>{t('apiKeys.col.status')}</Table.ColumnHeader>
-                <Table.ColumnHeader />
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {(keys.data ?? []).map((key) => (
-                <KeyRow key={key.id} keyItem={key} workspaceId={workspaceId} names={names} when={when} />
-              ))}
-            </Table.Body>
-          </Table.Root>
-        )}
-      </Card.Body>
-    </Card.Root>
+    <Table.Root size="sm" data-testid="keys-table">
+      <Table.Header>
+        <Table.Row>
+          <Table.ColumnHeader>{t('apiKeys.col.name')}</Table.ColumnHeader>
+          <Table.ColumnHeader>{t('apiKeys.col.projects')}</Table.ColumnHeader>
+          <Table.ColumnHeader>{t('apiKeys.col.lastUsed')}</Table.ColumnHeader>
+          <Table.ColumnHeader>{t('apiKeys.col.status')}</Table.ColumnHeader>
+          <Table.ColumnHeader />
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {(keys.data ?? []).map((key) => (
+          <KeyRow key={key.id} keyItem={key} workspaceId={workspaceId} names={names} when={when} />
+        ))}
+      </Table.Body>
+    </Table.Root>
   );
 }
 

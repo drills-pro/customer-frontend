@@ -1,7 +1,7 @@
 import { Fragment, useState, type ComponentType, type ReactNode } from 'react';
 import { Box, Breadcrumb, CloseButton, Drawer, Flex, HStack, IconButton, Portal, Stack } from '@chakra-ui/react';
 import { Link, useMatches } from '@tanstack/react-router';
-import { Briefcase, Layout, Menu, SettingsCog, Trash, Users } from 'pixelarticons/react';
+import { Briefcase, Key, Layout, Menu, SettingsCog, Trash, Users } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import { AppIcon, Wordmark } from '@/brand/Bit';
 import { LanguageSwitcher } from '@/components/language-switcher';
@@ -13,11 +13,15 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useTranslation();
   const { slug } = useWorkspace();
   const canManage = useCan('tenant.member.manage');
+  const canManageKeys = useCan('tenant.admin');
   const items = [
     { id: 'overview', to: '/w/$slug', label: t('nav.overview'), icon: <Layout width={20} height={20} />, exact: true },
     { id: 'projects', to: '/w/$slug/projects', label: t('projects.title'), icon: <Briefcase width={20} height={20} />, exact: false },
     ...(canManage
       ? [{ id: 'members', to: '/w/$slug/members', label: t('shell.members'), icon: <Users width={20} height={20} />, exact: false }]
+      : []),
+    ...(canManageKeys
+      ? [{ id: 'api-keys', to: '/w/$slug/api-keys', label: t('apiKeys.title'), icon: <Key width={20} height={20} />, exact: false }]
       : []),
     { id: 'trash', to: '/w/$slug/trash', label: t('nav.trash'), icon: <Trash width={20} height={20} />, exact: false },
     { id: 'settings', to: '/w/$slug/settings', label: t('shell.settings'), icon: <SettingsCog width={20} height={20} />, exact: false },

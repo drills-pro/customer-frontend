@@ -6,8 +6,10 @@ import {
   Clipboard,
   CloseButton,
   Collapsible,
+  DatePicker,
   Dialog,
   Field,
+  Fieldset,
   IconButton,
   Input,
   InputGroup,
@@ -15,7 +17,8 @@ import {
   Stack,
   Text,
 } from '@chakra-ui/react';
-import { Key } from 'pixelarticons/react';
+import { Calendar, Key } from 'pixelarticons/react';
+import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '@/shared/api/client';
 import { errorKey } from '@/shared/api/errors';
@@ -27,11 +30,11 @@ const UNKNOWN_PROJECT = 'unknown_project';
 
 /** Create a workspace key: name, the projects it works in, optional expiry. The same dialog then shows the secret once. */
 export function CreateKeyDialog({ workspaceId }: { workspaceId: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [projectIds, setProjectIds] = useState<string[]>([]);
-  const [expiry, setExpiry] = useState('');
+  const [expiry, setExpiry] = useState<DateValue[]>([]);
   const projects = useWorkspaceProjects(workspaceId, open);
   const create = useCreateApiKey(workspaceId);
   const created = create.data;
@@ -46,10 +49,11 @@ export function CreateKeyDialog({ workspaceId }: { workspaceId: string }) {
     if (!next) {
       setName('');
       setProjectIds([]);
-      setExpiry('');
+      setExpiry([]);
       create.reset();
     }
   };
+  const day = expiry[0];
   const toggle = (id: string, on: boolean) => setProjectIds((ids) => (on ? [...ids, id] : ids.filter((x) => x !== id)));
   const submit = () =>
     create.mutate({
@@ -57,7 +61,7 @@ export function CreateKeyDialog({ workspaceId }: { workspaceId: string }) {
       scopes: ['predict'],
       project_ids: projectIds,
       // The chosen day counts to its end, in the browser's time zone.
-      expires_at: expiry ? new Date(`${expiry}T23:59:59`).toISOString() : null,
+      expires_at: day ? new Date(day.year, day.month - 1, day.day, 23, 59, 59).toISOString() : null,
     });
 
   return (
@@ -112,25 +116,28 @@ export function CreateKeyDialog({ workspaceId }: { workspaceId: string }) {
                     />
                     <Field.HelperText>{t('apiKeys.form.nameHelp')}</Field.HelperText>
                   </Field.Root>
-                  <Field.Root required>
-                    <Field.Label>{t('apiKeys.form.projects')}</Field.Label>
-                    <Stack gap="2" data-testid="keys-projects">
-                      {active.map((p) => (
-                        <Checkbox.Root
-                          key={p.id}
-                          size="sm"
-                          checked={projectIds.includes(p.id)}
-                          onCheckedChange={(e) => toggle(p.id, e.checked === true)}
-                          data-testid={`keys-project-${p.id}`}
-                        >
-                          <Checkbox.HiddenInput />
-                          <Checkbox.Control />
-                          <Checkbox.Label>{p.name}</Checkbox.Label>
-                        </Checkbox.Root>
-                      ))}
-                    </Stack>
-                    <Field.HelperText>{t('apiKeys.form.projectsHelp')}</Field.HelperText>
-                  </Field.Root>
+                  {/* A fieldset, not a Field: each Field gives its children one shared id, so the checkboxes would fight over it. */}
+                  <Fieldset.Root>
+                    <Fieldset.Legend>{t('apiKeys.form.projects')}</Fieldset.Legend>
+                    <Fieldset.Content>
+                      <Stack gap="2" data-testid="keys-projects">
+                        {active.map((p) => (
+                          <Checkbox.Root
+                            key={p.id}
+                            size="sm"
+                            checked={projectIds.includes(p.id)}
+                            onCheckedChange={(e) => toggle(p.id, e.checked === true)}
+                            data-testid={`keys-project-${p.id}`}
+                          >
+                            <Checkbox.HiddenInput />
+                            <Checkbox.Control />
+                            <Checkbox.Label>{p.name}</Checkbox.Label>
+                          </Checkbox.Root>
+                        ))}
+                      </Stack>
+                      <Fieldset.HelperText>{t('apiKeys.form.projectsHelp')}</Fieldset.HelperText>
+                    </Fieldset.Content>
+                  </Fieldset.Root>
                   <Collapsible.Root>
                     <Collapsible.Trigger asChild>
                       <Button variant="ghost" size="sm" alignSelf="start" data-testid="keys-more">
@@ -138,11 +145,38 @@ export function CreateKeyDialog({ workspaceId }: { workspaceId: string }) {
                       </Button>
                     </Collapsible.Trigger>
                     <Collapsible.Content>
-                      <Field.Root pt="3">
-                        <Field.Label>{t('apiKeys.form.expiry')}</Field.Label>
-                        <Input type="date" data-testid="keys-expiry" value={expiry} onChange={(e) => setExpiry(e.target.value)} />
-                        <Field.HelperText>{t('apiKeys.form.expiryHelp')}</Field.HelperText>
-                      </Field.Root>
+                      <DatePicker.Root
+                        value={expiry}
+                        onValueChange={(e) => setExpiry(e.value)}
+                        selectionMode="single"
+                        locale={i18n.resolvedLanguage}
+                        min={today(getLocalTimeZone())}
+                        positioning={{ sameWidth: true }}
+                      >
+                        <DatePicker.Label>{t('apiKeys.form.expiry')}</DatePicker.Label>
+                        <DatePicker.Control>
+                          <DatePicker.Input data-testid="keys-expiry" />
+                          <DatePicker.IndicatorGroup>
+                            {day && <DatePicker.ClearTrigger aria-label={t('apiKeys.form.clearExpiry')} />}
+                            <DatePicker.Trigger aria-label={t('apiKeys.form.openCalendar')}>
+                              <Calendar />
+                            </DatePicker.Trigger>
+                          </DatePicker.IndicatorGroup>
+                        </DatePicker.Control>
+                        <Portal>
+                          <DatePicker.Positioner>
+                            <DatePicker.Content>
+                              <DatePicker.View view="day">
+                                <DatePicker.Header />
+                                <DatePicker.DayTable />
+                              </DatePicker.View>
+                            </DatePicker.Content>
+                          </DatePicker.Positioner>
+                        </Portal>
+                      </DatePicker.Root>
+                      <Text color="fg.muted" textStyle="sm">
+                        {t('apiKeys.form.expiryHelp')}
+                      </Text>
                     </Collapsible.Content>
                   </Collapsible.Root>
                   {create.isError && !hide && (

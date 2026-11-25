@@ -9,6 +9,7 @@ import { Splash } from '@/shared/ui/Splash';
 import { meQuery, useMe } from '@/modules/workspaces/api';
 import { AppShell } from '@/modules/workspaces/components/AppShell';
 import { useWorkspace, WorkspaceProvider } from '@/modules/workspaces/context';
+import { ApiKeysPage } from '@/modules/workspaces/pages/ApiKeysPage';
 import { NewWorkspacePage } from '@/modules/workspaces/pages/NewWorkspacePage';
 import { OverviewPage } from '@/modules/workspaces/pages/OverviewPage';
 import { RestorePage } from '@/modules/workspaces/pages/RestorePage';
@@ -105,6 +106,12 @@ export const overviewRoute = createRoute({
   path: '/',
   staticData: { crumb: textCrumb('nav.overview') },
   component: OverviewPage,
+});
+export const apiKeysRoute = createRoute({
+  getParentRoute: () => workspaceRoute,
+  path: 'api-keys',
+  staticData: { crumb: textCrumb('apiKeys.title') },
+  component: ApiKeysPage,
 });
 export const settingsRoute = createRoute({
   getParentRoute: () => workspaceRoute,

@@ -1319,7 +1319,9 @@
       "moreOptions": "More options",
       "expiry": "Expires on",
       "expiryHelp": "Leave empty to keep the key until you revoke it.",
-      "submit": "Create key"
+      "submit": "Create key",
+      "openCalendar": "Open calendar",
+      "clearExpiry": "Remove expiry date"
     },
     "reveal": {
       "title": "Your new key",

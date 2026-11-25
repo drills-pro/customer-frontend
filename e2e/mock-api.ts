@@ -243,6 +243,8 @@ export interface ApiState {
   pageSize: number;
   /** The workspace's API keys, revoked ones included. */
   apiKeys: ApiKeyRec[];
+  /** Projects listed beside the one PROJECT, for tests that need several. */
+  extraProjects: ProjectRec[];
   /** Every dataset write answers 403. */
   denyWrites: boolean;
   /** Creating an import answers 429 (the per-workspace cap). */
@@ -316,6 +318,7 @@ export const newState = (): ApiState => ({
   previewRows: [{ data: { x: 1, y: 2 } }, { data: { x: 3, y: 4 } }],
   pageSize: 50,
   apiKeys: [],
+  extraProjects: [],
   denyWrites: false,
   importCap: false,
   commitConflict: null,
@@ -461,14 +464,15 @@ function listedKey(k: ApiKeyRec) {
   };
 }
 
-/** The workspace's keys: list, create (the secret comes back once), revoke. Only the workspace's one project can be granted. */
+/** The workspace's keys: list, create (the secret comes back once), revoke. Only the workspace's listed projects can be granted. */
 function apiKeyRoutes(route: Route, state: ApiState, method: string, path: string, body: Record<string, unknown>) {
   if (path === '/v1/api-keys' && method === 'GET') return json(route, 200, state.apiKeys.map(listedKey));
   if (path === '/v1/api-keys' && method === 'POST') {
     const name = typeof body.name === 'string' ? body.name.trim() : '';
     const projects = Array.isArray(body.project_ids) ? (body.project_ids as string[]) : [];
     if (!name || projects.length === 0) return json(route, 422, { code: 'validation_error' });
-    if (projects.some((id) => id !== state.project.id)) return json(route, 422, { code: 'unknown_project' });
+    const granted = [state.project.id, ...state.extraProjects.map((p) => p.id)];
+    if (projects.some((id) => !granted.includes(id))) return json(route, 422, { code: 'unknown_project' });
     const secret = `drl_${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`;
     const rec: ApiKeyRec = {
       id: crypto.randomUUID(),
@@ -854,7 +858,18 @@ function projectRoutes(route: Route, state: ApiState, method: string, path: stri
       deployments: state.deployments.filter((d) => d.status !== 'deleted').length,
     };
     const live = status !== 'pending_delete' ? [{ id, name, status, team_id, task_type, created_at, ...counts }] : [];
-    return json(route, 200, paginate(live, req.url(), state.pageSize));
+    const more = state.extraProjects.map((p) => ({
+      id: p.id,
+      name: p.name,
+      status: p.status,
+      team_id: p.team_id,
+      task_type: p.task_type,
+      created_at: p.created_at,
+      datasets: 0,
+      models: 0,
+      deployments: 0,
+    }));
+    return json(route, 200, paginate([...live, ...more], req.url(), state.pageSize));
   }
   if (path === '/v1/projects/trash') {
     const { id, name, status, created_at } = state.project;

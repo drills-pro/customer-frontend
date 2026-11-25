@@ -2,6 +2,8 @@ name: Build and Push Docker Image
 
 on:
   push:
+    branches: [main]
+  pull_request: # the check job only: a PR builds and pushes no image
   workflow_dispatch:
 
 env:
@@ -28,6 +30,7 @@ jobs:
 
   build:
     needs: check
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read

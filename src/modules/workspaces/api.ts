@@ -147,3 +147,41 @@ export function useAcceptOwnershipOffer(id: string) {
     onSuccess: () => Promise.all([refresh(), qc.invalidateQueries({ queryKey: offerKey(id) })]),
   });
 }
+
+export type ApiKey = Schemas['ListedApiKey'];
+export type NewApiKey = Schemas['NewApiKey'];
+const apiKeysKey = (id: string) => ['workspace', id, 'api-keys'] as const;
+
+/** The workspace's keys, revoked ones included, so a revoked key stays visible with its status. */
+export function useApiKeys(id: string) {
+  return useQuery({
+    queryKey: apiKeysKey(id),
+    queryFn: () => unwrap(client.GET('/v1/api-keys')),
+  });
+}
+
+/** The workspace's projects, first page of 100: names for the keys table, and the choices in the create dialog. */
+export function useWorkspaceProjects(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['workspace', id, 'key-projects'],
+    queryFn: () => unwrap(client.GET('/v1/projects', { params: { query: { page_size: 100 } } })).then((page) => page.items),
+    enabled,
+  });
+}
+
+/** Creates a key. Not retried by Idempotency-Key (the API has none for keys), so the dialog disables Create while it runs. */
+export function useCreateApiKey(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: NewApiKey) => unwrap(client.POST('/v1/api-keys', { body })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: apiKeysKey(id) }),
+  });
+}
+
+export function useRevokeApiKey(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (keyId: string) => unwrap(client.DELETE('/v1/api-keys/{key_id}', { params: { path: { key_id: keyId } } })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: apiKeysKey(id) }),
+  });
+}

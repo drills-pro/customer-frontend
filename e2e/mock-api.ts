@@ -177,6 +177,18 @@ export interface PreviewRow {
   url?: string;
 }
 /** What the fake backend knows. Each test gets its own copy and may change it before it navigates. */
+/** A workspace API key as the mock keeps it: the secret only until the create answered it. */
+export interface ApiKeyRec {
+  id: string;
+  name: string;
+  prefix: string;
+  project_ids: string[];
+  expires_at: string | null;
+  created_at: string;
+  revoked_at: string | null;
+  secret: string;
+}
+
 export interface ApiState {
   emailVerified: boolean;
   /** How many verification mails were asked for (POST /v1/me/email-verification). */
@@ -229,6 +241,8 @@ export interface ApiState {
   previewRows: PreviewRow[];
   /** Datasets a list answers with per page, to test cursors. */
   pageSize: number;
+  /** The workspace's API keys, revoked ones included. */
+  apiKeys: ApiKeyRec[];
   /** Every dataset write answers 403. */
   denyWrites: boolean;
   /** Creating an import answers 429 (the per-workspace cap). */
@@ -301,6 +315,7 @@ export const newState = (): ApiState => ({
   versions: [],
   previewRows: [{ data: { x: 1, y: 2 } }, { data: { x: 3, y: 4 } }],
   pageSize: 50,
+  apiKeys: [],
   denyWrites: false,
   importCap: false,
   commitConflict: null,
@@ -428,6 +443,56 @@ const json = (route: Route, status: number, body?: unknown) =>
 export const OFFER_NOW = '2026-11-18T00:00:00Z';
 const withStatus = (o: OfferRec) => ({ ...o, status: o.expires_at > OFFER_NOW ? 'pending' : 'expired' });
 
+/** The key as the list shows it: never the secret. */
+function listedKey(k: ApiKeyRec) {
+  return {
+    id: k.id,
+    name: k.name,
+    prefix: k.prefix,
+    scopes: ['predict'],
+    project_ids: k.project_ids,
+    model_ids: [],
+    expires_at: k.expires_at,
+    created_at: k.created_at,
+    rate_limit_per_minute: null,
+    created_by: 'me',
+    revoked_at: k.revoked_at,
+    last_used_at: null,
+  };
+}
+
+/** The workspace's keys: list, create (the secret comes back once), revoke. Only the workspace's one project can be granted. */
+function apiKeyRoutes(route: Route, state: ApiState, method: string, path: string, body: Record<string, unknown>) {
+  if (path === '/v1/api-keys' && method === 'GET') return json(route, 200, state.apiKeys.map(listedKey));
+  if (path === '/v1/api-keys' && method === 'POST') {
+    const name = typeof body.name === 'string' ? body.name.trim() : '';
+    const projects = Array.isArray(body.project_ids) ? (body.project_ids as string[]) : [];
+    if (!name || projects.length === 0) return json(route, 422, { code: 'validation_error' });
+    if (projects.some((id) => id !== state.project.id)) return json(route, 422, { code: 'unknown_project' });
+    const secret = `drl_${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`;
+    const rec: ApiKeyRec = {
+      id: crypto.randomUUID(),
+      name,
+      prefix: secret.slice(0, 12),
+      project_ids: [...new Set(projects)],
+      expires_at: typeof body.expires_at === 'string' ? body.expires_at : null,
+      created_at: new Date().toISOString(),
+      revoked_at: null,
+      secret,
+    };
+    state.apiKeys.push(rec);
+    return json(route, 201, { ...listedKey(rec), secret });
+  }
+  const m = path.match(/^\/v1\/api-keys\/([^/]+)$/);
+  if (m && method === 'DELETE') {
+    const key = state.apiKeys.find((k) => k.id === m[1]);
+    if (!key) return json(route, 404, { code: 'not_found' });
+    key.revoked_at ??= new Date().toISOString();
+    return json(route, 204);
+  }
+  return json(route, 404, { code: 'not_found' });
+}
+
 /** GET, POST, DELETE of the workspace's one ownership offer and its :accept. The API shows an offer only to its two people and owners; the mock to everyone. */
 function offerRoutes(route: Route, state: ApiState, method: string, path: string, body: Record<string, unknown>) {
   if (path.endsWith(':accept')) {
@@ -519,6 +584,7 @@ export async function installApi(page: Page, state: ApiState) {
       }
       return json(route, 200, w);
     }
+    if (path === '/v1/api-keys' || path.startsWith('/v1/api-keys/')) return apiKeyRoutes(route, state, method, path, body);
     if (/^\/v1\/tenants\/[^/:]+\/ownership-offer(:accept)?$/.test(path)) return offerRoutes(route, state, method, path, body);
     if (/^\/v1\/tenants\/[^/:]+\/members$/.test(path)) return json(route, 200, state.members);
     if ((m = path.match(/^\/v1\/tenants\/[^/:]+\/members\/(.+)$/))) {

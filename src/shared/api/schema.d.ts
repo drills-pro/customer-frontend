@@ -1766,7 +1766,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/projects/{project_id}/api-keys': {
+  '/v1/api-keys': {
     parameters: {
       query?: never;
       header?: never;
@@ -1774,20 +1774,20 @@ export interface paths {
       cookie?: never;
     };
     /** List Api Keys */
-    get: operations['list_api_keys_v1_projects__project_id__api_keys_get'];
+    get: operations['list_api_keys_v1_api_keys_get'];
     put?: never;
     /**
      * Create Api Key
      * @description The secret is in this response only; the database keeps its hash.
      */
-    post: operations['create_api_key_v1_projects__project_id__api_keys_post'];
+    post: operations['create_api_key_v1_api_keys_post'];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  '/v1/projects/{project_id}/api-keys/{key_id}': {
+  '/v1/api-keys/{key_id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -1801,7 +1801,7 @@ export interface paths {
      * Revoke Api Key
      * @description Takes effect on the key's next request. Revoking twice keeps the first revocation time.
      */
-    delete: operations['revoke_api_key_v1_projects__project_id__api_keys__key_id__delete'];
+    delete: operations['revoke_api_key_v1_api_keys__key_id__delete'];
     options?: never;
     head?: never;
     patch?: never;
@@ -2706,6 +2706,8 @@ export interface components {
       prefix: string;
       /** Scopes */
       scopes: string[];
+      /** Project Ids */
+      project_ids: string[];
       /** Model Ids */
       model_ids: string[];
       /** Expires At */
@@ -3437,6 +3439,8 @@ export interface components {
       prefix: string;
       /** Scopes */
       scopes: string[];
+      /** Project Ids */
+      project_ids: string[];
       /** Model Ids */
       model_ids: string[];
       /** Expires At */
@@ -3574,11 +3578,8 @@ export interface components {
       name: string;
       /** Scopes */
       scopes: components['schemas']['Scope'][];
-      /**
-       * Model Ids
-       * @default []
-       */
-      model_ids: string[];
+      /** Project Ids */
+      project_ids: string[];
       /** Expires At */
       expires_at?: string | null;
       /** Rate Limit Per Minute */
@@ -9059,16 +9060,14 @@ export interface operations {
       };
     };
   };
-  list_api_keys_v1_projects__project_id__api_keys_get: {
+  list_api_keys_v1_api_keys_get: {
     parameters: {
       query?: never;
       header?: {
         'x-tenant-id'?: string | null;
         'x-user-id'?: string | null;
       };
-      path: {
-        project_id: string;
-      };
+      path?: never;
       cookie?: never;
     };
     requestBody?: never;
@@ -9093,16 +9092,14 @@ export interface operations {
       };
     };
   };
-  create_api_key_v1_projects__project_id__api_keys_post: {
+  create_api_key_v1_api_keys_post: {
     parameters: {
       query?: never;
       header?: {
         'x-tenant-id'?: string | null;
         'x-user-id'?: string | null;
       };
-      path: {
-        project_id: string;
-      };
+      path?: never;
       cookie?: never;
     };
     requestBody: {
@@ -9131,7 +9128,7 @@ export interface operations {
       };
     };
   };
-  revoke_api_key_v1_projects__project_id__api_keys__key_id__delete: {
+  revoke_api_key_v1_api_keys__key_id__delete: {
     parameters: {
       query?: never;
       header?: {
@@ -9139,7 +9136,6 @@ export interface operations {
         'x-user-id'?: string | null;
       };
       path: {
-        project_id: string;
         key_id: string;
       };
       cookie?: never;

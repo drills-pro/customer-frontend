@@ -1286,5 +1286,50 @@
       "send": "Send offer",
       "close": "Close"
     }
+  },
+  "apiKeys": {
+    "title": "API keys",
+    "subtitle": "Keys let your apps call predictions in the projects you choose.",
+    "create": "Create key",
+    "empty": "No keys yet.",
+    "never": "Never",
+    "unknownProject": "Unavailable project",
+    "col": {
+      "name": "Name",
+      "projects": "Projects",
+      "lastUsed": "Last used",
+      "status": "Status"
+    },
+    "status": {
+      "active": "Active",
+      "revoked": "Revoked"
+    },
+    "revoke": "Revoke",
+    "revokeTitle": "Revoke {{name}}?",
+    "revokeBody": "Apps using this key stop working on their next call. This cannot be undone.",
+    "revokeConfirm": "Revoke key",
+    "form": {
+      "title": "Create an API key",
+      "name": "Name",
+      "namePlaceholder": "For example, website",
+      "nameHelp": "What the key is for, so you can tell keys apart.",
+      "projects": "Projects",
+      "projectsHelp": "The key works with every model of the projects you pick.",
+      "noProjects": "This workspace has no active projects yet.",
+      "moreOptions": "More options",
+      "expiry": "Expires on",
+      "expiryHelp": "Leave empty to keep the key until you revoke it.",
+      "submit": "Create key"
+    },
+    "reveal": {
+      "title": "Your new key",
+      "body": "Copy it now. For security, it is shown only once.",
+      "label": "Secret key",
+      "copy": "Copy key",
+      "done": "Done"
+    },
+    "error": {
+      "unknownProject": "A project you picked is no longer available. Pick the projects again."
+    }
   }
 }

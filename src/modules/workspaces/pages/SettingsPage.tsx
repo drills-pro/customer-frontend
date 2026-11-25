@@ -6,6 +6,7 @@ import { ApiError } from '@/shared/api/client';
 import { errorKey } from '@/shared/api/errors';
 import { useDeleteWorkspace, useRenameWorkspace, useWorkspaceDetail } from '@/modules/workspaces/api';
 import { toaster } from '@/components/toaster';
+import { ApiKeysCard } from '@/modules/workspaces/components/ApiKeysCard';
 import { OwnershipCard } from '@/modules/workspaces/components/OwnershipCard';
 import { useCan, useWorkspace } from '@/modules/workspaces/context';
 
@@ -167,6 +168,7 @@ export function SettingsPage() {
   const { id } = useWorkspace();
   const w = useWorkspaceDetail(id);
   const canDelete = useCan('tenant.delete');
+  const canManageKeys = useCan('tenant.admin');
   return (
     <Stack gap="6">
       <Heading as="h1" textStyle="h1">
@@ -174,6 +176,7 @@ export function SettingsPage() {
       </Heading>
       <General id={id} name={w.name} slug={w.slug} />
       <OwnershipCard />
+      {canManageKeys && <ApiKeysCard workspaceId={id} />}
       {canDelete && <DangerZone id={id} name={w.name} />}
     </Stack>
   );

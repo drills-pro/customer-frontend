@@ -2,22 +2,24 @@ import type { ReactNode } from 'react';
 import { Alert, Heading, Skeleton, Stack } from '@chakra-ui/react';
 import { useParams } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { useDataset, useVersions, useWriteDenied } from '@/modules/datasets/api';
+import { useProjectDataset, useVersions, useWriteDenied } from '@/modules/datasets/api';
 import { ImportForm } from '@/modules/datasets/components/ImportForm';
 import { LoadError } from '@/modules/datasets/components/LoadError';
 import { canImport } from '@/modules/datasets/constants';
+import { useProjectDetail, type TaskType } from '@/modules/projects';
 import { useWorkspace } from '@/modules/workspaces';
 
-const FROM = '/app/w/$slug/projects/$projectId/datasets/$datasetId/imports/new';
+const FROM = '/app/w/$slug/projects/$projectId/datasets/imports/new';
 
-/** Pick a source, fill in what it needs, then create the import, upload the file when there is one, and start it. */
+/** Pick a source, fill in what it needs, then create the import, upload the file when there is one, and start it. The project's dataset
+ * is made with the first import, so this page works before there is one. */
 export function NewImportPage() {
   const { t } = useTranslation();
-  const { slug } = useWorkspace();
-  const { projectId, datasetId } = useParams({ from: FROM });
+  const workspace = useWorkspace();
+  const { projectId } = useParams({ from: FROM });
   const denied = useWriteDenied(projectId);
-  const dataset = useDataset(projectId, datasetId);
-  const versions = useVersions(projectId, datasetId);
+  const project = useProjectDetail(workspace.id, projectId);
+  const { dataset, isPending, isError, error, refetch } = useProjectDataset(projectId);
 
   const shell = (body: ReactNode) => (
     <Stack gap="6">
@@ -28,29 +30,58 @@ export function NewImportPage() {
     </Stack>
   );
 
-  if (dataset.isError)
-    return shell(<LoadError title={t('datasets.loadOneFailed')} error={dataset.error} onRetry={() => void dataset.refetch()} />);
-  if (versions.isError)
-    return shell(<LoadError title={t('datasets.versions.loadFailed')} error={versions.error} onRetry={() => void versions.refetch()} />);
-  if (dataset.isPending || versions.isPending || !versions.versions) return shell(<Skeleton h="48" />);
+  if (isError) return shell(<LoadError title={t('datasets.loadFailed')} error={error} onRetry={() => void refetch()} />);
+  if (isPending) return shell(<Skeleton h="48" />);
 
-  const { task_type: task } = dataset.data;
-  const blocked = dataset.data.deleted_at
-    ? 'datasets.import.deleted'
+  const task = project.task_type;
+  const blocked = denied
+    ? 'datasets.readOnly'
     : task === null
       ? 'datasets.import.noTask'
       : !canImport(task)
         ? 'datasets.import.unsupportedTask'
-        : denied
-          ? 'datasets.readOnly'
-          : null;
-  if (blocked || !canImport(task))
+        : null;
+  if (blocked)
     return shell(
       <Alert.Root status="info" colorPalette="info" data-testid="import-blocked">
         <Alert.Indicator />
-        <Alert.Description>{t(blocked ?? 'datasets.import.unsupportedTask')}</Alert.Description>
+        <Alert.Description>{t(blocked)}</Alert.Description>
       </Alert.Root>,
     );
 
-  return shell(<ImportForm projectId={projectId} datasetId={datasetId} slug={slug} task={task} baseVersions={versions.versions} />);
+  const props = { projectId, projectName: project.name, slug: workspace.slug, task };
+  return shell(
+    dataset ? <ImportWithVersions {...props} datasetId={dataset.id} /> : <ImportForm {...props} datasetId={null} baseVersions={[]} />,
+  );
+}
+
+/** The form for a project that has its dataset: it needs the versions to pick a base from. */
+function ImportWithVersions({
+  projectId,
+  projectName,
+  slug,
+  task,
+  datasetId,
+}: {
+  projectId: string;
+  projectName: string;
+  slug: string;
+  task: TaskType;
+  datasetId: string;
+}) {
+  const { t } = useTranslation();
+  const versions = useVersions(projectId, datasetId);
+  if (versions.isError)
+    return <LoadError title={t('datasets.versions.loadFailed')} error={versions.error} onRetry={() => void versions.refetch()} />;
+  if (versions.isPending || !versions.versions) return <Skeleton h="48" />;
+  return (
+    <ImportForm
+      projectId={projectId}
+      projectName={projectName}
+      slug={slug}
+      task={task}
+      datasetId={datasetId}
+      baseVersions={versions.versions}
+    />
+  );
 }

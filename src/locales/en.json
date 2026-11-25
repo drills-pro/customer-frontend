@@ -535,22 +535,12 @@
   },
   "datasets": {
     "title": "Datasets",
-    "subtitle": "The data this project trains on. Each import adds a version you can review and preview.",
-    "cancel": "Cancel",
-    "close": "Close",
     "retry": "Try again",
     "loadMore": "Load more",
-    "undo": "Undo",
-    "none": "None yet",
     "loadFailed": "Could not load the datasets",
-    "loadOneFailed": "Could not load this dataset",
     "readOnly": "Your role cannot change datasets in this project, so editing is turned off.",
     "noTask": "No task type",
-    "deleted": "Pending deletion",
-    "deletedNotice": "This dataset is pending deletion. You can restore it until {{date}}.",
     "versionNumber": "Version {{number}}",
-    "actions": "Actions for {{name}}",
-    "restore": "Restore dataset",
     "rows_one": "{{formatted}} row",
     "rows_other": "{{formatted}} rows",
     "files_one": "{{formatted}} file",
@@ -559,14 +549,7 @@
       "title": "No datasets yet",
       "body": "Create a dataset, then import a file or a Hugging Face dataset into it."
     },
-    "more": {
-      "title": "Add more training data",
-      "body": "Create another dataset, then import a file or a Hugging Face dataset into it."
-    },
     "column": {
-      "name": "Name",
-      "task": "Task",
-      "latestImport": "Latest import",
       "actions": "Actions",
       "version": "Version",
       "contents": "Contents",
@@ -574,27 +557,7 @@
       "source": "Source",
       "status": "Status"
     },
-    "create": {
-      "open": "Create dataset",
-      "title": "Create a dataset",
-      "name": "Name",
-      "later": "Add data later",
-      "dataTitle": "Add the data",
-      "dataHelp": "{{name}} is made. Add its first data now, or later from the dataset.",
-      "nameHelp": "You can tell datasets apart by this name.",
-      "submit": "Create"
-    },
-    "delete": {
-      "action": "Move to Trash",
-      "title": "Move {{name}} to the Trash?",
-      "body": "The dataset and its versions are hidden now and wait in the Trash, where you can restore them until their restore date.",
-      "confirm": "Move to Trash"
-    },
     "toast": {
-      "deleted": "{{name}} moved to the Trash, restorable until {{date}}",
-      "deleteFailed": "Could not delete the dataset",
-      "restored": "{{name}} was restored",
-      "restoreFailed": "Could not restore the dataset",
       "committed": "Added as version {{number}}",
       "commitFailed": "Could not add the version",
       "discardFailed": "Could not discard the import",
@@ -649,7 +612,6 @@
       "createdOn": "Started {{date}}",
       "noTask": "This project has no task type, so datasets in it cannot import data. Create a project with a task type to import.",
       "unsupportedTask": "Importing is not available for this project's task type yet.",
-      "deleted": "This dataset is pending deletion. Restore it to import data.",
       "working": {
         "queued": "Waiting for a free worker",
         "running": "Checking your data"
@@ -788,7 +750,6 @@
       "versionLabel": "Version",
       "version": "Version {{number}}",
       "versionHelp": "The newest version is picked first.",
-      "createdOn": "Created {{date}}",
       "items_one": "{{value}} item",
       "items_other": "{{value}} items",
       "classes_one": "{{count}} class",
@@ -1241,9 +1202,7 @@
     "title": "Trash",
     "subtitle": "Deleted projects and datasets wait here until their restore date, then they are removed for good. Archived projects are not here: archiving only hides a project.",
     "projects": "Projects",
-    "datasets": "Datasets",
     "until": "Restorable until {{date}}",
-    "inProject": "From {{name}}",
     "restore": "Restore",
     "restored": "{{name}} was restored",
     "restoreFailed": "Could not restore it",

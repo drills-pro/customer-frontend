@@ -55,7 +55,7 @@ test('the datasets tab opens the datasets and keeps the header', async ({ page }
   await expect(page).toHaveURL(`${BASE}/datasets`);
   await expect(page.getByTestId('project-tab-datasets')).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByTestId('project-header')).toBeVisible();
-  await expect(page.getByTestId('datasets-create-open')).toBeVisible();
+  await expect(page.getByTestId('datasets-import-empty')).toBeVisible();
 });
 
 test('the data stage links to the datasets', async ({ page }) => {

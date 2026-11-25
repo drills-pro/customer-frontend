@@ -1,17 +1,28 @@
 import { useState } from 'react';
-import { Box, Heading, Stack, Text } from '@chakra-ui/react';
+import { Box, Heading, Skeleton, Stack, Text } from '@chakra-ui/react';
 import { useParams } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { useVersionPreview, useVersions } from '@/modules/datasets/api';
+import { useProjectDataset, useVersionPreview, useVersions } from '@/modules/datasets/api';
+import { LoadError } from '@/modules/datasets/components/LoadError';
 import { PreviewPanel } from '@/modules/datasets/components/PreviewPanel';
 import { DEFAULT_PREVIEW_LIMIT } from '@/modules/datasets/constants';
+import { NotFound } from '@/shared/ui/NotFound';
 
-const FROM = '/app/w/$slug/projects/$projectId/datasets/$datasetId/versions/$versionId';
+const FROM = '/app/w/$slug/projects/$projectId/datasets/versions/$versionId';
 
-/** Sample rows of one version, with a sampling limit. */
+/** Sample rows of one version, with a sampling limit. A version belongs to the project's dataset. */
 export function VersionPage() {
   const { t } = useTranslation();
-  const { projectId, datasetId, versionId } = useParams({ from: FROM });
+  const { projectId, versionId } = useParams({ from: FROM });
+  const { dataset, isPending, isError, error, refetch } = useProjectDataset(projectId);
+  if (isError) return <LoadError title={t('datasets.loadFailed')} error={error} onRetry={() => void refetch()} />;
+  if (isPending) return <Skeleton h="48" />;
+  if (!dataset) return <NotFound />;
+  return <VersionView projectId={projectId} datasetId={dataset.id} versionId={versionId} />;
+}
+
+function VersionView({ projectId, datasetId, versionId }: { projectId: string; datasetId: string; versionId: string }) {
+  const { t } = useTranslation();
   const [limit, setLimit] = useState(DEFAULT_PREVIEW_LIMIT);
   const preview = useVersionPreview(projectId, datasetId, versionId, limit);
   const { versions } = useVersions(projectId, datasetId);

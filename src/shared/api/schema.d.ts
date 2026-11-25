@@ -909,23 +909,6 @@ export interface paths {
     patch: operations['update_visibility_v1_projects__project_id__visibility_patch'];
     trace?: never;
   };
-  '/v1/projects/{project_id}/sharing': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Update Sharing */
-    put: operations['update_sharing_v1_projects__project_id__sharing_put'];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/v1/projects/{project_id}:restore': {
     parameters: {
       query?: never;
@@ -1090,43 +1073,7 @@ export interface paths {
     get: operations['get_dataset_v1_projects__project_id__datasets__dataset_id__get'];
     put?: never;
     post?: never;
-    /** Delete Dataset */
-    delete: operations['delete_dataset_v1_projects__project_id__datasets__dataset_id__delete'];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/datasets/{dataset_id}:restore': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Restore Dataset */
-    post: operations['restore_dataset_v1_projects__project_id__datasets__dataset_id__restore_post'];
     delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/published': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Publish Version */
-    put: operations['publish_version_v1_projects__project_id__datasets__dataset_id__published_put'];
-    post?: never;
-    /** Unpublish Dataset */
-    delete: operations['unpublish_dataset_v1_projects__project_id__datasets__dataset_id__published_delete'];
     options?: never;
     head?: never;
     patch?: never;
@@ -1269,23 +1216,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/files/{path}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Version File */
-    get: operations['version_file_v1_projects__project_id__datasets__dataset_id__versions__version_id__files__path__get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/v1/projects/{project_id}/datasets/{dataset_id}/imports/{import_id}/preview': {
     parameters: {
       query?: never;
@@ -1295,23 +1225,6 @@ export interface paths {
     };
     /** Preview Import */
     get: operations['preview_import_v1_projects__project_id__datasets__dataset_id__imports__import_id__preview_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/datasets/trash': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List Trash */
-    get: operations['list_trash_v1_datasets_trash_get'];
     put?: never;
     post?: never;
     delete?: never;
@@ -1332,12 +1245,31 @@ export interface paths {
     put?: never;
     /**
      * Create Deployment
-     * @description Deploy a model version: one deployment serves exactly one. A version whose run has no test dataset is 409 deploy_risk_unacknowledged
-     *     until acknowledge_risk=true. Sending the same Idempotency-Key and version again returns that deployment (without the predict key,
-     *     which is shown once); the same key with another version is 409. `training_run_id` is deprecated (it deploys that run's newest
-     *     version): send exactly one of the two. Promoting a version to Production deploys it too.
+     * @description Deploy a succeeded training run's model: one deployment serves exactly one run. `set_main` makes it the project's main deployment,
+     *     the one a predict call with no X-Model-Id is answered by. A run with no test dataset is 409 deploy_risk_unacknowledged until
+     *     acknowledge_risk=true. The same Idempotency-Key and run returns that deployment again.
      */
     post: operations['create_deployment_v1_projects__project_id__deployments_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/deployments/{deployment_id}/main': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Set Main Deployment
+     * @description Make this deployment the project's main one; the previous main stops being it.
+     */
+    post: operations['set_main_deployment_v1_projects__project_id__deployments__deployment_id__main_post'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1399,26 +1331,6 @@ export interface paths {
      * @description Stop serving: predict and try-it answer 409, the predict key is kept. Repeating it is fine.
      */
     post: operations['stop_deployment_v1_projects__project_id__deployments__deployment_id__stop_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/deployments/{deployment_id}/main': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Set Deployment Main
-     * @description Make this deployment the project's main model: a predict call that names no model is answered by it.
-     */
-    post: operations['set_main_deployment_v1_projects__project_id__deployments__deployment_id__main_post'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1499,26 +1411,6 @@ export interface paths {
     get: operations['list_test_calls_v1_projects__project_id__deployments__deployment_id__test_calls_get'];
     put?: never;
     post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/predict/{deployment_id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Predict
-     * @description Deprecated (planning/24, migration phase 1): answers as before, marked Deprecation and Sunset, and counted per deployment.
-     */
-    post: operations['predict_v1_predict__deployment_id__post'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1613,6 +1505,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/me/tenant-slug-available': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Tenant Slug Available
+     * @description Whether a workspace handle is free: one indexed lookup. The create still decides if another request takes it first.
+     */
+    get: operations['tenant_slug_available_v1_me_tenant_slug_available_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/me/email-verification': {
     parameters: {
       query?: never;
@@ -1631,26 +1543,6 @@ export interface paths {
      * @description Zitadel mails the caller a verification link, unless the email is verified already (409 email_already_verified).
      */
     post: operations['send_email_verification_v1_me_email_verification_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/me/tenant-slug-available': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Tenant Slug Available
-     * @description Whether a workspace handle is free: one indexed lookup. The create still decides if another request takes it first.
-     */
-    get: operations['tenant_slug_available_v1_me_tenant_slug_available_get'];
-    put?: never;
-    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -1677,21 +1569,21 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/projects/{project_id}/models/{model_version_id}/publish': {
+  '/v1/projects/{project_id}/models': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    /** List Models */
+    get: operations['list_models_v1_projects__project_id__models_get'];
     put?: never;
     post?: never;
     delete?: never;
     options?: never;
     head?: never;
-    /** Publish Model */
-    patch: operations['publish_model_v1_projects__project_id__models__model_version_id__publish_patch'];
+    patch?: never;
     trace?: never;
   };
   '/v1/projects/{project_id}/models/{model_version_id}/download/{file}': {
@@ -1802,57 +1694,6 @@ export interface paths {
      * @description Takes effect on the key's next request. Revoking twice keeps the first revocation time.
      */
     delete: operations['revoke_api_key_v1_api_keys__key_id__delete'];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/public/projects': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List Public Projects */
-    get: operations['list_public_projects_v1_public_projects_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/public/projects/{project_id}/datasets': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List Public Project Datasets */
-    get: operations['list_public_project_datasets_v1_public_projects__project_id__datasets_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/public/projects/{project_id}/models': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List Public Project Models */
-    get: operations['list_public_project_models_v1_public_projects__project_id__models_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -2552,13 +2393,6 @@ export interface components {
       /** Zitadel Org Id */
       zitadel_org_id?: string | null;
     };
-    /** Body_publish_model_v1_projects__project_id__models__model_version_id__publish_patch */
-    Body_publish_model_v1_projects__project_id__models__model_version_id__publish_patch: {
-      /** Publish Metadata */
-      publish_metadata?: boolean | null;
-      /** Publish Artifact */
-      publish_artifact?: boolean | null;
-    };
     /** Body_set_tenant_status_v1_admin_tenants__tenant_id__status_post */
     Body_set_tenant_status_v1_admin_tenants__tenant_id__status_post: {
       /** Status */
@@ -2742,8 +2576,6 @@ export interface components {
       created_at: string;
       visibility: components['schemas']['Visibility'];
       default_access: components['schemas']['DefaultAccess'];
-      /** Gallery Published */
-      gallery_published: boolean;
     };
     /** CreatedTenant */
     CreatedTenant: {
@@ -2785,12 +2617,6 @@ export interface components {
       secret: string;
     };
     /**
-     * DataCategory
-     * @description What the customer declares a dataset holds (planning/18). Stored only. Mirrors datasets_data_categories_check.
-     * @enum {string}
-     */
-    DataCategory: 'personal_data' | 'biometric' | 'other_sensitive';
-    /**
      * DataKind
      * @enum {string}
      */
@@ -2799,11 +2625,6 @@ export interface components {
     DatasetCreate: {
       /** Name */
       name: string;
-      /**
-       * Data Categories
-       * @description what the dataset holds, declared by the customer
-       */
-      data_categories?: components['schemas']['DataCategory'][];
     };
     /** DatasetImport */
     DatasetImport: {
@@ -2859,17 +2680,6 @@ export interface components {
        * Format: date-time
        */
       created_at: string;
-      /** Deleted At */
-      deleted_at: string | null;
-      /** Published Version Id */
-      published_version_id: string | null;
-      /** Data Categories */
-      data_categories: components['schemas']['DataCategory'][];
-      /**
-       * Restorable Until
-       * @description When a deleted dataset is purged for good; None while it is live.
-       */
-      readonly restorable_until: string | null;
     };
     /** DatasetVersion */
     DatasetVersion: {
@@ -2924,10 +2734,7 @@ export interface components {
      * @enum {string}
      */
     DeployStrategy: 'main' | 'latest';
-    /**
-     * DeploymentCreated
-     * @description The deployment's id is the X-Model-Id a predict call names. `main` marks the project's default model.
-     */
+    /** DeploymentCreated */
     DeploymentCreated: {
       /**
        * Id
@@ -2942,7 +2749,7 @@ export interface components {
       rate_limit_per_minute: number;
       /** Plan Tier */
       plan_tier: string | null;
-      /** Predict Key */
+      /** Main */
       main: boolean;
     };
     /** DeploymentDetail */
@@ -2963,6 +2770,8 @@ export interface components {
       created_at: string;
       /** Model Version Id */
       model_version_id: string | null;
+      /** Main */
+      main: boolean;
       /**
        * Project Id
        * Format: uuid
@@ -2975,7 +2784,6 @@ export interface components {
       training_run_id: string;
       /** Rate Limit Per Minute */
       rate_limit_per_minute: number;
-      main: boolean;
     };
     /** DeploymentListItem */
     DeploymentListItem: {
@@ -2995,6 +2803,7 @@ export interface components {
       created_at: string;
       /** Model Version Id */
       model_version_id: string | null;
+      /** Main */
       main: boolean;
     };
     /**
@@ -3004,6 +2813,10 @@ export interface components {
     DeploymentSchema: {
       /** Task Type */
       task_type: string;
+      /**
+       * Deployment Id
+       * Format: uuid
+       */
       deployment_id: string;
       /** Input */
       input: {
@@ -3035,11 +2848,6 @@ export interface components {
      * @enum {string}
      */
     DownloadFile: 'model.onnx' | 'model.json';
-    /** SlugAvailability */
-    SlugAvailability: {
-      slug: string;
-      available: boolean;
-    };
     /** EmailVerificationStatus */
     EmailVerificationStatus: {
       /**
@@ -3072,11 +2880,6 @@ export interface components {
      * @enum {string}
      */
     FailureCode: 'oom' | 'bad_data' | 'unsupported' | 'timeout' | 'internal';
-    /** FileLink */
-    FileLink: {
-      /** Url */
-      url: string;
-    };
     /** HTTPValidationError */
     HTTPValidationError: {
       /** Detail */
@@ -3379,7 +3182,6 @@ export interface components {
       mlflow_model_name: string;
       /** Mlflow Version */
       mlflow_version: string;
-      /** Stage */
     };
     /** LineageRun */
     LineageRun: {
@@ -3552,7 +3354,7 @@ export interface components {
     ModelStatus: 'deployed' | 'deploying' | 'stopped' | 'not_deployed';
     /** ModelVersionItem */
     ModelVersionItem: {
-      /** Promotion Error */ /** Promotion Error Code */ /**
+      /**
        * Id
        * Format: uuid
        */
@@ -3560,12 +3362,12 @@ export interface components {
       /** Mlflow Model Name */
       mlflow_model_name: string;
       /** Mlflow Version */
-      mlflow_version: string; /**
+      mlflow_version: string;
+      /**
        * Created At
        * Format: date-time
        */
       created_at: string;
-      /** Customer Label */
       /**
        * Model Id
        * Format: uuid
@@ -3747,13 +3549,6 @@ export interface components {
     Page_TrainingRunSummary_: {
       /** Items */
       items: components['schemas']['TrainingRunSummary'][];
-      /** Next Page Token */
-      next_page_token?: string | null;
-    };
-    /** Page[TrashedDataset] */
-    Page_TrashedDataset_: {
-      /** Items */
-      items: components['schemas']['TrashedDataset'][];
       /** Next Page Token */
       next_page_token?: string | null;
     };
@@ -4005,7 +3800,6 @@ export interface components {
       };
       visibility: components['schemas']['Visibility'];
       default_access: components['schemas']['DefaultAccess'];
-      sharing: components['schemas']['Sharing'];
     };
     /**
      * ProjectListItem
@@ -4103,84 +3897,6 @@ export interface components {
       /** Default Test Dataset Id */
       default_test_dataset_id: string | null;
     };
-    /**
-     * PublicDataset
-     * @description A private dataset of a public project is listed with no name: "exists" is visible, contents are not.
-     */
-    PublicDataset: {
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /** Name */
-      name: string | null;
-      /** Published */
-      published: boolean;
-      /** Version Number */
-      version_number: number | null;
-      /** Stats */
-      stats: unknown;
-    };
-    /**
-     * PublicModel
-     * @description Likewise: an unpublished model's name and version are null.
-     */
-    PublicModel: {
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /** Mlflow Model Name */
-      mlflow_model_name: string | null;
-      /** Mlflow Version */
-      mlflow_version: string | null;
-      /** Publish Metadata */
-      publish_metadata: boolean;
-      /** Publish Artifact */
-      publish_artifact: boolean;
-    };
-    /** PublicProject */
-    PublicProject: {
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /** Name */
-      name: string | null;
-      /** Task Type */
-      task_type: string | null;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-    };
-    /** PublishRequest */
-    PublishRequest: {
-      /**
-       * Version Id
-       * Format: uuid
-       */
-      version_id: string;
-    };
-    /**
-     * PublishState
-     * @description Per-version "exclude" switches: true (the default) lets the project's Sharing level decide, false keeps this one out.
-     */
-    PublishState: {
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /** Publish Metadata */
-      publish_metadata: boolean;
-      /** Publish Artifact */
-      publish_artifact: boolean;
-    };
     /** RegisterBody */
     RegisterBody: {
       /** S3 Key */
@@ -4272,25 +3988,12 @@ export interface components {
      * @enum {string}
      */
     Severity: 'error' | 'warning';
-    /**
-     * Sharing
-     * @description Mirrors the projects.sharing CHECK constraint: what the project shows in the public gallery.
-     * @enum {string}
-     */
-    Sharing: 'private' | 'gallery' | 'gallery_downloads';
-    /** SharingChange */
-    SharingChange: {
-      sharing: components['schemas']['Sharing'];
-    };
-    /** SharingResult */
-    SharingResult: {
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      sharing: components['schemas']['Sharing'];
-      visibility: components['schemas']['Visibility'];
+    /** SlugAvailability */
+    SlugAvailability: {
+      /** Slug */
+      slug: string;
+      /** Available */
+      available: boolean;
     };
     /**
      * SmokeStatus
@@ -4974,36 +4677,6 @@ export interface components {
       completed_at: string | null;
     };
     /**
-     * TrashedDataset
-     * @description A deleted dataset in the Trash, with the project it came from.
-     */
-    TrashedDataset: {
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /** Name */
-      name: string;
-      /**
-       * Project Id
-       * Format: uuid
-       */
-      project_id: string;
-      /** Project Name */
-      project_name: string;
-      /**
-       * Deleted At
-       * Format: date-time
-       */
-      deleted_at: string;
-      /**
-       * Restorable Until
-       * Format: date-time
-       */
-      readonly restorable_until: string;
-    };
-    /**
      * TrashedProject
      * @description A project in the Trash: restorable until `restorable_until`.
      */
@@ -5114,7 +4787,6 @@ export interface components {
       id: string;
       visibility: components['schemas']['Visibility'];
       default_access: components['schemas']['DefaultAccess'];
-      sharing: components['schemas']['Sharing'];
     };
     /** Webhook */
     Webhook: {
@@ -7110,44 +6782,6 @@ export interface operations {
       };
     };
   };
-  update_sharing_v1_projects__project_id__sharing_put: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['SharingChange'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['SharingResult'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
   restore_project_v1_projects__project_id__restore_post: {
     parameters: {
       query?: never;
@@ -7540,150 +7174,6 @@ export interface operations {
       };
     };
   };
-  delete_dataset_v1_projects__project_id__datasets__dataset_id__delete: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      202: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['DatasetSummary'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  restore_dataset_v1_projects__project_id__datasets__dataset_id__restore_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['DatasetSummary'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  publish_version_v1_projects__project_id__datasets__dataset_id__published_put: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['PublishRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['DatasetSummary'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  unpublish_dataset_v1_projects__project_id__datasets__dataset_id__published_delete: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['DatasetSummary'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
   list_versions_v1_projects__project_id__datasets__dataset_id__versions_get: {
     parameters: {
       query?: {
@@ -8018,43 +7508,6 @@ export interface operations {
       };
     };
   };
-  version_file_v1_projects__project_id__datasets__dataset_id__versions__version_id__files__path__get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        dataset_id: string;
-        version_id: string;
-        path: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['FileLink'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
   preview_import_v1_projects__project_id__datasets__dataset_id__imports__import_id__preview_get: {
     parameters: {
       query?: {
@@ -8080,41 +7533,6 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['DatasetPreview'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_trash_v1_datasets_trash_get: {
-    parameters: {
-      query?: {
-        page_size?: number;
-        page_token?: string | null;
-      };
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Page_TrashedDataset_'];
         };
       };
       /** @description Validation Error */
@@ -8188,6 +7606,41 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['DeploymentCreated'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  set_main_deployment_v1_projects__project_id__deployments__deployment_id__main_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path: {
+        project_id: string;
+        deployment_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DeploymentDetail'];
         };
       };
       /** @description Validation Error */
@@ -8306,42 +7759,6 @@ export interface operations {
     };
   };
   stop_deployment_v1_projects__project_id__deployments__deployment_id__stop_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'If-Match'?: string | null;
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        deployment_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['DeploymentDetail'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  set_main_deployment_v1_projects__project_id__deployments__deployment_id__main_post: {
     parameters: {
       query?: never;
       header?: {
@@ -8520,50 +7937,15 @@ export interface operations {
       };
     };
   };
-  predict_v1_predict__deployment_id__post: {
-    parameters: {
-      query?: never;
-      header: {
-        'X-Predict-Key': string;
-      };
-      path: {
-        deployment_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
   predict_model_v1_predict_post: {
     parameters: {
       query?: never;
-      header: {
-        'X-Model-Id': string;
-        'X-Model-Revision'?: string | null;
+      header?: {
+        'X-Model-Id'?: string | null;
         'Idempotency-Key'?: string | null;
         Prefer?: string | null;
         Accept?: string | null;
         'x-project-id'?: string | null;
-        'x-model-id'?: string | null;
         'x-tenant-id'?: string | null;
         'x-user-id'?: string | null;
       };
@@ -8597,7 +7979,6 @@ export interface operations {
       query?: never;
       header?: {
         'x-project-id'?: string | null;
-        'x-model-id'?: string | null;
       };
       path: {
         prediction_id: string;
@@ -8631,7 +8012,6 @@ export interface operations {
       query?: never;
       header?: {
         'x-project-id'?: string | null;
-        'x-model-id'?: string | null;
       };
       path: {
         prediction_id: string;
@@ -8666,7 +8046,6 @@ export interface operations {
       header?: {
         'Last-Event-ID'?: string | null;
         'x-project-id'?: string | null;
-        'x-model-id'?: string | null;
       };
       path: {
         prediction_id: string;
@@ -8722,35 +8101,6 @@ export interface operations {
       };
     };
   };
-  email_verification_status_v1_me_email_verification_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['EmailVerificationStatus'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
   tenant_slug_available_v1_me_tenant_slug_available_get: {
     parameters: {
       query: {
@@ -8769,6 +8119,35 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['SlugAvailability'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  email_verification_status_v1_me_email_verification_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['EmailVerificationStatus'];
         };
       };
       /** @description Validation Error */
@@ -8844,7 +8223,7 @@ export interface operations {
       };
     };
   };
-  publish_model_v1_projects__project_id__models__model_version_id__publish_patch: {
+  list_models_v1_projects__project_id__models_get: {
     parameters: {
       query?: never;
       header?: {
@@ -8853,15 +8232,10 @@ export interface operations {
       };
       path: {
         project_id: string;
-        model_version_id: string;
       };
       cookie?: never;
     };
-    requestBody?: {
-      content: {
-        'application/json': components['schemas']['Body_publish_model_v1_projects__project_id__models__model_version_id__publish_patch'];
-      };
-    };
+    requestBody?: never;
     responses: {
       /** @description Successful Response */
       200: {
@@ -8869,7 +8243,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['PublishState'];
+          'application/json': components['schemas']['ModelVersionItem'][];
         };
       };
       /** @description Validation Error */
@@ -9148,100 +8522,6 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_public_projects_v1_public_projects_get: {
-    parameters: {
-      query?: {
-        limit?: number;
-        offset?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['PublicProject'][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_public_project_datasets_v1_public_projects__project_id__datasets_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['PublicDataset'][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_public_project_models_v1_public_projects__project_id__models_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['PublicModel'][];
-        };
       };
       /** @description Validation Error */
       422: {

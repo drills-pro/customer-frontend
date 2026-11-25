@@ -58,8 +58,8 @@ export function ImportsTab({
                 <Table.Cell textAlign="end">
                   <Button asChild size="xs">
                     <Link
-                      to="/w/$slug/projects/$projectId/datasets/$datasetId/imports/$importId"
-                      params={{ slug, projectId, datasetId, importId: i.id }}
+                      to="/w/$slug/projects/$projectId/datasets/imports/$importId"
+                      params={{ slug, projectId, importId: i.id }}
                       data-testid="import-link"
                     >
                       {t('datasets.imports.open')}

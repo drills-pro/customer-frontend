@@ -1,9 +1,8 @@
 import { useEffect, type ReactNode } from 'react';
-import { Alert, Box, Button, Center, Flex, Heading, SimpleGrid, Skeleton, Stack, Text } from '@chakra-ui/react';
+import { Alert, Box, Button, Flex, Heading, SimpleGrid, Skeleton, Stack, Text } from '@chakra-ui/react';
 import { Link } from '@tanstack/react-router';
-import { Database } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
-import { useDatasets, useVersions, versionCounts, type DatasetSummary } from '@/modules/datasets';
+import { useProjectDataset, useVersions, versionCounts, type DatasetSummary } from '@/modules/datasets';
 import { StepHeading } from '@/shared/ui/wizard';
 
 /** What the run trains on, with the names the summary shows. */
@@ -51,17 +50,10 @@ function OptionCard({
   );
 }
 
-/** Pick one of the project's datasets, then one of its versions. The chosen dataset (else the first) and its newest
- * version come preselected. */
+/** The project's one dataset, then one of its versions. The newest version comes preselected. */
 export function DataStep({ projectId, slug, choice, onChange }: Props) {
-  const { t, i18n } = useTranslation();
-  const { datasets: loaded, isPending, isError, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } = useDatasets(projectId);
-  // A picker needs every dataset, so read the remaining pages straight away.
-  useEffect(() => {
-    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-  const datasets = loaded?.filter((d) => !d.deleted_at);
-  const dataset = datasets?.find((d) => d.id === choice?.datasetId) ?? datasets?.[0];
+  const { t } = useTranslation();
+  const { dataset, isPending, isError, refetch } = useProjectDataset(projectId);
   // A clone starts with only the ids, so the name is filled in here too.
   useEffect(() => {
     if (dataset && (dataset.id !== choice?.datasetId || dataset.name !== choice.datasetName))
@@ -72,7 +64,6 @@ export function DataStep({ projectId, slug, choice, onChange }: Props) {
         versionNumber: null,
       });
   }, [dataset, choice, onChange]);
-  const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium' });
 
   const heading = <StepHeading title={t('training.data.title')} description={t('training.data.description')} />;
   if (isError)
@@ -92,7 +83,7 @@ export function DataStep({ projectId, slug, choice, onChange }: Props) {
         </Alert.Root>
       </Stack>
     );
-  if (isPending || !datasets) return <Skeleton h="32" />;
+  if (isPending) return <Skeleton h="32" />;
 
   return (
     <Stack as="section" gap="5">
@@ -112,42 +103,7 @@ export function DataStep({ projectId, slug, choice, onChange }: Props) {
           </Alert.Content>
         </Alert.Root>
       ) : (
-        <>
-          <Stack gap="2.5" role="group" aria-label={t('training.data.dataset')} data-testid="training-datasets">
-            {datasets.map((d) => {
-              const pressed = d.id === dataset.id;
-              return (
-                <OptionCard
-                  key={d.id}
-                  pressed={pressed}
-                  testId={`training-dataset-${d.id}`}
-                  onClick={() => onChange({ datasetId: d.id, datasetName: d.name, versionId: null, versionNumber: null })}
-                >
-                  <Flex minW="0" align="center" gap="3.5">
-                    <Center
-                      boxSize="9"
-                      flexShrink={0}
-                      borderRadius="l2"
-                      bg={pressed ? 'brand.solid' : 'brand.subtle'}
-                      color={pressed ? 'brand.contrast' : 'brand.fg'}
-                    >
-                      <Database width={18} height={18} />
-                    </Center>
-                    <Box minW="0">
-                      <Text truncate textStyle="body-sm" fontWeight="semibold">
-                        {d.name}
-                      </Text>
-                      <Text textStyle="body-sm" color="fg.muted">
-                        {t('training.data.createdOn', { date: date.format(new Date(d.created_at)) })}
-                      </Text>
-                    </Box>
-                  </Flex>
-                </OptionCard>
-              );
-            })}
-          </Stack>
-          <VersionPicker key={dataset.id} projectId={projectId} slug={slug} dataset={dataset} choice={choice} onChange={onChange} />
-        </>
+        <VersionPicker key={dataset.id} projectId={projectId} slug={slug} dataset={dataset} choice={choice} onChange={onChange} />
       )}
     </Stack>
   );
@@ -196,7 +152,7 @@ function VersionPicker({
           <Alert.Description>{t('training.data.noVersions')}</Alert.Description>
           <Box>
             <Button asChild size="sm">
-              <Link to="/w/$slug/projects/$projectId/datasets/$datasetId" params={{ slug, projectId, datasetId: dataset.id }}>
+              <Link to="/w/$slug/projects/$projectId/datasets" params={{ slug, projectId }}>
                 {t('training.data.goToDataset')}
               </Link>
             </Button>

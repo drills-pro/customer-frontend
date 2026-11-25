@@ -28,20 +28,23 @@ function submitErrorKey(e: unknown): string {
  * import page and, for a new dataset, inside the create dialog. `baseVersions` is the dataset's versions (none for a new dataset). */
 export function ImportForm({
   projectId,
+  projectName,
   datasetId,
   slug,
   task,
   baseVersions,
 }: {
   projectId: string;
-  datasetId: string;
+  projectName: string;
+  /** Null until the project's first import: the dataset is made on submit. */
+  datasetId: string | null;
   slug: string;
   task: TaskType;
   baseVersions: DatasetVersion[];
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { submit, reset } = useSubmitImport(projectId, datasetId);
+  const { submit, reset } = useSubmitImport(projectId, projectName, datasetId);
 
   const [values, setValues] = useState<ImportFormValues>(EMPTY_FORM);
   const [file, setFile] = useState<File | null>(null);
@@ -68,8 +71,8 @@ export function ImportForm({
     try {
       const created = await submit({ body, file, onStage: setStage, onProgress: setProgress });
       await navigate({
-        to: '/w/$slug/projects/$projectId/datasets/$datasetId/imports/$importId',
-        params: { slug, projectId, datasetId, importId: created.id },
+        to: '/w/$slug/projects/$projectId/datasets/imports/$importId',
+        params: { slug, projectId, importId: created.id },
       });
     } catch (e) {
       setError(submitErrorKey(e));

@@ -5,10 +5,10 @@ import { useTranslation } from 'react-i18next';
 import { toaster } from '@/components/toaster';
 import {
   useCommitImport,
-  useDataset,
   useImport,
   useImportAction,
   useImportPreview,
+  useProjectDataset,
   useVersions,
   useWriteDenied,
   type DatasetImport,
@@ -25,13 +25,22 @@ import { useWorkspace } from '@/modules/workspaces';
 import { ApiError } from '@/shared/api/client';
 import { NotFound } from '@/shared/ui/NotFound';
 
-const FROM = '/app/w/$slug/projects/$projectId/datasets/$datasetId/imports/$importId';
+const FROM = '/app/w/$slug/projects/$projectId/datasets/imports/$importId';
 
-/** One import, driven by its status: wait, review and decide, or read how it ended. */
+/** One import, driven by its status: wait, review and decide, or read how it ended. An import belongs to the project's dataset. */
 export function ImportPage() {
+  const { t } = useTranslation();
+  const { projectId, importId } = useParams({ from: FROM });
+  const { dataset, isPending, isError, error, refetch } = useProjectDataset(projectId);
+  if (isError) return <LoadError title={t('datasets.loadFailed')} error={error} onRetry={() => void refetch()} />;
+  if (isPending) return <Skeleton h="48" />;
+  if (!dataset) return <NotFound />;
+  return <ImportView projectId={projectId} datasetId={dataset.id} importId={importId} />;
+}
+
+function ImportView({ projectId, datasetId, importId }: { projectId: string; datasetId: string; importId: string }) {
   const { t, i18n } = useTranslation();
   const { slug } = useWorkspace();
-  const { projectId, datasetId, importId } = useParams({ from: FROM });
   const denied = useWriteDenied(projectId);
   const { data: item, error, isError, isPending, refetch } = useImport(projectId, datasetId, importId);
   const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium', timeStyle: 'short' });
@@ -88,22 +97,17 @@ function ImportBody({
   const cancel = useImportAction(projectId, datasetId, 'cancel');
   const discard = useImportAction(projectId, datasetId, 'discard');
   const commit = useCommitImport(projectId, datasetId);
-  const dataset = useDataset(projectId, datasetId);
   const [limit, setLimit] = useState(DEFAULT_PREVIEW_LIMIT);
   const preview = useImportPreview(projectId, datasetId, item.id, limit, ui.review);
   const { versions } = useVersions(projectId, datasetId);
   const nextNumber = versions ? (versions[0]?.number ?? 0) + 1 : null;
   const made = item.status === ImportStatus.Succeeded ? versions?.find((v) => v.import_id === item.id) : undefined;
-  const writeLocked = denied || Boolean(dataset.data?.deleted_at);
+  const writeLocked = denied;
   const busy = cancel.isPending || discard.isPending || commit.isPending;
   const fail = (title: string) => (e: unknown) => toaster.create({ type: 'error', title, description: t(datasetErrorKey(e)) });
   const newImport = (
     <Button asChild variant="solid">
-      <Link
-        to="/w/$slug/projects/$projectId/datasets/$datasetId/imports/new"
-        params={{ slug, projectId, datasetId }}
-        data-testid="import-new"
-      >
+      <Link to="/w/$slug/projects/$projectId/datasets/imports/new" params={{ slug, projectId }} data-testid="import-new">
         {t('datasets.import.new')}
       </Link>
     </Button>
@@ -215,8 +219,8 @@ function ImportBody({
           <Box>
             <Button asChild variant="solid">
               <Link
-                to="/w/$slug/projects/$projectId/datasets/$datasetId"
-                params={{ slug, projectId, datasetId }}
+                to="/w/$slug/projects/$projectId/datasets"
+                params={{ slug, projectId }}
                 search={{ tab: DATASET_TABS.versions }}
                 data-testid="import-view-versions"
               >

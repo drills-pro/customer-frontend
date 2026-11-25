@@ -16,7 +16,6 @@ export type DatasetImport = Schemas['DatasetImport'];
 export type ImportCreate = Schemas['ImportCreate'];
 export type ImportReport = Schemas['ImportReport'];
 export type DatasetPreview = Schemas['DatasetPreview'];
-export type TrashedDataset = Schemas['TrashedDataset'];
 
 export const datasetKey = (projectId: string, datasetId: string) => [...projectDatasetsKey(projectId), datasetId] as const;
 const versionsKey = (projectId: string, datasetId: string) => [...datasetKey(projectId, datasetId), 'versions'] as const;
@@ -24,9 +23,6 @@ const importsKey = (projectId: string, datasetId: string, pageSize?: number) =>
   [...datasetKey(projectId, datasetId), 'imports', pageSize ?? 'all'] as const;
 export const importKey = (projectId: string, datasetId: string, importId: string) =>
   [...datasetKey(projectId, datasetId), 'import', importId] as const;
-
-/** Deleted datasets of every project the user can see. Not under a project's key, so it has its own prefix to invalidate. */
-const TRASH_KEY = 'datasets-trash';
 
 const path = (projectId: string, datasetId: string) => ({ project_id: projectId, dataset_id: datasetId });
 
@@ -59,6 +55,15 @@ export function useDatasets(projectId: string) {
   return { ...paged, datasets: paged.items };
 }
 
+/**
+ * A project has one dataset: its imports make the versions. Null until the first import creates it. The list is read for it, so
+ * the first page is enough.
+ */
+export function useProjectDataset(projectId: string) {
+  const { datasets, isPending, isError, error, refetch } = useDatasets(projectId);
+  return { dataset: datasets?.[0] ?? null, isPending, isError, error, refetch };
+}
+
 export function useDataset(projectId: string, datasetId: string) {
   return useQuery({
     queryKey: datasetKey(projectId, datasetId),
@@ -76,50 +81,6 @@ export function useCreateDataset(projectId: string) {
   });
 }
 
-/** Delete and restore both answer with the dataset, so one place keeps the caches in step. */
-function useDatasetMutation<V>(projectId: string, run: (datasetId: string, vars: V) => Promise<DatasetSummary>) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ datasetId, ...vars }: { datasetId: string } & V) => run(datasetId, vars as V),
-    onSuccess: (dataset) => {
-      qc.setQueryData(datasetKey(projectId, dataset.id), dataset);
-      void qc.invalidateQueries({ queryKey: [TRASH_KEY] });
-      return qc.invalidateQueries({ queryKey: datasetListKey(projectId) });
-    },
-    onError: noteDenied(qc, projectId),
-  });
-}
-
-export const useDeleteDataset = (projectId: string) =>
-  useDatasetMutation<object>(projectId, (datasetId) =>
-    unwrap(client.DELETE('/v1/projects/{project_id}/datasets/{dataset_id}', { params: { path: path(projectId, datasetId) } })),
-  );
-
-export function useTrashedDatasets(workspaceId: string) {
-  const paged = usePagedList([TRASH_KEY, workspaceId], (pageToken) =>
-    unwrap(client.GET('/v1/datasets/trash', { params: { query: { page_token: pageToken } } })),
-  );
-  return { ...paged, datasets: paged.items };
-}
-
-/** Restore from the Trash, where the rows come from several projects: the project is a variable, not a hook argument. */
-export function useRestoreTrashedDataset() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ projectId, datasetId }: { projectId: string; datasetId: string }) =>
-      unwrap(client.POST('/v1/projects/{project_id}/datasets/{dataset_id}:restore', { params: { path: path(projectId, datasetId) } })),
-    onSuccess: (dataset, { projectId }) => {
-      void qc.invalidateQueries({ queryKey: [TRASH_KEY] });
-      return qc.invalidateQueries({ queryKey: projectDatasetsKey(projectId) });
-    },
-  });
-}
-
-export const useRestoreDataset = (projectId: string) =>
-  useDatasetMutation<object>(projectId, (datasetId) =>
-    unwrap(client.POST('/v1/projects/{project_id}/datasets/{dataset_id}:restore', { params: { path: path(projectId, datasetId) } })),
-  );
-
 export function useVersions(projectId: string, datasetId: string) {
   const paged = usePagedList(versionsKey(projectId, datasetId), (pageToken) =>
     unwrap(
@@ -131,7 +92,7 @@ export function useVersions(projectId: string, datasetId: string) {
   return { ...paged, versions: paged.items };
 }
 
-/** Newest first. `pageSize: 1` is the dataset list's "latest import" cell. */
+/** Newest first. `pageSize: 1` is a one-row read. */
 export function useImports(projectId: string, datasetId: string, pageSize?: number) {
   const paged = usePagedList(importsKey(projectId, datasetId, pageSize), (pageToken) =>
     unwrap(
@@ -158,40 +119,33 @@ export function useImport(projectId: string, datasetId: string, importId: string
 }
 
 /** The key is made once per attempt by the caller: a retry of the same attempt replays the first answer instead of making a second import. */
-export function useCreateImport(projectId: string, datasetId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ body, key }: { body: ImportCreate; key: string }) =>
-      unwrap(
-        client.POST('/v1/projects/{project_id}/datasets/{dataset_id}/imports', {
-          params: { path: path(projectId, datasetId), header: { [IDEMPOTENCY_HEADER]: key } },
-          body,
-        }),
-      ),
-    onSuccess: (created) => {
-      qc.setQueryData(importKey(projectId, datasetId, created.id), created);
-      return qc.invalidateQueries({ queryKey: [...datasetKey(projectId, datasetId), 'imports'] });
-    },
-    onError: noteDenied(qc, projectId),
-  });
+function createImportCall(projectId: string, datasetId: string, body: ImportCreate, key: string) {
+  return unwrap(
+    client.POST('/v1/projects/{project_id}/datasets/{dataset_id}/imports', {
+      params: { path: path(projectId, datasetId), header: { [IDEMPOTENCY_HEADER]: key } },
+      body,
+    }),
+  );
 }
 
 type ImportAction = 'start' | 'cancel' | 'discard';
-/** start, cancel and discard answer with the import; its cache entry takes the new status. The import id is the variable, so one hook serves a page and the new-import flow. */
+function importActionCall(projectId: string, datasetId: string, importId: string, action: ImportAction) {
+  const params = { params: { path: { ...path(projectId, datasetId), import_id: importId } } };
+  switch (action) {
+    case 'start':
+      return unwrap(client.POST('/v1/projects/{project_id}/datasets/{dataset_id}/imports/{import_id}/start', params));
+    case 'cancel':
+      return unwrap(client.POST('/v1/projects/{project_id}/datasets/{dataset_id}/imports/{import_id}/cancel', params));
+    case 'discard':
+      return unwrap(client.POST('/v1/projects/{project_id}/datasets/{dataset_id}/imports/{import_id}/discard', params));
+  }
+}
+
+/** start, cancel and discard answer with the import; its cache entry takes the new status. */
 export function useImportAction(projectId: string, datasetId: string, action: ImportAction) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (importId: string) => {
-      const params = { params: { path: { ...path(projectId, datasetId), import_id: importId } } };
-      switch (action) {
-        case 'start':
-          return unwrap(client.POST('/v1/projects/{project_id}/datasets/{dataset_id}/imports/{import_id}/start', params));
-        case 'cancel':
-          return unwrap(client.POST('/v1/projects/{project_id}/datasets/{dataset_id}/imports/{import_id}/cancel', params));
-        case 'discard':
-          return unwrap(client.POST('/v1/projects/{project_id}/datasets/{dataset_id}/imports/{import_id}/discard', params));
-      }
-    },
+    mutationFn: (importId: string) => importActionCall(projectId, datasetId, importId, action),
     onSuccess: (updated, importId) => {
       qc.setQueryData(importKey(projectId, datasetId, importId), updated);
       return qc.invalidateQueries({ queryKey: [...datasetKey(projectId, datasetId), 'imports'] });
@@ -210,14 +164,15 @@ interface SubmitArgs {
 }
 
 /**
- * Create the import, upload its file when there is one, and start it. A retry of the same attempt reuses what already succeeded (the
- * created import, the uploaded file) and its key, so nothing is made twice. `reset()` cancels the created import (best effort) and
- * drops the attempt, so the next submit begins again.
+ * Create the import, upload its file when there is one, and start it. The project's dataset is made first when it has none yet, once,
+ * and its id is kept, so a retry never makes a second one. A retry of the same attempt reuses what already succeeded (the created
+ * import, the uploaded file) and its key, so nothing is made twice. `reset()` cancels the created import (best effort) and drops the
+ * attempt, so the next submit begins again.
  */
-export function useSubmitImport(projectId: string, datasetId: string) {
-  const create = useCreateImport(projectId, datasetId);
-  const start = useImportAction(projectId, datasetId, 'start');
-  const cancel = useImportAction(projectId, datasetId, 'cancel');
+export function useSubmitImport(projectId: string, projectName: string, datasetId: string | null) {
+  const qc = useQueryClient();
+  const createDataset = useCreateDataset(projectId);
+  const made = useRef<string | null>(null);
   /** One attempt at making an import. The key is reused by every retry of the same request and replaced as soon as the request changes. */
   const attempt = useRef<{ key: string; signature: string; created?: DatasetImport; uploaded: boolean } | null>(null);
   const abort = useRef<AbortController | null>(null);
@@ -229,33 +184,47 @@ export function useSubmitImport(projectId: string, datasetId: string) {
     const a = attempt.current;
     if (!a.created) {
       onStage('creating');
-      a.created = await create.mutateAsync({ body, key: a.key });
+      let dsId = datasetId ?? made.current;
+      if (!dsId) {
+        dsId = (await createDataset.mutateAsync(projectName)).id;
+        made.current = dsId;
+      }
+      try {
+        a.created = await createImportCall(projectId, dsId, body, a.key);
+      } catch (e) {
+        noteDenied(qc, projectId)(e);
+        throw e;
+      }
+      qc.setQueryData(importKey(projectId, dsId, a.created.id), a.created);
+      void qc.invalidateQueries({ queryKey: [...datasetKey(projectId, dsId), 'imports'] });
     }
+    const created = a.created;
     if (body.source === ImportSource.Upload && !a.uploaded && file) {
-      if (!a.created.upload_url) throw new UploadLinkLost();
+      if (!created.upload_url) throw new UploadLinkLost();
       onStage('uploading');
       onProgress(0);
       abort.current = new AbortController();
-      await putFile(a.created.upload_url, file, onProgress, abort.current.signal).catch(() => {
+      await putFile(created.upload_url, file, onProgress, abort.current.signal).catch(() => {
         throw new UploadFailed();
       });
       a.uploaded = true;
     }
     onStage('starting');
     try {
-      await start.mutateAsync(a.created.id);
+      await importActionCall(projectId, created.dataset_id, created.id, 'start');
     } catch (e) {
       // Someone else moved it: the import page shows the server's state.
+      onImportError(qc, projectId, created.dataset_id, created.id)(e);
       if (!isConflict(e)) throw e;
     }
-    return a.created;
+    return created;
   }
 
   /** Start over: the attempt is dropped at once; its created import is cancelled best effort, and a failure there is ignored. */
   async function reset() {
     const created = attempt.current?.created;
     attempt.current = null;
-    if (created) await cancel.mutateAsync(created.id).catch(() => undefined);
+    if (created) await importActionCall(projectId, created.dataset_id, created.id, 'cancel').catch(() => undefined);
   }
 
   return { submit, reset };

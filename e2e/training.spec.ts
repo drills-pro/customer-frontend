@@ -456,21 +456,15 @@ test('a clone of a run that is gone starts from the defaults', async ({ page, ap
   await expect(page.getByTestId('training-preset-small')).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('the data step picks between datasets as cards, and the step list goes back to a passed step', async ({ page, api }) => {
-  const { d } = withVersion(api);
-  const other = dataset(api, { task_type: 'image-classification' });
-  const ov = versionOf(api, other.id, importOf(api, other.id, { status: 'succeeded' }).id);
+test('the data step keeps the chosen version when the step is opened again', async ({ page, api }) => {
+  const { v } = withVersion(api);
   await page.goto(NEW);
-  await expect(page.getByTestId(`training-dataset-${d.id}`)).toHaveAttribute('aria-pressed', 'true');
-  await page.getByTestId(`training-dataset-${other.id}`).click();
-  await expect(page.getByTestId(`training-dataset-${other.id}`)).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByTestId(`training-version-${ov.id}`)).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId(`training-version-${v.id}`)).toHaveAttribute('aria-pressed', 'true');
 
   await next(page).click();
   // The settings step has been reached; the data step, passed, can be opened again.
   await page.getByTestId('wizard-step-trigger-0').click();
-  await expect(page.getByTestId('training-datasets')).toBeVisible();
-  await expect(page.getByTestId(`training-dataset-${other.id}`)).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId(`training-version-${v.id}`)).toHaveAttribute('aria-pressed', 'true');
 });
 
 test.describe('runs list', () => {

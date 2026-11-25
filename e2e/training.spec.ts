@@ -540,5 +540,4 @@ test('a finished run has a model card with its metrics and its lineage', async (
   await expect(page.getByTestId('run-model-card')).toBeVisible();
   await expect(page.getByTestId('run-model-metrics-top1')).toBeVisible();
   await expect(page.getByTestId('run-lineage')).toBeVisible();
-  await expect(page.getByTestId('run-model-actions')).toBeVisible();
 });

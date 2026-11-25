@@ -16,12 +16,11 @@ const TAB_PATHS = {
   [ProjectTab.Overview]: '/w/$slug/projects/$projectId',
   [ProjectTab.Datasets]: '/w/$slug/projects/$projectId/datasets',
   [ProjectTab.Training]: '/w/$slug/projects/$projectId/training',
-  [ProjectTab.Models]: '/w/$slug/projects/$projectId/models',
   [ProjectTab.Deployments]: '/w/$slug/projects/$projectId/deployments',
 } as const;
 const NEW_TRAINING_PATH = '/w/$slug/projects/$projectId/training/new';
 /** The section tabs that own a subtree: any page under one keeps it selected. Anything else is the overview. */
-const SECTION_TABS = [ProjectTab.Datasets, ProjectTab.Training, ProjectTab.Models, ProjectTab.Deployments] as const;
+const SECTION_TABS = [ProjectTab.Datasets, ProjectTab.Training, ProjectTab.Deployments] as const;
 
 /** One project: its header and section tabs around the section's page. The shell breadcrumb leads back up. */
 export function ProjectLayout() {

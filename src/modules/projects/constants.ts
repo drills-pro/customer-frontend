@@ -23,17 +23,10 @@ export const ProjectTab = {
   Overview: 'overview',
   Datasets: 'datasets',
   Training: 'training',
-  Models: 'models',
   Deployments: 'deployments',
 } as const;
 export type ProjectTab = (typeof ProjectTab)[keyof typeof ProjectTab];
-export const PROJECT_TABS: readonly ProjectTab[] = [
-  ProjectTab.Overview,
-  ProjectTab.Datasets,
-  ProjectTab.Training,
-  ProjectTab.Models,
-  ProjectTab.Deployments,
-];
+export const PROJECT_TABS: readonly ProjectTab[] = [ProjectTab.Overview, ProjectTab.Datasets, ProjectTab.Training, ProjectTab.Deployments];
 
 /** The overview's pipeline stages, in order; each id is also its `projects.overview.pipeline.*` key. */
 export const PIPELINE_STAGES = ['data', 'train', 'deploy'] as const;

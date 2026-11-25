@@ -47,7 +47,7 @@ export function IntegrationTab({ deployment }: { deployment: Deployment }) {
     );
   if (schema.isPending) return <Skeleton h="64" />;
 
-  const { input, output, model_id, model_revision, task_type } = schema.data;
+  const { input, output, deployment_id, task_type } = schema.data;
   // Built from the API this app talks to (the public one in production), not from the server's own base URL.
   const example = buildCall(cfg.apiUrl, deployment.project_id, schema.data);
   const code = example[lang];
@@ -118,13 +118,9 @@ export function IntegrationTab({ deployment }: { deployment: Deployment }) {
                 <DataList.ItemLabel>{t('deployments.integration.modelId')}</DataList.ItemLabel>
                 <DataList.ItemValue minW="0">
                   <Text textStyle="mono-sm" truncate>
-                    {model_id}
+                    {deployment_id}
                   </Text>
                 </DataList.ItemValue>
-              </DataList.Item>
-              <DataList.Item>
-                <DataList.ItemLabel>{t('deployments.integration.revision')}</DataList.ItemLabel>
-                <DataList.ItemValue textStyle="mono-sm">{model_revision}</DataList.ItemValue>
               </DataList.Item>
             </DataList.Root>
           </Card.Body>

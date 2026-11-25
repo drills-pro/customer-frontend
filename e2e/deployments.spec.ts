@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { ACME_SLUG, API_URL, DEPLOYMENT_SCHEMA, PREDICT_KEY, PROJECT, deployment, run } from './mock-api';
+import { ACME_SLUG, API_URL, DEPLOYMENT_SCHEMA, PROJECT, deployment, run } from './mock-api';
 
 const BASE = `/w/${ACME_SLUG}/projects/${PROJECT}`;
 const PREDICT = `${API_URL}/v1/predict`;
@@ -35,15 +35,15 @@ test('lists deployments with their status and opens one', async ({ page, api }) 
   await expect(page.getByTestId('deployment-status')).toHaveAttribute('data-status', 'active');
 });
 
-test('deploys a finished run, shows the key once, then the run links to its deployment', async ({ page, api }) => {
+test('deploys a finished run, shows its model ID, then the run links to its deployment', async ({ page, api }) => {
   const r = run(api, 'succeeded');
   await page.goto(`${BASE}/training/${r.id}`);
   await page.getByTestId('training-run-deploy').click();
   await page.getByTestId('deploy-confirm').click();
-  await expect(page.getByTestId('deploy-key')).toHaveValue(PREDICT_KEY);
+  await expect(page.getByTestId('deploy-id')).toHaveValue(api.deployments[0].id);
   expect(api.deployCalls).toHaveLength(1);
-  // The deployment is keyed on the model version the run registered, and serves exactly that one.
-  expect(api.deployCalls[0].versionId).toBe(api.models[0].id);
+  // The deploy names the run; the deployment serves the one model version that run made.
+  expect(api.deployCalls[0].runId).toBe(r.id);
   expect(api.deployments[0].model_version_id).toBe(api.models[0].id);
   expect(api.deployments[0].training_run_id).toBe(r.id);
 
@@ -55,6 +55,17 @@ test('deploys a finished run, shows the key once, then the run links to its depl
   await page.getByTestId('deployment-run-link').click();
   await expect(page.getByTestId('training-run-deployment')).toBeVisible();
   await expect(page.getByTestId('training-run-deploy')).toHaveCount(0);
+});
+
+test('the deploy dialog can make the deployment the main model', async ({ page, api }) => {
+  const r = run(api, 'succeeded');
+  await page.goto(`${BASE}/training/${r.id}`);
+  await page.getByTestId('training-run-deploy').click();
+  await page.getByTestId('deploy-set-main').click();
+  await page.getByTestId('deploy-confirm').click();
+  await expect(page.getByTestId('deploy-created')).toHaveAttribute('data-deployment', api.deployments[0].id);
+  expect(api.deployCalls[0].setMain).toBe(true);
+  expect(api.deployments[0].main).toBe(true);
 });
 
 test('a run without a test split deploys only after the risk is accepted, with a new key', async ({ page, api }) => {
@@ -159,9 +170,7 @@ test('try it is a real predict call as the signed-in member, counted toward usag
   await expect(page.getByTestId('deployment-test-result')).toBeVisible();
   await expect(page.getByTestId('deployment-test-call')).toHaveCount(1);
   // The model and project are named by the headers of POST /v1/predict, from the deployment's schema.
-  expect(api.predictCalls).toEqual([
-    { project: PROJECT, model: DEPLOYMENT_SCHEMA.model_id, revision: DEPLOYMENT_SCHEMA.model_revision, body: { input: { text: 'hello' } } },
-  ]);
+  expect(api.predictCalls).toEqual([{ project: PROJECT, model: DEPLOYMENT_SCHEMA.deployment_id, body: { input: { text: 'hello' } } }]);
   expect(api.testCalls[0].request).toEqual({ input: { text: 'hello' } });
 });
 

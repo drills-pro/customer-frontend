@@ -4,34 +4,29 @@ test('the wizard creates a workspace and opens it', async ({ page, api }) => {
   api.workspaces = [];
   await page.goto('/new');
   await expect(page.getByTestId('wizard-step')).toHaveAttribute('data-step', 'details');
-  await expect(page.getByTestId('wizard-next')).toBeDisabled();
+  await expect(page.getByTestId('wizard-create')).toBeDisabled();
 
   await page.getByTestId('wizard-name').fill('My Team');
   await expect(page.getByTestId('wizard-slug')).toHaveValue('my-team');
-  await page.getByTestId('wizard-next').click();
-
-  await expect(page.getByTestId('wizard-step')).toHaveAttribute('data-step', 'review');
   await page.getByTestId('wizard-create').click();
 
-  await expect(page.getByTestId('wizard-step')).toHaveAttribute('data-step', 'done');
-  await expect(page.getByTestId('wizard-bit')).toHaveAttribute('data-pose', 'ship');
-  expect(api.workspaces).toHaveLength(1);
-
-  await page.getByTestId('wizard-open').click();
-  await expect(page).toHaveURL(`/w/${api.workspaces[0].slug}`);
+  // One step: the workspace is made and opened, with no review or done screen in between.
+  await expect.poll(() => api.workspaces.length).toBe(1);
+  expect(api.workspaces[0].slug).toBe('my-team');
+  await expect(page).toHaveURL('/w/my-team');
 });
 
 test('a taken handle gets a short ending instead of an error', async ({ page, api }) => {
   const taken = api.workspaces[0];
   await page.goto('/new');
   await page.getByTestId('wizard-name').fill(taken.name);
-  await page.getByTestId('wizard-next').click();
-
-  await expect(page.getByTestId('wizard-suffixed')).toBeVisible();
+  const before = api.workspaces.length;
   await page.getByTestId('wizard-create').click();
 
-  await expect(page.getByTestId('wizard-step')).toHaveAttribute('data-step', 'done');
-  expect(api.workspaces.at(-1)?.slug).toMatch(new RegExp(`^${taken.slug}-[a-z0-9]{5}$`));
+  await expect.poll(() => api.workspaces.length).toBe(before + 1);
+  const made = api.workspaces.at(-1)?.slug ?? '';
+  expect(made).toMatch(new RegExp(`^${taken.slug}-[a-z0-9]{5}$`));
+  await expect(page).toHaveURL(`/w/${made}`);
 });
 
 test('an unverified email starts on the verify step', async ({ page, api }) => {

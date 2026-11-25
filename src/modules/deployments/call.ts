@@ -22,8 +22,7 @@ export function buildCall(apiUrl: string, projectId: string, schema: DeploymentS
   const headers: Record<string, string> = {
     Authorization: `Bearer ${KEY_PLACEHOLDER}`,
     'X-Project-Id': projectId,
-    'X-Model-Id': schema.model_id,
-    'X-Model-Revision': schema.model_revision,
+    'X-Model-Id': schema.deployment_id,
     'Content-Type': 'application/json',
   };
   const body = input ?? { input: Object.fromEntries(Object.keys(schema.input).map((field) => [field, '<your data>'])) };
@@ -31,7 +30,7 @@ export function buildCall(apiUrl: string, projectId: string, schema: DeploymentS
   const response = {
     id: '<prediction id>',
     status: 'succeeded',
-    model: { id: schema.model_id, revision: schema.model_revision },
+    model: { id: schema.deployment_id },
     output: schema.output,
     usage: { latency_ms: 42 },
     metadata: {},

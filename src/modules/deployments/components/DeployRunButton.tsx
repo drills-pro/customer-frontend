@@ -12,8 +12,8 @@ import { newIdempotencyKey } from '@/shared/api/idempotency';
 const DEPLOYMENT_PATH = '/w/$slug/projects/$projectId/deployments/$deploymentId';
 const REDEPLOYABLE: readonly string[] = [DeploymentStatus.Deleted, DeploymentStatus.Failed];
 
-/** On a finished run: deploy its model version, or open the deployment it already has. The dialog asks first; a run with no test split, or
- * one scored below the task's quality floor, needs the person to accept that risk. The new endpoint's key is shown once. */
+/** On a finished run: deploy its model, or open the deployment it already has. The dialog asks first (and can make it the project's main
+ * model); a run with no test split, or one scored below the task's quality floor, needs the person to accept that risk. */
 export function DeployRunButton({ projectId, runId }: { projectId: string; runId: string }) {
   const { t } = useTranslation();
   const { id: workspaceId, slug } = useWorkspace();
@@ -23,22 +23,22 @@ export function DeployRunButton({ projectId, runId }: { projectId: string; runId
   // One key per attempt: a double click or a network retry replays the first answer instead of minting a second deployment.
   const [key, setKey] = useState(newIdempotencyKey);
   const [acknowledged, setAcknowledged] = useState(false);
+  const [setMain, setSetMain] = useState(false);
   const [created, setCreated] = useState<DeploymentCreated | null>(null);
   // Lineage answers the run's newest deployment in any status; a deleted or failed one can be deployed again.
   const newest = lineage.data?.deployment;
-  // A deployment serves one model version: the one this run registered.
-  const versionId = lineage.data?.model_version?.id;
   const existing = newest && !REDEPLOYABLE.includes(newest.status) ? newest : null;
 
   const reset = () => {
     create.reset();
     setKey(newIdempotencyKey());
     setAcknowledged(false);
+    setSetMain(false);
     setCreated(null);
   };
   const deploy = () =>
     create.mutate(
-      { versionId: versionId ?? '', runId, key, acknowledgeRisk: acknowledged },
+      { runId, key, acknowledgeRisk: acknowledged, setMain },
       {
         onSuccess: setCreated,
         // A refused attempt is over: the next click is a new one.
@@ -58,7 +58,7 @@ export function DeployRunButton({ projectId, runId }: { projectId: string; runId
         </Button>
       ) : (
         // Outline: the project header holds the screen's one solid button.
-        <Button size="sm" onClick={() => setOpen(true)} loading={lineage.isPending} disabled={!versionId} data-testid="training-run-deploy">
+        <Button size="sm" onClick={() => setOpen(true)} loading={lineage.isPending} data-testid="training-run-deploy">
           <Upload />
           {t('deployments.deploy.open')}
         </Button>
@@ -84,6 +84,16 @@ export function DeployRunButton({ projectId, runId }: { projectId: string; runId
                 ) : (
                   <Stack gap="4">
                     <Dialog.Description>{t('deployments.deploy.description')}</Dialog.Description>
+                    <Checkbox.Root
+                      size="sm"
+                      checked={setMain}
+                      onCheckedChange={(e) => setSetMain(e.checked === true)}
+                      data-testid="deploy-set-main"
+                    >
+                      <Checkbox.HiddenInput />
+                      <Checkbox.Control />
+                      <Checkbox.Label>{t('deployments.deploy.setMain')}</Checkbox.Label>
+                    </Checkbox.Root>
                     {risk && (
                       <Alert.Root status="warning" colorPalette="warning" data-testid="deploy-risk">
                         <Alert.Indicator />
@@ -144,36 +154,29 @@ export function DeployRunButton({ projectId, runId }: { projectId: string; runId
   );
 }
 
-/** The deploy went through. A fresh deployment carries its key, readable only in this answer; a re-deploy of the same model has none. */
+/** The deploy went through: the deployment's id is the X-Model-Id a predict call names (no key is minted any more). */
 function Created({ created }: { created: DeploymentCreated }) {
   const { t } = useTranslation();
   return (
     <Stack gap="4" data-testid="deploy-created" data-deployment={created.id}>
       <Text>{t('deployments.deploy.started')}</Text>
-      {created.predict_key && (
-        <>
-          <Clipboard.Root value={created.predict_key}>
-            <Clipboard.Label>{t('deployments.deploy.keyLabel')}</Clipboard.Label>
-            <InputGroup
-              endElement={
-                <Clipboard.Trigger asChild>
-                  <IconButton variant="ghost" size="xs" aria-label={t('deployments.deploy.copyKey')}>
-                    <Clipboard.Indicator />
-                  </IconButton>
-                </Clipboard.Trigger>
-              }
-            >
-              <Clipboard.Input asChild>
-                <Input readOnly fontFamily="mono" data-testid="deploy-key" />
-              </Clipboard.Input>
-            </InputGroup>
-          </Clipboard.Root>
-          <Alert.Root status="warning" colorPalette="warning">
-            <Alert.Indicator />
-            <Alert.Description>{t('deployments.deploy.keyOnce')}</Alert.Description>
-          </Alert.Root>
-        </>
-      )}
+      <Clipboard.Root value={created.id}>
+        <Clipboard.Label>{t('deployments.deploy.idLabel')}</Clipboard.Label>
+        <InputGroup
+          endElement={
+            <Clipboard.Trigger asChild>
+              <IconButton variant="ghost" size="xs" aria-label={t('deployments.deploy.copyId')}>
+                <Clipboard.Indicator />
+              </IconButton>
+            </Clipboard.Trigger>
+          }
+        >
+          <Clipboard.Input asChild>
+            <Input readOnly fontFamily="mono" data-testid="deploy-id" />
+          </Clipboard.Input>
+        </InputGroup>
+      </Clipboard.Root>
+      {created.main && <Text color="fg.muted">{t('deployments.deploy.mainNote')}</Text>}
     </Stack>
   );
 }

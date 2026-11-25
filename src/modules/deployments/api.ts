@@ -45,16 +45,16 @@ export function useDeployment(projectId: string, deploymentId: string) {
 
 /** Deploy a model version (one deployment serves exactly one). `runId` is the run it came from, whose lineage is refetched. The key is
  * made once per attempt by the caller, so a retry replays the first answer instead of minting a second deployment. `acknowledgeRisk` is
- * sent once the person accepted that a run without a test split has unchecked scores. */
+ * sent once the person accepted that a run without a test split has unchecked scores. `setMain` makes it the project's main model. */
 export function useCreateDeployment(workspaceId: string, projectId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ versionId, key, acknowledgeRisk }: { versionId: string; runId: string; key: string; acknowledgeRisk: boolean }) =>
+    mutationFn: ({ runId, key, acknowledgeRisk, setMain }: { runId: string; key: string; acknowledgeRisk: boolean; setMain: boolean }) =>
       unwrap(
         client.POST('/v1/projects/{project_id}/deployments', {
           params: {
             path: { project_id: projectId },
-            query: { model_version_id: versionId, acknowledge_risk: acknowledgeRisk },
+            query: { training_run_id: runId, set_main: setMain, acknowledge_risk: acknowledgeRisk },
             header: { [IDEMPOTENCY_HEADER]: key },
           },
         }),
@@ -109,15 +109,15 @@ export function useDeploymentSchema(projectId: string, deploymentId: string, ena
 }
 
 /** The in-app "try it": the real POST /v1/predict, with the signed-in session instead of a key. The call is stored, tagged as made from
- * the console, and counts toward usage like any other. `model` is what the deployment's schema names (`model_id`, `model_revision`). */
+ * the console, and counts toward usage like any other. `model` is the deployment the schema names (`deployment_id`). */
 export function useTestDeployment(projectId: string, deploymentId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ model, body }: { model: Pick<DeploymentSchema, 'model_id' | 'model_revision'>; body: Record<string, unknown> }) =>
+    mutationFn: ({ model, body }: { model: Pick<DeploymentSchema, 'deployment_id'>; body: Record<string, unknown> }) =>
       unwrap(
         client.POST('/v1/predict', {
           params: {
-            header: { 'X-Model-Id': model.model_id, 'X-Model-Revision': model.model_revision, 'x-project-id': projectId },
+            header: { 'X-Model-Id': model.deployment_id, 'x-project-id': projectId },
           },
           // The route reads the JSON body itself; the spec leaves it untyped.
           body: body as never,

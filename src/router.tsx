@@ -6,7 +6,6 @@ import { callbackRoute, loginRoute, signupRoute } from '@/modules/auth';
 import { datasetsRoute } from '@/modules/datasets';
 import { deploymentsRoutes } from '@/modules/deployments';
 import { membersRoute, inviteRoute } from '@/modules/members';
-import { modelRoutes } from '@/modules/models';
 import { projectsRoute } from '@/modules/projects';
 import { trainingRoutes } from '@/modules/training';
 import { trashRoute } from '@/modules/trash';
@@ -24,7 +23,7 @@ const routeTree = rootRoute.addChildren([
     inviteRoute,
     workspaceRoute.addChildren([
       overviewRoute,
-      projectsRoute(datasetsRoute, ...trainingRoutes, ...modelRoutes, ...deploymentsRoutes),
+      projectsRoute(datasetsRoute, ...trainingRoutes, ...deploymentsRoutes),
       membersRoute,
       trashRoute,
       settingsRoute,

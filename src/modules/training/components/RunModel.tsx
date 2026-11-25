@@ -1,9 +1,7 @@
-import { useState } from 'react';
-import { Alert, Box, Button, Field, Flex, Heading, HStack, Input, Skeleton, Stack, Text } from '@chakra-ui/react';
+import { Alert, Box, Flex, Heading, HStack, Skeleton, Stack, Text } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useRunLineage } from '@/modules/deployments';
-import { useRegisterModel } from '@/modules/models';
 import { client, unwrap } from '@/shared/api/client';
 import { errorKey } from '@/shared/api/errors';
 import { MetricsCard } from '@/modules/training/components/MetricsCard';
@@ -21,58 +19,6 @@ export function useModelCard(projectId: string, runId: string, enabled: boolean)
       ),
     enabled,
   });
-}
-
-/** Register the run's model under a name. Deploying is the header's Deploy button (`DeployRunButton`), which asks about the risk. */
-export function RunModelActions({ projectId, runId }: { projectId: string; runId: string }) {
-  const { t } = useTranslation();
-  const register = useRegisterModel(projectId);
-  const [name, setName] = useState('');
-  const trimmed = name.trim();
-
-  return (
-    <Box borderWidth="1px" borderColor="border" borderRadius="l3" bg="surface-raised" p="5" data-testid="run-model-actions">
-      <Heading as="h3" textStyle="body" fontWeight="semibold">
-        {t('training.run.model.title')}
-      </Heading>
-      <Text mt="1" color="fg.muted" textStyle="body-sm">
-        {t('training.run.model.help')}
-      </Text>
-      <Stack mt="4" gap="4">
-        <Flex gap="3" wrap="wrap" align="flex-end">
-          <Field.Root maxW="sm" flex="1" minW="0">
-            <Field.Label>{t('training.run.model.name')}</Field.Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t('training.run.model.namePlaceholder')}
-              data-testid="run-model-name"
-            />
-          </Field.Root>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={!trimmed || register.isPending}
-            onClick={() => register.mutate({ runId, name: trimmed })}
-            data-testid="run-model-register"
-          >
-            {t('training.run.model.register')}
-          </Button>
-        </Flex>
-        {register.isSuccess && (
-          <Alert.Root status="success" colorPalette="success" data-testid="run-model-registered">
-            <Alert.Indicator />
-            <Alert.Description>{t('training.run.model.registered')}</Alert.Description>
-          </Alert.Root>
-        )}
-        {register.isError && (
-          <Text textStyle="body-sm" color="fg.error" role="alert">
-            {t(errorKey(register.error))}
-          </Text>
-        )}
-      </Stack>
-    </Box>
-  );
 }
 
 /** The model card and lineage of a succeeded run: where its data came from, its base, its test split and what it became. */

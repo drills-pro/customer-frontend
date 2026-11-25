@@ -1405,6 +1405,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/projects/{project_id}/deployments/{deployment_id}/main': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Set Deployment Main
+     * @description Make this deployment the project's main model: a predict call that names no model is answered by it.
+     */
+    post: operations['set_main_deployment_v1_projects__project_id__deployments__deployment_id__main_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/projects/{project_id}/deployments/{deployment_id}/start': {
     parameters: {
       query?: never;
@@ -1651,63 +1671,6 @@ export interface paths {
      * @description Tenant, owner membership and Default team in one transaction: nothing outside Postgres to undo.
      */
     post: operations['create_tenant_v1_tenants_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/models/{run_id}/register': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Register Model */
-    post: operations['register_model_v1_projects__project_id__models__run_id__register_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/models': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List Models */
-    get: operations['list_models_v1_projects__project_id__models_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/projects/{project_id}/models/{model_version_id}/promote': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Promote Model
-     * @description None (internal) -> Staging (candidate) is immediate. Production answers 202 with the version pending: it is deployed, and the
-     *     stage flips only when the deployment is active (the version serving until then stays Production). Poll the models list: the
-     *     version either becomes Production (the previous one Staging) or shows promotion_status `failed` with promotion_error, stages
-     *     unchanged. Promoting an older version is a rollback. A run with no test data needs acknowledge_risk=true, as a deploy does.
-     */
-    post: operations['promote_model_v1_projects__project_id__models__model_version_id__promote_post'];
     delete?: never;
     options?: never;
     head?: never;
@@ -2961,7 +2924,7 @@ export interface components {
     DeployStrategy: 'main' | 'latest';
     /**
      * DeploymentCreated
-     * @description predict_key is present only when a new deployment was minted (shown once); a 'main' re-deploy omits it.
+     * @description The deployment's id is the X-Model-Id a predict call names. `main` marks the project's default model.
      */
     DeploymentCreated: {
       /**
@@ -2978,7 +2941,7 @@ export interface components {
       /** Plan Tier */
       plan_tier: string | null;
       /** Predict Key */
-      predict_key?: string | null;
+      main: boolean;
     };
     /** DeploymentDetail */
     DeploymentDetail: {
@@ -3010,6 +2973,7 @@ export interface components {
       training_run_id: string;
       /** Rate Limit Per Minute */
       rate_limit_per_minute: number;
+      main: boolean;
     };
     /** DeploymentListItem */
     DeploymentListItem: {
@@ -3029,6 +2993,7 @@ export interface components {
       created_at: string;
       /** Model Version Id */
       model_version_id: string | null;
+      main: boolean;
     };
     /**
      * DeploymentSchema
@@ -3037,13 +3002,7 @@ export interface components {
     DeploymentSchema: {
       /** Task Type */
       task_type: string;
-      /**
-       * Model Id
-       * Format: uuid
-       */
-      model_id: string;
-      /** Model Revision */
-      model_revision: string;
+      deployment_id: string;
       /** Input */
       input: {
         [key: string]: unknown;
@@ -3419,7 +3378,6 @@ export interface components {
       /** Mlflow Version */
       mlflow_version: string;
       /** Stage */
-      stage: string;
     };
     /** LineageRun */
     LineageRun: {
@@ -3565,12 +3523,6 @@ export interface components {
       has_test_split: boolean;
       model_version: components['schemas']['LineageModel'] | null;
     };
-    /**
-     * ModelStage
-     * @description Model Registry stages.
-     * @enum {string}
-     */
-    ModelStage: 'None' | 'Staging' | 'Production' | 'Archived';
     /** ModelStats */
     ModelStats: {
       /** Model Count */
@@ -3594,32 +3546,9 @@ export interface components {
      * @enum {string}
      */
     ModelStatus: 'deployed' | 'deploying' | 'stopped' | 'not_deployed';
-    /** ModelVersion */
-    ModelVersion: {
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /** Mlflow Model Name */
-      mlflow_model_name: string;
-      /** Mlflow Version */
-      mlflow_version: string;
-      stage: components['schemas']['ModelStage'];
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-    };
     /** ModelVersionItem */
     ModelVersionItem: {
-      promotion_status?: components['schemas']['PromotionStatus'] | null;
-      /** Promotion Error */
-      promotion_error?: string | null;
-      /** Promotion Error Code */
-      promotion_error_code?: string | null;
-      /**
+      /** Promotion Error */ /** Promotion Error Code */ /**
        * Id
        * Format: uuid
        */
@@ -3627,15 +3556,12 @@ export interface components {
       /** Mlflow Model Name */
       mlflow_model_name: string;
       /** Mlflow Version */
-      mlflow_version: string;
-      stage: components['schemas']['ModelStage'];
-      /**
+      mlflow_version: string; /**
        * Created At
        * Format: date-time
        */
       created_at: string;
       /** Customer Label */
-      customer_label: string;
       /**
        * Model Id
        * Format: uuid
@@ -3895,8 +3821,6 @@ export interface components {
        * Format: uuid
        */
       id: string;
-      /** Revision */
-      revision: string;
     };
     /** PredictUsage */
     PredictUsage: {
@@ -4178,32 +4102,6 @@ export interface components {
       /** Default Test Dataset Id */
       default_test_dataset_id: string | null;
     };
-    /** PromotedVersion */
-    PromotedVersion: {
-      promotion_status?: components['schemas']['PromotionStatus'] | null;
-      /** Promotion Error */
-      promotion_error?: string | null;
-      /** Promotion Error Code */
-      promotion_error_code?: string | null;
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /** Mlflow Model Name */
-      mlflow_model_name: string;
-      /** Mlflow Version */
-      mlflow_version: string;
-      stage: components['schemas']['ModelStage'];
-      /** Customer Label */
-      customer_label: string;
-    };
-    /**
-     * PromotionStatus
-     * @description Mirrors the model_versions.promotion_status CHECK constraint; no status = no promotion in flight.
-     * @enum {string}
-     */
-    PromotionStatus: 'pending' | 'failed';
     /**
      * PublicDataset
      * @description A private dataset of a public project is listed with no name: "exists" is visible, contents are not.
@@ -8265,9 +8163,9 @@ export interface operations {
   };
   create_deployment_v1_projects__project_id__deployments_post: {
     parameters: {
-      query?: {
-        model_version_id?: string | null;
-        training_run_id?: string | null;
+      query: {
+        training_run_id: string;
+        set_main?: boolean;
         acknowledge_risk?: boolean;
       };
       header: {
@@ -8407,6 +8305,42 @@ export interface operations {
     };
   };
   stop_deployment_v1_projects__project_id__deployments__deployment_id__stop_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'If-Match'?: string | null;
+        'x-tenant-id'?: string | null;
+        'x-user-id'?: string | null;
+      };
+      path: {
+        project_id: string;
+        deployment_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DeploymentDetail'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  set_main_deployment_v1_projects__project_id__deployments__deployment_id__main_post: {
     parameters: {
       query?: never;
       header?: {
@@ -8896,115 +8830,6 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['TenantCreated'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  register_model_v1_projects__project_id__models__run_id__register_post: {
-    parameters: {
-      query: {
-        name: string;
-      };
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        run_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ModelVersion'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_models_v1_projects__project_id__models_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ModelVersionItem'][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  promote_model_v1_projects__project_id__models__model_version_id__promote_post: {
-    parameters: {
-      query: {
-        stage: string;
-        acknowledge_risk?: boolean;
-      };
-      header?: {
-        'x-tenant-id'?: string | null;
-        'x-user-id'?: string | null;
-      };
-      path: {
-        project_id: string;
-        model_version_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['PromotedVersion'];
         };
       };
       /** @description Validation Error */

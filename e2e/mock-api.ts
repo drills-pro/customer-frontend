@@ -164,18 +164,12 @@ export interface ModelRec {
   training_run_id: string;
   mlflow_model_name: string;
   mlflow_version: string;
-  stage: 'None' | 'Staging' | 'Production' | 'Archived';
-  customer_label: string;
   created_at: string;
-  promotion_status: 'pending' | 'failed' | null;
-  promotion_error: string | null;
-  promotion_error_code: string | null;
 }
 /** What reached POST /v1/predict: the headers that name the model and project, and the body. */
 export interface PredictCallRec {
   project: string | null;
   model: string | null;
-  revision: string | null;
   body: unknown;
 }
 export interface PreviewRow {
@@ -205,16 +199,14 @@ export interface ApiState {
   deployments: DeploymentRec[];
   /** A deploy without acknowledge_risk=true answers 409 deploy_risk_unacknowledged (the run has no test split). */
   deployRisk: boolean;
-  /** The Idempotency-Key and acknowledge_risk of each deploy that reached the backend, in order. */
-  deployCalls: { key: string; acknowledge: boolean; versionId: string }[];
+  /** The Idempotency-Key, acknowledge_risk, set_main and run of each deploy that reached the backend, in order. */
+  deployCalls: { key: string; acknowledge: boolean; setMain: boolean; runId: string }[];
   /** The console predictions of the try-it log, newest first, as core-api lists them. */
   testCalls: TestCallRec[];
   /** Every call that reached POST /v1/predict, in order. */
   predictCalls: PredictCallRec[];
   /** The model versions of the project. A run gets one (registered at settle time) the first time its lineage is read. */
   models: ModelRec[];
-  /** Each promote request that reached the backend: the version, the stage and acknowledge_risk. */
-  promoteCalls: { versionId: string; stage: string; acknowledge: boolean }[];
   /** The training-runs list answers 500. */
   failRuns: boolean;
   /** What the training-presets list answers with: the project's task type's presets. */
@@ -296,7 +288,6 @@ export const newState = (): ApiState => ({
   testCalls: [],
   predictCalls: [],
   models: [],
-  promoteCalls: [],
   failRuns: false,
   presets: [preset('small', 10, 32), preset('medium', 20, 16)],
   failPresets: null,
@@ -604,15 +595,15 @@ export const deployment = (state: ApiState, status: string, trainingRunId: strin
     model_version_id: null,
     rate_limit_per_minute: 60,
     idempotency_key: crypto.randomUUID(),
+    main: false,
   };
   state.deployments.push(d);
   return d;
 };
 const MODEL_NAME = 'shelf';
 const MODEL_ID = 'dddddddd-0000-4000-8000-000000000004';
-const LABELS = { None: 'internal only', Staging: 'candidate', Production: 'serving', Archived: 'retired' } as const;
 /** A registered version of the project's one model; versions are numbered in the order they are made, a day apart. */
-export const model = (state: ApiState, stage: ModelRec['stage'] = 'None', patch: Partial<ModelRec> = {}): ModelRec => {
+export const model = (state: ApiState, patch: Partial<ModelRec> = {}): ModelRec => {
   const n = state.models.length + 1;
   const m: ModelRec = {
     id: crypto.randomUUID(),
@@ -620,46 +611,27 @@ export const model = (state: ApiState, stage: ModelRec['stage'] = 'None', patch:
     training_run_id: crypto.randomUUID(),
     mlflow_model_name: MODEL_NAME,
     mlflow_version: String(n),
-    stage,
-    customer_label: LABELS[stage],
     created_at: new Date(Date.UTC(2026, 9, n)).toISOString(),
-    promotion_status: null,
-    promotion_error: null,
-    promotion_error_code: null,
     ...patch,
   };
   state.models.push(m);
   return m;
 };
-/** What core-api does when a promotion settles: the version serves, the one that did goes back to Staging. */
-export const settlePromotion = (state: ApiState, m: ModelRec) => {
-  for (const o of state.models)
-    if (o.model_id === m.model_id && o.stage === 'Production') Object.assign(o, { stage: 'Staging', customer_label: LABELS.Staging });
-  Object.assign(m, {
-    stage: 'Production',
-    customer_label: LABELS.Production,
-    promotion_status: null,
-    promotion_error: null,
-    promotion_error_code: null,
-  });
-};
-/** The predict key a fresh deployment answers with, once. */
-export const PREDICT_KEY = 'pk_e2e_once';
 export const DEPLOYMENT_SCHEMA = {
   task_type: 'tabular-classification',
-  model_id: 'dddddddd-0000-4000-8000-000000000004',
-  model_revision: '3',
+  deployment_id: 'dddddddd-0000-4000-8000-000000000004',
   input: { text: 'string' },
   output: { predictions: [{ class: 'string', probability: 'number' }] },
   snippets: { curl: 'curl -X POST', python: 'import requests', javascript: 'await fetch' },
 };
 export const TEST_RESPONSE = { predictions: [{ class: 'cat', probability: 0.9 }] };
-const listItem = ({ id, status, route_prefix, created_at, model_version_id }: DeploymentRec) => ({
+const listItem = ({ id, status, route_prefix, created_at, model_version_id, main }: DeploymentRec) => ({
   id,
   status,
   route_prefix,
   created_at,
   model_version_id,
+  main,
 });
 /** DeploymentDetail: everything but the key the mock replays creates by. */
 const detail = (d: DeploymentRec) => ({
@@ -678,11 +650,11 @@ function deploymentRoutes(route: Route, state: ApiState, method: string, path: s
     if (!r) return problem(route, 404, 'not_found');
     // core-api answers the run's newest deployment whatever its status, deleted and failed included.
     const d = state.deployments.findLast((x) => x.training_run_id === r.id);
-    const v = state.models.find((x) => x.training_run_id === r.id) ?? model(state, 'None', { training_run_id: r.id });
+    const v = state.models.find((x) => x.training_run_id === r.id) ?? model(state, { training_run_id: r.id });
     return json(route, 200, {
       training_run: r,
       dataset_version: null,
-      model_version: { id: v.id, mlflow_model_name: v.mlflow_model_name, mlflow_version: v.mlflow_version, stage: v.stage },
+      model_version: { id: v.id, mlflow_model_name: v.mlflow_model_name, mlflow_version: v.mlflow_version },
       deployment: d ? { id: d.id, status: d.status, route_prefix: d.route_prefix } : null,
     });
   }
@@ -691,20 +663,22 @@ function deploymentRoutes(route: Route, state: ApiState, method: string, path: s
     const params = new URL(req.url()).searchParams;
     const key = req.headers()['idempotency-key'] ?? '';
     const acknowledge = params.get('acknowledge_risk') === 'true';
-    const versionId = params.get('model_version_id') ?? '';
-    state.deployCalls.push({ key, acknowledge, versionId });
+    const runId = params.get('training_run_id') ?? '';
+    const setMain = params.get('set_main') === 'true';
+    state.deployCalls.push({ key, acknowledge, setMain, runId });
     if (state.deployRisk && !acknowledge) return problem(route, 409, 'deploy_risk_unacknowledged');
-    const version = state.models.find((v) => v.id === versionId);
+    const version = state.models.find((v) => v.training_run_id === runId);
     if (!version) return problem(route, 404, 'not_found');
     const same = state.deployments.find((d) => d.idempotency_key === key);
-    const d = same ?? deployment(state, 'active', version.training_run_id);
+    const d = same ?? deployment(state, 'active', runId);
+    if (setMain) for (const other of state.deployments) other.main = false;
     d.idempotency_key = key;
     d.model_version_id = version.id;
+    if (setMain) d.main = true;
     return json(route, 202, {
       ...listItem(d),
       rate_limit_per_minute: d.rate_limit_per_minute,
       plan_tier: 'free',
-      predict_key: PREDICT_KEY,
     });
   }
   const m = path.match(new RegExp(`^/v1/projects/${PROJECT}/deployments/([^/]+)(/stop|/start|/schema|/test-calls)?$`));
@@ -741,7 +715,6 @@ function predictRoute(route: Route, state: ApiState, req: ReturnType<Route['requ
   state.predictCalls.push({
     project: h['x-project-id'] ?? null,
     model: h['x-model-id'] ?? null,
-    revision: h['x-model-revision'] ?? null,
     body,
   });
   if (!state.deployments.some((d) => d.status === 'active')) return problem(route, 409, 'deployment_not_active');
@@ -758,7 +731,7 @@ function predictRoute(route: Route, state: ApiState, req: ReturnType<Route['requ
   return json(route, 200, {
     id: call.id,
     status: 'completed',
-    model: { id: h['x-model-id'], revision: h['x-model-revision'] },
+    model: { id: h['x-model-id'] },
     output: TEST_RESPONSE,
     usage: { latency_ms: 12 },
     metadata: {},
@@ -768,24 +741,10 @@ function predictRoute(route: Route, state: ApiState, req: ReturnType<Route['requ
   });
 }
 
-/** The model versions list and a promote: Production answers 202 with the version pending, and the test settles it (`settlePromotion`)
- * or fails it. Returns undefined for any other path. */
-function modelRoutes(route: Route, state: ApiState, method: string, path: string, req: ReturnType<Route['request']>) {
+/** The project's model versions, newest first. Versions are made by a succeeded run's settle, and deployed from its page. */
+function modelRoutes(route: Route, state: ApiState, method: string, path: string) {
   if (path === `/v1/projects/${PROJECT}/models` && method === 'GET') return json(route, 200, [...state.models].reverse());
-  const m = path.match(new RegExp(`^/v1/projects/${PROJECT}/models/([^/]+)/promote$`));
-  if (!m) return undefined;
-  const v = state.models.find((x) => x.id === m[1]);
-  if (!v) return problem(route, 404, 'not_found');
-  const params = new URL(req.url()).searchParams;
-  const stage = params.get('stage') as ModelRec['stage'];
-  state.promoteCalls.push({ versionId: v.id, stage, acknowledge: params.get('acknowledge_risk') === 'true' });
-  if (stage === 'Production') {
-    Object.assign(v, { promotion_status: 'pending', promotion_error: null, promotion_error_code: null });
-    return json(route, 202, v);
-  }
-  if (v.stage === 'Production') return problem(route, 409, 'live_version');
-  Object.assign(v, { stage, customer_label: LABELS[stage] });
-  return json(route, 200, v);
+  return undefined;
 }
 
 /** PUT (replace roles) and DELETE of one project member; removing the only project_admin is the 409 `last_project_admin`, as for a non-owner caller. */
@@ -851,7 +810,7 @@ function projectRoutes(route: Route, state: ApiState, method: string, path: stri
     case '/members':
       return json(route, 200, state.projectMembers);
     case '/training-runs':
-      return state.failRuns ? problem(route, 500, 'internal') : json(route, 200, state.runs);
+      return state.failRuns ? problem(route, 500, 'internal') : json(route, 200, paginate(state.runs, req.url(), 50));
   }
   return undefined;
 }

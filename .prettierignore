@@ -10,3 +10,5 @@ tokens/tokens.json
 skills-lock.json
 test-results
 playwright-report
+src/shared/api/schema.d.ts
+src/theme/tokens.generated.ts

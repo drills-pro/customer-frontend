@@ -75,8 +75,8 @@ export function VersionsTab({
                     <HStack justify="flex-end" gap="2">
                       <Button asChild size="xs">
                         <Link
-                          to="/w/$slug/projects/$projectId/datasets/$datasetId/versions/$versionId"
-                          params={{ slug, projectId, datasetId: dataset.id, versionId: v.id }}
+                          to="/w/$slug/projects/$projectId/datasets/versions/$versionId"
+                          params={{ slug, projectId, versionId: v.id }}
                           data-testid="version-preview-link"
                         >
                           <Eye />

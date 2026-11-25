@@ -12,8 +12,8 @@ async function fillUpload(page: Page) {
 
 test('walks create, upload, start, review, commit', async ({ page, api }) => {
   await page.clock.install();
-  const d = dataset(api);
-  await page.goto(`${BASE}/${d.id}/imports/new`);
+  dataset(api);
+  await page.goto(`${BASE}/imports/new`);
   await fillUpload(page);
   await page.getByTestId('import-submit').click();
 
@@ -52,7 +52,7 @@ test('polling follows a moving import and stops on a settled one', async ({ page
   await page.clock.install();
   const d = dataset(api);
   const imp = importOf(api, d.id, { status: 'running' });
-  await page.goto(`${BASE}/${d.id}/imports/${imp.id}`);
+  await page.goto(`${BASE}/imports/${imp.id}`);
   await expect(page.getByTestId('import-working')).toBeVisible();
   const before = api.importGets[imp.id];
   await page.clock.runFor(4000);
@@ -77,7 +77,7 @@ test('polling stops when the page is left', async ({ page, api }) => {
   await page.clock.install();
   const d = dataset(api);
   const imp = importOf(api, d.id, { status: 'queued' });
-  await page.goto(`${BASE}/${d.id}/imports/${imp.id}`);
+  await page.goto(`${BASE}/imports/${imp.id}`);
   await expect(page.getByTestId('import-working')).toBeVisible();
   await page.getByTestId('shell-nav-overview').click();
   await expect(page.getByTestId('import-working')).toHaveCount(0);
@@ -89,12 +89,12 @@ test('polling stops when the page is left', async ({ page, api }) => {
 test('cancel and discard end an import', async ({ page, api }) => {
   const d = dataset(api);
   const running = importOf(api, d.id, { status: 'running' });
-  await page.goto(`${BASE}/${d.id}/imports/${running.id}`);
+  await page.goto(`${BASE}/imports/${running.id}`);
   await page.getByTestId('import-cancel').click();
   await expect(page.getByTestId('import-ended')).toBeVisible();
 
   const review = importOf(api, d.id, { status: 'awaiting_review', report: REPORT });
-  await page.goto(`${BASE}/${d.id}/imports/${review.id}`);
+  await page.goto(`${BASE}/imports/${review.id}`);
   await page.getByTestId('import-discard').click();
   await expect(page.getByTestId('import-ended')).toBeVisible();
   expect(review.status).toBe('discarded');
@@ -104,7 +104,7 @@ test('a 409 on commit re-renders from the server state', async ({ page, api }) =
   api.commitConflict = 'discarded';
   const d = dataset(api);
   const imp = importOf(api, d.id, { status: 'awaiting_review', report: REPORT });
-  await page.goto(`${BASE}/${d.id}/imports/${imp.id}`);
+  await page.goto(`${BASE}/imports/${imp.id}`);
   await page.getByTestId('import-commit').click();
   await expect(page.getByTestId('import-ended')).toBeVisible();
   await expect(page.getByTestId('import-commit')).toHaveCount(0);
@@ -112,8 +112,8 @@ test('a 409 on commit re-renders from the server state', async ({ page, api }) =
 
 test('a 429 on create shows an error and stays on the form', async ({ page, api }) => {
   api.importCap = true;
-  const d = dataset(api);
-  await page.goto(`${BASE}/${d.id}/imports/new`);
+  dataset(api);
+  await page.goto(`${BASE}/imports/new`);
   await fillUpload(page);
   await page.getByTestId('import-submit').click();
   await expect(page.getByTestId('import-error')).toBeVisible();
@@ -123,8 +123,8 @@ test('a 429 on create shows an error and stays on the form', async ({ page, api 
 
 test('a failed upload retries with the same key and the same import', async ({ page, api }) => {
   api.failUploads = 1;
-  const d = dataset(api);
-  await page.goto(`${BASE}/${d.id}/imports/new`);
+  dataset(api);
+  await page.goto(`${BASE}/imports/new`);
   await fillUpload(page);
   await page.getByTestId('import-submit').click();
   await expect(page.getByTestId('import-error')).toBeVisible();
@@ -137,8 +137,8 @@ test('a failed upload retries with the same key and the same import', async ({ p
 
 test('start over cancels the half-made import and uses a new key', async ({ page, api }) => {
   api.failUploads = 1;
-  const d = dataset(api);
-  await page.goto(`${BASE}/${d.id}/imports/new`);
+  dataset(api);
+  await page.goto(`${BASE}/imports/new`);
   await fillUpload(page);
   await page.getByTestId('import-submit').click();
   await page.getByTestId('import-start-over').click();
@@ -150,8 +150,8 @@ test('start over cancels the half-made import and uses a new key', async ({ page
 });
 
 test('Hugging Face validates the repo, then imports without an upload', async ({ page, api }) => {
-  const d = dataset(api);
-  await page.goto(`${BASE}/${d.id}/imports/new`);
+  dataset(api);
+  await page.goto(`${BASE}/imports/new`);
   await page.getByTestId('import-source-huggingface').click();
   await page.getByTestId('import-repo').fill('not/a/repo');
   await page.getByTestId('import-submit').click();
@@ -170,7 +170,7 @@ test('an import on a dataset with versions extends the latest one', async ({ pag
   versionOf(api, d.id, first.id);
   const second = importOf(api, d.id, { status: 'succeeded' });
   const latest = versionOf(api, d.id, second.id);
-  await page.goto(`${BASE}/${d.id}/imports/new`);
+  await page.goto(`${BASE}/imports/new`);
   await fillUpload(page);
   await page.getByTestId('import-submit').click();
   await expect(page).toHaveURL(/\/imports\/[0-9a-f-]+$/);
@@ -178,7 +178,16 @@ test('an import on a dataset with versions extends the latest one', async ({ pag
 });
 
 test('a missing import shows not found', async ({ page, api }) => {
-  const d = dataset(api);
-  await page.goto(`${BASE}/${d.id}/imports/${crypto.randomUUID()}`);
+  dataset(api);
+  await page.goto(`${BASE}/imports/${crypto.randomUUID()}`);
   await expect(page.getByTestId('state-screen')).toBeVisible();
+});
+
+test('the first import makes the project dataset, and it is the only one', async ({ page, api }) => {
+  await page.goto(`${BASE}/imports/new`);
+  await fillUpload(page);
+  await page.getByTestId('import-submit').click();
+  await expect(page).toHaveURL(/\/imports\/[0-9a-f-]+$/);
+  expect(api.datasets).toHaveLength(1);
+  expect(api.imports[0].dataset_id).toBe(api.datasets[0].id);
 });

@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { ACME_SLUG, PROJECT, dataset } from './mock-api';
+import { ACME_SLUG } from './mock-api';
 
 const trash = `/w/${ACME_SLUG}/trash`;
 
@@ -23,15 +23,4 @@ test('moving a project to the Trash takes it off the list, and Restore brings it
   await page.getByTestId('trash-restore-project').click();
   await expect(page.getByTestId('trash-empty')).toBeVisible();
   expect(api.project.status).toBe('active');
-});
-
-test('a deleted dataset is listed with its project and restores from the Trash', async ({ page, api }) => {
-  const d = dataset(api, { name: 'orders', deleted_at: '2026-11-18T00:00:00Z' });
-  await page.goto(trash);
-  await expect(page.getByTestId('trash-dataset-row')).toHaveCount(1);
-  await page.getByTestId('trash-restore-dataset').click();
-  await expect(page.getByTestId('trash-empty')).toBeVisible();
-  expect(api.datasets.find((x) => x.id === d.id)?.deleted_at).toBeNull();
-  await page.goto(`/w/${ACME_SLUG}/projects/${PROJECT}/datasets`);
-  await expect(page.getByTestId('dataset-row')).toHaveCount(1);
 });

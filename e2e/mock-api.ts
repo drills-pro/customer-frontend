@@ -38,7 +38,6 @@ export interface DatasetRec {
   name: string;
   task_type: string | null;
   created_at: string;
-  deleted_at: string | null;
 }
 export interface OfferRec {
   from_sub: string;
@@ -383,7 +382,6 @@ export const dataset = (state: ApiState, patch: Partial<DatasetRec> = {}): Datas
     name: `dataset-${state.datasets.length + 1}`,
     task_type: 'tabular-classification',
     created_at: NOW,
-    deleted_at: null,
     ...patch,
   };
   state.datasets.push(d);
@@ -853,7 +851,7 @@ function projectRoutes(route: Route, state: ApiState, method: string, path: stri
   if (path === '/v1/projects' && method === 'GET') {
     const { id, name, status, team_id, task_type, created_at } = state.project;
     const counts = {
-      datasets: state.datasets.filter((d) => !d.deleted_at).length,
+      datasets: state.datasets.length,
       models: state.models.length,
       deployments: state.deployments.filter((d) => d.status !== 'deleted').length,
     };
@@ -982,21 +980,7 @@ function trainingRoutes(route: Route, state: ApiState, method: string, path: str
 
 /** /v1/projects/{PROJECT}/datasets/...: the dataset flows. Returns undefined when the path is not one of them. */
 function datasetRoutes(route: Route, state: ApiState, method: string, path: string, req: ReturnType<Route['request']>) {
-  if (path === '/v1/datasets/trash') {
-    const gone = state.datasets
-      .filter((d) => d.deleted_at)
-      .map((d) => ({
-        id: d.id,
-        name: d.name,
-        created_at: d.created_at,
-        deleted_at: d.deleted_at,
-        project_id: PROJECT,
-        project_name: state.project.name,
-        restorable_until: RESTORABLE_UNTIL,
-      }));
-    return json(route, 200, paginate(gone, req.url(), state.pageSize));
-  }
-  const m = path.match(new RegExp(`^/v1/projects/${PROJECT}/datasets(?:/([^/:]+)(:restore|/.*)?)?$`));
+  const m = path.match(new RegExp(`^/v1/projects/${PROJECT}/datasets(?:/([^/:]+)(/.*)?)?$`));
   if (!m) return undefined;
   const [, id, rest = ''] = m;
   const body = (req.postDataJSON() ?? {}) as Record<string, unknown>;
@@ -1004,29 +988,18 @@ function datasetRoutes(route: Route, state: ApiState, method: string, path: stri
   if (write && state.denyWrites) return problem(route, 403, 'forbidden');
 
   if (!id) {
-    if (method === 'POST') return json(route, 201, dataset(state, { name: String(body.name) }));
-    return json(
-      route,
-      200,
-      paginate(
-        state.datasets.filter((d) => !d.deleted_at),
-        req.url(),
-        state.pageSize,
-      ),
-    );
+    if (method === 'POST') {
+      // One live dataset per project, as the API enforces it.
+      if (state.datasets.length) return problem(route, 409, 'project_has_dataset');
+      return json(route, 201, dataset(state, { name: String(body.name) }));
+    }
+    return json(route, 200, paginate(state.datasets, req.url(), state.pageSize));
   }
   const d = state.datasets.find((x) => x.id === id);
   if (!d) return problem(route, 404, 'not_found');
   const ofDataset = <T extends { dataset_id: string }>(items: T[]) => items.filter((i) => i.dataset_id === id);
 
-  if (rest === '') {
-    if (method === 'DELETE') d.deleted_at = '2026-10-26T00:00:00Z';
-    return json(route, method === 'DELETE' ? 202 : 200, { ...d, restorable_until: d.deleted_at ? RESTORABLE_UNTIL : null });
-  }
-  if (rest === ':restore') {
-    d.deleted_at = null;
-    return json(route, 200, d);
-  }
+  if (rest === '') return json(route, 200, d);
   if (rest === '/versions') {
     const own = state.versions.filter((v) => state.imports.some((i) => i.id === v.import_id && i.dataset_id === id));
     return json(route, 200, paginate(own, req.url(), state.pageSize));

@@ -38,10 +38,9 @@ export function trainStage(runs: { items: TrainingRunSummary[]; next_page_token?
   };
 }
 
-/** Counts live endpoints; one still deploying makes the stage in progress. */
+/** Counts live endpoints. A deployment is active as soon as it exists, so there is no stage in progress. */
 export function deployStage(deployments: DeploymentListItem[] | undefined, failed: boolean): Stage {
   if (!deployments) return unknownStage(failed);
   const live = deployments.filter((d) => d.status === DeploymentStatus.Active).length;
-  const deploying = deployments.some((d) => d.status === DeploymentStatus.Deploying);
-  return { state: pick(live > 0, deploying), count: live, more: false, inProgress: 0 };
+  return { state: pick(live > 0, false), count: live, more: false, inProgress: 0 };
 }

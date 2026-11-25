@@ -10,7 +10,7 @@ import { deploymentErrorKey, isRisk } from '@/modules/deployments/errors';
 import { newIdempotencyKey } from '@/shared/api/idempotency';
 
 const DEPLOYMENT_PATH = '/w/$slug/projects/$projectId/deployments/$deploymentId';
-const REDEPLOYABLE: readonly string[] = [DeploymentStatus.Deleted, DeploymentStatus.Failed];
+const REDEPLOYABLE: readonly string[] = [DeploymentStatus.Deleted];
 
 /** On a finished run: deploy its model, or open the deployment it already has. The dialog asks first (and can make it the project's main
  * model); a run with no test split, or one scored below the task's quality floor, needs the person to accept that risk. */
@@ -25,7 +25,7 @@ export function DeployRunButton({ projectId, runId }: { projectId: string; runId
   const [acknowledged, setAcknowledged] = useState(false);
   const [setMain, setSetMain] = useState(false);
   const [created, setCreated] = useState<DeploymentCreated | null>(null);
-  // Lineage answers the run's newest deployment in any status; a deleted or failed one can be deployed again.
+  // Lineage answers the run's newest deployment in any status; a deleted one can be deployed again.
   const newest = lineage.data?.deployment;
   const existing = newest && !REDEPLOYABLE.includes(newest.status) ? newest : null;
 

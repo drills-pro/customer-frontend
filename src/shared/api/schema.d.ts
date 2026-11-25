@@ -3335,8 +3335,6 @@ export interface components {
       model_count: number;
       /** Deployed Count */
       deployed_count: number;
-      /** Deploying Count */
-      deploying_count: number;
       /** Stopped Count */
       stopped_count: number;
       /** Not Deployed Count */
@@ -3351,7 +3349,7 @@ export interface components {
      * @description The statuses admin_models() derives from a model's newest deployment (a test checks the function names each).
      * @enum {string}
      */
-    ModelStatus: 'deployed' | 'deploying' | 'stopped' | 'not_deployed';
+    ModelStatus: 'deployed' | 'stopped' | 'not_deployed';
     /** ModelVersionItem */
     ModelVersionItem: {
       /**
@@ -5426,7 +5424,7 @@ export interface operations {
         task_type?: components['schemas']['TaskType'] | null;
         /** @description private | internal */
         visibility?: string | null;
-        /** @description deployed | deploying | stopped | not_deployed */
+        /** @description deployed | stopped | not_deployed */
         status?: string | null;
         page_size?: number;
         page_token?: string | null;

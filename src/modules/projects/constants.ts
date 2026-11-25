@@ -46,10 +46,8 @@ export const TrainingStatus = {
 } as const;
 export type TrainingStatus = (typeof TrainingStatus)[keyof typeof TrainingStatus];
 export const DeploymentStatus = {
-  Deploying: 'deploying',
   Active: 'active',
   Stopped: 'stopped',
-  Failed: 'failed',
   Deleted: 'deleted',
 } as const;
 export type DeploymentStatus = (typeof DeploymentStatus)[keyof typeof DeploymentStatus];

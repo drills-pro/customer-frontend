@@ -2,9 +2,7 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import { deploymentsKey, fetchDeployments } from '@/modules/projects';
 import { client, unwrap, type Schemas } from '@/shared/api/client';
 import { IDEMPOTENCY_HEADER } from '@/shared/api/idempotency';
-import { usePolledQuery } from '@/shared/api/poll';
 import { TEST_CALL_LIMIT } from '@/modules/deployments/constants';
-import { statusUi } from '@/modules/deployments/status';
 
 export type Deployment = Schemas['DeploymentDetail'];
 export type DeploymentCreated = Schemas['DeploymentCreated'];
@@ -24,22 +22,20 @@ const settle = (qc: QueryClient, workspaceId: string, projectId: string, deploym
   return qc.invalidateQueries({ queryKey: deploymentsKey(workspaceId, projectId) });
 };
 
-/** The project's deployments (the overview's query), polled while any of them is still deploying. */
+/** The project's deployments (the overview's query). */
 export function useDeploymentList(workspaceId: string, projectId: string) {
-  return usePolledQuery({
+  return useQuery({
     queryKey: deploymentsKey(workspaceId, projectId),
     queryFn: () => fetchDeployments(projectId),
-    shouldPoll: (list) => list?.some((d) => statusUi(d.status).poll) ?? false,
   });
 }
 
-/** One deployment, polled while it is deploying. */
+/** One deployment. */
 export function useDeployment(projectId: string, deploymentId: string) {
-  return usePolledQuery({
+  return useQuery({
     queryKey: deploymentKey(projectId, deploymentId),
     queryFn: () =>
       unwrap(client.GET('/v1/projects/{project_id}/deployments/{deployment_id}', { params: deploymentPath(projectId, deploymentId) })),
-    shouldPoll: (d) => d !== undefined && statusUi(d.status).poll,
   });
 }
 

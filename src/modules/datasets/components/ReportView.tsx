@@ -2,7 +2,7 @@ import { Badge, Box, Code, HStack, SimpleGrid, Stack, Stat, Table, Text } from '
 import { InfoBox, WarningDiamond } from 'pixelarticons/react';
 import { useTranslation } from 'react-i18next';
 import type { ImportReport } from '@/modules/datasets/api';
-import { Severity } from '@/modules/datasets/constants';
+import { IssueCode, Severity } from '@/modules/datasets/constants';
 import { formatBytes } from '@/modules/datasets/format';
 
 const Count = ({ label, value }: { label: string; value: string }) => (
@@ -65,7 +65,7 @@ export function ReportView({ report }: { report: ImportReport }) {
               </Table.Header>
               <Table.Body>
                 {rows.map(({ issue, id }) => (
-                  <Table.Row key={id} data-testid="import-issue" data-severity={issue.severity}>
+                  <Table.Row key={id} data-testid="import-issue" data-severity={issue.severity} data-code={issue.code}>
                     <Table.Cell>
                       <Badge colorPalette={issue.severity === Severity.Error ? 'danger' : 'warning'} variant="subtle" gap="1">
                         {issue.severity === Severity.Error ? <WarningDiamond width={12} height={12} /> : <InfoBox width={12} height={12} />}
@@ -78,7 +78,9 @@ export function ReportView({ report }: { report: ImportReport }) {
                     <Table.Cell maxW="48" truncate>
                       {issue.path ?? ''}
                     </Table.Cell>
-                    <Table.Cell whiteSpace="normal">{issue.message}</Table.Cell>
+                    <Table.Cell whiteSpace="normal" data-testid="import-issue-message">
+                      {issue.code === IssueCode.HfAccessDenied ? t('datasets.report.hfAccessDenied') : issue.message}
+                    </Table.Cell>
                   </Table.Row>
                 ))}
               </Table.Body>

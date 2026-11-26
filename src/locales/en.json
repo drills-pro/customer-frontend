@@ -688,7 +688,8 @@
       "error": "Error",
       "warning": "Warning",
       "omitted_one": "{{count}} more issue is not shown.",
-      "omitted_other": "{{count}} more issues are not shown."
+      "omitted_other": "{{count}} more issues are not shown.",
+      "hfAccessDenied": "Only public datasets can be imported."
     },
     "preview": {
       "limit": "Rows to show",

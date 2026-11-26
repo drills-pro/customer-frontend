@@ -26,6 +26,10 @@ export const SPLITS: readonly Split[] = [Split.Train, Split.Validation, Split.Te
 export type Severity = Schemas['Severity'];
 export const Severity = { Error: 'error', Warning: 'warning' } as const satisfies Record<string, Severity>;
 
+export type IssueCode = Schemas['IssueCode'];
+/** Issue codes the UI words itself; every other code shows as the backend sent it. */
+export const IssueCode = { HfAccessDenied: 'hf_access_denied' } as const satisfies Record<string, IssueCode>;
+
 /** `code` of a problem+json body. Branch on these, never on the HTTP text. */
 export const ProblemCode = {
   InvalidState: 'invalid_import_state',

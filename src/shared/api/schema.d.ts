@@ -3108,6 +3108,7 @@ export interface components {
       | 'hf_schema_mismatch'
       | 'hf_too_large'
       | 'hf_no_data_files'
+      | 'hf_access_denied'
       | 'job_timeout'
       | 'internal_error';
     /**

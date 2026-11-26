@@ -73,6 +73,25 @@ test('polling follows a moving import and stops on a settled one', async ({ page
   expect(api.importGets[imp.id]).toBe(settled);
 });
 
+test('a Hugging Face refusal is shown on the failed import', async ({ page, api }) => {
+  const d = dataset(api);
+  const imp = importOf(api, d.id, {
+    status: 'failed',
+    report: {
+      ...REPORT,
+      outcome: 'failed',
+      stats: null,
+      issues: [
+        { code: 'hf_access_denied', severity: 'error', path: null, message: 'Hugging Face answered 401: the repo is gated or private' },
+      ],
+    },
+  });
+  await page.goto(`${BASE}/imports/${imp.id}`);
+  await expect(page.getByTestId('import-failed')).toBeVisible();
+  await expect(page.getByTestId('import-issue')).toHaveAttribute('data-code', 'hf_access_denied');
+  await expect(page.getByTestId('import-issue-message')).toBeVisible();
+});
+
 test('polling stops when the page is left', async ({ page, api }) => {
   await page.clock.install();
   const d = dataset(api);
